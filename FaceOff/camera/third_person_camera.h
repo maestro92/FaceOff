@@ -22,8 +22,8 @@ class ThirdPersonCamera : public Camera
 
         void lookAt(glm::vec3& eye, glm::vec3& target, glm::vec3& up);
 
-        void control(Pipeline& m_pipeline);
-        void updateViewMatrix(Pipeline& m_pipeline);
+        void control(Pipeline& p);
+        void updateViewMatrix(Pipeline& p);
 
 
         void increaseOffsetDistance();

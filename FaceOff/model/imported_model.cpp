@@ -21,9 +21,12 @@ bool ImportedModel::load(string filename)
 
 	const aiScene* scene = aiImportFile(filename.c_str(), aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs);
 
-    if (scene)
-        ret = initFromAiScene(scene, filename);
-    else
+	if (scene)
+	{
+		cout << "Loading " << filename << endl;
+		ret = initFromAiScene(scene, filename);
+	}
+	else
         cout << "Error parsing '"<< filename.c_str() << "': '" << aiGetErrorString() << endl;
 
 
@@ -47,10 +50,11 @@ bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename
 
     bool b = initMaterials2(scene, filename);
 
-
+	/*
     Utility::debug("m_meshes size", m_meshes.size());
     Utility::debug("m_textures size", m_textures.size());
-    for(int i=0; i<m_meshes.size(); i++)
+    
+	for(int i=0; i<m_meshes.size(); i++)
     {
         Utility::debug("mesh texture Index", m_meshes[i].m_textureIndex);
     }
@@ -59,7 +63,7 @@ bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename
     {
         Utility::debug("textures Id", m_textures[i].m_id);
     }
-
+	*/
 
     return b;
 }
@@ -140,7 +144,7 @@ bool ImportedModel::initMaterials2(const aiScene* pScene, const std::string& Fil
         const aiMaterial* pMaterial = pScene->mMaterials[i];
 
         bool success = false;
-
+		/*
         Utility::debug("i", i);
         Utility::debug("aiTextureType_NONE", pMaterial->GetTextureCount(aiTextureType_NONE));
 
@@ -151,7 +155,7 @@ bool ImportedModel::initMaterials2(const aiScene* pScene, const std::string& Fil
         Utility::debug("aiTextureType_NORMALS", pMaterial->GetTextureCount(aiTextureType_NORMALS));
         Utility::debug("aiTextureType_DIFFUSE", pMaterial->GetTextureCount(aiTextureType_DIFFUSE));
         Utility::debug("aiTextureType_UNKNOWN", pMaterial->GetTextureCount(aiTextureType_UNKNOWN));
-
+		*/
 
         /// we're only intersted in teh diffuse texture
         if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0)
@@ -162,18 +166,18 @@ bool ImportedModel::initMaterials2(const aiScene* pScene, const std::string& Fil
             {
                 fullPath = Dir + "/" + path.data;
 
-                Utility::debug("fullPath", fullPath);
+         //       Utility::debug("fullPath", fullPath);
                 m_textures[i].m_id = Utility::loadTexture(fullPath);
 
                 success = true;
             }
         }
 
-        Utility::debug(fullPath, m_textures[i].m_id);
+   //     Utility::debug(fullPath, m_textures[i].m_id);
         if (!success)
             m_textures[i].m_id = Utility::loadTexture("Assets/models/weapons/Ak_47/ak-47.jpg");
 //            m_textures[i].m_id = Utility::loadTexture("Assets/models/weapons/M9/Tex_0009_1.jpg");
-        Utility::debugLn("final: " + fullPath, m_textures[i].m_id);
+    //    Utility::debugLn("final: " + fullPath, m_textures[i].m_id);
     }
 
     return Ret;
@@ -218,19 +222,19 @@ bool ImportedModel::initMaterials(const aiScene* pScene, const std::string& File
             {
                 fullPath = Dir + "/" + path.data;
 
-                Utility::debug("fullPath", fullPath);
+           //     Utility::debug("fullPath", fullPath);
                 m_textures[i-1].m_id = Utility::loadTexture(fullPath);
 
                 success = true;
             }
         }
 
-        Utility::debug(fullPath, m_textures[i-1].m_id);
+        // Utility::debug(fullPath, m_textures[i-1].m_id);
         // Load a white texture in case the model does not include its own texture
         if (!success)
             m_textures[i].m_id = Utility::loadTexture("Assets/Images/bricks.jpg");
 
-        Utility::debugLn("final: " + fullPath, m_textures[i-1].m_id);
+        // Utility::debugLn("final: " + fullPath, m_textures[i-1].m_id);
 
 
     }

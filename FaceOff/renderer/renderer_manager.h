@@ -11,11 +11,11 @@ class RendererManager
         RendererManager();
         ~RendererManager();
 
-        Renderer    r_fullVertexColor;
-        Renderer    r_fullColor;
-        Renderer    r_fullTexture;
+        static Renderer    r_fullVertexColor;
+		static Renderer    r_fullColor;
+		static Renderer    r_fullTexture;
 
-        void init();
+        static void init();
 };
 
 #endif

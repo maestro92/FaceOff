@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;world_object;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;world_object;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -212,7 +212,9 @@
     <ClCompile Include="model\builtin_model\xyz_axis_model.cpp" />
     <ClCompile Include="model\imported_model.cpp" />
     <ClCompile Include="model\model.cpp" />
-    <ClCompile Include="network_manager.cpp" />
+    <ClCompile Include="network\network_client.cpp" />
+    <ClCompile Include="network\network_manager.cpp" />
+    <ClCompile Include="network\network_server.cpp" />
     <ClCompile Include="pipeline.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
     <ClCompile Include="renderer\renderer_manager.cpp" />
@@ -405,7 +407,11 @@
     <ClInclude Include="model\model.h" />
     <ClInclude Include="model\texture.h" />
     <ClInclude Include="model\vertex_data.h" />
-    <ClInclude Include="network_manager.h" />
+    <ClInclude Include="network\network_info.h" />
+    <ClInclude Include="network\game_messages.h" />
+    <ClInclude Include="network\network_client.h" />
+    <ClInclude Include="network\network_manager.h" />
+    <ClInclude Include="network\network_server.h" />
     <ClInclude Include="pipeline.h" />
     <ClInclude Include="renderer\renderer.h" />
     <ClInclude Include="renderer\renderer_manager.h" />

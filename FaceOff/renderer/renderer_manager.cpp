@@ -1,6 +1,10 @@
 
 #include "renderer_manager.h"
 
+Renderer RendererManager::r_fullVertexColor;
+Renderer RendererManager::r_fullColor;
+Renderer RendererManager::r_fullTexture;
+
 RendererManager::RendererManager()
 {
 

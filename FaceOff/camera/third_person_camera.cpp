@@ -90,7 +90,7 @@ glm::vec3 ThirdPersonCamera::computeEyePos()
     return pos;
 }
 
-void ThirdPersonCamera::control(Pipeline& m_pipeline)
+void ThirdPersonCamera::control(Pipeline& p)
 {
     float pitchChange = 0.0f;
     float yawChange = 0.0f;
@@ -137,12 +137,12 @@ void ThirdPersonCamera::control(Pipeline& m_pipeline)
     if(m_yaw < -360)
         m_yaw += 360;
 
-    updateViewMatrix(m_pipeline);
+    updateViewMatrix(p);
 
 }
 
 
-void ThirdPersonCamera::updateViewMatrix(Pipeline& m_pipeline)
+void ThirdPersonCamera::updateViewMatrix(Pipeline& p)
 {
     m_eye = computeEyePos();
 
@@ -151,6 +151,6 @@ void ThirdPersonCamera::updateViewMatrix(Pipeline& m_pipeline)
 
     m_viewMatrix = m_viewMatrix * glm::translate(0.0f, -4.0f, 0.0f);
 
-    m_pipeline.setMatrixMode(VIEW_MATRIX);
-    m_pipeline.addMatrix(m_viewMatrix);
+    p.setMatrixMode(VIEW_MATRIX);
+    p.addMatrix(m_viewMatrix);
 }

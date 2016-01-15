@@ -5,16 +5,10 @@ const float CAMERA_FORWARD_SPEED = 0.1;
 
 FirstPersonCamera::FirstPersonCamera()
 {
-
+	m_screenMidX = Utility::SCREEN_WIDTH/2;
+	m_screenMidY = Utility::SCREEN_HEIGHT/2;
 }
 
-FirstPersonCamera::FirstPersonCamera(int midX, int midY) : Camera()
-{
-
-    m_mouseIn = false;
-    m_screenMidX = midX;
-    m_screenMidY = midY;
-}
 
 FirstPersonCamera::~FirstPersonCamera()
 {
@@ -36,7 +30,7 @@ void FirstPersonCamera::updatePosY(float dir)
 }
 
 
-void FirstPersonCamera::control(Pipeline& m_pipeline)
+void FirstPersonCamera::control(Pipeline& p)
 {
     if(m_mouseIn)
     {
@@ -71,28 +65,34 @@ void FirstPersonCamera::control(Pipeline& m_pipeline)
 
  //   Utility::debug("position", m_eye);
 
-    updatePipeline(m_pipeline);
+    updatePipeline(p);
 }
 
-void FirstPersonCamera::updatePipeline(Pipeline& m_pipeline)
+void FirstPersonCamera::updatePipeline(Pipeline& p)
 {
-    m_pipeline.setMatrixMode(VIEW_MATRIX);
-    m_pipeline.rotateX(m_pitch);
-    m_pipeline.rotateY(m_yaw);
-    m_pipeline.translate(m_eye.x, m_eye.y, m_eye.z);
+	p.setMatrixMode(VIEW_MATRIX);
+	p.rotateX(m_pitch);
+	p.rotateY(m_yaw);
+	p.translate(m_eye.x, m_eye.y, m_eye.z);
+
+	m_pipeline = p;
 }
 
-void FirstPersonCamera::updateTranslation(Pipeline& m_pipeline)
+void FirstPersonCamera::updateTranslation(Pipeline& p)
 {
-    m_pipeline.setMatrixMode(VIEW_MATRIX);
-    m_pipeline.translate(m_eye.x, m_eye.y, m_eye.z);
+	p.setMatrixMode(VIEW_MATRIX);
+	p.translate(m_eye.x, m_eye.y, m_eye.z);
+
+	m_pipeline = p;
 }
 
-void FirstPersonCamera::updateRotation(Pipeline& m_pipeline)
+void FirstPersonCamera::updateRotation(Pipeline& p)
 {
-    m_pipeline.setMatrixMode(VIEW_MATRIX);
-    m_pipeline.rotateX(m_pitch);
-    m_pipeline.rotateY(m_yaw);
+	p.setMatrixMode(VIEW_MATRIX);
+	p.rotateX(m_pitch);
+	p.rotateY(m_yaw);
+
+	m_pipeline = p;
 }
 
 
@@ -110,12 +110,13 @@ void FirstPersonCamera::restrain()
 	if(m_yaw > 360.0)
 		m_yaw -= 360;
 }
-
+/*
 void FirstPersonCamera::setMouseIn(bool b)
 {
     m_mouseIn = b;
-    if(m_mouseIn)
-        SDL_ShowCursor(SDL_DISABLE);
+	if (m_mouseIn)
+		SDL_ShowCursor(SDL_DISABLE);
     else
         SDL_ShowCursor(SDL_ENABLE);
 }
+*/

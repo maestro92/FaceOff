@@ -32,7 +32,7 @@
 
 #include "renderer_manager.h"
 #include "renderer.h"
-
+#include "player.h"
 
 
 #include "first_person_camera.h"
@@ -42,6 +42,19 @@
 #include "world_object.h"
 #include "skybox.h"
 #define FRAME_VALUES 10
+
+
+
+
+#include "RakPeerInterface.h"
+#include <RakNetTypes.h>
+#include "MessageIdentifiers.h"
+#include <vector>
+#include "BitStream.h"
+#include "RakNetTypes.h"	// Message ID
+
+#include "game_messages.h"
+#include "network_info.h"
 
 using namespace std;
 /*
@@ -96,21 +109,38 @@ class FaceOff
 		Model*          p_model;
 		QuadModel       m_groundModel;
 		XYZAxisModel    m_xyzModel;
-		ImportedModel   m_playerModel;
 		ImportedModel   m_gunModel;
 
 		WorldObject     o_worldAxis;
 		WorldObject     o_ground;
-		WorldObject     o_player;
 		WorldObject     o_gun;
 		SkyBox          o_skybox;
 
+
+//		Camera* p_defaultCamera;
+		int m_defaultPlayerID;
+
+		vector<Player*> m_players;
 
 		GLuint tempTexture;
 
 		GUIManager m_gui;
 		GOLModelManager m_GOLModelManager;
 	public:
+
+
+		bool m_isServer;
+		RakNet::RakPeerInterface* peer;
+		bool connected;
+
+
+		RakNet::Packet* packet;
+		RakNet::RakString rs;
+		RakNet::SystemAddress server_address;
+
+		int int_message;
+		RakNet::BitStream bsOut;
+
 
 		FaceOff();
 		~FaceOff();
@@ -120,6 +150,8 @@ class FaceOff
 		void initModels();
 		void initRenderers();
 		void initGUI();
+		void initNetwork();
+		void initLobby();
 
 		void start();
 		void update();

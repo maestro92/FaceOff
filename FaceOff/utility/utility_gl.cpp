@@ -49,7 +49,9 @@ GLuint Utility::loadTexture(string filename)
 
 GLuint Utility::loadTexture(string filename, GLuint filteringParam)
 {
+#if DEBUG_FLAG == 1
     cout << "Loading Texture " << filename << endl;
+#endif
 
     SDL_Surface* img2 = loadSDLImage(filename);
 
@@ -72,6 +74,8 @@ GLuint Utility::loadTexture(string filename, GLuint filteringParam)
     SDL_FreeSurface(img2);
     return num;
 }
+
+
 
 
 // http://stackoverflow.com/questions/8767166/passing-a-2d-array-to-a-c-function

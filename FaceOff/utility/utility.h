@@ -31,6 +31,8 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
+#define DEBUG_FLAG 0
+
 
 using namespace std;
 
@@ -135,6 +137,9 @@ class Utility
     public:
         Utility();
         ~Utility();
+
+		static const int SCREEN_WIDTH = 800;
+		static const int SCREEN_HEIGHT = 600;
 
 
 

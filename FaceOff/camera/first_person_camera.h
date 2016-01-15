@@ -9,11 +9,12 @@ class FirstPersonCamera : public Camera
 {
     public:
         FirstPersonCamera();
-        FirstPersonCamera(int midX, int midY);
         ~FirstPersonCamera();
 
-        void setMouseIn(bool b);
-        void control(Pipeline& m_pipeline);
+    //    void setMouseIn(bool b);
+        void control(Pipeline& p);
+
+
     private:
 
         int m_screenMidX;
@@ -24,11 +25,11 @@ class FirstPersonCamera : public Camera
         void updatePosY(float dir);
 
 
-		void updatePipeline(Pipeline& m_pipeline);
-		void updateTranslation(Pipeline& m_pipeline);
-        void updateRotation(Pipeline& m_pipeline);
+		void updatePipeline(Pipeline& p);
+		void updateTranslation(Pipeline& p);
+        void updateRotation(Pipeline& p);
 
 
-        bool m_mouseIn;
+    //    bool m_mouseIn;
 };
 #endif

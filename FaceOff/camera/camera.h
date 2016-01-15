@@ -3,7 +3,7 @@
 
 
 #include "define.h"
-#include "utility"
+#include "utility.h"
 #include "pipeline.h"
 using namespace std;
 
@@ -12,6 +12,9 @@ class Camera
 {
     public:
         inline glm::vec3 getEyePoint();
+		virtual void control(Pipeline& p);
+		Pipeline m_pipeline;
+		void setMouseIn(bool b);
 
     protected:
         Camera();
@@ -27,6 +30,8 @@ class Camera
         /// expressed in degrees
         float m_pitch;
         float m_yaw;
+
+		bool m_mouseIn;
 };
 
 inline glm::vec3 Camera::getEyePoint()

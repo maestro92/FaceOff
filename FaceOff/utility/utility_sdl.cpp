@@ -2,6 +2,7 @@
 
 
 
+
 void Utility::initSDL(int w, int h, SDL_Surface* & m_displaySurface)
 {
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -29,8 +30,10 @@ SDL_Surface* Utility::loadRawImage(string filename)
 
     if(!in.is_open())
     {
+#if DEBUG_FLAG == 1
         std::cout << filename << " not found" << std::endl;
-        return NULL;
+#endif
+		return NULL;
     }
 
     string path = filename.substr(0,(filename.find_last_of('/') != string::npos ?
@@ -39,8 +42,10 @@ SDL_Surface* Utility::loadRawImage(string filename)
     SDL_Surface* img = IMG_Load(filename.c_str());
     if(img == NULL)
     {
+#if DEBUG_FLAG == 1
         cout << filename << " Load image failed" << endl;
-        return NULL;
+#endif
+		return NULL;
     }
 
     return img;
