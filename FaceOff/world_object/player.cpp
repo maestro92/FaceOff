@@ -26,6 +26,19 @@ void Player::setId(int id)
 	m_id = id;
 }
 
+
+void Player::setPosition(glm::vec3 position)
+{
+	WorldObject::setPosition(position);
+	m_camera->setEyePoint(position);
+}
+
+void Player::setPosition(float x, float y, float z)
+{
+	setPosition(glm::vec3(x, y, z));
+}
+
+
 void Player::update(Pipeline& p)
 {
 	p.setMatrixMode(VIEW_MATRIX);

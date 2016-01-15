@@ -11,7 +11,6 @@ class FirstPersonCamera : public Camera
         FirstPersonCamera();
         ~FirstPersonCamera();
 
-    //    void setMouseIn(bool b);
         void control(Pipeline& p);
 
 

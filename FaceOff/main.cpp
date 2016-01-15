@@ -1,5 +1,6 @@
 #include "main.h"
 
+#define NETWORK_FLAG 1
 
 #include <stdio.h>
 #include <string.h>
@@ -222,13 +223,13 @@ void FaceOff::initLobby()
 				// we ignore the first part of each message (due to RakNet convention)
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
+
+
+				cout << endl << "	****	New Packet from:" << packet->guid.g << endl;
+
 				cout << "Player List" << endl;
 				for (int i = 0; i < (int)m_players.size(); i++)
 					cout << i << " - " << m_players[i]->m_guid.g << endl;
-
-				cout << endl << "New Packet from:" << packet->guid.g << endl;
-
-
 
 				// Handle message here 
 				switch (packet->data[0])
@@ -253,6 +254,13 @@ void FaceOff::initLobby()
 						float new_spawn_y = 5;
 						float new_spawn_z = new_player_id * 10;
 
+
+						Utility::debug("new_player_id", new_player_id);
+						Utility::debug("new_spawn_x", new_spawn_x);
+						Utility::debug("new_spawn_y", new_spawn_y);
+						Utility::debug("new_spawn_z", new_spawn_z);
+
+
 						if (m_players.size() > 0)
 						{
 							// send new client notification to existing clients
@@ -265,12 +273,18 @@ void FaceOff::initLobby()
 							bsOut.Write(new_spawn_z);
 							for (int i = 0; i < m_players.size(); i++)
 							{
+								if (i == m_defaultPlayerID)
+									continue;
+
 								cout << " To: " << i << " - " << m_players[i]->m_guid.g << endl;
 								peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
 							}
 
 
 							bsOut.Reset();
+
+
+							Utility::debug("m_players size", m_players.size()); 
 
 							cout << "Sending each client's position to new client" << endl;
 
@@ -298,15 +312,18 @@ void FaceOff::initLobby()
 						// Add Player
 						m_players.push_back(new Player(new_player_id));
 						m_players[new_player_id]->m_guid = packet->guid;
+						/*
 						m_players[new_player_id]->m_position.x = new_spawn_x;
 						m_players[new_player_id]->m_position.y = new_spawn_y;
 						m_players[new_player_id]->m_position.z = new_spawn_z;
-
+						*/
+						m_players[new_player_id]->setPosition(new_spawn_x, new_spawn_y, new_spawn_z);
 
 						// Use a BitStream to write a custom user message
 						// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 
 						// write a WELCOME message and include the clients index + 1
+						bsOut.Reset();
 						bsOut.Write((RakNet::MessageID)SPAWN_POSITION);
 						bsOut.Write(new_player_id);
 						bsOut.Write(new_spawn_x);
@@ -318,6 +335,15 @@ void FaceOff::initLobby()
 
 						// reset the BitStream
 						bsOut.Reset();
+
+
+						cout << "Player List" << endl;
+						for (int i = 0; i < m_players.size(); i++)
+						{
+							cout << i << " - " << m_players[i]->m_id << " position " << m_players[i]->m_position.x << " "
+								<< m_players[i]->m_position.y << " "
+								<< m_players[i]->m_position.z << endl;
+						}
 
 						break;
 					}
@@ -363,13 +389,13 @@ void FaceOff::initLobby()
 						int my_player_id = 0;
 						float x, y, z;
 
-						m_defaultPlayerID = my_player_id;
-
 						bsIn.Read(my_player_id);
 						bsIn.Read(x);
 						bsIn.Read(y);
 						bsIn.Read(z);
 						printf("Server said I'm client number %d at %f, %f, %f\n", my_player_id, x, y, z);
+
+						m_defaultPlayerID = my_player_id;
 
 						if (my_player_id + 1 >= m_players.size())
 						{
@@ -378,10 +404,12 @@ void FaceOff::initLobby()
 
 						m_players[my_player_id] = new Player(my_player_id);
 						m_players[my_player_id]->setPosition(x, y, z);
-						server_address = packet->systemAddress;
+						server_address = packet->systemAddress;	
 
 						break;
 					}
+						
+
 					case NEW_CLIENT:
 					{
 						int other_player_id = 0;
@@ -391,7 +419,7 @@ void FaceOff::initLobby()
 						bsIn.Read(x);
 						bsIn.Read(y);
 						bsIn.Read(z);
-						printf("Received new client info for %d: %d,%d,%d", other_player_id, x, y, z);
+						printf("Received new client info for %d: %f, %f, %f", other_player_id, x, y, z);
 
 						if (other_player_id + 1 >= m_players.size())
 						{
@@ -401,8 +429,30 @@ void FaceOff::initLobby()
 						m_players[other_player_id] = new Player(other_player_id);
 						m_players[other_player_id]->setPosition(x, y, z);
 
+
+						cout << "Player List" << endl;
+						for (int i = 0; i < m_players.size(); i++)
+						{
+
+							if (m_players[i] == NULL)
+							{
+								cout << "player " << i << " is null" << endl;
+							}
+							else
+							{
+								cout << i << " - " << m_players[i]->m_id << " position " << m_players[i]->m_position.x << " "
+									<< m_players[i]->m_position.y << " "
+									<< m_players[i]->m_position.z << endl;
+							}
+						}
+
+
+
+
 						break;
-					}
+					}	
+						
+					
 						
 
 
@@ -420,10 +470,6 @@ void FaceOff::initLobby()
 	}
 
 
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		cout << "Player " << i << ", id is " << m_players[i]->m_id << endl;
-	}
 
 	if (m_isServer)
 	{
@@ -444,6 +490,25 @@ void FaceOff::initLobby()
 
 	}
 	
+	Utility::debug("m_defaultPlayerId", m_defaultPlayerID);
+
+	cout << "Player List" << endl;
+	for (int i = 0; i < m_players.size(); i++)
+	{
+
+		if (m_players[i] == NULL)
+		{
+			cout << "player " << i << " is null" << endl;
+		}
+		else
+		{
+			cout << i << " - " << m_players[i]->m_id << " position " << m_players[i]->m_position.x << " "
+				<< m_players[i]->m_position.y << " "
+				<< m_players[i]->m_position.z << endl;
+		}
+	}
+
+
 	printf("Done wiating in the Lobby.\n");
 
 }
@@ -459,11 +524,6 @@ void FaceOff::start()
 	cout << "Start" << endl;
 
 
-	if (m_players.size() == 0)
-	{
-		m_defaultPlayerID = 0;
-		m_players.push_back(new Player(m_defaultPlayerID));
-	}
 		
 
 	Uint32 startTime = SDL_GetTicks();
@@ -819,7 +879,7 @@ int main(int argc, char *argv[])
 	getline(cin, name);
 	Utility::debug("Your Name:", name);
 
-
+#if NETWORK_FLAG == 1
 	char str[512];
 	printf("(C) or (S)erver?\n");
 	gets(str);
@@ -832,14 +892,16 @@ int main(int argc, char *argv[])
 		Martin.m_isServer = false;
 	}
 	
-
-
-
 	Martin.initNetwork();
 	Martin.initLobby();
+#else
 
-
-
+	if (Martin.m_players.size() == 0)
+	{
+		Martin.m_defaultPlayerID = 0;
+		Martin.m_players.push_back(new Player(Martin.m_defaultPlayerID));
+	}
+#endif
 
 	Martin.start();
 

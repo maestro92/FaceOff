@@ -33,6 +33,10 @@ class Player : public WorldObject
 
 		void setId(int id);
 
+		void setPosition(glm::vec3 position);
+		void setPosition(float x, float y, float z);
+
+
 		void update(Pipeline& p);
 
 		void render(Pipeline& p);

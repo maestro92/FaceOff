@@ -15,11 +15,12 @@ class Camera
 		virtual void control(Pipeline& p);
 		Pipeline m_pipeline;
 		void setMouseIn(bool b);
+		void setEyePoint(glm::vec3 eye);
 
     protected:
         Camera();
         virtual ~Camera();
-        void setEyePoint(glm::vec3 eye);
+
 
 
         float RAD_TO_DEGREE;
