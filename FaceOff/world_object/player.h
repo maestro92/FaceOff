@@ -51,12 +51,19 @@ class Player : public WorldObject
 		vector<glm::vec3> m_weaponPositionOffsets;
 
 		void update(Pipeline& p);
+		void update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis);
+		void update(glm::vec3 wPos, float pitch, float yaw);
+
 
 		void render(Pipeline& p);
 		void renderWeapon(Pipeline& p);
 
 		void addWeapon(Weapon* weapon);
+		Weapon* getCurWeapon();
 
+
+		float getCameraPitch();
+		float getCameraYaw();
 		
 };
 

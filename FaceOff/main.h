@@ -165,6 +165,8 @@ class FaceOff
 
 		void renderGUI();
 
+		void networkThread();
+		void networkFunc();
 
 		void startCB();
 		void resetGameBoardCB();

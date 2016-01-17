@@ -58,13 +58,13 @@ void NetworkClient::run()
 				case ID_CONNECTION_REQUEST_ACCEPTED:
 					connected = true;
 					break;
-				case POSITION_UPDATE:
+				case PLAYER_UPDATE:
 					// report the server's new counter value
 					std::cout << "Server said we are now at " << int_message << std::endl;
 					break;
 				case YOUR_TURN:
 					printf("My Turn. Sending message.\n");
-					bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
+					bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 					break;
 				default:

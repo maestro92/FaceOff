@@ -227,6 +227,7 @@
     <ClCompile Include="utility\utility_gl_uni_loc.cpp" />
     <ClCompile Include="utility\utility_math.cpp" />
     <ClCompile Include="utility\utility_sdl.cpp" />
+    <ClCompile Include="utility\utility_network.cpp" />
     <ClCompile Include="world_object\weapon\assult_rifle.cpp" />
     <ClCompile Include="world_object\weapon\melee.cpp" />
     <ClCompile Include="world_object\weapon\pistol.cpp" />

@@ -146,7 +146,7 @@ void NetworkServer::run()
 				case ID_CONNECTION_LOST:
 					printf("A client lost the connection.\n");
 					break;
-				case POSITION_UPDATE:
+				case PLAYER_UPDATE:
 					// received new position from client       
 					bsIn.Read(client_id);
 					bsIn.Read(x);
@@ -161,7 +161,7 @@ void NetworkServer::run()
 					cout << "sending new position value to each client" << endl;
 
 					bsOut.Reset();
-					bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
+					bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
 					bsOut.Write(client_id);
 					bsOut.Write(x);
 					bsOut.Write(y);

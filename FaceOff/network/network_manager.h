@@ -33,7 +33,7 @@ using namespace std;
 enum GameMessages
 {
 	SPAWN_POSITION = ID_USER_PACKET_ENUM + 1,
-	POSITION_UPDATE = ID_USER_PACKET_ENUM + 2,
+	PLAYER_UPDATE = ID_USER_PACKET_ENUM + 2,
 	YOUR_TURN = ID_USER_PACKET_ENUM + 3,
 	NEW_CLIENT = ID_USER_PACKET_ENUM + 4,
 };
@@ -188,7 +188,7 @@ void server()
 				case ID_CONNECTION_LOST:
 					printf("A client lost the connection.\n");
 					break;
-				case POSITION_UPDATE:
+				case PLAYER_UPDATE:
 					// received new position from client       
 
 					printf("Client sent incre flag, incrementing counter\n");
@@ -197,7 +197,7 @@ void server()
 					cout << "Sending new counter value to each client" << endl;
 
 					bsOut.Reset();
-					bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
+					bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
 					bsOut.Write(counter);
 
 					for (int i = 0; i < (int)clients.size(); i++)
@@ -268,13 +268,13 @@ void client()
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 				connected = true;
 				break;
-			case POSITION_UPDATE:
+			case PLAYER_UPDATE:
 				// report the server's new counter value
 				std::cout << "Server said we are now at " << int_message << std::endl;
 				break;
 			case YOUR_TURN:
 				printf("My Turn. Sending message.\n");
-				bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
+				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				break;
 			default:

@@ -28,6 +28,13 @@
 #include <iomanip>
 
 
+#include "RakPeerInterface.h"
+#include <RakNetTypes.h>
+#include "MessageIdentifiers.h"
+#include <vector>
+#include "BitStream.h"
+#include "RakNetTypes.h"	// Message ID
+
 #include "SDL.h"
 #include "SDL_image.h"
 
@@ -258,6 +265,12 @@ class Utility
         static void setUniLoc(GLuint location, glm::mat3 value);
         static void setUniLoc(GLuint location, glm::mat4 value);
         static void setUniLocTranspose(GLuint location, glm::mat4 value);
+
+
+		/// Utility_network.cpp
+		static void readBitStream(RakNet::BitStream& bsIn, glm::vec3& v);
+		static void setBitStream(RakNet::BitStream& bsOut, glm::vec3& v);
+
 };
 
 
