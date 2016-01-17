@@ -17,11 +17,20 @@ class Camera
 		void setMouseIn(bool b);
 		void setEyePoint(glm::vec3 eye);
 
-    protected:
+		glm::vec3 getViewDirection();
+		glm::mat4 getViewMatrix();
+		glm::mat4 getModelMatrix();
+
+
+
         Camera();
         virtual ~Camera();
 
-
+		glm::vec3 m_xAxis;
+		glm::vec3 m_yAxis;
+		glm::vec3 m_zAxis;
+		glm::mat4 m_viewMatrix;
+		glm::mat4 m_modelMatrix;
 
         float RAD_TO_DEGREE;
         float DEGREE_TO_RAD;
@@ -30,8 +39,9 @@ class Camera
 
         /// expressed in degrees
         float m_pitch;
-        float m_yaw;
-
+        float m_yaw;	
+	
+	protected:
 		bool m_mouseIn;
 };
 

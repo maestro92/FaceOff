@@ -1,6 +1,6 @@
 #include "main.h"
 
-#define NETWORK_FLAG 1
+#define NETWORK_FLAG 0
 
 #include <stdio.h>
 #include <string.h>
@@ -60,6 +60,7 @@ FaceOff::FaceOff()
 	initModels();
 	initGUI();
 
+
 	m_defaultPlayerID = 0;
 	//Initialize clear color
 	glClearColor(0.0f, 0.5f, 0.0f, 1.0f);
@@ -97,7 +98,7 @@ void FaceOff::initObjects()
 	o_worldAxis.setScale(scale);
 	o_ground.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
 
-
+	o_gun.setScale(0.05);
 
 	o_skybox = SkyBox();
 
@@ -111,7 +112,7 @@ void FaceOff::initObjects()
 	// m_players.push_back(new Player(m_defaultPlayerID));
 	// p_defaultCamera = m_players[0]->m_camera;
 	
-
+	Weapon::initWeaponModels();
 }
 
 
@@ -181,22 +182,17 @@ void FaceOff::initLobby()
 
 	if (m_isServer)
 	{
-
+		/*
 		m_players.push_back(new Player(0));
+		m_players[0]->setPosition(0.0, 5.0, 0.0);
 		m_defaultPlayerID = 0;
+		*/
 
+		m_defaultPlayerID = -1;
 
 		while (waitingInLobby)
 		{
-//			printf("In the lobby waiting loop.\n");
-			/*
-			Uint8* state = SDL_GetKeyState(NULL);
-			if (state[SDLK_a])
-			{
-				Utility::debug("pressed A, ending waitingInLobby");
-				waitingInLobby = false;
-			}
-			*/
+//			printf("In the lobby waiting loop.\n");			
 			while (SDL_PollEvent(&event))
 			{
 				switch (event.type)
@@ -211,6 +207,7 @@ void FaceOff::initLobby()
 						}
 				}
 			}
+			
 
 			// iterate over each message received
 			for (packet = peer->Receive(); 
@@ -379,11 +376,8 @@ void FaceOff::initLobby()
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
-
-
 				switch (packet->data[0])
 				{
-					
 					case SPAWN_POSITION:
 					{
 						int my_player_id = 0;
@@ -445,17 +439,9 @@ void FaceOff::initLobby()
 									<< m_players[i]->m_position.z << endl;
 							}
 						}
-
-
-
-
 						break;
 					}	
 						
-					
-						
-
-
 					case LOBBY_WAIT_END:
 						waitingInLobby = false;
 						break;
@@ -522,13 +508,8 @@ void FaceOff::initLobby()
 void FaceOff::start()
 {
 	cout << "Start" << endl;
-
-
-		
-
 	Uint32 startTime = SDL_GetTicks();
-	Uint32 next_game_tick = 0;
-	Uint32 delay_time = 0;
+	m_nextGameTick = 0;
 
 	while (isRunning)
 	{
@@ -569,8 +550,11 @@ void FaceOff::start()
 					cout << "clicking left" << endl;
 					SDL_GetMouseState(&tmpx, &tmpy);
 					m_mouseState.m_leftButtonDown = true;
-					m_firstPersonCamera.setMouseIn(true);
-					m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
+
+					if (m_isServer)
+						m_firstPersonCamera.setMouseIn(true);
+					else
+						m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
 					break;
 
 				case SDL_BUTTON_RIGHT:
@@ -594,8 +578,10 @@ void FaceOff::start()
 					break;
 
 				case SDLK_z:
-					m_firstPersonCamera.setMouseIn(false);
-					m_players[m_defaultPlayerID]->m_camera->setMouseIn(false);
+					if (m_isServer)
+						m_firstPersonCamera.setMouseIn(false);
+					else
+						m_players[m_defaultPlayerID]->m_camera->setMouseIn(false);
 					break;
 				}
 				break;
@@ -615,7 +601,7 @@ void FaceOff::update()
 
 	m_mouseState.m_pos = glm::vec2(mx, Utility::SCREEN_HEIGHT - my);
 
-	/*
+#if NETWORK_FLAG == 1
 	if (m_isServer)
 	{
 		// iterate over each message received
@@ -627,14 +613,7 @@ void FaceOff::update()
 			// we ignore the first part of each message (due to RakNet convention)
 			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
-			cout << "Client List" << endl;
-			for (int i = 0; i < (int)clients.size(); i++)
-				cout << i << " - " << clients[i].guid.g << endl;
-
 			cout << endl << "New Packet from:" << packet->guid.g << endl;
-
-			int client_id = 0;
-			int x = 0, y = 0, z = 0;
 
 
 			// Handle message here 
@@ -649,121 +628,52 @@ void FaceOff::update()
 			case ID_REMOTE_NEW_INCOMING_CONNECTION:
 				printf("Another client has connected.\n");
 				break;
-
-
 			case ID_NEW_INCOMING_CONNECTION:
 				printf("A connection is incoming.\n");
-
-				client_id = (int)clients.size();
-
-				if ((int)clients.size() > 0)
-				{
-					// send new client notification to existing clients
-					cout << "Sending new spaw position to each client" << endl;
-					bsOut.Reset();
-					bsOut.Write((RakNet::MessageID)NEW_CLIENT);
-					bsOut.Write(client_id);
-					bsOut.Write(20);
-					bsOut.Write(20);
-					bsOut.Write(10);
-					for (int i = 0; i < (int)clients.size(); i++)
-					{
-						cout << " To: " << i << " - " << clients[i].guid.g << endl;
-						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(clients[i].guid), false);
-					}
-
-
-					bsOut.Reset();
-
-					cout << "Sending each client's position to new client" << endl;
-
-					for (int i = 0; i < (int)clients.size(); i++)
-					{
-						cout << "sending for " << i << endl;
-						bsOut.Reset();
-						bsOut.Write((RakNet::MessageID)NEW_CLIENT);
-						bsOut.Write(i);
-
-						bsOut.Write(clients[i].x);
-						bsOut.Write(clients[i].y);
-						bsOut.Write(clients[i].z);
-
-						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-					}
-				}
-				else
-				{
-					cout << "No clients yet, didn't send spawn pos to existing " << "nor each existing pos to new " << endl;
-				}
-
-
-
-				// Add Client
-				clients.push_back(Client(client_id));
-				clients[client_id].guid = packet->guid;
-				clients[client_id].x = 20;
-				clients[client_id].y = 20;
-				clients[client_id].z = 10;
-
-
-				// Use a BitStream to write a custom user message
-				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
-
-				// write a WELCOME message and include the clients index + 1
-				bsOut.Write((RakNet::MessageID)SPAWN_POSITION);
-				bsOut.Write(client_id);
-				bsOut.Write(20);
-				bsOut.Write(20);
-				bsOut.Write(10);
-
-				// send the message back to the same address the current packet came from (the new client)
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-
-				// reset the BitStream
-				bsOut.Reset();
-
 				break;
-
-
-
 			case ID_DISCONNECTION_NOTIFICATION:
 				printf("A client has disconnected.\n");
 				break;
 			case ID_CONNECTION_LOST:
 				printf("A client lost the connection.\n");
 				break;
+
 			case POSITION_UPDATE:
 				// received new position from client       
-				bsIn.Read(client_id);
-				bsIn.Read(x);
-				bsIn.Read(y);
-				bsIn.Read(z);
-				printf("Client %d sent new position %d,%d,%d\n", client_id, x, y, z);
-
-				clients[client_id].x = x;
-				clients[client_id].y = y;
-				clients[client_id].z = z;
-
-				cout << "sending new position value to each client" << endl;
-
-				bsOut.Reset();
-				bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
-				bsOut.Write(client_id);
-				bsOut.Write(x);
-				bsOut.Write(y);
-				bsOut.Write(z);
-
-				for (int i = 0; i < (int)clients.size(); i++)
 				{
-					if (client_id != i)
+					int player_id = 0;
+					float x = 0, y = 0, z = 0;
+
+					bsIn.Read(player_id);
+					bsIn.Read(x);
+					bsIn.Read(y);
+					bsIn.Read(z);
+					printf("Player %d sent new position %d,%d,%d\n", player_id, x, y, z);
+
+					m_players[player_id]->setPosition(x, y, z);
+
+					cout << "sending new position value to each client" << endl;
+
+					bsOut.Reset();
+					bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
+					bsOut.Write(player_id);
+					bsOut.Write(x);
+					bsOut.Write(y);
+					bsOut.Write(z);
+
+					for (int i = 0; i < m_players.size(); i++)
 					{
-						cout << "	To: " << " - " << clients[i].guid.g << endl;
-						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(clients[i].guid), false);
+						if (player_id != i)
+						{
+							cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
+							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+						}
+						else
+							cout << "	Not Sending to own client: " << player_id << endl;
 					}
-					else
-						cout << "	Not Sending to own client: " << client_id << endl;
+					break;
 				}
-				break;
+
 
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
@@ -774,37 +684,78 @@ void FaceOff::update()
 	}
 	else
 	{
+//		Utility::debug("m_nextGameTick", m_nextGameTick);
+//		Utility::debug("curTick", curTick);
+
+	//	m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES;
+
+	//	if (m_nextGameTick > SDL_GetTicks())
+		if (m_nextGameTick > DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES)
+		{
+			cout << "sending each server my location" << endl;
+			bsOut.Reset();
+			bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
+			bsOut.Write(m_defaultPlayerID);
+			bsOut.Write(m_players[m_defaultPlayerID]->m_position.x);
+			bsOut.Write(m_players[m_defaultPlayerID]->m_position.y);
+			bsOut.Write(m_players[m_defaultPlayerID]->m_position.z);
+
+			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
+
+			m_nextGameTick = 0;
+		}
+		m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES / 100;
+
+
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
+			cout << "here" << endl;
 
 			RakNet::BitStream bsIn(packet->data, packet->length, false);
 			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-			bsIn.Read(int_message);
 
 			switch (packet->data[0])
 			{
-			case NEW_CLIENT:
-				std::cout << "Server said I'm client number " << int_message << std::endl;
-				break;
-			case ID_CONNECTION_REQUEST_ACCEPTED:
-				connected = true;
-				break;
-			case POSITION_UPDATE:
-				// report the server's new counter value
-				std::cout << "Server said we are now at " << int_message << std::endl;
-				break;
-			case YOUR_TURN:
-				printf("My Turn. Sending message.\n");
-				bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				break;
-			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				break;
+				case NEW_CLIENT:
+					cout << "NEW_CLIENT message " << endl;
+					break;
+				
+				case ID_CONNECTION_REQUEST_ACCEPTED:
+					break;
+
+				case POSITION_UPDATE:
+				{
+					// report the server's new counter value
+
+					cout << "POSITION_UPDATE, updating other_player_id's position" << endl;
+					
+					int other_player_id = 0;
+					float x, y, z;
+
+					bsIn.Read(other_player_id);
+					bsIn.Read(x);
+					bsIn.Read(y);
+					bsIn.Read(z);
+
+					Utility::debug("other_player_id", other_player_id);
+
+					m_players[other_player_id]->setPosition(x, y, z);
+					break;
+				}
+
+
+				case YOUR_TURN:
+					printf("My Turn. Sending message.\n");
+					bsOut.Write((RakNet::MessageID)POSITION_UPDATE);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					break;
+				default:
+					printf("Message with identifier %i has arrived.\n", packet->data[0]);
+					break;
 			}
 		}
 	}
-	*/
+#endif
 }
 
 /*
@@ -824,27 +775,48 @@ void FaceOff::forwardRender()
 	m_pipeline.setMatrixMode(VIEW_MATRIX);
 	m_pipeline.loadIdentity();
 
-//	m_firstPersonCamera.control(m_pipeline);
-	
 
-	
-	m_players[m_defaultPlayerID]->update(m_pipeline);
+	if (m_isServer)
+	{
+		m_firstPersonCamera.control(m_pipeline);
+		o_skybox.setPosition(-m_firstPersonCamera.getEyePoint());
+	}
+	else
+	{
+		m_players[m_defaultPlayerID]->update(m_pipeline);
+		o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getEyePoint());
+	}
 
-//	o_skybox.setPosition(-m_firstPersonCamera.getEyePoint());
-	o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getEyePoint());
-	
 	o_skybox.render(m_pipeline);
 
 
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
 
 	// render the players
-	for (int i = 0; i < m_players.size(); i++)
+	if (m_isServer)
 	{
-		if (i != m_defaultPlayerID)
-			m_players[i]->render(m_pipeline);
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			 if (i != m_defaultPlayerID && m_players[i] != NULL)
+			{
+			//	Utility::debug("here rendering player", i);
+//				 Utility::debug("player", i);
+				 cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " <<  m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
+				 m_players[i]->render(m_pipeline);
+			}
+		}
 	}
-	
+	else
+	{
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			if (i != m_defaultPlayerID && m_players[i] != NULL)
+				m_players[i]->render(m_pipeline);
+			else
+				m_players[i]->renderWeapon(m_pipeline);
+		}
+	}
+
 
 
 	p_renderer = &RendererManager::r_fullVertexColor;

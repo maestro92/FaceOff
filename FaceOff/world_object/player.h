@@ -16,6 +16,13 @@
 #include "imported_model.h"
 
 
+#include "world_object/weapon/weapon.h"
+#include "world_object/weapon/assult_rifle.h"
+
+
+using namespace std;
+
+
 class Player : public WorldObject
 {
     public:
@@ -30,16 +37,27 @@ class Player : public WorldObject
         Camera* m_camera;
 		Model* m_model;
 		Renderer* m_renderer;
-
+		Renderer* r_gun;
+		
 		void setId(int id);
 
 		void setPosition(glm::vec3 position);
 		void setPosition(float x, float y, float z);
 
 
+//		vector<WorldObject*> m_weapons;
+		int m_curWeaponIndex;
+		vector<Weapon*> m_weapons;
+		vector<glm::vec3> m_weaponPositionOffsets;
+
 		void update(Pipeline& p);
 
 		void render(Pipeline& p);
+		void renderWeapon(Pipeline& p);
+
+		void addWeapon(Weapon* weapon);
+
+		
 };
 
 #endif // PLAYER_H_

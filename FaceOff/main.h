@@ -45,7 +45,6 @@
 
 
 
-
 #include "RakPeerInterface.h"
 #include <RakNetTypes.h>
 #include "MessageIdentifiers.h"
@@ -81,12 +80,14 @@ e for events
 
 class FaceOff
 {
-	private:
+	// private:
+	public:
 		RendererManager              m_rm;
 		Renderer*                    p_renderer;
 
 		/// GUI
 		long long m_runningTime;
+		Uint32 m_nextGameTick = 0;
 		MouseState m_mouseState;
 
 		Pipeline m_pipeline;
@@ -128,6 +129,9 @@ class FaceOff
 		GOLModelManager m_GOLModelManager;
 	public:
 
+		Weapon* weap;
+
+		Player p;
 
 		bool m_isServer;
 		RakNet::RakPeerInterface* peer;

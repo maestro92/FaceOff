@@ -37,3 +37,20 @@ void Camera::setMouseIn(bool b)
 	else
 		SDL_ShowCursor(SDL_ENABLE);
 }
+
+
+glm::mat4 Camera::getViewMatrix()
+{
+	return m_viewMatrix;
+}
+
+
+glm::mat4 Camera::getModelMatrix()
+{
+	return m_modelMatrix;
+}
+
+glm::vec3 Camera::getViewDirection()
+{
+	return -m_zAxis;
+}

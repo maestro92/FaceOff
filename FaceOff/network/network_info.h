@@ -11,7 +11,8 @@
 #define SERVER_PORT 60000
 
 // How often the server sends position updates to the client
-static const int DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES = 250;
+// static const int DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES = 250;
+static const int DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES = 1000;
 
 struct Client
 {

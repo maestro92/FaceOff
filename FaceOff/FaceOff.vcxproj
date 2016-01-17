@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;world_object;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;world_object\weapon;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;world_object;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -227,8 +227,12 @@
     <ClCompile Include="utility\utility_gl_uni_loc.cpp" />
     <ClCompile Include="utility\utility_math.cpp" />
     <ClCompile Include="utility\utility_sdl.cpp" />
+    <ClCompile Include="world_object\weapon\assult_rifle.cpp" />
+    <ClCompile Include="world_object\weapon\melee.cpp" />
+    <ClCompile Include="world_object\weapon\pistol.cpp" />
     <ClCompile Include="world_object\player.cpp" />
     <ClCompile Include="world_object\skybox.cpp" />
+    <ClCompile Include="world_object\weapon\weapon.cpp" />
     <ClCompile Include="world_object\world_object.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -419,8 +423,12 @@
     <ClInclude Include="shader.h" />
     <ClInclude Include="utility\utility.h" />
     <ClInclude Include="weapon.h" />
+    <ClInclude Include="world_object\weapon\assult_rifle.h" />
+    <ClInclude Include="world_object\weapon\melee.h" />
+    <ClInclude Include="world_object\weapon\pistol.h" />
     <ClInclude Include="world_object\player.h" />
     <ClInclude Include="world_object\skybox.h" />
+    <ClInclude Include="world_object\weapon\weapon.h" />
     <ClInclude Include="world_object\world_object.h" />
   </ItemGroup>
   <ItemGroup>

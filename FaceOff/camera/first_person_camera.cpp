@@ -75,6 +75,14 @@ void FirstPersonCamera::updatePipeline(Pipeline& p)
 	p.rotateY(m_yaw);
 	p.translate(m_eye.x, m_eye.y, m_eye.z);
 
+
+
+
+	m_viewMatrix = p.getViewMatrix();
+	m_xAxis = glm::vec3(m_viewMatrix[0][0], m_viewMatrix[1][0], m_viewMatrix[2][0]);
+	m_yAxis = glm::vec3(m_viewMatrix[0][1], m_viewMatrix[1][1], m_viewMatrix[2][1]);
+	m_zAxis = glm::vec3(m_viewMatrix[0][2], m_viewMatrix[1][2], m_viewMatrix[2][2]);
+
 	m_pipeline = p;
 }
 

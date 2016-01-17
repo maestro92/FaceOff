@@ -42,10 +42,13 @@ class ThirdPersonCamera : public Camera
     private:
         glm::vec3 m_target;
         float m_offsetDistance;
-        glm::vec3 m_xAxis;
+		/*
+		glm::vec3 m_xAxis;
         glm::vec3 m_yAxis;
         glm::vec3 m_zAxis;
-        glm::mat4 m_viewMatrix;
+		glm::mat4 m_viewMatrix;
+        */
+		
 
 
         /// spring system
