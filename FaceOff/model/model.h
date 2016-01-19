@@ -1,5 +1,5 @@
-#ifndef EG_MODELABS_H
-#define	EG_MODELABS_H
+#ifndef MODEL_H_
+#define	MODEL_H_
 
 
 #define NO_SDL_GLEXT

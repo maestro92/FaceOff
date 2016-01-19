@@ -212,7 +212,7 @@ void Renderer::printTables()
 
     for (int i=0; i<m_tables.size(); i++)
     {
-        Utility::debug("Table ", i);
+        utl::debug("Table ", i);
 
         for ( auto it = m_tables[i].begin(); it != m_tables[i].end(); ++it )
         {
@@ -220,7 +220,7 @@ void Renderer::printTables()
             cout << ":" << it->second << endl;
         }
 
-        Utility::debugLn(2);
+        utl::debugLn(2);
     }
 }
 
@@ -260,7 +260,7 @@ void Renderer::loadUniformLocations(Pipeline& p, int pass)
 
     if(pass != m_curShader)
     {
-        Utility::debug("######### pass Not Matching");
+        utl::debug("######### pass Not Matching");
     }
 
 	if(!p.matricesReady)

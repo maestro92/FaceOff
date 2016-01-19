@@ -28,17 +28,17 @@ TextEngine::TextEngine(string font, int fontPixelSize, int screenWidth, int scre
 
     FT_Library ft;
     if (FT_Init_FreeType(&ft))
-        Utility::debug("ERROR::FREETYPE: Could not init FreeType Library");
+        utl::debug("ERROR::FREETYPE: Could not init FreeType Library");
 
     FT_Face face;
     if (FT_New_Face(ft, "Assets/Fonts/arial.ttf", 0, &face))
-        Utility::debug("ERROR::FREETYPE: Failed to load font");
+        utl::debug("ERROR::FREETYPE: Failed to load font");
 
     m_initFontPixelSize = fontPixelSize;
     FT_Set_Pixel_Sizes(face, 0, fontPixelSize);
     if(FT_Load_Char(face, 'X', FT_LOAD_RENDER))
     {
-        Utility::debug("Could not load character 'X'\n");
+        utl::debug("Could not load character 'X'\n");
     }
 
     // Disable byte-alignment restriction
@@ -295,7 +295,7 @@ void TextEngine::lineWrappedDynamicAlgo(string text)
     }
 
     lineCosts[n][n] = 0;
-    Utility::debug<int>("lineCosts", lineCosts);
+    utl::debug<int>("lineCosts", lineCosts);
 
     vector<int> startPositions(n+1, 0);
 
@@ -329,7 +329,7 @@ void TextEngine::lineWrappedDynamicAlgo(string text)
         endPositions[i] = cur;
     }
 
-    Utility::debug<int>("endPositions", endPositions);
+    utl::debug<int>("endPositions", endPositions);
 
     for(int i = 0; i<words.size(); i++)
     {

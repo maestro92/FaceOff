@@ -22,6 +22,7 @@ class WorldObject
         glm::vec3 m_velocity;
         glm::vec3 m_scale;
         glm::mat4 m_rotation;
+		glm::mat4 m_modelRotation;
 
         inline void setScale(float s);
         inline void setScale(glm::vec3 scale);
@@ -32,6 +33,10 @@ class WorldObject
 
         inline void setVelocity(glm::vec3 vel);
         inline void setVelocity(float x, float y, float z);
+
+		inline glm::vec3 getPosition();
+		inline glm::vec3 getScale();
+		inline glm::mat4 getRotation();
 
         virtual inline void setRotation(glm::mat4 rot);
 
@@ -85,6 +90,22 @@ inline void WorldObject::setRotation(glm::mat4 rot)
                       rot[2][0], rot[2][1], rot[2][2], 0.0,
                       0.0,       0.0,       0.0,       1.0};
     m_rotation = glm::make_mat4(temp);
+}
+
+
+inline glm::vec3 WorldObject::getPosition()
+{
+	return m_position;
+}
+
+inline glm::vec3 WorldObject::getScale()
+{
+	return m_scale;
+}
+
+inline glm::mat4 WorldObject::getRotation()
+{
+	return m_rotation;
 }
 
 #endif

@@ -65,3 +65,10 @@ Other things I've learned
 Curiously recurring template pattern for the Weapon Class
 I Needed a static variable for each derived class
 
+
+- What's the difference between calling detach() and not calling detach()
+
+http://stackoverflow.com/questions/22803600/when-should-i-use-stdthreaddetach
+
+
+- difference between std::tread and boost threads?

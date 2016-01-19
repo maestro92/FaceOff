@@ -20,10 +20,10 @@ ThirdPersonCamera::ThirdPersonCamera()
     glm::vec2 hori = glm::vec2(eye_p.x, eye_p.z);
 
     m_pitch = atan( (eye_p.y - target_p.y) / glm::length(hori) );
-    m_pitch *= RAD_TO_DEGREE;
+    m_pitch *= utl::RADIAN_TO_DEGREE;
 
     m_yaw = atan( -eye_p.x / eye_p.z );
-    m_yaw *= RAD_TO_DEGREE;
+	m_yaw *= utl::RADIAN_TO_DEGREE;
 
     lookAt(eye_p, target_p, up_p);
     m_idealViewMatrix = m_viewMatrix;
@@ -67,12 +67,12 @@ void ThirdPersonCamera::lookAt(glm::vec3& eye, glm::vec3& target, glm::vec3& up)
 
 float ThirdPersonCamera::computeHoriDist()
 {
-    return m_offsetDistance * cos(m_pitch * DEGREE_TO_RAD);
+	return m_offsetDistance * cos(m_pitch * utl::DEGREE_TO_RADIAN);
 }
 
 float ThirdPersonCamera::computeVertDist()
 {
-    return m_offsetDistance * sin(m_pitch * DEGREE_TO_RAD);
+    return m_offsetDistance * sin(m_pitch * utl::DEGREE_TO_RADIAN);
 }
 
 glm::vec3 ThirdPersonCamera::computeEyePos()
@@ -83,7 +83,7 @@ glm::vec3 ThirdPersonCamera::computeEyePos()
 
     pos.y = m_target.y + vertDist;
 
-	float rad = m_yaw * DEGREE_TO_RAD;
+	float rad = m_yaw * utl::DEGREE_TO_RADIAN;
     pos.x = m_target.x - horiDist * sin(rad);
     pos.z = m_target.z - horiDist * cos(rad);
 

@@ -1,7 +1,7 @@
 #include "utility.h"
 
 
-void Utility::initGLEW()
+void utl::initGLEW()
 {
     // initialize Glew
     GLenum err = glewInit();
@@ -12,7 +12,7 @@ void Utility::initGLEW()
 }
 
 
-GLuint Utility::createFBO()
+GLuint utl::createFBO()
 {
     GLuint FBO;
     glGenFramebuffers(1, &FBO);
@@ -20,14 +20,14 @@ GLuint Utility::createFBO()
 }
 
 
-void Utility::bindFBO(GLuint target)
+void utl::bindFBO(GLuint target)
 {
 
 
 }
 
 
-void Utility::errorCheckFBO()
+void utl::errorCheckFBO()
 {
     int i=glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if(i!=GL_FRAMEBUFFER_COMPLETE)
@@ -41,13 +41,13 @@ void Utility::errorCheckFBO()
 
 
 
-GLuint Utility::loadTexture(string filename)
+GLuint utl::loadTexture(string filename)
 {
     return loadTexture(filename, GL_LINEAR);
 }
 
 
-GLuint Utility::loadTexture(string filename, GLuint filteringParam)
+GLuint utl::loadTexture(string filename, GLuint filteringParam)
 {
 #if DEBUG_FLAG == 1
     cout << "Loading Texture " << filename << endl;
@@ -79,7 +79,7 @@ GLuint Utility::loadTexture(string filename, GLuint filteringParam)
 
 
 // http://stackoverflow.com/questions/8767166/passing-a-2d-array-to-a-c-function
-GLuint Utility::loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam)
+GLuint utl::loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam)
 {
     int h = data.size();
     int w = data[0].size();
@@ -129,7 +129,7 @@ GLuint Utility::loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteri
 }
 
 
-GLuint Utility::createNewTexture(int w, int h)
+GLuint utl::createNewTexture(int w, int h)
 {
     GLuint textureID;
     glGenTextures(1,&textureID);
@@ -145,7 +145,7 @@ GLuint Utility::createNewTexture(int w, int h)
 
 
 
-TextureDataBuffer Utility::createEmptyBuffer(int w, int h)
+TextureDataBuffer utl::createEmptyBuffer(int w, int h)
 {
     TextureDataBuffer dataBuffer;
     dataBuffer.resize(h);
@@ -160,7 +160,7 @@ TextureDataBuffer Utility::createEmptyBuffer(int w, int h)
 
 
 
-GLuint Utility::createNewDepthTexture(int w, int h)
+GLuint utl::createNewDepthTexture(int w, int h)
 {
     GLuint textureID;
 
@@ -180,7 +180,7 @@ GLuint Utility::createNewDepthTexture(int w, int h)
 
 
 
-void Utility::setTextureParameters(int w, int h, int internal_format, int format)
+void utl::setTextureParameters(int w, int h, int internal_format, int format)
 {
    	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, w, h, 0, format, GL_FLOAT, NULL);
 
@@ -194,7 +194,7 @@ void Utility::setTextureParameters(int w, int h, int internal_format, int format
 
 
 
-GLuint Utility::createNewCubemapTexture()
+GLuint utl::createNewCubemapTexture()
 {
     /// need to pass in the pictures in the following order
     /// left, right, top, bottom, near, far
@@ -216,7 +216,7 @@ GLuint Utility::createNewCubemapTexture()
 
 
 
-GLuint Utility::loadCubemapTexture(string* filenames)
+GLuint utl::loadCubemapTexture(string* filenames)
 {
     /// need to pass in the pictures in the following order
     /// left, right, top, bottom, near, far
@@ -242,7 +242,7 @@ GLuint Utility::loadCubemapTexture(string* filenames)
 
 
 
-void Utility::setCubemapTextureParameters()
+void utl::setCubemapTextureParameters()
 {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -253,7 +253,7 @@ void Utility::setCubemapTextureParameters()
 
 
 
-void Utility::errorCheck()
+void utl::errorCheck()
 {
     int i;
     i = glGetError();
@@ -265,7 +265,7 @@ void Utility::errorCheck()
 
 
 
-FrameBufferObject Utility::createFrameBufferObject(int width, int height)
+FrameBufferObject utl::createFrameBufferObject(int width, int height)
 {
     FrameBufferObject pod;
 
@@ -288,7 +288,7 @@ FrameBufferObject Utility::createFrameBufferObject(int width, int height)
 }
 
 
-DoubleFrameBufferObject Utility::createDoubleFrameBufferObject(int width, int height)
+DoubleFrameBufferObject utl::createDoubleFrameBufferObject(int width, int height)
 {
     DoubleFrameBufferObject fbObj;
     fbObj.ping = createFrameBufferObject(width, height);
@@ -297,12 +297,12 @@ DoubleFrameBufferObject Utility::createDoubleFrameBufferObject(int width, int he
 }
 
 
-void Utility::setupFrameBuffer()
+void utl::setupFrameBuffer()
 {
     setupFrameBuffer(0);
 }
 
-void Utility::setupFrameBuffer(GLuint target)
+void utl::setupFrameBuffer(GLuint target)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, target);
     glClearColor(0.0,0.0,0.0,1.0);

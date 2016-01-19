@@ -23,7 +23,7 @@ void GUIManager::init(int screenWidth, int screenHeight,
 
     m_paletteRect.set(paletteX, paletteY, paletteWidth, paletteHeight);
 
-    TextureDataBuffer pixelData = Utility::createEmptyBuffer(paletteWidth, paletteHeight);
+    TextureDataBuffer pixelData = utl::createEmptyBuffer(paletteWidth, paletteHeight);
 
     for(int y = 0; y < paletteHeight; y++)
     {
@@ -63,7 +63,7 @@ void GUIManager::init(int screenWidth, int screenHeight,
             }
         }
     }
-    m_GUIPaletteTexture = Utility::loadTexture(pixelData, GL_NEAREST);
+    m_GUIPaletteTexture = utl::loadTexture(pixelData, GL_NEAREST);
 
 
     Shader* s;
@@ -185,7 +185,7 @@ int GUIManager::getGOLModelListBoxIndex()
         return m_GOLModelListBox->getIndex();
     else
     {
-        Utility::debug("In GUIManager::getGOLListBoxIndex(), m_GOLModelListBox is NULL");
+        utl::debug("In GUIManager::getGOLListBoxIndex(), m_GOLModelListBox is NULL");
         exit(1);
     }
 }

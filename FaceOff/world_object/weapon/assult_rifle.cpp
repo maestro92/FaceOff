@@ -13,7 +13,7 @@ AssultRifle::AssultRifle(string gunType)
 
 	for (auto it = Weapon::s_weaponModels.begin(); it != Weapon::s_weaponModels.end(); it++)
 	{
-		Utility::debugLn(it->first);
+		utl::debugLn(it->first);
 	}
 
 

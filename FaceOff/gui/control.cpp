@@ -115,7 +115,7 @@ bool Control::update(MouseState & state)
     int x = state.m_pos.x;
     int y = m_screenHeight - state.m_pos.y;
 
-  //  Utility::debug("x, y", glm::vec2(x, y));
+  //  utl::debug("x, y", glm::vec2(x, y));
     m_isInside = false;
 
     if( (x >= m_rect.x && x <= m_rect.x + m_rect.w) &&
@@ -133,7 +133,7 @@ bool Control::update(MouseState & state, unsigned int& groupFlag)
     if(flag)
     {
         groupFlag = groupFlag | ( 1 << m_id);
-     //   Utility::debug()
+     //   utl::debug()
      //   std::bitset<32> x(groupFlag);
      //   cout << x << endl;
     }
@@ -167,7 +167,7 @@ void Control::setTextLayout(bool setLineBreakFlag, int xLayoutFlag, int yLayoutF
             break;
 
         default:
-            Utility::debug("Error in Control::setTextLayout xLayoutFlag");
+            utl::debug("Error in Control::setTextLayout xLayoutFlag");
             exit(1);
             break;
     }
@@ -189,7 +189,7 @@ void Control::setTextLayout(bool setLineBreakFlag, int xLayoutFlag, int yLayoutF
             break;
 
         default:
-            Utility::debug("Error in Control::setTextLayout yLayoutFlag");
+            utl::debug("Error in Control::setTextLayout yLayoutFlag");
             exit(1);
             break;
     }
@@ -218,7 +218,7 @@ void Control::setRectTextLayout(LineBreakInfo& lineBreakInfo, float& startingX, 
             break;
 
         default:
-            Utility::debug("Error in Control::setTextLayout xLayoutFlag");
+            utl::debug("Error in Control::setTextLayout xLayoutFlag");
             exit(1);
             break;
     }
@@ -241,7 +241,7 @@ void Control::setRectTextLayout(LineBreakInfo& lineBreakInfo, float& startingX, 
             break;
 
         default:
-            Utility::debug("Error in Control::setTextLayout yLayoutFlag");
+            utl::debug("Error in Control::setTextLayout yLayoutFlag");
             exit(1);
             break;
     }
@@ -298,7 +298,7 @@ void Control::customRender()
 
 void Control::emptyOnClick()
 {
-    Utility::debug("In " + m_text + " the empty OnClick Func");
+    utl::debug("In " + m_text + " the empty OnClick Func");
 }
 
 

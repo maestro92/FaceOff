@@ -230,11 +230,13 @@
     <ClCompile Include="utility\utility_network.cpp" />
     <ClCompile Include="world_object\weapon\assult_rifle.cpp" />
     <ClCompile Include="world_object\weapon\melee.cpp" />
+    <ClCompile Include="world_object\particle.cpp" />
     <ClCompile Include="world_object\weapon\pistol.cpp" />
     <ClCompile Include="world_object\player.cpp" />
     <ClCompile Include="world_object\skybox.cpp" />
     <ClCompile Include="world_object\weapon\weapon.cpp" />
     <ClCompile Include="world_object\world_object.cpp" />
+    <ClCompile Include="world_object\world_sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera\camera.h" />
@@ -426,11 +428,13 @@
     <ClInclude Include="weapon.h" />
     <ClInclude Include="world_object\weapon\assult_rifle.h" />
     <ClInclude Include="world_object\weapon\melee.h" />
+    <ClInclude Include="world_object\particle.h" />
     <ClInclude Include="world_object\weapon\pistol.h" />
     <ClInclude Include="world_object\player.h" />
     <ClInclude Include="world_object\skybox.h" />
     <ClInclude Include="world_object\weapon\weapon.h" />
     <ClInclude Include="world_object\world_object.h" />
+    <ClInclude Include="world_object\world_sphere.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="libraries\RakNet\CMakeLists.txt" />

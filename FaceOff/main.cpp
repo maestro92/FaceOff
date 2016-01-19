@@ -1,6 +1,9 @@
 #include "main.h"
 
-#define NETWORK_FLAG 1
+#define NETWORK_FLAG 0
+
+#define SERVER_NETWORK_THREAD 0
+#define CLIENT_NETWORK_THREAD 0
 
 #include <stdio.h>
 #include <string.h>
@@ -20,7 +23,6 @@
 /*
 RakNet Ogre tutorial
 http://classes.cs.kent.edu/gpg/trac/wiki/cmarshall
-
 */
 
 
@@ -51,6 +53,7 @@ SDL_Event event;
 static float runningTime = 0.0f;
 
 
+
 FaceOff::FaceOff()
 {
 	isRunning = true;
@@ -67,7 +70,7 @@ FaceOff::FaceOff()
 
 	m_pipeline.setMatrixMode(PROJECTION_MATRIX);
 	m_pipeline.loadIdentity();
-	m_pipeline.perspective(45, Utility::SCREEN_WIDTH / Utility::SCREEN_HEIGHT, 0.5, 5000.0);
+	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, 0.5, 5000.0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glEnable(GL_DEPTH_TEST);
@@ -86,7 +89,7 @@ FaceOff::~FaceOff()
 void FaceOff::initRenderers()
 {
 	RendererManager::init();
-	tempTexture = Utility::loadTexture("Assets/Images/tank1B.png");
+	tempTexture = utl::loadTexture("Assets/Images/tank1B.png");
 }
 
 
@@ -103,13 +106,16 @@ void FaceOff::initObjects()
 
 	o_gun.setScale(0.05);
 
+
+	o_sampleBullet.setScale(1.0, 5.0, 1.0);
+
 	o_skybox = SkyBox();
 
-	int x = Utility::SCREEN_WIDTH - 200;
+	int x = utl::SCREEN_WIDTH - 200;
 	int y = 0;
 	int w = 200;
-	int h = Utility::SCREEN_HEIGHT;
-//	m_gui.init(Utility::SCREEN_WIDTH, Utility::SCREEN_HEIGHT, x, y, w, h);
+	int h = utl::SCREEN_HEIGHT;
+//	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, x, y, w, h);
 	
 
 	Weapon::initWeaponModels();
@@ -125,6 +131,8 @@ void FaceOff::initModels()
 	m_groundModel = QuadModel(-scale, scale, -scale, scale);
 
 	m_gunModel.load("./Assets/models/weapons/Ak_47/Ak-47.obj");
+
+	m_bulletModel.load("./Assets/models/cylinder_base.obj");
 }
 
 
@@ -195,7 +203,7 @@ void FaceOff::initLobby()
 						switch (event.key.keysym.sym)
 						{
 							case SDLK_a:
-								Utility::debug("pressed A, ending waitingInLobby");
+								utl::debug("pressed A, ending waitingInLobby");
 								waitingInLobby = false;
 								break;
 						}
@@ -228,9 +236,11 @@ void FaceOff::initLobby()
 					case ID_REMOTE_DISCONNECTION_NOTIFICATION:
 						printf("Another client has disconnected.\n");
 						break;
+
 					case ID_REMOTE_CONNECTION_LOST:
 						printf("Another client has lost the connection.\n");
 						break;
+
 					case ID_REMOTE_NEW_INCOMING_CONNECTION:
 						printf("Another client has connected.\n");
 						break;
@@ -246,10 +256,10 @@ void FaceOff::initLobby()
 						float new_spawn_z = new_player_id * 30;
 
 
-						Utility::debug("new_player_id", new_player_id);
-						Utility::debug("new_spawn_x", new_spawn_x);
-						Utility::debug("new_spawn_y", new_spawn_y);
-						Utility::debug("new_spawn_z", new_spawn_z);
+						utl::debug("new_player_id", new_player_id);
+						utl::debug("new_spawn_x", new_spawn_x);
+						utl::debug("new_spawn_y", new_spawn_y);
+						utl::debug("new_spawn_z", new_spawn_z);
 
 
 						if (m_players.size() > 0)
@@ -275,7 +285,7 @@ void FaceOff::initLobby()
 							bsOut.Reset();
 
 
-							Utility::debug("m_players size", m_players.size()); 
+							utl::debug("m_players size", m_players.size()); 
 
 							cout << "Sending each client's position to new client" << endl;
 
@@ -303,11 +313,6 @@ void FaceOff::initLobby()
 						// Add Player
 						m_players.push_back(new Player(new_player_id));
 						m_players[new_player_id]->m_guid = packet->guid;
-						/*
-						m_players[new_player_id]->m_position.x = new_spawn_x;
-						m_players[new_player_id]->m_position.y = new_spawn_y;
-						m_players[new_player_id]->m_position.z = new_spawn_z;
-						*/
 						m_players[new_player_id]->setPosition(new_spawn_x, new_spawn_y, new_spawn_z);
 
 						// Use a BitStream to write a custom user message
@@ -470,7 +475,7 @@ void FaceOff::initLobby()
 
 	}
 	
-	Utility::debug("m_defaultPlayerId", m_defaultPlayerID);
+	utl::debug("m_defaultPlayerId", m_defaultPlayerID);
 
 	cout << "Player List" << endl;
 	for (int i = 0; i < m_players.size(); i++)
@@ -497,13 +502,205 @@ void FaceOff::initLobby()
 
 
 
+void FaceOff::serverNetworkThread()
+{
+	while (isRunning)
+	{
+		// iterate over each message received
+		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+		{
+			// we first initalized bitStream with the packet->data
+			RakNet::BitStream bsIn(packet->data, packet->length, false);
 
+			// we ignore the first part of each message (due to RakNet convention)
+			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+			cout << endl << "New Packet from:" << packet->guid.g << endl;
+
+
+			// Handle message here 
+			switch (packet->data[0])
+			{
+			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+				printf("Another client has disconnected.\n");
+				break;
+			case ID_REMOTE_CONNECTION_LOST:
+				printf("Another client has lost the connection.\n");
+				break;
+			case ID_REMOTE_NEW_INCOMING_CONNECTION:
+				printf("Another client has connected.\n");
+				break;
+			case ID_NEW_INCOMING_CONNECTION:
+				printf("A connection is incoming.\n");
+				break;
+			case ID_DISCONNECTION_NOTIFICATION:
+				printf("A client has disconnected.\n");
+				break;
+			case ID_CONNECTION_LOST:
+				printf("A client lost the connection.\n");
+				break;
+
+			case PLAYER_UPDATE:   
+			{
+				// received new position from client    
+				int player_id = 0;
+				glm::vec3 pos, wPos;
+				float camPitch, camYaw;
+
+				bsIn.Read(player_id);
+				bsIn.ReadVector(pos.x, pos.y, pos.z);
+				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+				bsIn.Read(camPitch);
+				bsIn.Read(camYaw);
+
+
+				printf("Player %d sent new position ", player_id);			utl::debug("", pos);
+				printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
+				printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
+				printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
+
+
+				m_players[player_id]->setPosition(pos);
+				m_players[player_id]->update(wPos, camPitch, camYaw);
+
+				cout << "sending new position value to each client" << endl;
+
+
+				bsOut.Reset();
+				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+				bsOut.Write(player_id);
+				bsOut.WriteVector(pos.x, pos.y, pos.z);
+				bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
+				bsOut.Write(camPitch);
+				bsOut.Write(camYaw);
+
+				for (int i = 0; i < m_players.size(); i++)
+				{
+					if (player_id != i)
+					{
+						cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
+						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+					}
+					else
+						cout << "	Not Sending to own client: " << player_id << endl;
+				}
+				break;
+			}
+
+
+			default:
+				printf("Message with identifier %i has arrived.\n", packet->data[0]);
+				break;
+			}
+			bsOut.Reset();
+		}
+	}
+}
+
+
+void FaceOff::clientNetworkThread()
+{
+	while (isRunning)
+	{
+		//	m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES;
+		//	if (m_nextGameTick > SDL_GetTicks())
+		if (m_nextGameTick > DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES)
+		{
+			cout << "sending each server my location" << endl;
+			bsOut.Reset();
+			bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+			bsOut.Write(m_defaultPlayerID);
+
+
+			utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_position);
+			utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->getCurWeapon()->m_position);
+			bsOut.Write(m_players[m_defaultPlayerID]->getCameraPitch());
+			bsOut.Write(m_players[m_defaultPlayerID]->getCameraYaw());
+
+
+			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
+
+			m_nextGameTick = 0;
+		}
+//		m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES / 10;
+		m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES;
+
+
+
+		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+		{
+			cout << "here" << endl;
+
+			RakNet::BitStream bsIn(packet->data, packet->length, false);
+			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+			switch (packet->data[0])
+			{
+			case NEW_CLIENT:
+				cout << "NEW_CLIENT message " << endl;
+				break;
+
+			case ID_CONNECTION_REQUEST_ACCEPTED:
+				break;
+
+			case PLAYER_UPDATE:
+			{
+				// report the server's new counter value
+
+				cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
+
+				int other_player_id = 0;
+				int player_id = 0;
+				glm::vec3 pos, wPos;
+				float camPitch, camYaw;
+
+				bsIn.Read(other_player_id);
+				bsIn.ReadVector(pos.x, pos.y, pos.z);
+				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+				bsIn.Read(camPitch);
+				bsIn.Read(camYaw);
+
+				utl::debug("other_player_id", other_player_id);
+
+				m_players[other_player_id]->setPosition(pos);
+				m_players[other_player_id]->update(wPos, camPitch, camYaw);
+				break;
+			}
+
+
+			case YOUR_TURN:
+				printf("My Turn. Sending message.\n");
+				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				break;
+			default:
+				printf("Message with identifier %i has arrived.\n", packet->data[0]);
+				break;
+			}
+		}
+	}
+}
 
 void FaceOff::start()
 {
 	cout << "Start" << endl;
 	Uint32 startTime = SDL_GetTicks();
 	m_nextGameTick = 0;
+
+#if SERVER_NETWORK_THREAD == 1
+	if (m_isServer)
+	{
+		m_networkThread = thread(&FaceOff::serverNetworkThread, this);
+	}
+#endif	
+
+#if CLIENT_NETWORK_THREAD == 1
+	if (!m_isServer)
+	{
+		m_networkThread = thread(&FaceOff::clientNetworkThread, this);
+	}
+#endif
+	
 
 	while (isRunning)
 	{
@@ -548,8 +745,20 @@ void FaceOff::start()
 					if (m_isServer)
 						m_firstPersonCamera.setMouseIn(true);
 					else
+					{
+						if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
+						{
+							m_players[m_defaultPlayerID]->fireWeapon(m_bullets);
+						}
+						
 						m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
+						
+					}
+					
+					
+					
 					break;
+
 
 				case SDL_BUTTON_RIGHT:
 					cout << "clicking right" << endl;
@@ -588,21 +797,21 @@ void FaceOff::start()
 }
 
 
-void FaceOff::networkThread()
-{
-	while (isRunning)
-	{
-		networkFunc();
-	}
-}
 
-
-void FaceOff::networkFunc()
+void FaceOff::update()
 {
+	int mx, my;
+	SDL_GetMouseState(&mx, &my);
+
+	m_mouseState.m_pos = glm::vec2(mx, utl::SCREEN_HEIGHT - my);
+
 
 #if NETWORK_FLAG == 1
+
+#if	SERVER_NETWORK_THREAD != 1
 	if (m_isServer)
 	{
+		
 		// iterate over each message received
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
@@ -640,75 +849,52 @@ void FaceOff::networkFunc()
 			case PLAYER_UPDATE:
 				// received new position from client       
 			{
-								  int player_id = 0;
-								  glm::vec3 pos, wPos;
-								  float camPitch, camYaw;
+				int player_id = 0;
+				glm::vec3 pos, wPos;
+				float camPitch, camYaw;
 
-								  bsIn.Read(player_id);
-								  bsIn.ReadVector(pos.x, pos.y, pos.z);
-								  bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-								  bsIn.Read(camPitch);
-								  bsIn.Read(camYaw);
+				bsIn.Read(player_id);
+				bsIn.ReadVector(pos.x, pos.y, pos.z);
+				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+				bsIn.Read(camPitch);
+				bsIn.Read(camYaw);
 
-								  //					bsIn.Read(m_players[player_id]->m_position);
+							
+				printf("Player %d sent new position ", player_id);			utl::debug("", pos);
+				printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
+				printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
+				printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
+							
 
-								  /*
-								  Utility::readBitStream(bsIn, pos);
-								  Utility::readBitStream(bsIn, xAxis);
-								  Utility::readBitStream(bsIn, yAxis);
-								  Utility::readBitStream(bsIn, zAxis);
-
-								  printf("Player %d sent new position ", player_id);	Utility::debug("", pos);
-								  printf("Player %d sent new x_axis ", player_id);	Utility::debug("", xAxis);
-								  printf("Player %d sent new y_axis ", player_id);	Utility::debug("", yAxis);
-								  printf("Player %d sent new z_axis ", player_id);	Utility::debug("", zAxis);
-								  */
-
-
-								  printf("Player %d sent new position ", player_id);			Utility::debug("", pos);
-								  printf("Player %d sent new weapon position ", player_id);	Utility::debug("", wPos);
-								  printf("Player %d sent new pitch ", player_id);				Utility::debug("", camPitch);
-								  printf("Player %d sent new yaw ", player_id);				Utility::debug("", camYaw);
-
-
-								  m_players[player_id]->setPosition(pos);
-								  m_players[player_id]->update(wPos, camPitch, camYaw);
+				m_players[player_id]->setPosition(pos);
+				m_players[player_id]->update(wPos, camPitch, camYaw);
 
 
 
 
-								  cout << "sending new position value to each client" << endl;
+				cout << "sending new position value to each client" << endl;
 
 
-								  bsOut.Reset();
-								  bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-								  bsOut.Write(player_id);
-								  bsOut.WriteVector(pos.x, pos.y, pos.z);
-								  bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
-								  bsOut.Write(camPitch);
-								  bsOut.Write(camYaw);
+				bsOut.Reset();
+				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+				bsOut.Write(player_id);
+				bsOut.WriteVector(pos.x, pos.y, pos.z);
+				bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
+				bsOut.Write(camPitch);
+				bsOut.Write(camYaw);
 
-								  /*
-								  bsOut.Reset();
-								  bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-								  bsOut.Write(player_id);
-								  Utility::setBitStream(bsOut, pos);
-								  Utility::setBitStream(bsOut, xAxis);
-								  Utility::setBitStream(bsOut, yAxis);
-								  Utility::setBitStream(bsOut, zAxis);
-								  */
 
-								  for (int i = 0; i < m_players.size(); i++)
-								  {
-									  if (player_id != i)
-									  {
-										  cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
-										  peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-									  }
-									  else
-										  cout << "	Not Sending to own client: " << player_id << endl;
-								  }
-								  break;
+				for (int i = 0; i < m_players.size(); i++)
+				{
+					if (player_id != i)
+					{
+						cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
+						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+					}
+					else
+						cout << "	Not Sending to own client: " << player_id << endl;
+				}
+				break;
 			}
 
 
@@ -719,10 +905,14 @@ void FaceOff::networkFunc()
 			bsOut.Reset();
 		}
 	}
-	else
+#endif
+
+#if CLIENT_NETWORK_THREAD != 1
+	if (!m_isServer)
 	{
-		//		Utility::debug("m_nextGameTick", m_nextGameTick);
-		//		Utility::debug("curTick", curTick);
+		
+		//		utl::debug("m_nextGameTick", m_nextGameTick);
+		//		utl::debug("curTick", curTick);
 
 		//	m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES;
 
@@ -735,18 +925,11 @@ void FaceOff::networkFunc()
 			bsOut.Write(m_defaultPlayerID);
 
 
-			Utility::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_position);
-			Utility::setBitStream(bsOut, m_players[m_defaultPlayerID]->getCurWeapon()->m_position);
+			utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_position);
+			utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->getCurWeapon()->m_position);
 			bsOut.Write(m_players[m_defaultPlayerID]->getCameraPitch());
 			bsOut.Write(m_players[m_defaultPlayerID]->getCameraYaw());
 
-
-			/*
-			bsOut.Write(m_players[m_defaultPlayerID]->m_position);
-			Utility::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_camera->m_xAxis);
-			Utility::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_camera->m_yAxis);
-			Utility::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_camera->m_zAxis);
-			*/
 
 			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
 
@@ -773,63 +956,26 @@ void FaceOff::networkFunc()
 
 			case PLAYER_UPDATE:
 			{
-								  // report the server's new counter value
+				// report the server's new counter value
 
-								  cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
+				cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
 
-								  /*
-								  int other_player_id = 0;
-								  float x, y, z;
-								  float xAxis_x = 0, xAxis_y = 0, xAxis_z = 0;
-								  float yAxis_x = 0, yAxis_y = 0, yAxis_z = 0;
-								  float zAxis_x = 0, zAxis_y = 0, zAxis_z = 0;
+				int other_player_id = 0;
+				int player_id = 0;
+				glm::vec3 pos, wPos;
+				float camPitch, camYaw;
 
-								  bsIn.Read(other_player_id);
-								  bsIn.Read(x);
-								  bsIn.Read(y);
-								  bsIn.Read(z);
+				bsIn.Read(other_player_id);
+				bsIn.ReadVector(pos.x, pos.y, pos.z);
+				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+				bsIn.Read(camPitch);
+				bsIn.Read(camYaw);
 
+				utl::debug("other_player_id", other_player_id);
 
-								  // xAxis
-								  bsIn.Read(xAxis_x);
-								  bsIn.Read(xAxis_y);
-								  bsIn.Read(xAxis_z);
-
-								  // yAxis
-								  bsIn.Read(yAxis_x);
-								  bsIn.Read(yAxis_y);
-								  bsIn.Read(yAxis_z);
-
-								  // zAxis
-								  bsIn.Read(zAxis_x);
-								  bsIn.Read(zAxis_y);
-								  bsIn.Read(zAxis_z);
-
-								  Utility::debug("other_player_id", other_player_id);
-
-								  m_players[other_player_id]->setPosition(x, y, z);
-								  m_players[other_player_id]->update(glm::vec3(xAxis_x, xAxis_y, xAxis_z),
-								  glm::vec3(yAxis_x, yAxis_y, yAxis_z),
-								  glm::vec3(zAxis_x, zAxis_y, zAxis_z));
-								  */
-
-
-								  int other_player_id = 0;
-								  int player_id = 0;
-								  glm::vec3 pos, wPos;
-								  float camPitch, camYaw;
-
-								  bsIn.Read(other_player_id);
-								  bsIn.ReadVector(pos.x, pos.y, pos.z);
-								  bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-								  bsIn.Read(camPitch);
-								  bsIn.Read(camYaw);
-
-								  Utility::debug("other_player_id", other_player_id);
-
-								  m_players[other_player_id]->setPosition(pos);
-								  m_players[other_player_id]->update(wPos, camPitch, camYaw);
-								  break;
+				m_players[other_player_id]->setPosition(pos);
+				m_players[other_player_id]->update(wPos, camPitch, camYaw);
+				break;
 			}
 
 
@@ -843,24 +989,11 @@ void FaceOff::networkFunc()
 				break;
 			}
 		}
+		
 	}
 #endif
-}
+#endif
 
-
-
-
-
-void FaceOff::update()
-{
-	int mx, my;
-	SDL_GetMouseState(&mx, &my);
-
-	m_mouseState.m_pos = glm::vec2(mx, Utility::SCREEN_HEIGHT - my);
-
-
-	networkFunc();
-	// networkThread();
 }
 
 /*
@@ -876,7 +1009,7 @@ void FaceOff::forwardRender()
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	
+
 	m_pipeline.setMatrixMode(VIEW_MATRIX);
 	m_pipeline.loadIdentity();
 
@@ -891,7 +1024,7 @@ void FaceOff::forwardRender()
 		m_players[m_defaultPlayerID]->update(m_pipeline);
 		o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getEyePoint());
 	}
-	
+
 
 
 
@@ -905,10 +1038,10 @@ void FaceOff::forwardRender()
 	{
 		for (int i = 0; i < m_players.size(); i++)
 		{
-			 if (i != m_defaultPlayerID && m_players[i] != NULL)
+			if (i != m_defaultPlayerID && m_players[i] != NULL)
 			{
-				 cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " <<  m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
-				 m_players[i]->render(m_pipeline);
+				cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
+				m_players[i]->render(m_pipeline);
 			}
 		}
 	}
@@ -936,13 +1069,41 @@ void FaceOff::forwardRender()
 	p_renderer->setData("u_color", glm::vec3(0.5, 0.0, 0.0));
 	p_model = &m_groundModel;
 	o_ground.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+	p_renderer->setData("u_color", glm::vec3(1.0, 1.0, 0.0));
+	p_model = &m_bulletModel;
 	
+	// *********************
+	// need to make this constant time removal
+	auto it = m_bullets.begin();
+	while (it != m_bullets.end())
+	{
+		(*it).update();
+		if ((*it).isAlive())
+		{
+			(*it).renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+			it++;
+		}
+		else
+		{
+			auto temp = it;
+			temp++;
+			m_bullets.erase(it);
+			it = temp;
+		}
+	}
+
+//	o_sampleBullet.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+
 	p_renderer = &RendererManager::r_fullTexture;
 	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);
 	p_model = &m_gunModel;
-	o_gun.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+//	o_gun.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+	
 
-	//   renderGUI();
+
+		//   renderGUI();
 }
 
 
@@ -950,16 +1111,17 @@ void FaceOff::forwardRender()
 
 int main(int argc, char *argv[])
 {
-	Utility::initSDL(Utility::SCREEN_WIDTH, Utility::SCREEN_HEIGHT, pDisplaySurface);
-	Utility::initGLEW();
+	utl::initSDL(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, pDisplaySurface);
+	utl::initGLEW();
 
 	FaceOff Martin;
 
 	string name = "";
 	printf("Enter Your Name?\n");
 	getline(cin, name);
-	Utility::debug("Your Name:", name);
+	utl::debug("Your Name:", name);
 
+	
 #if NETWORK_FLAG == 1
 	char str[512];
 	printf("(C) or (S)erver?\n");
@@ -991,7 +1153,15 @@ int main(int argc, char *argv[])
 
 	Martin.start();
 
-	Utility::exitSDL(pDisplaySurface);
+
+	if (Martin.m_isServer && SERVER_NETWORK_THREAD == 1)
+		Martin.m_networkThread.join();
+
+	if (!Martin.m_isServer && CLIENT_NETWORK_THREAD == 1)
+		Martin.m_networkThread.join();
+
+	
+	utl::exitSDL(pDisplaySurface);
 	//normal termination
 	cout << "Terminating normally." << endl;
 	return EXIT_SUCCESS;
@@ -1018,7 +1188,7 @@ void FaceOff::GOLModelListBoxCB()
 void FaceOff::initGUI()
 {
 
-	Control::init("", 25, Utility::SCREEN_WIDTH, Utility::SCREEN_HEIGHT);
+	Control::init("", 25, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 
 	int X_OFFSET = 600;
 
@@ -1087,7 +1257,7 @@ void FaceOff::renderGUI()
 	/// http://sdl.beuc.net/sdl.wiki/SDL_Average_FPS_Measurement
 	unsigned int getTicks = SDL_GetTicks();
 
-	//    string final_str = "(" + Utility::floatToStr(m_mouseState.m_pos.x) + ", " + Utility::floatToStr(m_mouseState.m_pos.y) + ")";
+	//    string final_str = "(" + utl::floatToStr(m_mouseState.m_pos.x) + ", " + utl::floatToStr(m_mouseState.m_pos.y) + ")";
 
 	m_gui.updateAndRender(m_mouseState);
 

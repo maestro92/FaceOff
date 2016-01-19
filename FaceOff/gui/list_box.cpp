@@ -127,7 +127,7 @@ void ListBox::setItemsTextLayout(int xLayoutFlag, int yLayoutFlag)
                 break;
 
             default:
-                Utility::debug("Error in Control::setTextLayout xLayoutFlag");
+                utl::debug("Error in Control::setTextLayout xLayoutFlag");
                 exit(1);
                 break;
         }
@@ -144,7 +144,7 @@ void ListBox::setItemsTextLayout(int xLayoutFlag, int yLayoutFlag)
                 break;
 
             default:
-                Utility::debug("Error in Control::setTextLayout yLayoutFlag");
+                utl::debug("Error in Control::setTextLayout yLayoutFlag");
                 exit(1);
                 break;
         }

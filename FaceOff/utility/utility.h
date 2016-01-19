@@ -138,145 +138,160 @@ struct DoubleFrameBufferObject
     }
 };
 
-
-class Utility
+template<class T>
+struct LinkedListNode
 {
-    public:
-        Utility();
-        ~Utility();
+	T data;
+	LinkedListNode<T>* next;
 
-		static const int SCREEN_WIDTH = 800;
-		static const int SCREEN_HEIGHT = 600;
+	LinkedListNode(const T& d) : data(d), next() 
+	{}
 
-
-
-        template<typename T>
-            static vector<T> reserveVector(int size);
-
-        /// Utility_Math.cpp
-        static float DEGREE_TO_RADIAN;
-        static float RADIAN_TO_DEGREE;
-        static string floatToStr(float value);
-        static float randFloat(float min=0, float max=1);
-        template<class T>
-        static inline T sqr(const T &x)
-        {
-            return x*x;
-        }
+	
+};
 
 
-        /// Utility_SDL.cpp
-        static void initSDL(int w, int h, SDL_Surface* & m_displaySurface);
-        static void exitSDL(SDL_Surface* & m_displaySurface);
-        static SDL_Surface* loadRawImage(string filename);
-        static SDL_Surface* loadSDLImage(string filename);
+template<class T>
+class LinkedList
+{
+	LinkedListNode* head;
 
-
-        /// Utility_GL.cpp
-        static void initGLEW();
-        static void errorCheck();
-        static GLuint createFBO();
-        static void errorCheckFBO();
-        static void bindFBO(GLuint target);
-
-        static TextureDataBuffer createEmptyBuffer(int w, int h);
-
-        static GLuint loadTexture(string filename);
-        static GLuint loadTexture(string filename, GLuint filteringParam);
-        static GLuint loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam);
-
-        static GLuint createNewTexture(int w, int h);
-        static GLuint createNew3DTexture(int w, int h, int d);
-
-
-        static GLuint createNewDepthTexture(int w, int h);
-        static GLuint createNewCubemapTexture();
-
-        static GLuint loadCubemapTexture(string* filenames);
-        static void setTextureParameters(int w, int h, int internal_format, int format);
-        static void setCubemapTextureParameters();
-        static FrameBufferObject createFrameBufferObject(int width, int height);
-        static DoubleFrameBufferObject createDoubleFrameBufferObject(int width, int height);
-
-        static void setupFrameBuffer();
-        static void setupFrameBuffer(GLuint target);
-
-
-        /// utility_assimp.cpp
-        static glm::vec3 toGlmVec(aiVector3D& v);
-        static glm::vec3 toGlmVec(aiColor3D& c);
-        static glm::vec3 toGlmVec(aiColor4D& c);
-
-
-        static glm::mat4 toGlmMat(aiMatrix3x3 m);
-        static glm::mat4 toGlmMat(aiMatrix4x4& m);
-        static glm::mat4 toGlmMat(const aiMatrix4x4& m);
-
-        static glm::vec2 scaleGlmVec(const glm::vec2 v, float s);
-        static glm::vec2 scaleGlmVec(const glm::vec2 v, float s1, float s2);
-        static glm::vec3 scaleGlmVec(const glm::vec3 v, float s);
-        static glm::vec3 scaleGlmVec(const glm::vec3 v, float s1, float s2, float s3);
-
-
-        /// Utility_Debug.cpp
-        static void debugLn(int l=1);
-        static void debugLn(string s, int l=1);
-        static void debugLn(string s, bool b, int l=1);
-        static void debugLn(string s, char c, int l=1);
-        static void debugLn(string s, string s2, int l=1);
-        static void debugLn(string s, unsigned int i, int l=1);
-        static void debugLn(string s, int i, int l=1);
-        static void debugLn(string s, float f, int l=1);
-        static void debugLn(string s, glm::vec2 v, int l=1);
-        static void debugLn(string s, glm::vec3 v, int l=1);
-        static void debugLn(string s, glm::vec4 v, int l=1);
-        static void debugLn(string s, glm::mat3 m, int l=1);
-        static void debugLn(string s, glm::mat4 m, int l=1);
-
-
-        static void debug(string s);
-        static void debug(string s, bool b);
-        static void debug(string s, char c);
-        static void debug(string s, string s2);
-        static void debug(string s, unsigned int i);
-        static void debug(string s, int i);
-        static void debug(string s, float f);
-        static void debug(string s, glm::vec2 v);
-        static void debug(string s, glm::vec3 v);
-        static void debug(string s, glm::vec4 v);
-        static void debug(string s, glm::mat3 m);
-        static void debug(string s, glm::mat4 m);
-        template <class T>
-        static void debug(string s, vector<T> v);
-
-        template <class T>
-        static void debug(string s, vector< vector<T> > v);
-
-        static void checkGLError();
-
-
-        /// Utility_UniLoc.cpp
-        static void setUniLoc(GLuint location, int value);
-        static void setUniLoc(GLuint location, float value);
-        static void setUniLoc(GLuint location, float x, float y);
-        static void setUniLoc(GLuint location, glm::vec2 value);
-        static void setUniLoc(GLuint location, glm::vec3 value);
-        static void setUniLoc(GLuint location, glm::vec4 value);
-        static void setUniLoc(GLuint location, glm::mat3 value);
-        static void setUniLoc(GLuint location, glm::mat4 value);
-        static void setUniLocTranspose(GLuint location, glm::mat4 value);
-
-
-		/// Utility_network.cpp
-		static void readBitStream(RakNet::BitStream& bsIn, glm::vec3& v);
-		static void setBitStream(RakNet::BitStream& bsOut, glm::vec3& v);
 
 };
 
 
+namespace utl
+{
+	const int SCREEN_WIDTH = 800;
+	const int SCREEN_HEIGHT = 600;
+
+	const float DEGREE_TO_RADIAN = 0.0174;    /// pi/180
+	const float RADIAN_TO_DEGREE = 57.32;     /// 180/pi
+
+	template<typename T>
+	vector<T> reserveVector(int size);
+
+	/// utl_Math.cpp
+	string floatToStr(float value);
+	float randFloat(float min = 0, float max = 1);
+	template<class T>
+	inline T sqr(const T &x)
+	{
+		return x*x;
+	}
+
+
+	/// utl_SDL.cpp
+	void initSDL(int w, int h, SDL_Surface* & m_displaySurface);
+	void exitSDL(SDL_Surface* & m_displaySurface);
+	SDL_Surface* loadRawImage(string filename);
+	SDL_Surface* loadSDLImage(string filename);
+
+
+	/// utl_GL.cpp
+	void initGLEW();
+	void errorCheck();
+	GLuint createFBO();
+	void errorCheckFBO();
+	void bindFBO(GLuint target);
+
+	TextureDataBuffer createEmptyBuffer(int w, int h);
+
+	GLuint loadTexture(string filename);
+	GLuint loadTexture(string filename, GLuint filteringParam);
+	GLuint loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam);
+
+	GLuint createNewTexture(int w, int h);
+	GLuint createNew3DTexture(int w, int h, int d);
+
+
+	GLuint createNewDepthTexture(int w, int h);
+	GLuint createNewCubemapTexture();
+
+	GLuint loadCubemapTexture(string* filenames);
+	void setTextureParameters(int w, int h, int internal_format, int format);
+	void setCubemapTextureParameters();
+	FrameBufferObject createFrameBufferObject(int width, int height);
+	DoubleFrameBufferObject createDoubleFrameBufferObject(int width, int height);
+
+	void setupFrameBuffer();
+	void setupFrameBuffer(GLuint target);
+
+
+	/// utl_assimp.cpp
+	glm::vec3 toGlmVec(aiVector3D& v);
+	glm::vec3 toGlmVec(aiColor3D& c);
+	glm::vec3 toGlmVec(aiColor4D& c);
+
+
+	glm::mat4 toGlmMat(aiMatrix3x3 m);
+	glm::mat4 toGlmMat(aiMatrix4x4& m);
+	glm::mat4 toGlmMat(const aiMatrix4x4& m);
+
+	/*
+	glm::vec2 scaleGlmVec(const glm::vec2 v, float s);
+	glm::vec2 scaleGlmVec(const glm::vec2 v, float s1, float s2);
+	glm::vec3 scaleGlmVec(const glm::vec3 v, float s);
+	glm::vec3 scaleGlmVec(const glm::vec3 v, float s1, float s2, float s3);
+	*/
+
+	/// utl_Debug.cpp
+	void debugLn(int l = 1);
+	void debugLn(string s, int l = 1);
+	void debugLn(string s, bool b, int l = 1);
+	void debugLn(string s, char c, int l = 1);
+	void debugLn(string s, string s2, int l = 1);
+	void debugLn(string s, unsigned int i, int l = 1);
+	void debugLn(string s, int i, int l = 1);
+	void debugLn(string s, float f, int l = 1);
+	void debugLn(string s, glm::vec2 v, int l = 1);
+	void debugLn(string s, glm::vec3 v, int l = 1);
+	void debugLn(string s, glm::vec4 v, int l = 1);
+	void debugLn(string s, glm::mat3 m, int l = 1);
+	void debugLn(string s, glm::mat4 m, int l = 1);
+
+
+	void debug(string s);
+	void debug(string s, bool b);
+	void debug(string s, char c);
+	void debug(string s, string s2);
+	void debug(string s, unsigned int i);
+	void debug(string s, int i);
+	void debug(string s, float f);
+	void debug(string s, glm::vec2 v);
+	void debug(string s, glm::vec3 v);
+	void debug(string s, glm::vec4 v);
+	void debug(string s, glm::mat3 m);
+	void debug(string s, glm::mat4 m);
+	template <class T>
+	void debug(string s, vector<T> v);
+
+	template <class T>
+	void debug(string s, vector< vector<T> > v);
+
+	void checkGLError();
+
+
+	/// utl_UniLoc.cpp
+	void setUniLoc(GLuint location, int value);
+	void setUniLoc(GLuint location, float value);
+	void setUniLoc(GLuint location, float x, float y);
+	void setUniLoc(GLuint location, glm::vec2 value);
+	void setUniLoc(GLuint location, glm::vec3 value);
+	void setUniLoc(GLuint location, glm::vec4 value);
+	void setUniLoc(GLuint location, glm::mat3 value);
+	void setUniLoc(GLuint location, glm::mat4 value);
+	void setUniLocTranspose(GLuint location, glm::mat4 value);
+
+
+	/// utl_network.cpp
+	void readBitStream(RakNet::BitStream& bsIn, glm::vec3& v);
+	void setBitStream(RakNet::BitStream& bsOut, glm::vec3& v);
+
+};
 
 template<typename T>
-vector<T> Utility::reserveVector(int size)
+vector<T> utl::reserveVector(int size)
 {
     vector<T> v;
     v.reserve(size);
@@ -284,7 +299,7 @@ vector<T> Utility::reserveVector(int size)
 }
 
 template <class T>
-void Utility::debug(string s, vector<T> v)
+void utl::debug(string s, vector<T> v)
 {
     cout << s << endl;
     for(int i = 0; i < v.size(); i++)
@@ -293,7 +308,7 @@ void Utility::debug(string s, vector<T> v)
 }
 
 template <class T>
-void Utility::debug(string s, vector< vector<T> > v)
+void utl::debug(string s, vector< vector<T> > v)
 {
     cout << s << endl;
     for(int y = 0; y < v.size(); y++)

@@ -3,7 +3,7 @@
 
 
 
-void Utility::initSDL(int w, int h, SDL_Surface* & m_displaySurface)
+void utl::initSDL(int w, int h, SDL_Surface* & m_displaySurface)
 {
     SDL_Init(SDL_INIT_EVERYTHING);
     m_displaySurface = SDL_SetVideoMode(w, h, 32, SDL_SWSURFACE|SDL_OPENGL);
@@ -16,7 +16,7 @@ void Utility::initSDL(int w, int h, SDL_Surface* & m_displaySurface)
     }
 }
 
-void Utility::exitSDL(SDL_Surface* & m_displaySurface)
+void utl::exitSDL(SDL_Surface* & m_displaySurface)
 {
     SDL_FreeSurface(m_displaySurface);
     SDL_Quit();
@@ -24,7 +24,7 @@ void Utility::exitSDL(SDL_Surface* & m_displaySurface)
 
 
 
-SDL_Surface* Utility::loadRawImage(string filename)
+SDL_Surface* utl::loadRawImage(string filename)
 {
     std::ifstream in(filename.c_str());
 
@@ -52,7 +52,7 @@ SDL_Surface* Utility::loadRawImage(string filename)
 }
 
 
-SDL_Surface* Utility::loadSDLImage(string filename)
+SDL_Surface* utl::loadSDLImage(string filename)
 {
     SDL_Surface* img = loadRawImage(filename);
 

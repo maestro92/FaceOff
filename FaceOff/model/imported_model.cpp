@@ -51,17 +51,17 @@ bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename
     bool b = initMaterials2(scene, filename);
 
 	/*
-    Utility::debug("m_meshes size", m_meshes.size());
-    Utility::debug("m_textures size", m_textures.size());
+    utl::debug("m_meshes size", m_meshes.size());
+    utl::debug("m_textures size", m_textures.size());
     
 	for(int i=0; i<m_meshes.size(); i++)
     {
-        Utility::debug("mesh texture Index", m_meshes[i].m_textureIndex);
+        utl::debug("mesh texture Index", m_meshes[i].m_textureIndex);
     }
 
     for(int i=0; i<m_textures.size(); i++)
     {
-        Utility::debug("textures Id", m_textures[i].m_id);
+        utl::debug("textures Id", m_textures[i].m_id);
     }
 	*/
 
@@ -86,14 +86,14 @@ void ImportedModel::initMesh(unsigned int index, const aiMesh* m, const aiScene*
         VertexData v;
 
         /// position
-        v.m_position = Utility::toGlmVec(m->mVertices[i]);
+        v.m_position = utl::toGlmVec(m->mVertices[i]);
 
         /// normal
-        v.m_normal = Utility::toGlmVec(m->mNormals[i]);
+        v.m_normal = utl::toGlmVec(m->mNormals[i]);
 
         /// colors
         if(m->mColors[0])
-            v.m_color = Utility::toGlmVec(m->mColors[0][i]);
+            v.m_color = utl::toGlmVec(m->mColors[0][i]);
         else
             v.m_color = defaultColor;
 
@@ -145,16 +145,16 @@ bool ImportedModel::initMaterials2(const aiScene* pScene, const std::string& Fil
 
         bool success = false;
 		/*
-        Utility::debug("i", i);
-        Utility::debug("aiTextureType_NONE", pMaterial->GetTextureCount(aiTextureType_NONE));
+        utl::debug("i", i);
+        utl::debug("aiTextureType_NONE", pMaterial->GetTextureCount(aiTextureType_NONE));
 
-        Utility::debug("aiTextureType_DIFFUSE", pMaterial->GetTextureCount(aiTextureType_DIFFUSE));
-        Utility::debug("aiTextureType_SPECULAR", pMaterial->GetTextureCount(aiTextureType_SPECULAR));
-        Utility::debug("aiTextureType_AMBIENT", pMaterial->GetTextureCount(aiTextureType_AMBIENT));
-        Utility::debug("aiTextureType_EMISSIVE", pMaterial->GetTextureCount(aiTextureType_EMISSIVE));
-        Utility::debug("aiTextureType_NORMALS", pMaterial->GetTextureCount(aiTextureType_NORMALS));
-        Utility::debug("aiTextureType_DIFFUSE", pMaterial->GetTextureCount(aiTextureType_DIFFUSE));
-        Utility::debug("aiTextureType_UNKNOWN", pMaterial->GetTextureCount(aiTextureType_UNKNOWN));
+        utl::debug("aiTextureType_DIFFUSE", pMaterial->GetTextureCount(aiTextureType_DIFFUSE));
+        utl::debug("aiTextureType_SPECULAR", pMaterial->GetTextureCount(aiTextureType_SPECULAR));
+        utl::debug("aiTextureType_AMBIENT", pMaterial->GetTextureCount(aiTextureType_AMBIENT));
+        utl::debug("aiTextureType_EMISSIVE", pMaterial->GetTextureCount(aiTextureType_EMISSIVE));
+        utl::debug("aiTextureType_NORMALS", pMaterial->GetTextureCount(aiTextureType_NORMALS));
+        utl::debug("aiTextureType_DIFFUSE", pMaterial->GetTextureCount(aiTextureType_DIFFUSE));
+        utl::debug("aiTextureType_UNKNOWN", pMaterial->GetTextureCount(aiTextureType_UNKNOWN));
 		*/
 
         /// we're only intersted in teh diffuse texture
@@ -166,18 +166,18 @@ bool ImportedModel::initMaterials2(const aiScene* pScene, const std::string& Fil
             {
                 fullPath = Dir + "/" + path.data;
 
-         //       Utility::debug("fullPath", fullPath);
-                m_textures[i].m_id = Utility::loadTexture(fullPath);
+         //       utl::debug("fullPath", fullPath);
+                m_textures[i].m_id = utl::loadTexture(fullPath);
 
                 success = true;
             }
         }
 
-   //     Utility::debug(fullPath, m_textures[i].m_id);
+   //     utl::debug(fullPath, m_textures[i].m_id);
         if (!success)
-            m_textures[i].m_id = Utility::loadTexture("Assets/models/weapons/Ak_47/ak-47.jpg");
-//            m_textures[i].m_id = Utility::loadTexture("Assets/models/weapons/M9/Tex_0009_1.jpg");
-    //    Utility::debugLn("final: " + fullPath, m_textures[i].m_id);
+            m_textures[i].m_id = utl::loadTexture("Assets/models/weapons/Ak_47/ak-47.jpg");
+//            m_textures[i].m_id = utl::loadTexture("Assets/models/weapons/M9/Tex_0009_1.jpg");
+    //    utl::debugLn("final: " + fullPath, m_textures[i].m_id);
     }
 
     return Ret;
@@ -210,8 +210,8 @@ bool ImportedModel::initMaterials(const aiScene* pScene, const std::string& File
 
         bool success = false;
 /*
-        Utility::debug("i", i);
-        Utility::debug("aiTextureType_DIFFUSE", pMaterial->GetTextureCount(aiTextureType_DIFFUSE));
+        utl::debug("i", i);
+        utl::debug("aiTextureType_DIFFUSE", pMaterial->GetTextureCount(aiTextureType_DIFFUSE));
 */
         /// we're only intersted in teh diffuse texture
         if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0)
@@ -222,19 +222,19 @@ bool ImportedModel::initMaterials(const aiScene* pScene, const std::string& File
             {
                 fullPath = Dir + "/" + path.data;
 
-           //     Utility::debug("fullPath", fullPath);
-                m_textures[i-1].m_id = Utility::loadTexture(fullPath);
+           //     utl::debug("fullPath", fullPath);
+                m_textures[i-1].m_id = utl::loadTexture(fullPath);
 
                 success = true;
             }
         }
 
-        // Utility::debug(fullPath, m_textures[i-1].m_id);
+        // utl::debug(fullPath, m_textures[i-1].m_id);
         // Load a white texture in case the model does not include its own texture
         if (!success)
-            m_textures[i].m_id = Utility::loadTexture("Assets/Images/bricks.jpg");
+            m_textures[i].m_id = utl::loadTexture("Assets/Images/bricks.jpg");
 
-        // Utility::debugLn("final: " + fullPath, m_textures[i-1].m_id);
+        // utl::debugLn("final: " + fullPath, m_textures[i-1].m_id);
 
 
     }

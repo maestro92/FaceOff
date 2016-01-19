@@ -187,7 +187,7 @@ glm::mat4 Pipeline::getProjectionMatrix()
 glm::mat4 Pipeline::getModelViewProjectionMatrix()
 {
 	if(!matricesReady)
-        m_modelViewProjectionMatrix = getProjectionMatrix()*getViewMatrix()*getModelMatrix();
+		m_modelViewProjectionMatrix = getProjectionMatrix() * getViewMatrix()* getModelMatrix();
 
     return m_modelViewProjectionMatrix;
 }

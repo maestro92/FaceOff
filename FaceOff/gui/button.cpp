@@ -53,7 +53,7 @@ bool Button::update(MouseState & state, unsigned int& groupFlag)
         if(flag == true)
         {
             groupFlag = groupFlag | ( 1 << m_id);
-         //   Utility::debug()
+         //   utl::debug()
       //      std::bitset<32> x(groupFlag);
        //     cout << x << endl;
         }
@@ -74,7 +74,7 @@ bool Button::update(MouseState & state, unsigned int& groupFlag)
     if(flag)
     {
         groupFlag = groupFlag | ( 1 << m_id);
-     //   Utility::debug()
+     //   utl::debug()
         std::bitset<32> x(groupFlag);
     //    cout << x << endl;
     }

@@ -40,10 +40,14 @@
 #include "quad_model.h"
 #include "xyz_axis_model.h"
 #include "world_object.h"
+#include "particle.h"
 #include "skybox.h"
 #define FRAME_VALUES 10
+#include <list>
 
-
+#include <iostream>
+#include <chrono>
+#include <thread>
 
 #include "RakPeerInterface.h"
 #include <RakNetTypes.h>
@@ -75,6 +79,15 @@ v for volatile
 s for static
 i for indexes and iterators
 e for events
+*/
+
+
+
+/*
+1. Health Bar and Name
+2. Bullets
+3. Collision Detection
+4. [1] [2] for guns
 */
 
 
@@ -111,12 +124,15 @@ class FaceOff
 		QuadModel       m_groundModel;
 		XYZAxisModel    m_xyzModel;
 		ImportedModel   m_gunModel;
+		ImportedModel	m_bulletModel;
 
 		WorldObject     o_worldAxis;
 		WorldObject     o_ground;
 		WorldObject     o_gun;
 		SkyBox          o_skybox;
+		WorldObject		o_sampleBullet;
 
+		list<Particle> m_bullets;
 
 //		Camera* p_defaultCamera;
 		int m_defaultPlayerID;
@@ -165,12 +181,17 @@ class FaceOff
 
 		void renderGUI();
 
-		void networkThread();
-		void networkFunc();
-
 		void startCB();
 		void resetGameBoardCB();
 		void GOLModelListBoxCB();
+
+
+
+		thread m_networkThread;
+
+		void clientNetworkThread();
+		void serverNetworkThread();
+
 };
 
 #endif

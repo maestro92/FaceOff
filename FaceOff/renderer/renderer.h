@@ -55,7 +55,7 @@ struct DataPair
 
     void printError()
     {
-        Utility::debug(name, "unmatched type");
+        utl::debug(name, "unmatched type");
         exit(1);
     }
     virtual void setValue(bool value){printError();};
@@ -88,12 +88,12 @@ struct BoolDataPair : public DataPair
 
     virtual void setUniLoc()
     {
-        Utility::setUniLoc(uniLoc, value);
+        utl::setUniLoc(uniLoc, value);
     }
 
     virtual void printValue()
     {
-        Utility::debug("value is", value);
+        utl::debug("value is", value);
     }
 };
 
@@ -116,12 +116,12 @@ struct IntDataPair : public DataPair
 
     virtual void setUniLoc()
     {
-        Utility::setUniLoc(uniLoc, value);
+        utl::setUniLoc(uniLoc, value);
     }
 
     virtual void printValue()
     {
-        Utility::debug("value is", value);
+        utl::debug("value is", value);
     }
 };
 
@@ -144,12 +144,12 @@ struct FloatDataPair : public DataPair
 
     void setUniLoc()
     {
-        Utility::setUniLoc(uniLoc, value);
+        utl::setUniLoc(uniLoc, value);
     }
 
     void printValue()
     {
-        Utility::debug("value is", value);
+        utl::debug("value is", value);
     }
 };
 
@@ -172,12 +172,12 @@ struct Vec2DataPair : public DataPair
 
     void setUniLoc()
     {
-        Utility::setUniLoc(uniLoc, value);
+        utl::setUniLoc(uniLoc, value);
     }
 
     void printValue()
     {
-        Utility::debug("value is", value);
+        utl::debug("value is", value);
     }
 };
 
@@ -200,12 +200,12 @@ struct Vec3DataPair : public DataPair
 
     void setUniLoc()
     {
-        Utility::setUniLoc(uniLoc, value);
+        utl::setUniLoc(uniLoc, value);
     }
 
     void printValue()
     {
-        Utility::debug("value is", value);
+        utl::debug("value is", value);
     }
 };
 
@@ -229,12 +229,12 @@ struct Vec4DataPair : public DataPair
 
     void setUniLoc()
     {
-        Utility::setUniLoc(uniLoc, value);
+        utl::setUniLoc(uniLoc, value);
     }
 
     void printValue()
     {
-        Utility::debug("value is", value);
+        utl::debug("value is", value);
     }
 };
 
@@ -257,12 +257,12 @@ struct Mat3DataPair : public DataPair
 
     void setUniLoc()
     {
-        Utility::setUniLoc(uniLoc, value);
+        utl::setUniLoc(uniLoc, value);
     }
 
     void printValue()
     {
-        Utility::debug("value is", value);
+        utl::debug("value is", value);
     }
 };
 
@@ -284,12 +284,12 @@ struct Mat4DataPair : public DataPair
 
     void setUniLoc()
     {
-        Utility::setUniLoc(uniLoc, value);
+        utl::setUniLoc(uniLoc, value);
     }
 
     void printValue()
     {
-        Utility::debug("value is", value);
+        utl::debug("value is", value);
     }
 };
 

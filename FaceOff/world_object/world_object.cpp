@@ -18,9 +18,9 @@ void WorldObject::renderSingle(Pipeline& m_pipeline, Renderer* renderer, int pas
     renderer->enableShader(pass);
     m_pipeline.pushMatrix();
         m_pipeline.translate(m_position);
-        m_pipeline.scale(m_scale);
         m_pipeline.addMatrix(m_rotation);
-        renderer->loadUniformLocations(m_pipeline, pass);
+		m_pipeline.scale(m_scale);
+		renderer->loadUniformLocations(m_pipeline, pass);
         model->render();
     m_pipeline.popMatrix();
     renderer->disableShader(pass);
@@ -35,9 +35,9 @@ void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass
 {
     m_pipeline.pushMatrix();
         m_pipeline.translate(m_position);
-        m_pipeline.scale(m_scale);
         m_pipeline.addMatrix(m_rotation);
-        renderer->loadUniformLocations(m_pipeline);
+		m_pipeline.scale(m_scale);
+		renderer->loadUniformLocations(m_pipeline);
         model->render();
     m_pipeline.popMatrix();
 }

@@ -14,7 +14,9 @@
 #include "renderer_manager.h"
 #include "model.h"
 #include "imported_model.h"
+#include "particle.h"
 
+#include <list>
 
 #include "world_object/weapon/weapon.h"
 #include "world_object/weapon/assult_rifle.h"
@@ -49,6 +51,8 @@ class Player : public WorldObject
 		int m_curWeaponIndex;
 		vector<Weapon*> m_weapons;
 		vector<glm::vec3> m_weaponPositionOffsets;
+		vector<glm::vec3> m_bulletStartPositionOffsets;
+		vector<glm::vec3> m_bulletStartPositionOffsetScale;
 
 		void update(Pipeline& p);
 		void update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis);
@@ -61,10 +65,16 @@ class Player : public WorldObject
 		void addWeapon(Weapon* weapon);
 		Weapon* getCurWeapon();
 
+		void fireWeapon(list<Particle>& bullets);
+
 
 		float getCameraPitch();
 		float getCameraYaw();
-		
+
+	private:
+		float m_maxHP;
+		float m_curHP;
+
 };
 
 #endif // PLAYER_H_

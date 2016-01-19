@@ -108,7 +108,7 @@ bool Slider::update(MouseState& state, unsigned int& groupFlag)
         if(flag == true)
         {
             groupFlag = groupFlag | ( 1 << m_id);
-         //   Utility::debug()
+         //   utl::debug()
          //   std::bitset<32> x(groupFlag);
          //   cout << x << endl;
         }
@@ -132,7 +132,7 @@ bool Slider::update(MouseState& state, unsigned int& groupFlag)
     if(flag)
     {
         groupFlag = groupFlag | ( 1 << m_id);
-     //   Utility::debug()
+     //   utl::debug()
         std::bitset<32> x(groupFlag);
         cout << x << endl;
     }
@@ -159,7 +159,7 @@ bool Slider::update1(MouseState & state, unsigned int& groupFlag)
         if(flag == true)
         {
             groupFlag = groupFlag | ( 1 << m_id);
-         //   Utility::debug()
+         //   utl::debug()
       //      std::bitset<32> x(groupFlag);
      //       cout << x << endl;
         }
@@ -185,7 +185,7 @@ void Slider::render(Pipeline& p,
     int offset_x = (int)((*m_current - m_minValue) / (m_maxValue - m_minValue) * (m_rect.w - tickSize) + m_rect.x);
     int offset_y = 0;
 
-  //  Utility::debug("offset_x", offset_x);
+  //  utl::debug("offset_x", offset_x);
 
     m_sliderQuadRect.x = offset_x;
 

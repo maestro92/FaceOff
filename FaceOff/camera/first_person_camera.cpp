@@ -1,12 +1,14 @@
 #include "first_person_camera.h"
 
+#include "utility.h"
+
 const float CAMERA_ROTATION_SPEED = 0.1;
 const float CAMERA_FORWARD_SPEED = 0.1;
 
 FirstPersonCamera::FirstPersonCamera()
 {
-	m_screenMidX = Utility::SCREEN_WIDTH/2;
-	m_screenMidY = Utility::SCREEN_HEIGHT/2;
+	m_screenMidX = utl::SCREEN_WIDTH/2;
+	m_screenMidY = utl::SCREEN_HEIGHT/2;
 }
 
 
@@ -18,14 +20,14 @@ FirstPersonCamera::~FirstPersonCamera()
 
 void FirstPersonCamera::updatePosXZ(float dir)
 {
-	float rad = (m_yaw + dir) * DEGREE_TO_RAD;
+	float rad = (m_yaw + dir) * utl::DEGREE_TO_RADIAN;
 	m_eye.x -= sin(rad) * CAMERA_FORWARD_SPEED;
 	m_eye.z -= cos(rad) * CAMERA_FORWARD_SPEED;
 }
 
 void FirstPersonCamera::updatePosY(float dir)
 {
-	float rad = (m_pitch + dir) * DEGREE_TO_RAD;
+	float rad = (m_pitch + dir) * utl::DEGREE_TO_RADIAN;
 	m_eye.y += sin(rad) * CAMERA_FORWARD_SPEED;
 }
 
@@ -63,7 +65,7 @@ void FirstPersonCamera::control(Pipeline& p)
 			updatePosXZ(270);
     }
 
- //   Utility::debug("position", m_eye);
+ //   utl::debug("position", m_eye);
 
     updatePipeline(p);
 }
@@ -71,12 +73,12 @@ void FirstPersonCamera::control(Pipeline& p)
 void FirstPersonCamera::updatePipeline(Pipeline& p)
 {
 	p.setMatrixMode(VIEW_MATRIX);
+
 	p.rotateX(m_pitch);
 	p.rotateY(m_yaw);
 	p.translate(m_eye.x, m_eye.y, m_eye.z);
 
-
-
+	glm::mat4 view = p.getViewMatrix();
 
 	m_viewMatrix = p.getViewMatrix();
 	m_xAxis = glm::vec3(m_viewMatrix[0][0], m_viewMatrix[1][0], m_viewMatrix[2][0]);

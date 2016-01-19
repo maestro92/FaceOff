@@ -40,8 +40,8 @@ void Weapon::render(Pipeline& p, Renderer* r)
 
 	p.pushMatrix();
 		p.translate(m_position);
-		p.scale(m_scale);
 		p.addMatrix(m_rotation);
+		p.scale(m_scale);
 		r->loadUniformLocations(p, pass);
 		Weapon::s_weaponModels[m_gunType].render();
 	p.popMatrix();

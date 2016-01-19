@@ -15,6 +15,8 @@ class Camera
 		virtual void control(Pipeline& p);
 		Pipeline m_pipeline;
 		void setMouseIn(bool b);
+		bool getMouseIn();
+
 		void setEyePoint(glm::vec3 eye);
 
 		glm::vec3 getViewDirection();
@@ -32,8 +34,8 @@ class Camera
 		glm::mat4 m_viewMatrix;
 		glm::mat4 m_modelMatrix;
 
-        float RAD_TO_DEGREE;
-        float DEGREE_TO_RAD;
+     //   float RAD_TO_DEGREE;
+     //   float DEGREE_TO_RAD;
 
         glm::vec3 m_eye;
 
@@ -49,4 +51,27 @@ inline glm::vec3 Camera::getEyePoint()
 {
     return m_eye;
 }
+
+
+inline void Camera::setEyePoint(glm::vec3 eye)
+{
+	m_eye = eye;
+}
+
+
+inline void Camera::setMouseIn(bool b)
+{
+	m_mouseIn = b;
+	if (m_mouseIn)
+		SDL_ShowCursor(SDL_DISABLE);
+	else
+		SDL_ShowCursor(SDL_ENABLE);
+}
+
+
+inline bool Camera::getMouseIn()
+{
+	return m_mouseIn;
+}
+
 #endif

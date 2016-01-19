@@ -1,6 +1,6 @@
 #include "utility.h"
 
-void Utility::readBitStream(RakNet::BitStream& bsIn, glm::vec3& v)
+void utl::readBitStream(RakNet::BitStream& bsIn, glm::vec3& v)
 {	
 	/*
 	bsIn.Read(v.x);
@@ -10,7 +10,7 @@ void Utility::readBitStream(RakNet::BitStream& bsIn, glm::vec3& v)
 	bsIn.ReadVector(v.x, v.y, v.z);
 }
 
-void Utility::setBitStream(RakNet::BitStream& bsOut, glm::vec3& v)
+void utl::setBitStream(RakNet::BitStream& bsOut, glm::vec3& v)
 {
 	/*
 	bsOut.Write(v.x);

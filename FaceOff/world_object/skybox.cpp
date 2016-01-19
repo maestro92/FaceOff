@@ -26,7 +26,7 @@ void SkyBox::init(string* files)
 {
     m_cubeModel = CubeModel();
 
-    m_staticCubeMapID = Utility::loadCubemapTexture(files);
+    m_staticCubeMapID = utl::loadCubemapTexture(files);
 
     Shader* s;
 

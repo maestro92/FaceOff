@@ -1,24 +1,24 @@
 #include "utility.h"
 
-glm::vec3 Utility::toGlmVec(aiVector3D& v)
+glm::vec3 utl::toGlmVec(aiVector3D& v)
 {
     return glm::vec3(v.x, v.y, v.z);
 }
 
 
-glm::vec3 Utility::toGlmVec(aiColor3D& color)
+glm::vec3 utl::toGlmVec(aiColor3D& color)
 {
     return glm::vec3((float)(color.r), (float)(color.g), (float)(color.b));
 }
 
 
-glm::vec3 Utility::toGlmVec(aiColor4D& color)
+glm::vec3 utl::toGlmVec(aiColor4D& color)
 {
     return glm::vec3((float)(color.r), (float)(color.g), (float)(color.b));
 }
 
 
-glm::mat4 Utility::toGlmMat(aiMatrix3x3 m)
+glm::mat4 utl::toGlmMat(aiMatrix3x3 m)
 {
     float temp[16] = {m.a1, m.a2, m.a3, 0.0,
                       m.b1, m.b2, m.b3, 0.0,
@@ -28,7 +28,7 @@ glm::mat4 Utility::toGlmMat(aiMatrix3x3 m)
 }
 
 
-glm::mat4 Utility::toGlmMat(aiMatrix4x4& m)
+glm::mat4 utl::toGlmMat(aiMatrix4x4& m)
 {
     float temp[16] = {m.a1, m.a2, m.a3, m.a4,
                       m.b1, m.b2, m.b3, m.b4,
@@ -38,7 +38,7 @@ glm::mat4 Utility::toGlmMat(aiMatrix4x4& m)
 }
 
 
-glm::mat4 Utility::toGlmMat(const aiMatrix4x4& m)
+glm::mat4 utl::toGlmMat(const aiMatrix4x4& m)
 {
     float temp[16] = {m.a1, m.a2, m.a3, m.a4,
                       m.b1, m.b2, m.b3, m.b4,
