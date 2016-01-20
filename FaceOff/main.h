@@ -42,6 +42,7 @@
 #include "world_object.h"
 #include "particle.h"
 #include "skybox.h"
+#include "billboard_list.h"
 #define FRAME_VALUES 10
 #include <list>
 
@@ -126,6 +127,7 @@ class FaceOff
 
 		vector<Terrain> m_terrains;
 		Terrain m_terrain;
+		BillboardList m_grassPatch;
 
 		Model*          p_model;
 		QuadModel       m_groundModel;

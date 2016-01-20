@@ -14,6 +14,8 @@ Pipeline::Pipeline()
 	m_normalMatrix = glm::mat3(1.0);
 	matricesReady = true;
 	m_curMatrixMode = PROJECTION_MATRIX;
+
+	m_viewPosition = glm::vec3(0.0, 0.0, 0.0);
 }
 
 void Pipeline::loadIdentity()
@@ -22,6 +24,7 @@ void Pipeline::loadIdentity()
 	{
 		m_modelMatrix[m_modelMatrix.size()-1]=glm::mat4(1.0);
 		m_viewMatrix[m_viewMatrix.size()-1]=glm::mat4(1.0);
+		m_viewPosition = glm::vec3(0.0, 0.0, 0.0);
 	}
 	else
 		m_projectionMatrix[m_projectionMatrix.size()-1] = glm::mat4(1.0);
@@ -33,6 +36,7 @@ void Pipeline::reset()
 {
     m_modelMatrix.clear();
 	m_viewMatrix.clear();
+	m_viewPosition = glm::vec3(0.0, 0.0, 0.0);
 	m_projectionMatrix.clear();
 
 	m_modelMatrix.push_back(glm::mat4(1.0));
@@ -44,6 +48,7 @@ void Pipeline::reset()
 	m_normalMatrix=glm::mat3(1.0);
 	matricesReady=true;
 	m_curMatrixMode=0;
+
 }
 
 
@@ -54,13 +59,27 @@ bool Pipeline::setMatrixMode(int m)
 	return true;
 }
 
+
+
+
+void Pipeline::setViewPosition(glm::vec3 pos)
+{
+	m_viewPosition = pos;
+}
+
+glm::vec3 Pipeline::getViewPosition()
+{
+	return m_viewPosition;
+}
+
 		//modelview
 void Pipeline::translate(float x,float y,float z)
 {
 	if(m_curMatrixMode==MODEL_MATRIX)
 		m_modelMatrix[m_modelMatrix.size()-1]*=glm::translate(x,y,z);
-	else if(m_curMatrixMode==VIEW_MATRIX)
-		m_viewMatrix[m_viewMatrix.size()-1]*=glm::translate(-x,-y,-z);
+	else if (m_curMatrixMode == VIEW_MATRIX)
+		m_viewMatrix[m_viewMatrix.size() - 1] *= glm::translate(-x, -y, -z);
+	
 	matricesReady=false;
 }
 

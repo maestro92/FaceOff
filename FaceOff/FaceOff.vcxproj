@@ -209,6 +209,7 @@
     <ClCompile Include="light\light_manager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model\builtin_model\cube_model.cpp" />
+    <ClCompile Include="model\builtin_model\billboard_model.cpp" />
     <ClCompile Include="model\builtin_model\quad_model.cpp" />
     <ClCompile Include="model\builtin_model\terrain_model.cpp" />
     <ClCompile Include="model\builtin_model\xyz_axis_model.cpp" />
@@ -230,6 +231,7 @@
     <ClCompile Include="utility\utility_math.cpp" />
     <ClCompile Include="utility\utility_sdl.cpp" />
     <ClCompile Include="utility\utility_network.cpp" />
+    <ClCompile Include="world_object\billboard_list.cpp" />
     <ClCompile Include="world_object\terrain.cpp" />
     <ClCompile Include="world_object\weapon\assult_rifle.cpp" />
     <ClCompile Include="world_object\weapon\melee.cpp" />
@@ -412,6 +414,7 @@
     <ClInclude Include="light\light_manager.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="model\builtin_model\cube_model.h" />
+    <ClInclude Include="model\builtin_model\billboard_model.h" />
     <ClInclude Include="model\builtin_model\quad_model.h" />
     <ClInclude Include="model\builtin_model\terrain_model.h" />
     <ClInclude Include="model\builtin_model\xyz_axis_model.h" />
@@ -432,6 +435,7 @@
     <ClInclude Include="shader.h" />
     <ClInclude Include="utility\utility.h" />
     <ClInclude Include="weapon.h" />
+    <ClInclude Include="world_object\billboard_list.h" />
     <ClInclude Include="world_object\terrain.h" />
     <ClInclude Include="world_object\weapon\assult_rifle.h" />
     <ClInclude Include="world_object\weapon\melee.h" />

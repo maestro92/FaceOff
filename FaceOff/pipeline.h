@@ -35,14 +35,13 @@ if a class doesn't contain pointers, then there is no need to write assignment o
 */
 class Pipeline
 {
-
-
-
     public:
         int m_curMatrixMode;
-        std::vector<glm::mat4> m_modelMatrix;
-        std::vector<glm::mat4> m_viewMatrix;
-        std::vector<glm::mat4> m_projectionMatrix;
+        vector<glm::mat4> m_modelMatrix;
+        vector<glm::mat4> m_viewMatrix;
+        vector<glm::mat4> m_projectionMatrix;
+
+		glm::vec3 m_viewPosition;
 
         bool matricesReady;
         glm::mat4 m_modelViewMatrix;					//only to save time for vertexshader
@@ -61,6 +60,9 @@ class Pipeline
 
 		void loadIdentity();
 		bool setMatrixMode(int m);
+
+		void setViewPosition(glm::vec3 pos);
+		glm::vec3 getViewPosition();
 
 		//modelview
 		void translate(float x,float y,float z);
@@ -118,7 +120,6 @@ class Pipeline
 
 		void RotatePositiveZ();
 		void RotateNegativeZ();
-
 
         glm::mat4 m_shadowMatrix;
 };

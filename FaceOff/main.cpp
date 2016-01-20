@@ -118,7 +118,7 @@ void FaceOff::initObjects()
 //	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, x, y, w, h);
 	
 	m_terrain = Terrain(0, 0);
-
+	m_grassPatch = BillboardList();
 
 	Weapon::initWeaponModels();
 }
@@ -1100,6 +1100,7 @@ void FaceOff::forwardRender()
 
 	m_terrain.render(m_pipeline);
 
+	m_grassPatch.render(m_pipeline);
 
 	p_renderer = &RendererManager::r_fullTexture;
 	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);

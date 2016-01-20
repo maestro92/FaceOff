@@ -25,8 +25,8 @@ class FirstPersonCamera : public Camera
 
 
 		void updatePipeline(Pipeline& p);
-		void updateTranslation(Pipeline& p);
-        void updateRotation(Pipeline& p);
+		void updatePipelineTranslation(Pipeline& p);
+		void updatePipelineRotation(Pipeline& p);
 
 
     //    bool m_mouseIn;

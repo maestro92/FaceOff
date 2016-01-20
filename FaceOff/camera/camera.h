@@ -13,7 +13,7 @@ class Camera
     public:
         inline glm::vec3 getEyePoint();
 		virtual void control(Pipeline& p);
-		Pipeline m_pipeline;
+	//	Pipeline m_pipeline;
 		void setMouseIn(bool b);
 		bool getMouseIn();
 
