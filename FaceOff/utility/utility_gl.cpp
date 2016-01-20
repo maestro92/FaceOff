@@ -41,17 +41,15 @@ void utl::errorCheckFBO()
 
 
 
-GLuint utl::loadTexture(string filename)
+GLuint utl::loadTexture(string filename, bool mipmapFlag)
 {
-    return loadTexture(filename, GL_LINEAR);
+    return loadTexture(filename, GL_LINEAR, GL_CLAMP, mipmapFlag);
 }
 
 
-GLuint utl::loadTexture(string filename, GLuint filteringParam)
+GLuint utl::loadTexture(string filename, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag)
 {
-#if DEBUG_FLAG == 1
     cout << "Loading Texture " << filename << endl;
-#endif
 
     SDL_Surface* img2 = loadSDLImage(filename);
 
@@ -60,14 +58,9 @@ GLuint utl::loadTexture(string filename, GLuint filteringParam)
 
     // tell OpenGL we want to use this texture
     glBindTexture(GL_TEXTURE_2D,num);       //and use the texture, we have just generated
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,img2->w,img2->h,0,GL_RGBA,GL_UNSIGNED_INT_8_8_8_8,img2->pixels);        //we make the actual texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img2->w, img2->h, 0, GL_RGBA,GL_UNSIGNED_INT_8_8_8_8, img2->pixels);        //we make the actual texture
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringParam);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringParam);
-
-    // if you comment these two lines out, you will see the edges of the cube
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);      //we repeat the pixels in the edge of the texture, it will hide that 1px wide line at the edge of the cube, which you have seen in the video
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);      //we do it for vertically and horizontally (previous line)
+	setTexture2DParams(GL_TEXTURE_2D, filteringParam, edgeParam, mipmapFlag);
 
     //we delete the image, we don't need it anymore
     glBindTexture(GL_TEXTURE_2D,0);
@@ -79,7 +72,7 @@ GLuint utl::loadTexture(string filename, GLuint filteringParam)
 
 
 // http://stackoverflow.com/questions/8767166/passing-a-2d-array-to-a-c-function
-GLuint utl::loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam)
+GLuint utl::loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag)
 {
     int h = data.size();
     int w = data[0].size();
@@ -94,9 +87,6 @@ GLuint utl::loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringPa
 		for (int x = 0; x < w; x++)
 			temp[y][x] = new GLubyte[4];
 	}
-		
-
-//    GLubyte temp[h][w][4];
 
     for(int y = 0; y < h; y++)
     {
@@ -116,17 +106,40 @@ GLuint utl::loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringPa
     glBindTexture(GL_TEXTURE_2D,num);       //and use the texture, we have just generated
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, &temp[0][0][0]);        //we make the actual texture
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringParam);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringParam);
-
-    // if you comment these two lines out, you will see the edges of the cube
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);      //we repeat the pixels in the edge of the texture, it will hide that 1px wide line at the edge of the cube, which you have seen in the video
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);      //we do it for vertically and horizontally (previous line)
+	setTexture2DParams(GL_TEXTURE_2D, filteringParam, edgeParam, mipmapFlag);
 
     //we delete the image, we don't need it anymore
     glBindTexture(GL_TEXTURE_2D,0);
     return num;
 }
+
+
+
+
+void utl::setTexture2DParams(GLuint target, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag)
+{
+	if (mipmapFlag)
+	{
+		if (filteringParam != GL_NEAREST_MIPMAP_NEAREST &&
+			filteringParam != GL_LINEAR_MIPMAP_NEAREST &&
+			filteringParam != GL_NEAREST_MIPMAP_LINEAR &&
+			filteringParam != GL_LINEAR_MIPMAP_LINEAR)
+		{
+			cout << "Wrong mipmap Texture filtering setting when loading" << endl;
+			exit(1);
+		}
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+
+	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filteringParam);
+
+	// if you comment these two lines out, you will see the edges of the cube
+	glTexParameteri(target, GL_TEXTURE_WRAP_S, edgeParam);      //we repeat the pixels in the edge of the texture, it will hide that 1px wide line at the edge of the cube, which you have seen in the video
+	glTexParameteri(target, GL_TEXTURE_WRAP_T, edgeParam);      //we do it for vertically and horizontally (previous line)
+}
+
 
 
 GLuint utl::createNewTexture(int w, int h)

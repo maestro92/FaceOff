@@ -16,7 +16,6 @@ class RendererManager
 		static Renderer		r_fullTexture;
 		static Renderer		r_playerTarget;
 
-
         static void init();
 };
 

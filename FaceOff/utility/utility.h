@@ -197,9 +197,10 @@ namespace utl
 
 	TextureDataBuffer createEmptyBuffer(int w, int h);
 
-	GLuint loadTexture(string filename);
-	GLuint loadTexture(string filename, GLuint filteringParam);
-	GLuint loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam);
+	GLuint loadTexture(string filename, bool mipmapFlag = false);
+	GLuint loadTexture(string filename, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag = false);
+	GLuint loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag = false);
+	void setTexture2DParams(GLuint target, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag);
 
 	GLuint createNewTexture(int w, int h);
 	GLuint createNew3DTexture(int w, int h, int d);

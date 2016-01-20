@@ -63,7 +63,7 @@ void GUIManager::init(int screenWidth, int screenHeight,
             }
         }
     }
-    m_GUIPaletteTexture = utl::loadTexture(pixelData, GL_NEAREST);
+    m_GUIPaletteTexture = utl::loadTexture(pixelData, GL_NEAREST, GL_CLAMP);
 
 
     Shader* s;

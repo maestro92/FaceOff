@@ -5,9 +5,9 @@ XYZAxisModel::XYZAxisModel()
 {
     m_modelGeometry = GL_LINES;
 
-    std::vector<unsigned int> indices;
     std::vector<VertexData> vertices;
-    VertexData v;
+	std::vector<unsigned int> indices;
+	VertexData v;
 
     float scale = 50;
 

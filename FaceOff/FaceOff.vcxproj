@@ -206,9 +206,11 @@
     <ClCompile Include="libraries\RakNet\VitaIncludes.cpp" />
     <ClCompile Include="libraries\RakNet\WSAStartupSingleton.cpp" />
     <ClCompile Include="libraries\RakNet\_FindFirst.cpp" />
+    <ClCompile Include="light\light_manager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model\builtin_model\cube_model.cpp" />
     <ClCompile Include="model\builtin_model\quad_model.cpp" />
+    <ClCompile Include="model\builtin_model\terrain_model.cpp" />
     <ClCompile Include="model\builtin_model\xyz_axis_model.cpp" />
     <ClCompile Include="model\imported_model.cpp" />
     <ClCompile Include="model\model.cpp" />
@@ -228,6 +230,7 @@
     <ClCompile Include="utility\utility_math.cpp" />
     <ClCompile Include="utility\utility_sdl.cpp" />
     <ClCompile Include="utility\utility_network.cpp" />
+    <ClCompile Include="world_object\terrain.cpp" />
     <ClCompile Include="world_object\weapon\assult_rifle.cpp" />
     <ClCompile Include="world_object\weapon\melee.cpp" />
     <ClCompile Include="world_object\particle.cpp" />
@@ -405,9 +408,12 @@
     <ClInclude Include="libraries\RakNet\WSAStartupSingleton.h" />
     <ClInclude Include="libraries\RakNet\XBox360Includes.h" />
     <ClInclude Include="libraries\RakNet\_FindFirst.h" />
+    <ClInclude Include="light\base_light.h" />
+    <ClInclude Include="light\light_manager.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="model\builtin_model\cube_model.h" />
     <ClInclude Include="model\builtin_model\quad_model.h" />
+    <ClInclude Include="model\builtin_model\terrain_model.h" />
     <ClInclude Include="model\builtin_model\xyz_axis_model.h" />
     <ClInclude Include="model\mesh.h" />
     <ClInclude Include="model\imported_model.h" />
@@ -426,6 +432,7 @@
     <ClInclude Include="shader.h" />
     <ClInclude Include="utility\utility.h" />
     <ClInclude Include="weapon.h" />
+    <ClInclude Include="world_object\terrain.h" />
     <ClInclude Include="world_object\weapon\assult_rifle.h" />
     <ClInclude Include="world_object\weapon\melee.h" />
     <ClInclude Include="world_object\particle.h" />

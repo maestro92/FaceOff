@@ -59,6 +59,8 @@
 #include "game_messages.h"
 #include "network_info.h"
 
+#include "terrain.h"
+
 using namespace std;
 /*
 
@@ -88,6 +90,10 @@ e for events
 2. Bullets
 3. Collision Detection
 4. [1] [2] for guns
+5. change character body from sphere to capsules
+
+https://www.youtube.com/watch?v=yNYwZMmgTJk&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP&index=14
+
 */
 
 
@@ -118,7 +124,8 @@ class FaceOff
 
 		FirstPersonCamera m_firstPersonCamera;
 
-
+		vector<Terrain> m_terrains;
+		Terrain m_terrain;
 
 		Model*          p_model;
 		QuadModel       m_groundModel;

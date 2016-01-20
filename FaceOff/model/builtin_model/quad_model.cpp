@@ -43,9 +43,9 @@ void QuadModel::init(float l, float r,
                      float b, float t,
                      float uv_x, float uv_y, float uv_w)
 {
-    std::vector<unsigned int> indices;
     std::vector<VertexData> vertices;
-    VertexData tmp;
+	std::vector<unsigned int> indices;
+	VertexData tmp;
 
     float uv_x0 = uv_x;  float uv_x1 = uv_x + 1;
     float uv_y0 = uv_y;  float uv_y1 = uv_y + 1;

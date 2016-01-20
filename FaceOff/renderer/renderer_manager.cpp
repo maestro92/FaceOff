@@ -36,5 +36,7 @@ void RendererManager::init()
 	r_playerTarget.addShader(s);
 	r_playerTarget.addDataPair("u_texture", DP_INT);
 
+
+
 }
 

@@ -117,6 +117,8 @@ void FaceOff::initObjects()
 	int h = utl::SCREEN_HEIGHT;
 //	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, x, y, w, h);
 	
+	m_terrain = Terrain(0, 0);
+
 
 	Weapon::initWeaponModels();
 }
@@ -1065,10 +1067,11 @@ void FaceOff::forwardRender()
 	p_model = &m_xyzModel;
 	o_worldAxis.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 
+	
 	p_renderer = &RendererManager::r_fullColor;
 	p_renderer->setData("u_color", glm::vec3(0.5, 0.0, 0.0));
-	p_model = &m_groundModel;
-	o_ground.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+	// p_model = &m_groundModel;
+	// o_ground.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 
 	p_renderer->setData("u_color", glm::vec3(1.0, 1.0, 0.0));
 	p_model = &m_bulletModel;
@@ -1094,6 +1097,8 @@ void FaceOff::forwardRender()
 	}
 
 //	o_sampleBullet.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+	m_terrain.render(m_pipeline);
 
 
 	p_renderer = &RendererManager::r_fullTexture;
