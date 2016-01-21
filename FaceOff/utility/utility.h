@@ -186,7 +186,7 @@ namespace utl
 	void exitSDL(SDL_Surface* & m_displaySurface);
 	SDL_Surface* loadRawImage(string filename);
 	SDL_Surface* loadSDLImage(string filename);
-
+	Uint32 getpixel(SDL_Surface *surface, int x, int y);
 
 	/// utl_GL.cpp
 	void initGLEW();
@@ -228,13 +228,6 @@ namespace utl
 	glm::mat4 toGlmMat(aiMatrix3x3 m);
 	glm::mat4 toGlmMat(aiMatrix4x4& m);
 	glm::mat4 toGlmMat(const aiMatrix4x4& m);
-
-	/*
-	glm::vec2 scaleGlmVec(const glm::vec2 v, float s);
-	glm::vec2 scaleGlmVec(const glm::vec2 v, float s1, float s2);
-	glm::vec3 scaleGlmVec(const glm::vec3 v, float s);
-	glm::vec3 scaleGlmVec(const glm::vec3 v, float s1, float s2, float s3);
-	*/
 
 	/// utl_Debug.cpp
 	void debugLn(int l = 1);

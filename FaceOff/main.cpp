@@ -122,7 +122,8 @@ void FaceOff::initObjects()
 	int h = utl::SCREEN_HEIGHT;
 //	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, x, y, w, h);
 	
-	o_terrain = Terrain(0, 0);
+//	o_terrain = Terrain(0, 0);
+	o_multiTextureTerrain = MultiTextureTerrain("Assets/Images/terrain/heightmap.png");
 	o_grassPatch = BillboardList();
 	o_grassPatch.setTexture("Assets/Images/billboard_grass_alpha_001.png");
 	o_grassPatch.setRandomFormation(50, 50, 1000);

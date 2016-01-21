@@ -50,13 +50,13 @@ void FirstPersonCamera::control(Pipeline& p)
 		if(state[SDLK_w])
 		{
             updatePosXZ(0.0);
-		//	updatePosY(0.0);
+			updatePosY(0.0);
 		}
 
 		else if(state[SDLK_s])
 		{
             updatePosXZ(180.0);
-		//	updatePosY(180.0);
+			updatePosY(180.0);
 		}
 
 		if(state[SDLK_a])

@@ -12,7 +12,14 @@ class TerrainModel : public Model
 		// constructor
 		TerrainModel();
 
-		TerrainModel(int vertexCount, float size);
+		TerrainModel(string heightMap);
+
+		float getHeight(int x, int y, SDL_Surface* image, int maxGray, int minGray);
+		void getMinMax(SDL_Surface* image, int* maxGray, int* minGray);
+
+
+		glm::vec3 computeNormal(int x, int y, SDL_Surface* image, int maxGray, int minGray);
+
 
 		// Destructor
 		~TerrainModel();

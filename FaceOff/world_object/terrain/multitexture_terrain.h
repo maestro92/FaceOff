@@ -12,7 +12,7 @@ class MultiTextureTerrain : public Terrain
 		static Renderer r_multiTexturedTerrain;
 	public:
 		MultiTextureTerrain();
-		MultiTextureTerrain(int gridX, int gridZ);
+		MultiTextureTerrain(string heightMap);
 		void render(Pipeline& p);
 
 };
