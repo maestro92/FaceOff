@@ -37,6 +37,7 @@ struct MatricesUniLoc
     GLuint view;
     GLuint model;
     GLuint normal;
+	GLuint eyePoint;
 };
 
 // http://blogs.msdn.com/b/oldnewthing/archive/2004/05/07/127826.aspx
@@ -295,7 +296,6 @@ struct Mat4DataPair : public DataPair
 
 
 
-
 enum DATA_PAIR_TYPE
 {
     DP_BOOL = 0,
@@ -330,7 +330,8 @@ class Renderer
 
 
         void addDataPair(const char* name, int dataType);
-        void addDataPair(int pass, const char* name, int dataType);
+		void addDataPairArray(const char* name, int dataType, int count);
+		void addDataPair(int pass, const char* name, int dataType);
 
         GLuint getUniLoc(Shader* s, const char* name);
 
@@ -380,6 +381,10 @@ class Renderer
         void setData(int pass, const char* name, glm::mat3 value);
         void setData(int pass, const char* name, glm::mat4 value);
         void errorCheck(int pass, const char* name);
+
+
+		void setDataArray(const char* name, int value, GLuint target, vector<GLuint> textureIDs);
+
 
         bool initMatricesUniLocs(Shader* s, MatricesUniLoc& Mat);
 

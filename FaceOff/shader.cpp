@@ -13,7 +13,12 @@ Shader::Shader(const char* vs_source, const char* fs_source)
 {
     string source;
     cout << "vs: " << vs_source << ", fs: " << fs_source << endl;
-    loadFile(vs_source, source);
+	m_vsName = vs_source;
+	m_gsName = "";
+	m_fsName = fs_source;
+
+	
+	loadFile(vs_source, source);
 
     // source code and Mode
     vs = loadShader(source, GL_VERTEX_SHADER);
@@ -40,8 +45,14 @@ Shader::Shader(const char* vs_source, const char* fs_source)
 Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_source)
 {
     string source;
-    cout << "vs: " << vs_source << ", gs:" << gs_source << ", fs: " << fs_source << endl << endl;
-    loadFile(vs_source, source);
+	cout << endl << endl << endl << "vs: " << vs_source << ", gs:" << gs_source << ", fs: " << fs_source << endl << endl;
+	m_vsName = vs_source;
+	m_gsName = gs_source;
+	m_fsName = fs_source;
+
+	
+	
+	loadFile(vs_source, source);
     // source code and Mode
     vs = loadShader(source, GL_VERTEX_SHADER);
 
@@ -76,7 +87,7 @@ Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_sour
 Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_source, bool feedBack)
 {
     string source;
-    cout << "vs: " << vs_source << ", gs:" << gs_source << ", fs: " << fs_source << endl << endl;
+	cout << endl << endl << endl << "vs: " << vs_source << ", gs:" << gs_source << ", fs: " << fs_source << endl << endl;
     loadFile(vs_source, source);
     /// load the vertex shader
     vs = loadShader(source, GL_VERTEX_SHADER);
@@ -332,4 +343,19 @@ void Shader::delShader()
 }
 
 
+
+string Shader::getVertexShaderName()
+{
+	return m_vsName;
+}
+
+string Shader::getGeometryShaderName()
+{
+	return m_gsName;
+}
+
+string Shader::getFragmentShaderName()
+{
+	return m_fsName;
+}
 

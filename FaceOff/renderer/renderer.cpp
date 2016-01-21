@@ -30,6 +30,22 @@ void Renderer::addDataPair(const char* name, int dataType)
     addDataPair(RENDER_PASS1, name, dataType);
 }
 
+
+void Renderer::addDataPairArray(const char* name, int dataType, int count)
+{
+	for (int i = 0; i < count; i++)
+	{
+		char Name[128];
+		int j = sprintf(Name, "%s", name);
+		j += sprintf(Name + j, "[%d]", i);
+
+//		cout << Name << endl;
+		addDataPair(RENDER_PASS1, Name, dataType);
+	}
+}
+
+
+
 void Renderer::addDataPair(int pass, const char* name, int dataType)
 {
     DataPair* p;
@@ -152,10 +168,10 @@ void Renderer::setData(int pass, const char* name, int value, GLuint target, GLu
 {
     errorCheck(pass, name);
 
-    glActiveTexture(GL_TEXTURE0 + value);
+    glActiveTexture(GL_TEXTURE0 + (unsigned int)value);
     glBindTexture(target, textureId);
 
-    m_textureUnitStack.push(GL_TEXTURE0 + value);
+	m_textureUnitStack.push(GL_TEXTURE0 + (unsigned int)value);
     m_tables[pass][name]->setValue(value);
 }
 
@@ -200,8 +216,21 @@ void Renderer::errorCheck(int pass, const char* name)
     if(m_tables[pass].find(name) == m_tables[pass].end())
     {
         cout << "glUniLoc " << name << " is not found " << endl;
+		cout << m_shaders[pass]->getVertexShaderName() << endl;
         exit(1);
     }
+}
+
+
+void Renderer::setDataArray(const char* name, int value, GLuint target, vector<GLuint> textureIds)
+{
+	for (int i = 0; i < textureIds.size(); i++)
+	{
+		char Name[128];
+		int j = sprintf(Name, "%s", name);
+		j += sprintf(Name + j, "[%d]", i);
+		setData(Name, i + value, target, textureIds[i]);
+	}
 }
 
 
@@ -277,6 +306,7 @@ void Renderer::loadUniformLocations(Pipeline& p, int pass)
 	glUniformMatrix4fv(m_matricesUniLocs[pass].model, 1, GL_FALSE, &p.m_modelMatrix[p.m_modelMatrix.size()-1][0][0]);
     glUniformMatrix4fv(m_matricesUniLocs[pass].view, 1, GL_FALSE, &p.m_viewMatrix[p.m_viewMatrix.size()-1][0][0]);
 	glUniformMatrix3fv(m_matricesUniLocs[pass].normal, 1, GL_FALSE, &p.m_normalMatrix[0][0]);
+	glUniform3f(m_matricesUniLocs[pass].eyePoint, p.m_viewPosition.x, p.m_viewPosition.y, p.m_viewPosition.z);
 }
 
 
@@ -370,7 +400,7 @@ bool Renderer::initMatricesUniLocs(Shader* s, MatricesUniLoc& Mat)
     Mat.projection          = getUniLoc( s, "u_projMat");
     Mat.model               = getUniLoc( s, "u_modelMat");
     Mat.normal              = getUniLoc( s, "u_normalMat");
-
+	Mat.eyePoint			= getUniLoc( s, "u_eyePoint");
     if(Mat.modelViewProjection == -1 ||
        Mat.modelView == -1 ||
        Mat.view == -1 ||

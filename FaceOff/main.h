@@ -60,8 +60,8 @@
 #include "game_messages.h"
 #include "network_info.h"
 
-#include "terrain.h"
-
+#include "terrain/terrain.h"
+#include "terrain/multitexture_terrain.h"
 using namespace std;
 /*
 
@@ -92,6 +92,8 @@ e for events
 3. Collision Detection
 4. [1] [2] for guns
 5. change character body from sphere to capsules
+6. change rand
+7. Fog Mode!!
 
 https://www.youtube.com/watch?v=yNYwZMmgTJk&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP&index=14
 
@@ -125,15 +127,23 @@ class FaceOff
 
 		FirstPersonCamera m_firstPersonCamera;
 
-		vector<Terrain> m_terrains;
-		Terrain m_terrain;
-		BillboardList m_grassPatch;
+		Terrain o_terrain;
+		MultiTextureTerrain o_multiTextureTerrain;
+
+		BillboardList o_grassPatch;
+		BillboardList o_flowerPatch;
 
 		Model*          p_model;
 		QuadModel       m_groundModel;
 		XYZAxisModel    m_xyzModel;
 		ImportedModel   m_gunModel;
 		ImportedModel	m_bulletModel;
+		ImportedModel	m_tree;
+		ImportedModel	m_lowPolyTree;
+
+		WorldObject		o_tree;
+		WorldObject		o_lowPolyTree;
+
 
 		WorldObject     o_worldAxis;
 		WorldObject     o_ground;

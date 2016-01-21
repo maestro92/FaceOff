@@ -71,7 +71,8 @@ class ImportedModel : public Model
         void transferDataToBuffer(vector<unsigned int>& vec, unsigned int bufferIndex);
 
         virtual bool load(string filename);
-      //  void render();
+		virtual bool load(string filename, vector<string> textureFiles);
+		//  void render();
 
 
         /// instead of having VB/IB (Vertex Buffer and Index Buffer) Objects, we
@@ -107,6 +108,7 @@ class ImportedModel : public Model
         void clear();
         glm::vec3 getMaterialColor(const aiMesh* m, const aiScene* s);
 
+		void setTextures(vector<string> textureFiles);
 
 };
 

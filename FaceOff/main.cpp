@@ -70,7 +70,10 @@ FaceOff::FaceOff()
 
 	m_pipeline.setMatrixMode(PROJECTION_MATRIX);
 	m_pipeline.loadIdentity();
-	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, 0.5, 5000.0);
+	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, 0.5, 2000.0);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glEnable(GL_DEPTH_TEST);
@@ -104,7 +107,9 @@ void FaceOff::initObjects()
 	o_worldAxis.setScale(scale);
 	o_ground.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
 
-	o_gun.setScale(0.05);
+	o_gun.setPosition(200, 0, 200);
+	o_gun.setRotation(glm::rotate(90.0f, 0.0f, 1.0f, 0.0f));
+	o_gun.setScale(0.5);
 
 
 	o_sampleBullet.setScale(1.0, 5.0, 1.0);
@@ -117,8 +122,19 @@ void FaceOff::initObjects()
 	int h = utl::SCREEN_HEIGHT;
 //	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, x, y, w, h);
 	
-	m_terrain = Terrain(0, 0);
-	m_grassPatch = BillboardList();
+	o_terrain = Terrain(0, 0);
+	o_grassPatch = BillboardList();
+	o_grassPatch.setTexture("Assets/Images/billboard_grass_alpha_001.png");
+	o_grassPatch.setRandomFormation(50, 50, 1000);
+
+	o_flowerPatch = BillboardList();
+	o_flowerPatch.setTexture("Assets/Images/billboard_flower_alpha_001.png");
+	o_flowerPatch.setRandomFormation(50, 50, 1000);
+
+
+	o_tree.setPosition(50, 0, 50);
+	o_lowPolyTree.setPosition(100, 0, 100);
+
 
 	Weapon::initWeaponModels();
 }
@@ -129,12 +145,22 @@ void FaceOff::initModels()
 {
 	float scale = 50.0;
 
+	vector<string> textures;
+
 	m_xyzModel = XYZAxisModel();
 	m_groundModel = QuadModel(-scale, scale, -scale, scale);
 
 	m_gunModel.load("./Assets/models/weapons/Ak_47/Ak-47.obj");
 
 	m_bulletModel.load("./Assets/models/cylinder_base.obj");
+
+
+	textures.clear();  textures.push_back("Assets/tree.png");
+	m_tree.load("Assets/tree.obj", textures);
+
+	textures.clear();  textures.push_back("Assets/lowPolyTree.png");
+	m_lowPolyTree.load("Assets/lowPolyTree.obj", textures);
+
 }
 
 
@@ -813,7 +839,7 @@ void FaceOff::update()
 #if	SERVER_NETWORK_THREAD != 1
 	if (m_isServer)
 	{
-		
+
 		// iterate over each message received
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
@@ -851,52 +877,52 @@ void FaceOff::update()
 			case PLAYER_UPDATE:
 				// received new position from client       
 			{
-				int player_id = 0;
-				glm::vec3 pos, wPos;
-				float camPitch, camYaw;
+								  int player_id = 0;
+								  glm::vec3 pos, wPos;
+								  float camPitch, camYaw;
 
-				bsIn.Read(player_id);
-				bsIn.ReadVector(pos.x, pos.y, pos.z);
-				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-				bsIn.Read(camPitch);
-				bsIn.Read(camYaw);
-
-							
-				printf("Player %d sent new position ", player_id);			utl::debug("", pos);
-				printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
-				printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
-				printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
-							
-
-				m_players[player_id]->setPosition(pos);
-				m_players[player_id]->update(wPos, camPitch, camYaw);
+								  bsIn.Read(player_id);
+								  bsIn.ReadVector(pos.x, pos.y, pos.z);
+								  bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+								  bsIn.Read(camPitch);
+								  bsIn.Read(camYaw);
 
 
+								  printf("Player %d sent new position ", player_id);			utl::debug("", pos);
+								  printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
+								  printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
+								  printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
 
 
-				cout << "sending new position value to each client" << endl;
+								  m_players[player_id]->setPosition(pos);
+								  m_players[player_id]->update(wPos, camPitch, camYaw);
 
 
-				bsOut.Reset();
-				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-				bsOut.Write(player_id);
-				bsOut.WriteVector(pos.x, pos.y, pos.z);
-				bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
-				bsOut.Write(camPitch);
-				bsOut.Write(camYaw);
 
 
-				for (int i = 0; i < m_players.size(); i++)
-				{
-					if (player_id != i)
-					{
-						cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
-						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-					}
-					else
-						cout << "	Not Sending to own client: " << player_id << endl;
-				}
-				break;
+								  cout << "sending new position value to each client" << endl;
+
+
+								  bsOut.Reset();
+								  bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+								  bsOut.Write(player_id);
+								  bsOut.WriteVector(pos.x, pos.y, pos.z);
+								  bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
+								  bsOut.Write(camPitch);
+								  bsOut.Write(camYaw);
+
+
+								  for (int i = 0; i < m_players.size(); i++)
+								  {
+									  if (player_id != i)
+									  {
+										  cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
+										  peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+									  }
+									  else
+										  cout << "	Not Sending to own client: " << player_id << endl;
+								  }
+								  break;
 			}
 
 
@@ -912,7 +938,7 @@ void FaceOff::update()
 #if CLIENT_NETWORK_THREAD != 1
 	if (!m_isServer)
 	{
-		
+
 		//		utl::debug("m_nextGameTick", m_nextGameTick);
 		//		utl::debug("curTick", curTick);
 
@@ -958,26 +984,26 @@ void FaceOff::update()
 
 			case PLAYER_UPDATE:
 			{
-				// report the server's new counter value
+								  // report the server's new counter value
 
-				cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
+								  cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
 
-				int other_player_id = 0;
-				int player_id = 0;
-				glm::vec3 pos, wPos;
-				float camPitch, camYaw;
+								  int other_player_id = 0;
+								  int player_id = 0;
+								  glm::vec3 pos, wPos;
+								  float camPitch, camYaw;
 
-				bsIn.Read(other_player_id);
-				bsIn.ReadVector(pos.x, pos.y, pos.z);
-				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-				bsIn.Read(camPitch);
-				bsIn.Read(camYaw);
+								  bsIn.Read(other_player_id);
+								  bsIn.ReadVector(pos.x, pos.y, pos.z);
+								  bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+								  bsIn.Read(camPitch);
+								  bsIn.Read(camYaw);
 
-				utl::debug("other_player_id", other_player_id);
+								  utl::debug("other_player_id", other_player_id);
 
-				m_players[other_player_id]->setPosition(pos);
-				m_players[other_player_id]->update(wPos, camPitch, camYaw);
-				break;
+								  m_players[other_player_id]->setPosition(pos);
+								  m_players[other_player_id]->update(wPos, camPitch, camYaw);
+								  break;
 			}
 
 
@@ -991,7 +1017,7 @@ void FaceOff::update()
 				break;
 			}
 		}
-		
+
 	}
 #endif
 #endif
@@ -1034,7 +1060,7 @@ void FaceOff::forwardRender()
 
 
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
-
+	
 	// render the players
 	if (m_isServer)
 	{
@@ -1057,10 +1083,13 @@ void FaceOff::forwardRender()
 				m_players[i]->renderWeapon(m_pipeline);
 			}
 			else
+			{
 				m_players[i]->renderWeapon(m_pipeline);
+			}
+
 		}
 	}
-
+	
 
 
 	p_renderer = &RendererManager::r_fullVertexColor;
@@ -1097,19 +1126,35 @@ void FaceOff::forwardRender()
 	}
 
 //	o_sampleBullet.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+//	o_terrain.render(m_pipeline);
+	o_multiTextureTerrain.render(m_pipeline);
 
-	m_terrain.render(m_pipeline);
+	o_grassPatch.setPosition(10.0, 0.0, 10.0);
+	o_grassPatch.setScale(1.0, 1.0, 1.0);
+	o_flowerPatch.setPosition(0.0, 0.0, 0.0);
+	o_flowerPatch.setScale(1.0, 1.0, 1.0);
 
-	m_grassPatch.render(m_pipeline);
+	o_grassPatch.render(m_pipeline);
+	o_flowerPatch.render(m_pipeline);
+
+
+
+//	o_grassPatch.render(m_pipeline);
+//	o_flowerPatch.render(m_pipeline);
+
 
 	p_renderer = &RendererManager::r_fullTexture;
 	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);
 	p_model = &m_gunModel;
-//	o_gun.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+	o_gun.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 	
+	p_model = &m_tree;
+	o_tree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 
-
-		//   renderGUI();
+	p_model = &m_lowPolyTree;
+	o_lowPolyTree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+	
+	//   renderGUI();
 }
 
 

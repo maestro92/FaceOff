@@ -115,6 +115,11 @@ GLuint utl::loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringPa
 
 
 
+GLuint utl::createNoiseTexture(int w, int h, int min, int max)
+{
+	return -1;
+}
+
 
 void utl::setTexture2DParams(GLuint target, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag)
 {
@@ -139,6 +144,8 @@ void utl::setTexture2DParams(GLuint target, GLuint filteringParam, GLuint edgePa
 	glTexParameteri(target, GL_TEXTURE_WRAP_S, edgeParam);      //we repeat the pixels in the edge of the texture, it will hide that 1px wide line at the edge of the cube, which you have seen in the video
 	glTexParameteri(target, GL_TEXTURE_WRAP_T, edgeParam);      //we do it for vertically and horizontally (previous line)
 }
+
+
 
 
 

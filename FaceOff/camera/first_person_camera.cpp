@@ -7,6 +7,7 @@ const float CAMERA_FORWARD_SPEED = 0.1;
 
 FirstPersonCamera::FirstPersonCamera()
 {
+	m_eye = glm::vec3(0.0, 5.0, 0.0);
 	m_screenMidX = utl::SCREEN_WIDTH/2;
 	m_screenMidY = utl::SCREEN_HEIGHT/2;
 }
@@ -49,13 +50,13 @@ void FirstPersonCamera::control(Pipeline& p)
 		if(state[SDLK_w])
 		{
             updatePosXZ(0.0);
-			updatePosY(0.0);
+		//	updatePosY(0.0);
 		}
 
 		else if(state[SDLK_s])
 		{
             updatePosXZ(180.0);
-			updatePosY(180.0);
+		//	updatePosY(180.0);
 		}
 
 		if(state[SDLK_a])

@@ -37,6 +37,9 @@ class Shader
     bool loadIncludeFiles(string & str, string newLine);
     unsigned int loadShader(string& source, unsigned int ShaderType);
 
+	string m_vsName;
+	string m_gsName;
+	string m_fsName;
 
 
     public:
@@ -52,6 +55,11 @@ class Shader
         Shader(string path, string vs_source, string gs_source, string fs_source);
    //     Shader(string path, string vs_source, bool feedBack);
         ~Shader();
+
+		string getVertexShaderName();
+		string getGeometryShaderName();
+		string getFragmentShaderName();
+
         void linkShader();
         void useShader();
         unsigned int getProgramId();

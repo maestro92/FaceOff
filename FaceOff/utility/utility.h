@@ -38,7 +38,7 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
-#define DEBUG_FLAG 0
+#define DEBUG_FLAG 1
 
 
 using namespace std;
@@ -204,7 +204,7 @@ namespace utl
 
 	GLuint createNewTexture(int w, int h);
 	GLuint createNew3DTexture(int w, int h, int d);
-
+	GLuint createNoiseTexture(int w, int h, int min, int max);
 
 	GLuint createNewDepthTexture(int w, int h);
 	GLuint createNewCubemapTexture();

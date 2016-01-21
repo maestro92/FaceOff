@@ -34,6 +34,27 @@ bool ImportedModel::load(string filename)
 }
 
 
+
+bool ImportedModel::load(string filename, vector<string> textureFiles)
+{
+	bool ret = false;
+
+	const aiScene* scene = aiImportFile(filename.c_str(), aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs);
+
+	if (scene)
+	{
+		cout << "Loading " << filename << endl;
+		ret = initFromAiScene(scene, filename);
+	}
+	else
+		cout << "Error parsing '" << filename.c_str() << "': '" << aiGetErrorString() << endl;
+
+	setTextures(textureFiles);
+	return ret;
+}
+
+
+
 bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename)
 {
     m_meshes.resize(scene->mNumMeshes);
@@ -50,10 +71,10 @@ bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename
 
     bool b = initMaterials2(scene, filename);
 
-	/*
+	
     utl::debug("m_meshes size", m_meshes.size());
     utl::debug("m_textures size", m_textures.size());
-    
+	/*
 	for(int i=0; i<m_meshes.size(); i++)
     {
         utl::debug("mesh texture Index", m_meshes[i].m_textureIndex);
@@ -119,7 +140,16 @@ void ImportedModel::initMesh(unsigned int index, const aiMesh* m, const aiScene*
 }
 
 
-
+void ImportedModel::setTextures(vector<string> textureFiles)
+{
+	m_textures.clear();
+	for (int i = 0; i < textureFiles.size(); i++)
+	{
+		TextureData tex;
+		tex.m_id = utl::loadTexture(textureFiles[i]);
+		m_textures.push_back(tex);
+	}
+}
 
 bool ImportedModel::initMaterials2(const aiScene* pScene, const std::string& Filename)
 {
@@ -231,8 +261,8 @@ bool ImportedModel::initMaterials(const aiScene* pScene, const std::string& File
 
         // utl::debug(fullPath, m_textures[i-1].m_id);
         // Load a white texture in case the model does not include its own texture
-        if (!success)
-            m_textures[i].m_id = utl::loadTexture("Assets/Images/bricks.jpg");
+		if (!success)
+			m_textures[i].m_id = utl::loadTexture("Assets/models/weapons/Ak_47/ak-47.jpg");
 
         // utl::debugLn("final: " + fullPath, m_textures[i-1].m_id);
 

@@ -14,6 +14,11 @@ class BillboardModel : public Model
 
 		BillboardModel(int w, int h, float gap);
 
+		void createUniformFormation(int w, int h, float gap);
+
+		void createRandFormation(int maxW, int maxH, int count);
+
+
 		// Destructor
 		~BillboardModel();
 
