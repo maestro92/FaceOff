@@ -24,7 +24,10 @@ void Camera::control(Pipeline& p)
 
 }
 
+void Camera::control(Pipeline& p, Terrain* terrain)
+{
 
+}
 
 glm::mat4 Camera::getViewMatrix()
 {

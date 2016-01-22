@@ -15,6 +15,7 @@
 #include "model.h"
 #include "imported_model.h"
 #include "particle.h"
+#include "terrain/terrain.h"
 
 #include <list>
 
@@ -55,8 +56,13 @@ class Player : public WorldObject
 		vector<glm::vec3> m_bulletStartPositionOffsetScale;
 
 		void update(Pipeline& p);
+		void update(Pipeline& p, Terrain* terrain);
 		void update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis);
 		void update(glm::vec3 wPos, float pitch, float yaw);
+
+		void updateWeaponTransform();
+		void updateBulletTransform();
+		void adjustWeaponAndBulletPosition();
 
 
 		void render(Pipeline& p);

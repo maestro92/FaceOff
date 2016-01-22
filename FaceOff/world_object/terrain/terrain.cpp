@@ -27,3 +27,15 @@ void Terrain::render(Pipeline& p)
 	r_renderer.disableShader();
 }
 
+
+float Terrain::getHeightAt(float worldX, float worldZ)
+{
+	// we first want to find out where the gridsquare is
+	float terrainX = worldX - m_position.x;
+	float terrainZ = worldZ - m_position.z;
+
+	terrainX /= m_scale.x;
+	terrainZ /= m_scale.z;
+
+	return m_model->getHeightAt(terrainX, terrainZ);
+}

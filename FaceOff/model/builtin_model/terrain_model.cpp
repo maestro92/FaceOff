@@ -2,18 +2,22 @@
 #include "terrain_model.h"
 
 
-const float DEFAULT_SIZE = 800;
-const float VERTEX_COUNT = 128;
-const float MAX_HEIGHT = 40;
-const float MAX_PIXEL_COLOUR = 256 * 256 * 256;
+float TerrainModel::DEFAULT_SIZE = 800;
+float TerrainModel::VERTEX_COUNT = 128;
+float TerrainModel::MAX_HEIGHT = 40;
+float TerrainModel::MAX_PIXEL_COLOUR = 256 * 256 * 256;
 
 // constructor
 TerrainModel::TerrainModel()
 {
+	m_heights.resize(VERTEX_COUNT, vector<float>(VERTEX_COUNT, 0));
+
 	vector<VertexData> vertices;
 	vector<unsigned int> indices;
 	VertexData v;
-	int vertexPointer = 0;
+
+	m_gridSquareSize = DEFAULT_SIZE / ((float)VERTEX_COUNT - 1);
+	m_sideVertexCount = VERTEX_COUNT;
 
 	for (int z = 0; z < VERTEX_COUNT; z++)
 	{
@@ -65,14 +69,14 @@ TerrainModel::TerrainModel(string heightMap)
 	VertexData v;
 
 	SDL_Surface* image = utl::loadRawImage(heightMap);
-	
-	int maxGray, minGray;
-	
-	getMinMax(image, &maxGray, &minGray);
-	utl::debug("maxGray", maxGray);
-	utl::debug("minGray", minGray);
-
+		
 	int vertexCount = image->h;
+	m_heights.resize(vertexCount, vector<float>(vertexCount, 0));
+	m_gridSquareSize = DEFAULT_SIZE / ((float)vertexCount - 1);
+	m_sideVertexCount = vertexCount;
+
+	int maxGray, minGray;
+	getMinMax(image, &maxGray, &minGray);
 
 	for (int z = 0; z < vertexCount; z++)
 	{
@@ -80,19 +84,16 @@ TerrainModel::TerrainModel(string heightMap)
 		{
 			VertexData v;
 			v.m_position.x = (float)x / ((float)vertexCount - 1) * DEFAULT_SIZE;
-			v.m_position.y = getHeight(x, z, image, maxGray, minGray);
+			
+			float height = getHeight(x, z, image, maxGray, minGray);
+			m_heights[z][x] = height;
+			v.m_position.y = height;
 			v.m_position.z = (float)z / ((float)vertexCount - 1) * DEFAULT_SIZE;
 
 			// http://stackoverflow.com/questions/13983189/opengl-how-to-calculate-normals-in-a-terrain-height-grid
 			
 			v.m_normal = computeNormal(x, z, image, maxGray, minGray);
 			
-			/*
-			v.m_normal.x = 0;
-			v.m_normal.y = 1;
-			v.m_normal.z = 0;
-			*/
-
 			v.m_UV.x = (float)x / ((float)vertexCount - 1);
 			v.m_UV.y = (float)z / ((float)vertexCount - 1);
 
@@ -150,42 +151,7 @@ float TerrainModel::getHeight(int x, int y, SDL_Surface* image, int maxGray, int
 
 	h = (((float)(h - minGray) / (float)(maxGray - minGray))-0.5) * MAX_HEIGHT;
 
-	if (h == minGray)
-	{
-		cout << "here" << endl;
-	}
-
 	return h;
-
-	// cout << "h " << h << ", newh" << newh << endl;
-
-	// utl::debug("h", newh);
-	/*
-	static int count = 0;
-	if (x < 125 && x > 120 && y < 125 && y > 120 && ((int)r)>115 )
-//	if (((int)r)<0 && count < 10)
-	{
-		utl::debug("height", height);	
-		cout << (int)r << " " << (int)g << " " << (int)b << " " << (int)a << endl;
-		count++;
-	}
-	
-
-	
-//	height += MAX_PIXEL_COLOUR / 2.0f; 
-//	height /= MAX_PIXEL_COLOUR / 2.0f;
-	if (x < 5 && y < 5)
-		utl::debug("final height", h);
-
-	h /= 256.0f;
-	
-	h *= MAX_HEIGHT;
-
-	if (x < 5 && y < 5)
-		utl::debug("final height", h);
-
-	*/
-
 }
 
 
@@ -217,4 +183,55 @@ void TerrainModel::getMinMax(SDL_Surface* image, int* maxGray, int* minGray)
 TerrainModel::~TerrainModel()
 {
 
+}
+
+
+float TerrainModel::getGridSquareSize()
+{
+	return m_gridSquareSize;
+}
+
+
+float TerrainModel::getHeightAt(int x, int z)
+{
+	return m_heights[z][x];
+}
+
+
+int TerrainModel::getSideGridCount()
+{
+	return m_heights.size() - 1;
+}
+
+
+float TerrainModel::getHeightAt(float posX, float posZ)
+{
+	int gridX = (int)(floor(posX / m_gridSquareSize));
+	int gridZ = (int)(floor(posZ / m_gridSquareSize));
+
+	if (gridX < 0 || gridX >= m_sideVertexCount || gridZ < 0 || gridZ >= m_sideVertexCount)
+		return 0;
+
+	// find out where inside the gird
+	float xCoord = fmod(posX, m_gridSquareSize) / m_gridSquareSize;
+	float zCoord = fmod(posZ, m_gridSquareSize) / m_gridSquareSize;
+
+	float h = 0;
+	if (xCoord <= (1 - zCoord))
+	{
+		h = utl::barycentricInterpolation(
+			glm::vec3(0, m_heights[gridZ][gridX], 0),
+			glm::vec3(1, m_heights[gridZ][gridX + 1], 0),
+			glm::vec3(0, m_heights[gridZ + 1][gridX], 1),
+			glm::vec2(xCoord, zCoord));
+	}
+	else
+	{
+		h = utl::barycentricInterpolation(
+			glm::vec3(1, m_heights[gridZ][gridX + 1], 0),
+			glm::vec3(1, m_heights[gridZ + 1][gridX + 1], 1),
+			glm::vec3(0, m_heights[gridZ + 1][gridX], 1),
+			glm::vec2(xCoord, zCoord));
+	}
+	return h;
 }

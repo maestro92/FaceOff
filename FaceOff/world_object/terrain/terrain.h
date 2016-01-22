@@ -4,7 +4,6 @@
 #include "world_object.h"
 #include "terrain_model.h"
 
-const float MAX_PIXEL_COLOUR = 256 * 256 * 256;
 
 class Terrain : public WorldObject
 {
@@ -13,14 +12,19 @@ class Terrain : public WorldObject
 		float m_size;
 		float m_maxHeight;
 
-		Model* m_model;
+		TerrainModel* m_model;
 		GLuint m_textureID;
+
+
 
 		static Renderer r_renderer;
 
 	public:
 		Terrain();
 		Terrain(string heightMap);
+		
+		float getHeightAt(float worldX, float worldZ);
+		
 		void render(Pipeline& p);
 
 };

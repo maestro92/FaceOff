@@ -180,6 +180,9 @@ namespace utl
 		return x*x;
 	}
 
+	float barycentricInterpolation(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec2 coord);
+
+
 
 	/// utl_SDL.cpp
 	void initSDL(int w, int h, SDL_Surface* & m_displaySurface);

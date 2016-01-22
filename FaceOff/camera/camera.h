@@ -5,6 +5,7 @@
 #include "define.h"
 #include "utility.h"
 #include "pipeline.h"
+#include "terrain/terrain.h"
 using namespace std;
 
 
@@ -13,7 +14,8 @@ class Camera
     public:
         inline glm::vec3 getEyePoint();
 		virtual void control(Pipeline& p);
-	//	Pipeline m_pipeline;
+		virtual void control(Pipeline& p, Terrain* terrain);
+		//	Pipeline m_pipeline;
 		void setMouseIn(bool b);
 		bool getMouseIn();
 

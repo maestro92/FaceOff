@@ -12,6 +12,7 @@ class FirstPersonCamera : public Camera
         ~FirstPersonCamera();
 
         void control(Pipeline& p);
+		void control(Pipeline& p, Terrain* terrain);
 
 
     private:

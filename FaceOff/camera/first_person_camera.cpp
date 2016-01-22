@@ -71,6 +71,44 @@ void FirstPersonCamera::control(Pipeline& p)
     updatePipeline(p);
 }
 
+
+void FirstPersonCamera::control(Pipeline& p, Terrain* terrain)
+{
+	if (m_mouseIn)
+	{
+		int tmpx, tmpy;
+		SDL_GetMouseState(&tmpx, &tmpy);
+
+		m_yaw += CAMERA_ROTATION_SPEED * (m_screenMidX - tmpx);
+		m_pitch += CAMERA_ROTATION_SPEED * (m_screenMidY - tmpy);
+
+		restrain();
+		SDL_WarpMouse(m_screenMidX, m_screenMidY);
+		Uint8* state = SDL_GetKeyState(NULL);
+
+		if (state[SDLK_w])
+		{
+			updatePosXZ(0.0);
+		}
+
+		else if (state[SDLK_s])
+		{
+			updatePosXZ(180.0);
+		}
+
+		if (state[SDLK_a])
+			updatePosXZ(90.0);
+
+		else if (state[SDLK_d])
+			updatePosXZ(270);
+	}
+
+	//   utl::debug("position", m_eye);
+	m_eye.y = terrain->getHeightAt(m_eye.x, m_eye.z) + 5;
+	updatePipeline(p);
+}
+
+
 void FirstPersonCamera::updatePipeline(Pipeline& p)
 {
 	p.setMatrixMode(VIEW_MATRIX);

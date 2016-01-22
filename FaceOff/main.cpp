@@ -1050,7 +1050,7 @@ void FaceOff::forwardRender()
 	}
 	else
 	{
-		m_players[m_defaultPlayerID]->update(m_pipeline);
+		m_players[m_defaultPlayerID]->update(m_pipeline, &o_multiTextureTerrain);
 		o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getEyePoint());
 	}
 
