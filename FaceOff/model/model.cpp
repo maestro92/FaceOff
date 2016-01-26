@@ -77,3 +77,28 @@ void Model::render()
 
 }
 
+void Model::setTextures(vector<string> textureFiles)
+{
+	m_textures.clear();
+	for (int i = 0; i < textureFiles.size(); i++)
+	{
+		TextureData tex;
+		tex.m_id = utl::loadTexture(textureFiles[i], GL_LINEAR_MIPMAP_LINEAR, GL_REPEAT, true);
+		m_textures.push_back(tex);
+	}
+}
+
+
+void Model::setMeshRandTextureIdx()
+{
+	int texCount = m_textures.size();
+
+	if (texCount <= 0)
+		return;
+
+	for (int i = 0; i < m_meshes.size(); i++)
+	{
+//		m_meshes[i].m_textureIndex = utl::randInt(0, texCount - 1);
+		m_meshes[i].m_textureIndex = 0;
+	}
+}

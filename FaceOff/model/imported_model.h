@@ -108,7 +108,7 @@ class ImportedModel : public Model
         void clear();
         glm::vec3 getMaterialColor(const aiMesh* m, const aiScene* s);
 
-		void setTextures(vector<string> textureFiles);
+
 
 };
 

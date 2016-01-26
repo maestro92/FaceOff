@@ -34,7 +34,7 @@
 #include "renderer.h"
 #include "player.h"
 
-
+#include "light\light_manager.h"
 #include "first_person_camera.h"
 
 #include "quad_model.h"
@@ -87,15 +87,84 @@ e for events
 
 
 /*
-1. Health Bar and Name
-2. Bullets
-3. Collision Detection
-4. [1] [2] for guns
-5. change character body from sphere to capsules
-6. change rand
-7. Fog Mode!!
+Constructing a BSP tree from scratch or recomputing parts of a tree is sufficiently
+expensive that they are rarely built or modified at runtime. For this reason, BSP trees
+are primarily used to hold static background geometry. Collision detection among
+moving objects is usually handled through some other method.
+
+
+Quad Trees
+As the tree must be preallocated to a specific depth and cannot easily grow further,
+the array representation is more suitable for static scenes and static octrees. The
+pointer-based representation is more useful for dynamic scenes in which the octree
+is constantly updated.
+
+
+The biggest problem with using kd-trees, if I recall correctly, 
+is that they are more difficult to insert/remove items from while maintaining balance. 
+Therefore, I would recommend using one kd-tree for static objects such as houses and 
+trees which is highly balanced, and another which contains players and vehicles, 
+which needs balancing regularly. Find the nearest static object and 
+the nearest mobile object, and compare those two.
+http://gamedev.stackexchange.com/questions/14373/in-2d-how-do-i-efficiently-find-the-nearest-object-to-a-point
+
+/*
+Heh, well I think I am back to square one. Because the main actors in the game are:
+- Players
+- Fired Bullets
+- Weapons (before they are picked up, i.e. placed in world => static )
+- World level geometry
+
+
+http://www.codercorner.com/SAP.pdf
+- hased quad tree
+
+- http://www.gamedev.net/page/resources/_/technical/game-programming/general-collision-detection-for-games-using-ell-r1026
+
+
+http://forum.unity3d.com/threads/why-no-bsp-support.185410/
 
 https://www.youtube.com/watch?v=yNYwZMmgTJk&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP&index=14
+
+
+- Discussion Forum (it even has Chris Ericson's answer)
+http://www.gamedev.net/topic/328022-what-collision-method-is-better/
+http://www.gamedev.net/topic/565522-which-broadphase-collision-tech-should-i-use-/
+https://www.reddit.com/r/gamedev/comments/1cssyn/sweep_and_prune_vs_quadtree_or_similar/
+
+
+- kd tree
+
+good for static object
+keep dynamic objects in a separate tree
+good for raycasting
+
+
+
+- Sweep and prune
+
+This broadphase has the best performance for typical dynamics worlds,
+where most objects have little or no motion.
+
+http://www.codercorner.com/SAP.pdf
+http://www.toptal.com/game/video-game-physics-part-ii-collision-detection-for-solid-objects
+
+
+- dynamic bounding tree 
+
+It handles dynamic worlds where many objects are in motion,
+and object addition and removal is faster than SAP.
+
+http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Broadphase
+http://www.randygaul.net/2013/08/06/dynamic-aabb-tree/
+http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=4&t=9800
+http://gamedev.stackexchange.com/questions/87625/sweep-and-prune-vs-quad-tree-when-all-objects-are-dynamic-moving
+https://code.google.com/p/box2d/source/browse/trunk/Box2D/Box2D/Collision/b2DynamicTree.h
+http://www.toptal.com/game/video-game-physics-part-ii-collision-detection-for-solid-objects
+
+
+
+
 
 */
 
@@ -127,12 +196,10 @@ class FaceOff
 
 		FirstPersonCamera m_firstPersonCamera;
 
-		Terrain o_terrain;
-		MultiTextureTerrain o_multiTextureTerrain;
+		// lights
+		LightManager m_lightManager;
 
-		BillboardList o_grassPatch;
-		BillboardList o_flowerPatch;
-
+		// models
 		Model*          p_model;
 		QuadModel       m_groundModel;
 		XYZAxisModel    m_xyzModel;
@@ -140,6 +207,16 @@ class FaceOff
 		ImportedModel	m_bulletModel;
 		ImportedModel	m_tree;
 		ImportedModel	m_lowPolyTree;
+		ImportedModel	m_stairs;
+		ImportedModel	m_woodenBox;
+		
+
+		// objects
+		Terrain o_terrain;
+		MultiTextureTerrain o_multiTextureTerrain;
+
+		BillboardList o_grassPatch;
+		BillboardList o_flowerPatch;
 
 		WorldObject		o_tree;
 		WorldObject		o_lowPolyTree;
@@ -153,7 +230,6 @@ class FaceOff
 
 		list<Particle> m_bullets;
 
-//		Camera* p_defaultCamera;
 		int m_defaultPlayerID;
 
 		vector<Player*> m_players;
@@ -180,6 +256,8 @@ class FaceOff
 		int int_message;
 		RakNet::BitStream bsOut;
 
+
+		vector<WorldObject*> m_objects;
 
 		FaceOff();
 		~FaceOff();

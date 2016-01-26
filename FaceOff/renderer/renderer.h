@@ -315,7 +315,7 @@ class Renderer
         Renderer();
         virtual ~Renderer();
 
-        void addShader(Shader* s);
+        virtual void addShader(Shader* s);
 
         void enableShader();
         void enableShader(int pass);

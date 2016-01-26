@@ -64,10 +64,14 @@ class Model
         ~Model();
 
         void addMesh(Mesh m);
-        virtual void render();
+		void setTextures(vector<string> textureFiles);
+		void setMeshRandTextureIdx();
+		virtual void render();
 
         void clear();
         GLuint m_modelGeometry;
+
+
 
         vector<Mesh> m_meshes;
         vector<TextureData> m_textures;

@@ -140,16 +140,7 @@ void ImportedModel::initMesh(unsigned int index, const aiMesh* m, const aiScene*
 }
 
 
-void ImportedModel::setTextures(vector<string> textureFiles)
-{
-	m_textures.clear();
-	for (int i = 0; i < textureFiles.size(); i++)
-	{
-		TextureData tex;
-		tex.m_id = utl::loadTexture(textureFiles[i]);
-		m_textures.push_back(tex);
-	}
-}
+
 
 bool ImportedModel::initMaterials2(const aiScene* pScene, const std::string& Filename)
 {

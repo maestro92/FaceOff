@@ -17,14 +17,12 @@ Shader::Shader(const char* vs_source, const char* fs_source)
 	m_gsName = "";
 	m_fsName = fs_source;
 
-	
+	// source code and Mode
 	loadFile(vs_source, source);
-
-    // source code and Mode
     vs = loadShader(source, GL_VERTEX_SHADER);
 
+	// load the fragment Shader
     source = "";
-    // load the fragment Shader
     loadFile(fs_source, source);
     fs = loadShader(source, GL_FRAGMENT_SHADER);
 
@@ -51,21 +49,20 @@ Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_sour
 	m_fsName = fs_source;
 
 	
-	
+	// source code and Mode
 	loadFile(vs_source, source);
-    // source code and Mode
     vs = loadShader(source, GL_VERTEX_SHADER);
 
 
-    source = "";
     // load the geometry Shader
-    loadFile(gs_source, source);
+	source = "";
+	loadFile(gs_source, source);
     gs = loadShader(source, GL_GEOMETRY_SHADER);
 
 
-    source = "";
     // load the fragment Shader
-    loadFile(fs_source, source);
+	source = "";
+	loadFile(fs_source, source);
     fs = loadShader(source, GL_FRAGMENT_SHADER);
 
 

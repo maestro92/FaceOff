@@ -58,9 +58,9 @@ FaceOff::FaceOff()
 {
 	isRunning = true;
 
-	initRenderers();
-	initObjects();
 	initModels();
+	initObjects();
+	initRenderers();
 	initGUI();
 
 
@@ -89,11 +89,40 @@ FaceOff::~FaceOff()
 
 
 
-void FaceOff::initRenderers()
+
+void FaceOff::initModels()
 {
-	RendererManager::init();
-	tempTexture = utl::loadTexture("Assets/Images/tank1B.png");
+	float scale = 1.0;
+
+	vector<string> textures;
+
+	m_xyzModel = XYZAxisModel();
+	m_groundModel = QuadModel(-scale, scale, -scale, scale);
+	textures.clear();  textures.push_back("Assets/Images/chess.png"); //textures.push_back("Assets/tree.png"); // textures.push_back("Assets/Images/chess.png");
+	m_groundModel.setTextures(textures);
+	m_groundModel.setMeshRandTextureIdx();
+
+	m_gunModel.load("./Assets/models/weapons/Ak_47/Ak-47.obj");
+
+	m_bulletModel.load("./Assets/models/cylinder_base.obj");
+
+
+	textures.clear();  textures.push_back("Assets/tree.png");
+	m_tree.load("Assets/tree.obj", textures);
+
+	textures.clear();  textures.push_back("Assets/lowPolyTree.png");
+	m_lowPolyTree.load("Assets/lowPolyTree.obj", textures);
+
+
+	textures.clear(); textures.push_back("Assets/models/basic stair/texture.png");
+	m_stairs.load("Assets/models/basic stair/stairs.obj", textures);
+	m_stairs.setMeshRandTextureIdx();
+
+	textures.clear(); textures.push_back("Assets/models/wooden box/WoodPlanks_Color.jpg");
+	m_woodenBox.load("Assets/models/wooden box/WoodenBoxOpen02.obj", textures);
+	m_woodenBox.setMeshRandTextureIdx();
 }
+
 
 
 void FaceOff::initObjects()
@@ -102,8 +131,7 @@ void FaceOff::initObjects()
 	m_firstPersonCamera.setEyePoint(glm::vec3(-59.362, 94.037, 153.189));
 
 
-
-	float scale = 20.0;
+	float scale = 1.0;
 	o_worldAxis.setScale(scale);
 	o_ground.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
 
@@ -126,44 +154,84 @@ void FaceOff::initObjects()
 	o_multiTextureTerrain = MultiTextureTerrain("Assets/Images/terrain/heightmap.png");
 	o_grassPatch = BillboardList();
 	o_grassPatch.setTexture("Assets/Images/billboard_grass_alpha_001.png");
-	o_grassPatch.setRandomFormation(50, 50, 1000);
+	o_grassPatch.setRandomFormation(800, 800, 1000, &o_multiTextureTerrain);
 
 	o_flowerPatch = BillboardList();
 	o_flowerPatch.setTexture("Assets/Images/billboard_flower_alpha_001.png");
-	o_flowerPatch.setRandomFormation(50, 50, 1000);
+	o_flowerPatch.setRandomFormation(800, 800, 1000, &o_multiTextureTerrain);
 
 
 	o_tree.setPosition(50, 0, 50);
 	o_lowPolyTree.setPosition(100, 0, 100);
 
+	
 
 	Weapon::initWeaponModels();
+
+	scale = 200.0f;
+	WorldObject::DEFAULT_MODEL = &m_tree;
+	WorldObject* o_temp = new WorldObject();
+	o_temp->setScale(scale, 50.0, scale);
+	o_temp->setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
+	o_temp->setModel(&m_groundModel);
+	m_objects.push_back(o_temp);
+	
+
+	scale = 15.0f;
+	o_temp = new WorldObject();
+	o_temp->setScale(scale);
+	o_temp->setPosition(0, 0, 20);
+	o_temp->setModel(&m_stairs);
+	m_objects.push_back(o_temp);
+
+
+	o_temp = new WorldObject();
+	o_temp->setScale(scale);
+	o_temp->setPosition(0, 0, -20);
+	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
+	o_temp->setModel(&m_stairs);
+	m_objects.push_back(o_temp);
+
+	scale = 10.0f;
+	float gap = 10.0;
+	for (int i = 0; i < 5; i++)
+	{
+		o_temp = new WorldObject();
+		float x = -10 + i * 2 * gap + 50;
+		float y = 0;
+		float z = -10 + i * gap;
+
+		o_temp->setPosition(x, scale / 2, z);
+		o_temp->setScale(scale);
+		o_temp->setModel(&m_woodenBox);
+		m_objects.push_back(o_temp);
+	}
+
+
+	for (int i = 0; i < 5; i++)
+	{
+		o_temp = new WorldObject();
+		float x = -10 - i * 2 * gap - 50;
+		float y = 0;
+		float z = -10 + i * gap;
+
+		o_temp->setPosition(x, scale / 2, z);
+		o_temp->setScale(scale);
+		o_temp->setModel(&m_woodenBox);
+		m_objects.push_back(o_temp);
+	}
+
 }
 
 
 
-void FaceOff::initModels()
+
+
+void FaceOff::initRenderers()
 {
-	float scale = 50.0;
-
-	vector<string> textures;
-
-	m_xyzModel = XYZAxisModel();
-	m_groundModel = QuadModel(-scale, scale, -scale, scale);
-
-	m_gunModel.load("./Assets/models/weapons/Ak_47/Ak-47.obj");
-
-	m_bulletModel.load("./Assets/models/cylinder_base.obj");
-
-
-	textures.clear();  textures.push_back("Assets/tree.png");
-	m_tree.load("Assets/tree.obj", textures);
-
-	textures.clear();  textures.push_back("Assets/lowPolyTree.png");
-	m_lowPolyTree.load("Assets/lowPolyTree.obj", textures);
-
+	RendererManager::init();
+	RendererManager::initSceneRendererStaticLightsData(m_lightManager);
 }
-
 
 
 
@@ -1033,7 +1101,9 @@ void FaceOff::forwardRender()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+	// glDisable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1050,7 +1120,8 @@ void FaceOff::forwardRender()
 	}
 	else
 	{
-		m_players[m_defaultPlayerID]->update(m_pipeline, &o_multiTextureTerrain);
+		m_players[m_defaultPlayerID]->update(m_pipeline);
+		//		m_players[m_defaultPlayerID]->update(m_pipeline, &o_multiTextureTerrain);
 		o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getEyePoint());
 	}
 
@@ -1080,8 +1151,8 @@ void FaceOff::forwardRender()
 		{
 			if (i != m_defaultPlayerID && m_players[i] != NULL)
 			{
-				m_players[i]->render(m_pipeline);
-				m_players[i]->renderWeapon(m_pipeline);
+		//		m_players[i]->render(m_pipeline);
+		//		m_players[i]->renderWeapon(m_pipeline);
 			}
 			else
 			{
@@ -1098,53 +1169,36 @@ void FaceOff::forwardRender()
 	o_worldAxis.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 
 	
-	p_renderer = &RendererManager::r_fullColor;
-	p_renderer->setData("u_color", glm::vec3(0.5, 0.0, 0.0));
-	// p_model = &m_groundModel;
-	// o_ground.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+	// glDisable(GL_CULL_FACE);
 
-	p_renderer->setData("u_color", glm::vec3(1.0, 1.0, 0.0));
-	p_model = &m_bulletModel;
-	
-	// *********************
-	// need to make this constant time removal
-	auto it = m_bullets.begin();
-	while (it != m_bullets.end())
+	p_renderer = &RendererManager::r_texturedObject;
+	p_renderer->enableShader();
+	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, tempTexture);
+	for (int i = 0; i < m_objects.size(); i++)
 	{
-		(*it).update();
-		if ((*it).isAlive())
-		{
-			(*it).renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-			it++;
-		}
-		else
-		{
-			auto temp = it;
-			temp++;
-			m_bullets.erase(it);
-			it = temp;
-		}
+		WorldObject* object = m_objects[i];
+		object->renderGroup(m_pipeline, p_renderer);
 	}
+	p_renderer->disableShader();
 
-//	o_sampleBullet.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-//	o_terrain.render(m_pipeline);
-	o_multiTextureTerrain.render(m_pipeline);
+	// glEnable(GL_CULL_FACE);
+	/*
+	p_renderer = &RendererManager::r_texturedObject;
+	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);
+//	p_model = &m_tree;
+	// p_model = &m_groundModel;
+	p_model = &m_groundModel;
+	m_objects[0]->setModel(p_model);
+	m_objects[0]->renderSingle(m_pipeline, p_renderer, RENDER_PASS1);
+	*/
 
-	o_grassPatch.setPosition(10.0, 0.0, 10.0);
-	o_grassPatch.setScale(1.0, 1.0, 1.0);
-	o_flowerPatch.setPosition(0.0, 0.0, 0.0);
-	o_flowerPatch.setScale(1.0, 1.0, 1.0);
 
+	/*
 	o_grassPatch.render(m_pipeline);
 	o_flowerPatch.render(m_pipeline);
 
 
-
-//	o_grassPatch.render(m_pipeline);
-//	o_flowerPatch.render(m_pipeline);
-
-
-	p_renderer = &RendererManager::r_fullTexture;
+	p_renderer = &RendererManager::r_texturedObject;
 	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);
 	p_model = &m_gunModel;
 	o_gun.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
@@ -1154,8 +1208,7 @@ void FaceOff::forwardRender()
 
 	p_model = &m_lowPolyTree;
 	o_lowPolyTree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-	
-	//   renderGUI();
+	*/
 }
 
 
@@ -1314,3 +1367,148 @@ void FaceOff::renderGUI()
 	m_gui.updateAndRender(m_mouseState);
 
 }
+
+
+
+
+
+
+/*
+
+
+void FaceOff::forwardRender()
+{
+glBindFramebuffer(GL_FRAMEBUFFER, 0);
+glEnable(GL_DEPTH_TEST);
+// glDisable(GL_CULL_FACE);
+glEnable(GL_CULL_FACE);
+glCullFace(GL_BACK);
+
+glClearColor(0.0, 0.0, 0.0, 1.0);
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+m_pipeline.setMatrixMode(VIEW_MATRIX);
+m_pipeline.loadIdentity();
+
+
+if (m_isServer)
+{
+m_firstPersonCamera.control(m_pipeline);
+o_skybox.setPosition(-m_firstPersonCamera.getEyePoint());
+}
+else
+{
+m_players[m_defaultPlayerID]->update(m_pipeline, &o_multiTextureTerrain);
+o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getEyePoint());
+}
+
+
+
+
+o_skybox.render(m_pipeline);
+
+
+m_pipeline.setMatrixMode(MODEL_MATRIX);
+
+// render the players
+if (m_isServer)
+{
+for (int i = 0; i < m_players.size(); i++)
+{
+if (i != m_defaultPlayerID && m_players[i] != NULL)
+{
+cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
+m_players[i]->render(m_pipeline);
+}
+}
+}
+else
+{
+for (int i = 0; i < m_players.size(); i++)
+{
+if (i != m_defaultPlayerID && m_players[i] != NULL)
+{
+m_players[i]->render(m_pipeline);
+m_players[i]->renderWeapon(m_pipeline);
+}
+else
+{
+m_players[i]->renderWeapon(m_pipeline);
+}
+
+}
+}
+
+
+
+p_renderer = &RendererManager::r_fullVertexColor;
+p_model = &m_xyzModel;
+o_worldAxis.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+
+p_renderer = &RendererManager::r_fullColor;
+p_renderer->setData("u_color", glm::vec3(0.5, 0.0, 0.0));
+// p_model = &m_groundModel;
+// o_ground.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+p_renderer->setData("u_color", glm::vec3(1.0, 1.0, 0.0));
+p_model = &m_bulletModel;
+
+// *********************
+// need to make this constant time removal
+auto it = m_bullets.begin();
+while (it != m_bullets.end())
+{
+(*it).update();
+if ((*it).isAlive())
+{
+(*it).renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+it++;
+}
+else
+{
+auto temp = it;
+temp++;
+m_bullets.erase(it);
+it = temp;
+}
+}
+
+//	o_sampleBullet.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+//	o_terrain.render(m_pipeline);
+o_multiTextureTerrain.render(m_pipeline);
+
+
+o_grassPatch.setPosition(1.0, 0.0, 1.0);
+o_grassPatch.setScale(1.0, 1.0, 1.0);
+o_flowerPatch.setPosition(0.0, 0.0, 0.0);
+o_flowerPatch.setScale(1.0, 1.0, 1.0);
+
+
+o_grassPatch.render(m_pipeline);
+o_flowerPatch.render(m_pipeline);
+
+
+
+//	o_grassPatch.render(m_pipeline);
+//	o_flowerPatch.render(m_pipeline);
+
+
+//	p_renderer = &RendererManager::r_fullTexture;
+p_renderer = &RendererManager::r_texturedObject;
+p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);
+p_model = &m_gunModel;
+o_gun.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+p_model = &m_tree;
+o_tree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+p_model = &m_lowPolyTree;
+o_lowPolyTree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+//   renderGUI();
+}
+
+
+*/

@@ -6,9 +6,9 @@
 #include "Model.h"
 
 const glm::vec3 NEG_GRAVITY = glm::vec3(0, -9.8, 0);
-const glm::vec3 NEG_HALF_GRAVITY = glm::vec3(0, 9.8, 0);
+const glm::vec3 NEG_HALF_GRAVITY = glm::vec3(0, -4.9, 0);
 
-const glm::vec3 POS_GRAVITY = glm::vec3(0, -4.9, 0);
+const glm::vec3 POS_GRAVITY = glm::vec3(0, 9.8, 0);
 const glm::vec3 POS_HALF_GRAVITY = glm::vec3(0, 4.9, 0);
 
 using namespace std;
@@ -18,11 +18,16 @@ class WorldObject
     public:
         WorldObject();
 
+		float m_minX, m_maxX;
+		float m_minY, m_maxY;
+		float m_minZ, m_maxZ;
+
         glm::vec3 m_position;
         glm::vec3 m_velocity;
         glm::vec3 m_scale;
         glm::mat4 m_rotation;
 		glm::mat4 m_modelRotation;
+		Model* m_model;
 
         inline void setScale(float s);
         inline void setScale(glm::vec3 scale);
@@ -34,17 +39,28 @@ class WorldObject
         inline void setVelocity(glm::vec3 vel);
         inline void setVelocity(float x, float y, float z);
 
+		inline void setModel(Model* model);
+
 		inline glm::vec3 getPosition();
 		inline glm::vec3 getScale();
 		inline glm::mat4 getRotation();
 
         virtual inline void setRotation(glm::mat4 rot);
 
+		virtual void renderSingle(Pipeline& m_pipeline, Renderer* renderer);
+		virtual void renderSingle(Pipeline& m_pipeline, Renderer* renderer, int pass);
+
+		virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer);
+		virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass);
+
+
         virtual void renderSingle(Pipeline& m_pipeline, Renderer* renderer, Model* model);
         virtual void renderSingle(Pipeline& m_pipeline, Renderer* renderer, int pass, Model* model);
 
         virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer, Model* model);
         virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass, Model* model);
+
+		static Model* DEFAULT_MODEL;
 
 };
 
@@ -106,6 +122,11 @@ inline glm::vec3 WorldObject::getScale()
 inline glm::mat4 WorldObject::getRotation()
 {
 	return m_rotation;
+}
+
+inline void WorldObject::setModel(Model* model)
+{
+	m_model = model;
 }
 
 #endif

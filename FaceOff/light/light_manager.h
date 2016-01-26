@@ -24,12 +24,20 @@ class LightManager
 		~LightManager();
 
 
+//		vector<BaseLight*> getLights();
+//		BaseLight* getLight(int index);
 
-		vector<BaseLight*> getLights();
-		BaseLight* getLight(int index);
+		DirectionalLight getDirLight(int index);
+		PointLight getPointLight(int index);
+		SpotLight getSpotLight(int index);
+
 	private:
 
-		vector<BaseLight*> m_lights;
+		vector<DirectionalLight> m_dirLights;
+		vector<PointLight> m_pointLights;
+		vector<SpotLight> m_spotLights;
+
+//		vector<BaseLight*> m_lights;
 		int m_dirLightCount;
 		int m_pointLightCount;
 		int m_spotLightCount;

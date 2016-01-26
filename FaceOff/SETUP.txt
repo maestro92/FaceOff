@@ -9,8 +9,7 @@ right click on the project and choose "properties"
 
 Configuration Properties -> C/C++ -> General
 Additional Include Directories:
-./;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;world_object;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include
-
+./;world_object\weapon;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include
 
 
 Configuration Properties -> Linker -> General

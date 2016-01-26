@@ -37,15 +37,5 @@ inline void SkyBox::setRotation(glm::mat4 rot)
     m_rotation = glm::make_mat4(temp);
 
 }
-/*
-virtual inline void setMatrix(Camera* camera);
-{
 
-    float temp[16] = {rot[0][0], rot[0][1], rot[0][2], 0.0,
-                      rot[1][0], rot[1][1], rot[1][2], 0.0,
-                      rot[2][0], rot[2][1], rot[2][2], 0.0,
-                      0.0,       0.0,       0.0,       1.0};
-    m_rotation = glm::make_mat4(temp);
-
-}*/
 #endif

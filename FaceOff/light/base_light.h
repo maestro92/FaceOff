@@ -25,7 +25,7 @@ struct DirectionalLight : public BaseLight
 	glm::vec3 direction;
 	DirectionalLight()
 	{
-		direction = glm::vec3(-1.0f, -1.0f, 0.0f);
+		direction = glm::vec3(1.0f, -1.0f, 0.0f);
 	}
 };
 

@@ -262,7 +262,7 @@ GLuint Renderer::getUniLoc(Shader* s, const char* name)
 
     if(location == -1)
     {
-        cout << "Error in Init_Shader with " << name << endl;
+        cout << "Error in getUniLoc with " << name << endl;
     }
     return location;
 }

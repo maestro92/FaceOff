@@ -2,9 +2,12 @@
 
 LightManager::LightManager()
 {
-	BaseLight* light;
+	DirectionalLight light = DirectionalLight();
+	light.color = WHITE;
+	light.ambientIntensity = 0.5;
+	light.diffuseIntensity = 0.9;
 
-
+	m_dirLights.push_back(light);
 }
 
 LightManager::~LightManager()
@@ -13,14 +16,17 @@ LightManager::~LightManager()
 }
 
 
-vector<BaseLight*> LightManager::getLights()
+DirectionalLight LightManager::getDirLight(int index)
 {
-	return m_lights;
+	return m_dirLights[index];
 }
 
-
-BaseLight* LightManager::getLight(int index)
+PointLight LightManager::getPointLight(int index)
 {
-	return m_lights[index];
-}		
+	return m_pointLights[index];
+}
 
+SpotLight LightManager::getSpotLight(int index)
+{
+	return m_spotLights[index];
+}

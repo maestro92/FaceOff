@@ -3,6 +3,7 @@
 
 
 #include "model.h"
+#include "terrain/terrain.h"
 
 using namespace std;
 
@@ -13,10 +14,12 @@ class BillboardModel : public Model
 		BillboardModel();
 
 		BillboardModel(int w, int h, float gap);
-
+		
 		void createUniformFormation(int w, int h, float gap);
+		void createUniformFormation(int w, int h, float gap, Terrain* terrain);
 
 		void createRandFormation(int maxW, int maxH, int count);
+		void createRandFormation(int maxW, int maxH, int count, Terrain* terrain);
 
 
 		// Destructor

@@ -1,6 +1,7 @@
 
 #include "skybox.h"
 
+static float angle = 0;
 
 SkyBox::SkyBox()
 {
@@ -38,19 +39,25 @@ void SkyBox::init(string* files)
 
 void SkyBox::render(Pipeline& m_pipeline)
 {
-    glDisable(GL_DEPTH_TEST);
 
+    glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
     r_skybox.enableShader();
     r_skybox.setData("u_cubeMapTextureID", 0, GL_TEXTURE_CUBE_MAP, m_staticCubeMapID);
 
     m_pipeline.pushMatrix();
         m_pipeline.translate(m_position);
+		m_pipeline.rotate(angle, 0.0f, 1.0f, 0.0f);
+
         r_skybox.loadUniformLocations(m_pipeline);
         m_cubeModel.render();
     m_pipeline.popMatrix();
     r_skybox.disableShader();
 
-
+	angle += 0.001;
+	if (angle > 360)
+		angle -= 360;
+	glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 }
 

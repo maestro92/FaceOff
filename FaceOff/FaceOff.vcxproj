@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./;world_object\weapon;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;world_object\weapon;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -89,6 +89,7 @@
     <ClCompile Include="camera\camera.cpp" />
     <ClCompile Include="camera\first_person_camera.cpp" />
     <ClCompile Include="camera\third_person_camera.cpp" />
+    <ClCompile Include="collision_detection\kd_tree.cpp" />
     <ClCompile Include="gui\button.cpp" />
     <ClCompile Include="gui\control.cpp" />
     <ClCompile Include="gui\gui_manager.cpp" />
@@ -248,6 +249,8 @@
     <ClInclude Include="camera\camera.h" />
     <ClInclude Include="camera\first_person_camera.h" />
     <ClInclude Include="camera\third_person_camera.h" />
+    <ClInclude Include="collision_detection\kd_tree.h" />
+    <ClInclude Include="collision_detection\kd_tree_node.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="gui\button.h" />
     <ClInclude Include="gui\control.h" />
