@@ -84,3 +84,22 @@ void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass
         model->render();
     m_pipeline.popMatrix();
 }
+
+
+/*
+CubeWireFrameModel WorldObject::createWireFrameModel()
+{
+	
+	m_maxX = m_model->m_maxX * m_scale.x + m_position.x;
+	m_minX = m_model->m_minX * m_scale.x + m_position.x;
+
+	m_maxY = m_model->m_maxY * m_scale.y + m_position.y;
+	m_minY = m_model->m_minY * m_scale.y + m_position.y;
+	
+	m_maxZ = m_model->m_maxZ * m_scale.z + m_position.z;
+	m_minZ = m_model->m_minZ * m_scale.z + m_position.z;
+	
+	CubeWireFrameModel model(m_maxX, m_minX, m_maxY, m_minY, m_maxZ, m_minZ);
+	return model;
+}
+*/

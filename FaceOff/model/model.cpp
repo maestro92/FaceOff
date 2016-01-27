@@ -9,6 +9,9 @@ using namespace std;
 Model::Model()
 {
     m_modelGeometry = GL_TRIANGLES;
+
+	m_minX = m_minY = m_minZ = -1.0;
+	m_maxX = m_maxY = m_maxZ = 1.0; 
 }
 
 

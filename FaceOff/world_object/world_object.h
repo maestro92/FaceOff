@@ -3,7 +3,8 @@
 
 #include "utility.h"
 #include "renderer.h"
-#include "Model.h"
+#include "model.h"
+#include "cube_wireframe_model.h"
 
 const glm::vec3 NEG_GRAVITY = glm::vec3(0, -9.8, 0);
 const glm::vec3 NEG_HALF_GRAVITY = glm::vec3(0, -4.9, 0);
@@ -61,6 +62,9 @@ class WorldObject
         virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass, Model* model);
 
 		static Model* DEFAULT_MODEL;
+
+		CubeWireFrameModel* m_wireFrameModel;
+
 
 };
 
@@ -127,6 +131,11 @@ inline glm::mat4 WorldObject::getRotation()
 inline void WorldObject::setModel(Model* model)
 {
 	m_model = model;
+		
+	m_wireFrameModel = new CubeWireFrameModel(m_model->m_maxX, m_model->m_minX,
+											m_model->m_maxY, m_model->m_minY, 
+											m_model->m_maxZ, m_model->m_minZ);
+	
 }
 
 #endif

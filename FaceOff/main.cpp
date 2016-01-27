@@ -97,7 +97,12 @@ void FaceOff::initModels()
 	vector<string> textures;
 
 	m_xyzModel = XYZAxisModel();
-	m_groundModel = QuadModel(-scale, scale, -scale, scale);
+
+
+
+
+	m_groundModel.load("Assets/models/quad.obj");
+
 	textures.clear();  textures.push_back("Assets/Images/chess.png"); //textures.push_back("Assets/tree.png"); // textures.push_back("Assets/Images/chess.png");
 	m_groundModel.setTextures(textures);
 	m_groundModel.setMeshRandTextureIdx();
@@ -175,7 +180,8 @@ void FaceOff::initObjects()
 	o_temp->setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
 	o_temp->setModel(&m_groundModel);
 	m_objects.push_back(o_temp);
-	
+
+
 
 	scale = 15.0f;
 	o_temp = new WorldObject();
@@ -184,14 +190,14 @@ void FaceOff::initObjects()
 	o_temp->setModel(&m_stairs);
 	m_objects.push_back(o_temp);
 
-
+	
 	o_temp = new WorldObject();
 	o_temp->setScale(scale);
 	o_temp->setPosition(0, 0, -20);
 	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
 	o_temp->setModel(&m_stairs);
 	m_objects.push_back(o_temp);
-
+	
 	scale = 10.0f;
 	float gap = 10.0;
 	for (int i = 0; i < 5; i++)
@@ -220,7 +226,7 @@ void FaceOff::initObjects()
 		o_temp->setModel(&m_woodenBox);
 		m_objects.push_back(o_temp);
 	}
-
+	
 }
 
 
@@ -1164,12 +1170,9 @@ void FaceOff::forwardRender()
 	
 
 
-	p_renderer = &RendererManager::r_fullVertexColor;
-	p_model = &m_xyzModel;
-	o_worldAxis.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 
 	
-	// glDisable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 
 	p_renderer = &RendererManager::r_texturedObject;
 	p_renderer->enableShader();
@@ -1181,7 +1184,26 @@ void FaceOff::forwardRender()
 	}
 	p_renderer->disableShader();
 
-	// glEnable(GL_CULL_FACE);
+
+
+	p_renderer = &RendererManager::r_fullVertexColor;
+	p_model = &m_xyzModel;
+	p_renderer->enableShader();
+	o_worldAxis.renderGroup(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+		object->renderGroup(m_pipeline, p_renderer, object->m_wireFrameModel);
+	}
+
+	p_renderer->disableShader();
+
+
+
+	glEnable(GL_CULL_FACE);
+	
 	/*
 	p_renderer = &RendererManager::r_texturedObject;
 	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);

@@ -90,6 +90,7 @@
     <ClCompile Include="camera\first_person_camera.cpp" />
     <ClCompile Include="camera\third_person_camera.cpp" />
     <ClCompile Include="collision_detection\kd_tree.cpp" />
+    <ClCompile Include="model\builtin_model\cube_wireframe_model.cpp" />
     <ClCompile Include="gui\button.cpp" />
     <ClCompile Include="gui\control.cpp" />
     <ClCompile Include="gui\gui_manager.cpp" />
@@ -251,6 +252,7 @@
     <ClInclude Include="camera\third_person_camera.h" />
     <ClInclude Include="collision_detection\kd_tree.h" />
     <ClInclude Include="collision_detection\kd_tree_node.h" />
+    <ClInclude Include="model\builtin_model\cube_wireframe_model.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="gui\button.h" />
     <ClInclude Include="gui\control.h" />

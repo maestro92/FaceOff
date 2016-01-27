@@ -73,6 +73,12 @@ class Model
 
 
 
+		float m_minX, m_maxX;
+		float m_minY, m_maxY;
+		float m_minZ, m_maxZ;
+
+
+
         vector<Mesh> m_meshes;
         vector<TextureData> m_textures;
 };

@@ -17,6 +17,7 @@
 
 
 #include "gol_model_manager.h"
+#include "cube_wireframe_model.h"
 
 #include "utility.h"
 #include "shader.h"
@@ -201,7 +202,7 @@ class FaceOff
 
 		// models
 		Model*          p_model;
-		QuadModel       m_groundModel;
+		ImportedModel   m_groundModel;
 		XYZAxisModel    m_xyzModel;
 		ImportedModel   m_gunModel;
 		ImportedModel	m_bulletModel;
@@ -209,7 +210,7 @@ class FaceOff
 		ImportedModel	m_lowPolyTree;
 		ImportedModel	m_stairs;
 		ImportedModel	m_woodenBox;
-		
+
 
 		// objects
 		Terrain o_terrain;
@@ -222,6 +223,8 @@ class FaceOff
 		WorldObject		o_lowPolyTree;
 
 
+
+		WorldObject		o_cubeWireFrame;
 		WorldObject     o_worldAxis;
 		WorldObject     o_ground;
 		WorldObject     o_gun;
