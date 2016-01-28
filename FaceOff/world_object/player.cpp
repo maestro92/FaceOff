@@ -28,7 +28,11 @@ Player::Player(int id)
 	m_weapons.resize(NUM_WEAPON_TYPE);
 
 	// this value is obtained visually
-	m_weaponPositionOffsets.resize(NUM_WEAPON_TYPE, glm::vec3(0.35, -0.64, 1.26));
+	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
+		m_weaponPositionOffsets.resize(NUM_WEAPON_TYPE, glm::vec3(0.35, -0.64, 1.26));
+	else
+		m_weaponPositionOffsets.resize(NUM_WEAPON_TYPE, glm::vec3(2.11, -2.49, 5.2));
+
 	m_bulletStartPositionOffsets.resize(NUM_WEAPON_TYPE);
 	m_bulletStartPositionOffsetScale.resize(NUM_WEAPON_TYPE, glm::vec3(-0.052, 0.474, 0.952));
 
@@ -67,20 +71,26 @@ void Player::update(Pipeline& p)
 
 	// first person camera: eye = target
 	// third person camera: eye != target
-	m_position = m_camera->getTargetPoint();
+	
 	// m_position = m_camera->getEyePoint();
 
-	updateWeaponTransform();
-	updateBulletTransform();
-
-	// adjustWeaponAndBulletPosition()
+	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
+	{
+		m_position = m_camera->getEyePoint();
+		updateWeaponTransform();
+		updateBulletTransform();
+	}
+	else
+	{
+		m_position = m_camera->getTargetPoint();
+		updateWeaponTransform(m_camera->m_targetXAxis, m_camera->m_targetYAxis, m_camera->m_targetZAxis);
+	}
+	// adjustWeaponAndBulletPosition();
 }
 
 
 void Player::updateWeaponTransform()
 {
-	glm::mat4 viewMat = m_camera->getViewMatrix();
-
 	glm::vec3 xAxis = m_camera->m_xAxis;
 	glm::vec3 yAxis = m_camera->m_yAxis;
 	glm::vec3 zAxis = m_camera->m_zAxis;
@@ -93,6 +103,23 @@ void Player::updateWeaponTransform()
 	glm::vec3 pos = m_position + xAxis + yAxis + zAxis;
 	m_weapons[m_curWeaponIndex]->setPosition(pos);
 	m_weapons[m_curWeaponIndex]->setScale(0.005);
+
+}
+
+
+
+void Player::updateWeaponTransform(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis)
+{
+	zAxis = -zAxis;
+
+	xAxis = xAxis * m_weaponPositionOffsets[m_curWeaponIndex].x;
+	yAxis = yAxis * m_weaponPositionOffsets[m_curWeaponIndex].y;
+	zAxis = zAxis * m_weaponPositionOffsets[m_curWeaponIndex].z;
+
+	glm::vec3 pos = m_camera->getTargetPoint() + xAxis + yAxis + zAxis;
+	m_weapons[m_curWeaponIndex]->setPosition(pos);
+	m_weapons[m_curWeaponIndex]->setScale(0.05);
+	m_weapons[m_curWeaponIndex]->setRotation(m_camera->m_targetRotation);
 }
 
 void Player::updateBulletTransform()
@@ -175,12 +202,13 @@ void Player::render(Pipeline& p, Renderer* r)
 {
 	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
 	{
-		renderWeapon(p);
+		// renderWeapon(p);
+//		m_weapons[m_curWeaponIndex]->render(p, r);
 	}
 	else
 	{
 //		renderSingle(p, m_renderer, RENDER_PASS1, m_model);
-
+		/*
 		p.pushMatrix();
 			p.translate(m_position);
 			p.addMatrix(m_rotation);
@@ -188,10 +216,16 @@ void Player::render(Pipeline& p, Renderer* r)
 			r->loadUniformLocations(p);
 			m_model->render();
 		p.popMatrix();
+		*/
+
+		renderGroup(p, r, m_model);
+		// m_weapons[m_curWeaponIndex]->render(p, r);
+		m_weapons[m_curWeaponIndex]->renderGroup(p, r, &Weapon::s_weaponModels["Ak-47"]);
 
 
+	//	m_weapons[m_curWeaponIndex]->render(p, r);
 
-//		m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
+	//	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
 	}
 
 	/*
@@ -260,8 +294,9 @@ float Player::getCameraYaw()
 void Player::adjustWeaponAndBulletPosition()
 {
 	Uint8* state = SDL_GetKeyState(NULL);
-	float step = 0.001;
+	float step = 0.01;
 
+	/*
 	if (state[SDLK_i])
 	{
 		m_bulletStartPositionOffsetScale[m_curWeaponIndex].z += step;
@@ -291,36 +326,33 @@ void Player::adjustWeaponAndBulletPosition()
 	{
 		m_bulletStartPositionOffsetScale[m_curWeaponIndex].y -= step;
 	}
-
-	/*
-	if (state[SDLK_i])
-	{
-	m_weaponPositionOffsets[m_curWeaponIndex].z += step;
-	}
-
-	else if (state[SDLK_k])
-	{
-	m_weaponPositionOffsets[m_curWeaponIndex].z -= step;
-	}
-
-
-	if (state[SDLK_j])
-	{
-	m_weaponPositionOffsets[m_curWeaponIndex].x -= step;
-	}
-	else if (state[SDLK_l])
-	{
-	m_weaponPositionOffsets[m_curWeaponIndex].x += step;
-	}
-
-
-	if (state[SDLK_n])
-	{
-	m_weaponPositionOffsets[m_curWeaponIndex].y += step;
-	}
-	else if (state[SDLK_m])
-	{
-	m_weaponPositionOffsets[m_curWeaponIndex].y -= step;
-	}
 	*/
+	
+	if (state[SDLK_t])
+	{
+		m_weaponPositionOffsets[m_curWeaponIndex].z += step;
+	}
+
+	else if (state[SDLK_g])
+	{
+		m_weaponPositionOffsets[m_curWeaponIndex].z -= step;
+	}
+
+
+	if (state[SDLK_f])
+		m_weaponPositionOffsets[m_curWeaponIndex].x -= step;
+	
+	else if (state[SDLK_h])
+		m_weaponPositionOffsets[m_curWeaponIndex].x += step;
+	
+
+
+	if (state[SDLK_r])
+		m_weaponPositionOffsets[m_curWeaponIndex].y += step;
+	else if (state[SDLK_y])
+		m_weaponPositionOffsets[m_curWeaponIndex].y -= step;
+	
+	utl::debug("x y z", m_weaponPositionOffsets[m_curWeaponIndex]);
+
+
 }

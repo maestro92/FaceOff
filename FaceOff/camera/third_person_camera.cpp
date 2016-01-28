@@ -14,7 +14,7 @@ ThirdPersonCamera::ThirdPersonCamera()
 	m_zAxis     = glm::vec3(0.0f, 0.0f, 1.0f);
     m_viewMatrix = glm::mat4(1.0);
 
-    glm::vec3 eye_p     = glm::vec3(-80.0, 30.0, 0.0);
+    glm::vec3 eye_p     = glm::vec3(80.0, 30.0, 0.0);
     glm::vec3 target_p  = glm::vec3(0.0, 4.0, 0.0);
     glm::vec3 up_p      = glm::vec3(0.0, 1.0, 0.0);
 
@@ -86,11 +86,17 @@ void ThirdPersonCamera::updateTarget()
 //	m_target += m_targetXAxis * 0.0f;
 //	m_target += m_targetYAxis * 0.0f;
 	
-	glm::vec3 xAxis = m_xAxis;
-	glm::vec3 yAxis = glm::vec3(0.0, 1.0, 0.0);
-	glm::vec3 zAxis = glm::cross(xAxis, yAxis);
+	m_targetXAxis = m_xAxis;
+	m_targetYAxis = glm::vec3(0.0, 1.0, 0.0);
+	m_targetZAxis = glm::cross(m_targetXAxis, m_targetYAxis);
 
-	m_target += -zAxis * m_forwardSpeed;
+	float temp[16] = { m_targetXAxis[0], m_targetXAxis[1], m_targetXAxis[2], 0,
+   					   m_targetYAxis[0], m_targetYAxis[1], m_targetYAxis[2], 0,
+					   m_targetZAxis[0], m_targetZAxis[1], m_targetZAxis[2], 0 ,
+					   0,				 0,				   0,			     1 };
+	m_targetRotation = glm::make_mat4(temp);
+	m_targetRotation *= glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+	m_target += -m_targetZAxis * m_forwardSpeed;
 }
 
 void ThirdPersonCamera::updateEyePos()
@@ -122,10 +128,10 @@ void ThirdPersonCamera::control(Pipeline& p)
 		m_forwardSpeed = -BALL_FORWARD_SPEED;
 
     if(state[SDLK_a])
-        yawChange = BALL_HEADING_SPEED/2;
+        yawChange = BALL_HEADING_SPEED;
 
     if(state[SDLK_d])
-        yawChange = -BALL_HEADING_SPEED/2;
+        yawChange = -BALL_HEADING_SPEED;
 
 	if (state[SDLK_m])
 		m_offsetDistance += 1;

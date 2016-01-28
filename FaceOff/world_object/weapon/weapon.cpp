@@ -33,19 +33,15 @@ void Weapon::initWeaponModels()
 
 void Weapon::render(Pipeline& p, Renderer* r)
 {
-	int pass = 0;
-	r->enableShader(pass);
-
-	r->setData("u_texture", 0, GL_TEXTURE_2D, 0);
-
+	r->enableShader();
 	p.pushMatrix();
 		p.translate(m_position);
 		p.addMatrix(m_rotation);
 		p.scale(m_scale);
-		r->loadUniformLocations(p, pass);
+		r->loadUniformLocations(p);
 		Weapon::s_weaponModels[m_gunType].render();
 	p.popMatrix();
-	r->disableShader(pass);
+	r->disableShader();
 
 }
 

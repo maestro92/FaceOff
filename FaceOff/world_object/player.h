@@ -63,6 +63,7 @@ class Player : public WorldObject
 		void update(glm::vec3 wPos, float pitch, float yaw);
 
 		void updateWeaponTransform();
+		void updateWeaponTransform(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis);
 		void updateBulletTransform();
 		void adjustWeaponAndBulletPosition();
 

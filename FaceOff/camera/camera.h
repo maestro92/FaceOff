@@ -42,6 +42,12 @@ class Camera
 		glm::mat4 m_viewMatrix;
 		glm::mat4 m_modelMatrix;
 
+		glm::vec3 m_targetXAxis;
+		glm::vec3 m_targetYAxis;
+		glm::vec3 m_targetZAxis;
+		glm::mat4 m_targetRotation;
+
+
      //   float RAD_TO_DEGREE;
      //   float DEGREE_TO_RAD;
 		glm::vec3 m_target;

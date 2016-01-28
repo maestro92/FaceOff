@@ -4,8 +4,8 @@
 #include "camera.h"
 #include "renderer.h"
 
-const float BALL_FORWARD_SPEED = 0.5f;
-const float BALL_HEADING_SPEED = 0.5f;
+const float BALL_FORWARD_SPEED = 0.25f;
+const float BALL_HEADING_SPEED = 0.25f;
 const float BALL_ROLLING_SPEED = 10.0f;
 const float MAX_CAMERA_OFFSET = 200.0f;
 const float MIN_CAMERA_OFFSET = 20.0f;
@@ -47,10 +47,7 @@ class ThirdPersonCamera : public Camera
 //        glm::vec3 m_target;
         float m_offsetDistance;
 		
-		glm::vec3 m_targetXAxis;
-        glm::vec3 m_targetYAxis;
-        glm::vec3 m_targetZAxis;
-		
+
 		
 		float m_forwardSpeed;
 

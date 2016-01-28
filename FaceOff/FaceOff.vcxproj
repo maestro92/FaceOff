@@ -443,7 +443,6 @@
     <ClInclude Include="renderer\scene_renderer.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="utility\utility.h" />
-    <ClInclude Include="weapon.h" />
     <ClInclude Include="world_object\billboard_list.h" />
     <ClInclude Include="world_object\terrain\terrain.h" />
     <ClInclude Include="world_object\weapon\assult_rifle.h" />

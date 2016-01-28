@@ -12,6 +12,7 @@ Camera::Camera()
  //   DEGREE_TO_RAD = M_PI / 180.0;
 
 	m_mouseIn = false;
+	m_targetRotation = glm::mat4(1.0);
 }
 
 Camera::~Camera()
