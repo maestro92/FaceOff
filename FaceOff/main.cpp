@@ -138,7 +138,7 @@ void FaceOff::initObjects()
 
 	float scale = 1.0;
 	o_worldAxis.setScale(scale);
-	o_ground.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
+	// o_ground.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
 
 	o_gun.setPosition(200, 0, 200);
 	o_gun.setRotation(glm::rotate(90.0f, 0.0f, 1.0f, 0.0f));
@@ -173,11 +173,14 @@ void FaceOff::initObjects()
 
 	Weapon::initWeaponModels();
 
-	scale = 200.0f;
+	scale = 150;
 	WorldObject::DEFAULT_MODEL = &m_tree;
 	WorldObject* o_temp = new WorldObject();
 	o_temp->setScale(scale, 50.0, scale);
+	// o_temp->setScale(50, 50, 50);
+
 	o_temp->setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
+//	o_temp->setRotation(glm::rotate(180.0f, 1.0f, 0.0f, 0.0f));
 	o_temp->setModel(&m_groundModel);
 	m_objects.push_back(o_temp);
 
@@ -226,7 +229,13 @@ void FaceOff::initObjects()
 		o_temp->setModel(&m_woodenBox);
 		m_objects.push_back(o_temp);
 	}
-	
+
+	float xbound = 150;
+	float ybound = 50;
+	float zbound = 50;
+
+	m_objectKDtree.build(m_objects, glm::vec3(xbound, ybound, zbound), glm::vec3(-xbound, 0, -zbound));
+
 }
 
 
@@ -1185,20 +1194,34 @@ void FaceOff::forwardRender()
 	p_renderer->disableShader();
 
 
-
+	/*
 	p_renderer = &RendererManager::r_fullVertexColor;
-	p_model = &m_xyzModel;
+
 	p_renderer->enableShader();
-	o_worldAxis.renderGroup(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+		p_model = &m_xyzModel;
+		o_worldAxis.renderGroup(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 
 
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-		object->renderGroup(m_pipeline, p_renderer, object->m_wireFrameModel);
-	}
-
+		for (int i = 0; i < m_objects.size(); i++)
+		{
+			WorldObject* object = m_objects[i];
+			// object->renderGroup(m_pipeline, p_renderer, object->m_wireFrameModel);
+			object->renderWireFrameGroup(m_pipeline, p_renderer);
+		}
 	p_renderer->disableShader();
+*/
+
+
+	p_renderer = &RendererManager::r_fullColor;
+	p_renderer->enableShader();
+		p_renderer->setData("u_color", GREEN);
+		// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
+		m_objectKDtree.render(m_pipeline, p_renderer);
+	p_renderer->disableShader();
+
+
+
+
 
 
 

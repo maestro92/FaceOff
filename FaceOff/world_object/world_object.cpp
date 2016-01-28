@@ -86,6 +86,51 @@ void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass
 }
 
 
+
+
+void WorldObject::renderWireFrameGroup(Pipeline& p, Renderer* r)
+{
+	p.pushMatrix();
+		r->loadUniformLocations(p);
+		m_wireFrameModel->render();
+	p.popMatrix();
+}
+
+void WorldObject::updateAABB()
+{
+
+	/*
+	The following Two are equivalent
+	glm::mat4 M = m_rotation * glm::scale(m_scale);
+	M = glm::transpose(M);
+	*/
+	glm::mat4 M = glm::scale(m_scale) * m_rotation;
+
+
+	for (int i = 0; i < 3; i++)
+	{
+		m_minP[i] = m_maxP[i] = m_position[i];
+
+		for (int j = 0; j < 3; j++)
+		{
+			float e = M[i][j] * m_model->m_minP[j];
+			float f = M[i][j] * m_model->m_maxP[j];
+
+			if (e < f)
+			{
+				m_minP[i] += e;
+				m_maxP[i] += f;
+			}
+			else
+			{
+				m_minP[i] += f;
+				m_maxP[i] += e;
+			}
+		}
+	}
+
+}
+
 /*
 CubeWireFrameModel WorldObject::createWireFrameModel()
 {

@@ -23,8 +23,11 @@ bool ImportedModel::load(string filename)
 
 	if (scene)
 	{
-		m_minX = m_minY = m_minZ = INT_MAX;
-		m_maxX = m_maxY = m_maxZ = INT_MIN;
+	//	m_minX = m_minY = m_minZ = INT_MAX;
+	//	m_maxX = m_maxY = m_maxZ = INT_MIN;
+
+		m_minP = glm::vec3(INT_MAX);
+		m_maxP = glm::vec3(INT_MIN);
 
 		cout << "Loading " << filename << endl;
 		ret = initFromAiScene(scene, filename);
@@ -47,18 +50,12 @@ bool ImportedModel::load(string filename, vector<string> textureFiles)
 	if (scene)
 	{
 
-		m_minX = m_minY = m_minZ = INT_MAX;
-		m_maxX = m_maxY = m_maxZ = INT_MIN;
+		m_minP = glm::vec3(INT_MAX);
+		m_maxP = glm::vec3(INT_MIN);
 
 		cout << "Loading " << filename << endl;
 		ret = initFromAiScene(scene, filename);
 
-		utl::debug("maxX", m_maxX);
-		utl::debug("minX", m_minX);
-		utl::debug("maxY", m_maxY);
-		utl::debug("minY", m_minY);
-		utl::debug("maxZ", m_maxZ);
-		utl::debug("minZ", m_minZ);
 	}
 	else
 		cout << "Error parsing '" << filename.c_str() << "': '" << aiGetErrorString() << endl;
@@ -123,9 +120,14 @@ void ImportedModel::initMesh(unsigned int index, const aiMesh* m, const aiScene*
         /// position
         v.m_position = utl::toGlmVec(m->mVertices[i]);
 
+		/*
 		m_minX = min(m_minX, v.m_position.x);	m_maxX = max(m_maxX, v.m_position.x);
 		m_minY = min(m_minY, v.m_position.y);	m_maxY = max(m_maxY, v.m_position.y);
 		m_minZ = min(m_minZ, v.m_position.z);	m_maxZ = max(m_maxZ, v.m_position.z);
+		*/
+		m_minP.x = min(m_minP.x, v.m_position.x);	m_maxP.x = max(m_maxP.x, v.m_position.x);
+		m_minP.y = min(m_minP.y, v.m_position.y);	m_maxP.y = max(m_maxP.y, v.m_position.y);
+		m_minP.z = min(m_minP.z, v.m_position.z);	m_maxP.z = max(m_maxP.z, v.m_position.z);
 
 		
         /// normal

@@ -14,14 +14,27 @@ const glm::vec3 POS_HALF_GRAVITY = glm::vec3(0, 4.9, 0);
 
 using namespace std;
 
+
+struct AABB
+{
+	glm::vec3 max;
+	glm::vec3 min;
+};
+
 class WorldObject
 {
     public:
         WorldObject();
 
+		/*
 		float m_minX, m_maxX;
 		float m_minY, m_maxY;
 		float m_minZ, m_maxZ;
+		*/
+
+
+		glm::vec3 m_maxP, m_minP;
+
 
         glm::vec3 m_position;
         glm::vec3 m_velocity;
@@ -65,7 +78,8 @@ class WorldObject
 
 		CubeWireFrameModel* m_wireFrameModel;
 
-
+		void renderWireFrameGroup(Pipeline& m_pipeline, Renderer* renderer);
+		void updateAABB();
 };
 
 inline void WorldObject::setScale(float s)
@@ -132,10 +146,15 @@ inline void WorldObject::setModel(Model* model)
 {
 	m_model = model;
 		
-	m_wireFrameModel = new CubeWireFrameModel(m_model->m_maxX, m_model->m_minX,
-											m_model->m_maxY, m_model->m_minY, 
-											m_model->m_maxZ, m_model->m_minZ);
+//	m_wireFrameModel = new CubeWireFrameModel(m_model->m_maxP, m_model->m_minP);
 	
+
+	updateAABB();
+	m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
 }
+
+
+
+
 
 #endif

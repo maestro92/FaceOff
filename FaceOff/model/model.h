@@ -72,11 +72,7 @@ class Model
         GLuint m_modelGeometry;
 
 
-
-		float m_minX, m_maxX;
-		float m_minY, m_maxY;
-		float m_minZ, m_maxZ;
-
+		glm::vec3 m_maxP, m_minP;
 
 
         vector<Mesh> m_meshes;

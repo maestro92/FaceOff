@@ -10,8 +10,11 @@ Model::Model()
 {
     m_modelGeometry = GL_TRIANGLES;
 
-	m_minX = m_minY = m_minZ = -1.0;
-	m_maxX = m_maxY = m_maxZ = 1.0; 
+	// m_minX = m_minY = m_minZ = -1.0;
+	// m_maxX = m_maxY = m_maxZ = 1.0; 
+
+	m_maxP = glm::vec3(1.0);
+	m_minP = glm::vec3(-1.0);
 }
 
 

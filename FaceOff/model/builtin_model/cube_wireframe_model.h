@@ -11,8 +11,10 @@ class CubeWireFrameModel : public Model
 	public:
 		CubeWireFrameModel();
 		CubeWireFrameModel(float xmax, float xmin,
-			float ymax, float ymin,
-			float zmax, float zmin);
+							float ymax, float ymin,
+							float zmax, float zmin);
+
+		CubeWireFrameModel(glm::vec3 maxXYZ, glm::vec3 minXYZ);
 
 		~CubeWireFrameModel();
 };

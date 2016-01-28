@@ -61,6 +61,8 @@
 #include "game_messages.h"
 #include "network_info.h"
 
+#include "collision_detection/kd_tree.h"
+
 #include "terrain/terrain.h"
 #include "terrain/multitexture_terrain.h"
 using namespace std;
@@ -184,6 +186,7 @@ class FaceOff
 
 		Pipeline m_pipeline;
 
+		
 
 		float m_fps;
 		float m_iterRefreshRate;
@@ -241,9 +244,10 @@ class FaceOff
 
 		GUIManager m_gui;
 		GOLModelManager m_GOLModelManager;
-	public:
 
-		Weapon* weap;
+		KDTree m_objectKDtree;
+
+	public:
 
 		Player p;
 
