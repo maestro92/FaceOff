@@ -44,3 +44,4 @@ glm::vec3 Camera::getViewDirection()
 {
 	return -m_zAxis;
 }
+

@@ -9,12 +9,18 @@ Player::Player() : Player(0)
 Player::Player(int id)
 {
 	setId(id);
+//
+//	m_camera = new FirstPersonCamera();
+	m_camera = new ThirdPersonCamera();
 
-	m_camera = new FirstPersonCamera();
-	m_model = new ImportedModel("./Assets/models/sphere10.obj");
-	m_renderer = &RendererManager::r_fullColor;
+	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
+	m_model = new ImportedModel("./Assets/models/sphere/sphere.obj", textures);
+	m_model->setMeshRandTextureIdx();
+
+	// m_renderer = &RendererManager::r_fullColor;
 	
 	setPosition(0.0, 5.0, 0.0);
+	setScale(5.0);
 
 	m_maxHP = 100;
 	m_curHP = 100;
@@ -58,7 +64,11 @@ void Player::update(Pipeline& p)
 	p.loadIdentity();
 
 	m_camera->control(p);
-	m_position = m_camera->getEyePoint();
+
+	// first person camera: eye = target
+	// third person camera: eye != target
+	m_position = m_camera->getTargetPoint();
+	// m_position = m_camera->getEyePoint();
 
 	updateWeaponTransform();
 	updateBulletTransform();
@@ -116,7 +126,7 @@ void Player::update(Pipeline& p, Terrain* terrain)
 	p.loadIdentity();
 
 	m_camera->control(p, terrain);
-	m_position = m_camera->getEyePoint();
+	m_position = m_camera->getTargetPoint();
 
 	updateWeaponTransform();
 	updateBulletTransform();
@@ -161,12 +171,35 @@ void Player::update(glm::vec3 wPos, float pitch, float yaw)
 	m_weapons[m_curWeaponIndex]->setRotation(rot);
 }
 
-void Player::render(Pipeline& p)
+void Player::render(Pipeline& p, Renderer* r)
 {
+	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
+	{
+		renderWeapon(p);
+	}
+	else
+	{
+//		renderSingle(p, m_renderer, RENDER_PASS1, m_model);
+
+		p.pushMatrix();
+			p.translate(m_position);
+			p.addMatrix(m_rotation);
+			p.scale(m_scale);
+			r->loadUniformLocations(p);
+			m_model->render();
+		p.popMatrix();
+
+
+
+//		m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
+	}
+
+	/*
 	m_renderer->setData("u_color", glm::vec3(0.8, 0.8, 0.8));
 	renderSingle(p, m_renderer, RENDER_PASS1, m_model);
 
 	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
+	*/
 }
 
 

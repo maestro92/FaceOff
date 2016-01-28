@@ -10,6 +10,11 @@ ImportedModel::ImportedModel(string filename)
     load(filename);
 }
 
+ImportedModel::ImportedModel(string filename, vector<string> textures)
+{
+	load(filename, textures);
+}
+
 ImportedModel::~ImportedModel()
 {
 
@@ -61,6 +66,7 @@ bool ImportedModel::load(string filename, vector<string> textureFiles)
 		cout << "Error parsing '" << filename.c_str() << "': '" << aiGetErrorString() << endl;
 
 	setTextures(textureFiles);
+
 	return ret;
 }
 
@@ -73,6 +79,9 @@ bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename
     /// for some reason Assimp always creates one extra mNumMaterials
     m_textures.resize(scene->mNumMaterials);
 
+	bool b = initMaterials2(scene, filename);
+
+
     for (unsigned int i=0; i<m_meshes.size(); i++)
     {
         const aiMesh* mesh = scene->mMeshes[i];
@@ -80,7 +89,7 @@ bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename
     }
 
 
-    bool b = initMaterials2(scene, filename);
+
 
 	
     utl::debug("m_meshes size", m_meshes.size());
@@ -120,11 +129,6 @@ void ImportedModel::initMesh(unsigned int index, const aiMesh* m, const aiScene*
         /// position
         v.m_position = utl::toGlmVec(m->mVertices[i]);
 
-		/*
-		m_minX = min(m_minX, v.m_position.x);	m_maxX = max(m_maxX, v.m_position.x);
-		m_minY = min(m_minY, v.m_position.y);	m_maxY = max(m_maxY, v.m_position.y);
-		m_minZ = min(m_minZ, v.m_position.z);	m_maxZ = max(m_maxZ, v.m_position.z);
-		*/
 		m_minP.x = min(m_minP.x, v.m_position.x);	m_maxP.x = max(m_maxP.x, v.m_position.x);
 		m_minP.y = min(m_minP.y, v.m_position.y);	m_maxP.y = max(m_maxP.y, v.m_position.y);
 		m_minP.z = min(m_minP.z, v.m_position.z);	m_maxP.z = max(m_maxP.z, v.m_position.z);

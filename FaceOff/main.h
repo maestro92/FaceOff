@@ -167,7 +167,7 @@ http://www.toptal.com/game/video-game-physics-part-ii-collision-detection-for-so
 
 
 
-
+- fix the imported_model and texture index
 
 */
 

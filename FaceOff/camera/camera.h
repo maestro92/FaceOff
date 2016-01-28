@@ -8,11 +8,17 @@
 #include "terrain/terrain.h"
 using namespace std;
 
+enum CameraType
+{
+	FIRST_PERSON_CAMERA,
+	THIRD_PERSON_CAMERA
+};
 
 class Camera
 {
     public:
         inline glm::vec3 getEyePoint();
+		inline glm::vec3 getTargetPoint();
 		virtual void control(Pipeline& p);
 		virtual void control(Pipeline& p, Terrain* terrain);
 		//	Pipeline m_pipeline;
@@ -25,7 +31,7 @@ class Camera
 		glm::mat4 getViewMatrix();
 		glm::mat4 getModelMatrix();
 
-
+		virtual CameraType getCameraType() = 0;
 
         Camera();
         virtual ~Camera();
@@ -38,7 +44,7 @@ class Camera
 
      //   float RAD_TO_DEGREE;
      //   float DEGREE_TO_RAD;
-
+		glm::vec3 m_target;
         glm::vec3 m_eye;
 
         /// expressed in degrees
@@ -61,6 +67,11 @@ inline void Camera::setEyePoint(glm::vec3 eye)
 }
 
 
+inline glm::vec3 Camera::getTargetPoint()
+{
+	return m_target;
+}
+
 inline void Camera::setMouseIn(bool b)
 {
 	m_mouseIn = b;
@@ -75,5 +86,7 @@ inline bool Camera::getMouseIn()
 {
 	return m_mouseIn;
 }
+
+
 
 #endif

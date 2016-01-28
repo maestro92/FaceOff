@@ -177,11 +177,9 @@ void FaceOff::initObjects()
 	WorldObject::DEFAULT_MODEL = &m_tree;
 	WorldObject* o_temp = new WorldObject();
 	o_temp->setScale(scale, 50.0, scale);
-	// o_temp->setScale(50, 50, 50);
-
 	o_temp->setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
-//	o_temp->setRotation(glm::rotate(180.0f, 1.0f, 0.0f, 0.0f));
 	o_temp->setModel(&m_groundModel);
+	o_temp->m_name = "ground";
 	m_objects.push_back(o_temp);
 
 
@@ -191,6 +189,7 @@ void FaceOff::initObjects()
 	o_temp->setScale(scale);
 	o_temp->setPosition(0, 0, 20);
 	o_temp->setModel(&m_stairs);
+	o_temp->m_name = "stairs 20";
 	m_objects.push_back(o_temp);
 
 	
@@ -199,6 +198,7 @@ void FaceOff::initObjects()
 	o_temp->setPosition(0, 0, -20);
 	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
 	o_temp->setModel(&m_stairs);
+	o_temp->m_name = "stairs -20";
 	m_objects.push_back(o_temp);
 	
 	scale = 10.0f;
@@ -212,6 +212,7 @@ void FaceOff::initObjects()
 
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
+		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
 		o_temp->setModel(&m_woodenBox);
 		m_objects.push_back(o_temp);
 	}
@@ -226,6 +227,7 @@ void FaceOff::initObjects()
 
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
+		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
 		o_temp->setModel(&m_woodenBox);
 		m_objects.push_back(o_temp);
 	}
@@ -234,7 +236,7 @@ void FaceOff::initObjects()
 	float ybound = 50;
 	float zbound = 50;
 
-	m_objectKDtree.build(m_objects, glm::vec3(xbound, ybound, zbound), glm::vec3(-xbound, 0, -zbound));
+	m_objectKDtree.build(m_objects, glm::vec3(xbound+1, ybound+1, zbound+1), glm::vec3(-xbound-1, -1, -zbound-1));
 
 }
 
@@ -1127,57 +1129,29 @@ void FaceOff::forwardRender()
 	m_pipeline.setMatrixMode(VIEW_MATRIX);
 	m_pipeline.loadIdentity();
 
-
+	/*
 	if (m_isServer)
 	{
 		m_firstPersonCamera.control(m_pipeline);
 		o_skybox.setPosition(-m_firstPersonCamera.getEyePoint());
 	}
 	else
+	*/
 	{
 		m_players[m_defaultPlayerID]->update(m_pipeline);
 		//		m_players[m_defaultPlayerID]->update(m_pipeline, &o_multiTextureTerrain);
-		o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getEyePoint());
+		o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
+//		o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getTargetPoint());
 	}
 
-
-
-
-	o_skybox.render(m_pipeline);
 
 
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
+	// o_skybox.setPosition(0.0, 0.0, 0.0);
+	// o_skybox.setScale(5.0);
+	o_skybox.render(m_pipeline);
 	
-	// render the players
-	if (m_isServer)
-	{
-		for (int i = 0; i < m_players.size(); i++)
-		{
-			if (i != m_defaultPlayerID && m_players[i] != NULL)
-			{
-				cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
-				m_players[i]->render(m_pipeline);
-			}
-		}
-	}
-	else
-	{
-		for (int i = 0; i < m_players.size(); i++)
-		{
-			if (i != m_defaultPlayerID && m_players[i] != NULL)
-			{
-		//		m_players[i]->render(m_pipeline);
-		//		m_players[i]->renderWeapon(m_pipeline);
-			}
-			else
-			{
-				m_players[i]->renderWeapon(m_pipeline);
-			}
-
-		}
-	}
-	
-
+	// o_skybox.render(m_pipeline);
 
 
 	
@@ -1186,6 +1160,48 @@ void FaceOff::forwardRender()
 	p_renderer = &RendererManager::r_texturedObject;
 	p_renderer->enableShader();
 	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, tempTexture);
+
+
+
+
+
+
+
+	// render the players
+	if (m_isServer)
+	{
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			if (i != m_defaultPlayerID && m_players[i] != NULL)
+			{
+				cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
+//				m_players[i]->render(m_pipeline);
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			if (i != m_defaultPlayerID && m_players[i] != NULL)
+			{
+				//		m_players[i]->render(m_pipeline);
+				//		m_players[i]->renderWeapon(m_pipeline);
+			}
+			else
+			{
+				//		m_players[i]->renderWeapon(m_pipeline);
+				m_players[i]->render(m_pipeline, p_renderer);
+			}
+
+		}
+	}
+
+
+
+
+
+
 	for (int i = 0; i < m_objects.size(); i++)
 	{
 		WorldObject* object = m_objects[i];
@@ -1194,22 +1210,23 @@ void FaceOff::forwardRender()
 	p_renderer->disableShader();
 
 
-	/*
+	
 	p_renderer = &RendererManager::r_fullVertexColor;
 
 	p_renderer->enableShader();
 		p_model = &m_xyzModel;
 		o_worldAxis.renderGroup(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 
-
+		/*
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* object = m_objects[i];
 			// object->renderGroup(m_pipeline, p_renderer, object->m_wireFrameModel);
 			object->renderWireFrameGroup(m_pipeline, p_renderer);
 		}
+		*/
 	p_renderer->disableShader();
-*/
+
 
 
 	p_renderer = &RendererManager::r_fullColor;
@@ -1226,7 +1243,7 @@ void FaceOff::forwardRender()
 
 
 	glEnable(GL_CULL_FACE);
-	
+
 	/*
 	p_renderer = &RendererManager::r_texturedObject;
 	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);

@@ -9,6 +9,8 @@
 #include "RakNetTypes.h"	// Message ID
 
 #include "first_person_camera.h"
+#include "third_person_camera.h"
+
 #include "world_object.h"
 #include "renderer.h"
 #include "renderer_manager.h"
@@ -39,7 +41,7 @@ class Player : public WorldObject
 
         Camera* m_camera;
 		Model* m_model;
-		Renderer* m_renderer;
+//		Renderer* m_renderer;
 		Renderer* r_gun;
 		
 		void setId(int id);
@@ -65,7 +67,7 @@ class Player : public WorldObject
 		void adjustWeaponAndBulletPosition();
 
 
-		void render(Pipeline& p);
+		void render(Pipeline& p, Renderer* r);
 		void renderWeapon(Pipeline& p);
 
 		void addWeapon(Weapon* weapon);

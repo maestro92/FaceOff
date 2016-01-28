@@ -150,6 +150,7 @@ void Pipeline::rotate(glm::quat q_rotation)
 
 	else if(m_curMatrixMode==VIEW_MATRIX)
 		m_viewMatrix[m_viewMatrix.size()-1]*=RotationMatrix;
+
 	matricesReady=false;
 }
 

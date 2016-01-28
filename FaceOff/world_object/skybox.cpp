@@ -47,7 +47,8 @@ void SkyBox::render(Pipeline& m_pipeline)
 
     m_pipeline.pushMatrix();
         m_pipeline.translate(m_position);
-		m_pipeline.rotate(angle, 0.0f, 1.0f, 0.0f);
+	//	m_pipeline.rotate(angle, 0.0f, 1.0f, 0.0f);
+		m_pipeline.scale(m_scale);
 
         r_skybox.loadUniformLocations(m_pipeline);
         m_cubeModel.render();

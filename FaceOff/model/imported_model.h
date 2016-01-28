@@ -62,6 +62,7 @@ class ImportedModel : public Model
     public:
         ImportedModel();
         ImportedModel(string filename);
+		ImportedModel(string filename, vector<string> textures);
         ~ImportedModel();
 
 

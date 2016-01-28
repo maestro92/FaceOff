@@ -103,8 +103,6 @@ void Model::setMeshRandTextureIdx()
 		return;
 
 	for (int i = 0; i < m_meshes.size(); i++)
-	{
-//		m_meshes[i].m_textureIndex = utl::randInt(0, texCount - 1);
 		m_meshes[i].m_textureIndex = 0;
-	}
+	
 }

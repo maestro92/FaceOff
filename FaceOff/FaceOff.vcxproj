@@ -63,6 +63,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;glu32.lib;glew32.lib;SDL.lib;SDLmain.lib;SDL_image.lib;ws2_32.lib;freetype.lib;assimp.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>libraries\glew\lib;libraries\freetype\lib;libraries\assimp\lib;libraries\SDL\lib;libraries\SDL_image\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <StackReserveSize>
+      </StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

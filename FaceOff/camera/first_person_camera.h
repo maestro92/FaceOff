@@ -28,7 +28,7 @@ class FirstPersonCamera : public Camera
 		void updatePipeline(Pipeline& p);
 		void updatePipelineTranslation(Pipeline& p);
 		void updatePipelineRotation(Pipeline& p);
-
+		virtual CameraType getCameraType();
 
     //    bool m_mouseIn;
 };
