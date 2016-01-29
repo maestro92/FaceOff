@@ -1265,7 +1265,8 @@ void FaceOff::forwardRender()
 		p_renderer->setData("u_color", GREEN);
 		
 		// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
-		// m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
+		if (!containedFlag)
+			m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
 	
 
 		p_renderer->setData("u_color", BLUE);

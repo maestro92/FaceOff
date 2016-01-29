@@ -53,6 +53,15 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 
 	KDTreeNode* root = new KDTreeNode(maxP, minP);
  
+	if (objects.size() == 3 && 
+		objects[0]->m_name == "ground" &&
+		objects[1]->m_name == "stairs 20" && 
+		objects[2]->m_name == "stairs -20")
+	{
+		int a = 1;
+	}
+
+
 //	if (objects.size() < 3 || depth == 6)
 	if (objects.size() < 3 || depth == 4)
 	{
@@ -113,18 +122,41 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 
 	for (int i = 0; i < objects.size(); i++)
 	{
-		if (testAABBAABB(lx, ln, objects[i]->m_maxP, objects[i]->m_minP))
-			leftObjects.push_back(objects[i]);
+		WorldObject* obj = objects[i];
+		if (testAABBAABB(lx, ln, obj->m_maxP, obj->m_minP))
+			leftObjects.push_back(obj);
 
-		if (testAABBAABB(rx, rn, objects[i]->m_maxP, objects[i]->m_minP))
-			rightObjects.push_back(objects[i]);
+		if (testAABBAABB(rx, rn, obj->m_maxP, obj->m_minP))
+			rightObjects.push_back(obj);
 	}
 	
-	if (leftObjects.size() == objects.size() || 
-		rightObjects.size() == objects.size() || 
+	if (leftObjects.size() == objects.size() ||
+		rightObjects.size() == objects.size() ||
 		leftObjects.size() == rightObjects.size() == objects.size())
-		return root;
 
+
+	{
+		vector <glm::vec3> colors = { RED, GREEN, BLUE };
+
+		int rem = count % 3;
+		root->createWireFrameModel(colors[rem]);
+
+		root->m_objects = objects;
+		utl::debug("depth", depth);
+		utl::debug("count", count);
+		utl::debug("max", root->m_maxP);
+		utl::debug("min", root->m_minP);
+		count++;
+		for (int i = 0; i < root->m_objects.size(); i++)
+		{
+			utl::debug("obj name", root->m_objects[i]->m_name);
+		}
+		utl::debugLn(2);
+		root->m_left = NULL;
+		root->m_right = NULL;
+
+		return root;
+	}
 	/*
 	utl::debug("root->m_splitDirection", root->m_splitDirection);
 	utl::debug("root->m_splitValue", root->m_splitValue);
