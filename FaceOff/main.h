@@ -251,6 +251,9 @@ class FaceOff
 
 		Player p;
 
+		KDTreeNode* hitNode;
+
+
 		bool m_isServer;
 		RakNet::RakPeerInterface* peer;
 		bool connected;

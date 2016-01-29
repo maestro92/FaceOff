@@ -59,6 +59,7 @@ FaceOff::FaceOff()
 	isRunning = true;
 
 	containedFlag = false;
+	hitNode = NULL;
 
 	initModels();
 	initObjects();
@@ -826,6 +827,9 @@ void FaceOff::start()
 	{
 		startTime = SDL_GetTicks();
 
+
+
+
 		while (SDL_PollEvent(&event))
 		{
 			int tmpx, tmpy;
@@ -842,6 +846,9 @@ void FaceOff::start()
 					cout << "clicking Up left" << endl;
 					m_mouseState.m_leftButtonDown = false;
 					SDL_GetMouseState(&tmpx, &tmpy);
+
+					hitNode = NULL;
+
 					break;
 
 				case SDL_BUTTON_RIGHT:
@@ -869,6 +876,25 @@ void FaceOff::start()
 						if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
 						{
 							m_players[m_defaultPlayerID]->fireWeapon(m_bullets);
+
+							WorldObject* hitObject = NULL;
+
+							glm::vec3 lineStart = m_players[m_defaultPlayerID]->m_position;
+							glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
+
+							m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
+
+						//	utl::debug("player pos", lineStart);
+						//	utl::debug("target z", lineDir);
+
+							if (hitObject != NULL)
+							{
+								utl::debug("name", hitObject->m_name);
+								hitObject->isHit = true;
+							}
+							else
+								utl::debug("hitObject is NULL");
+							// VisitNodes
 						}
 						
 						m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
@@ -949,6 +975,12 @@ void FaceOff::update()
 			neighbors[i]->isCollided = true;
 	}
 
+
+
+	for(int i=0; i<m_objects.size(); i++)
+	{
+		m_objects[i]->updateGameInfo();
+	}
 
 
 #if NETWORK_FLAG == 1
@@ -1237,7 +1269,7 @@ void FaceOff::forwardRender()
 	for (int i = 0; i < m_objects.size(); i++)
 	{
 		WorldObject* object = m_objects[i];
-		if (object->isTested != true)
+		if (object->isTested != true && object->isCollided != true && object->isHit != true)
 			object->renderGroup(m_pipeline, p_renderer);
 	}
 	p_renderer->disableShader();
@@ -1258,8 +1290,14 @@ void FaceOff::forwardRender()
 		}
 		*/
 		if (containedFlag)
+		{
 			m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
-
+		}
+		else
+		{
+		//	if (hitNode != NULL)
+		//		m_objectKDtree.renderNode(m_pipeline, p_renderer, hitNode);
+		}
 	p_renderer->disableShader();
 
 
@@ -1277,9 +1315,15 @@ void FaceOff::forwardRender()
 		{
 			WorldObject* object = m_objects[i];
 			
-			if (object->isCollided)
+			if (object->isHit)
 			{
-				p_renderer->setData("u_color", RED);
+				p_renderer->setData("u_color", GREEN);
+				object->renderGroup(m_pipeline, p_renderer);
+				
+			}
+			else if (object->isCollided)
+			{
+				p_renderer->setData("u_color", PURPLE);
 				object->renderGroup(m_pipeline, p_renderer);
 				object->isCollided = false;
 			}

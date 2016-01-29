@@ -29,19 +29,31 @@ struct KDTreeNode
 		m_left = NULL;
 		m_right = NULL;
 		createWireFrameModel();
+		createCubeFrameModel();
+	//	m_containedModel = new CubeModel(glm::vec3(0.0), glm::vec3(0.0));
 	}
 
 	void createWireFrameModel()
 	{
 		m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
-		m_containedModel = new CubeModel(m_maxP, m_minP);
 	}
 
 	void createWireFrameModel(glm::vec3 color)
 	{
 		m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
+	}
+	
+	void createCubeFrameModel()
+	{
+		m_containedModel = new CubeModel(m_maxP, m_minP);
+	}
+
+	void createCubeFrameModel(glm::vec3 color)
+	{
 		m_containedModel = new CubeModel(m_maxP, m_minP, color);
 	}
+
+
 
 	bool isLeaf()
 	{
@@ -61,6 +73,7 @@ struct KDTreeNode
 
 	CubeWireFrameModel* m_wireFrameModel;
 	CubeModel* m_containedModel;
+	CubeModel* m_hitModel;
 };
 
 

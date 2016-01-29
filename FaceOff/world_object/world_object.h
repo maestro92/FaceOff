@@ -28,7 +28,8 @@ class WorldObject
 
 		bool isTested;
 		bool isCollided;
-
+		bool isHit;
+		int isHitCounter;
 		string m_name;
 
 		glm::vec3 m_maxP, m_minP;
@@ -78,6 +79,7 @@ class WorldObject
 
 		void renderWireFrameGroup(Pipeline& m_pipeline, Renderer* renderer);
 		void updateAABB();
+		void updateGameInfo();
 };
 
 inline void WorldObject::setScale(float s)

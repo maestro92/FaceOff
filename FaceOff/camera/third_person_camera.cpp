@@ -90,11 +90,13 @@ void ThirdPersonCamera::updateTarget()
 	m_targetXAxis = m_xAxis;
 	m_targetYAxis = glm::vec3(0.0, 1.0, 0.0);
 	m_targetZAxis = glm::cross(m_targetXAxis, m_targetYAxis);
+	m_targetZAxis = glm::normalize(m_targetZAxis);
 
 	float temp[16] = { m_targetXAxis[0], m_targetXAxis[1], m_targetXAxis[2], 0,
    					   m_targetYAxis[0], m_targetYAxis[1], m_targetYAxis[2], 0,
 					   m_targetZAxis[0], m_targetZAxis[1], m_targetZAxis[2], 0 ,
 					   0,				 0,				   0,			     1 };
+
 	m_targetRotation = glm::make_mat4(temp);
 	m_targetRotation *= glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 	m_target += -m_targetZAxis * m_forwardSpeed;

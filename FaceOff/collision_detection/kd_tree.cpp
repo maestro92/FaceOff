@@ -49,8 +49,6 @@ void KDTree::build(vector<WorldObject*> objects, glm::vec3 maxP, glm::vec3 minP)
 
 KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP, glm::vec3 minP, int depth, int& count)
 {
-	// utl::debug("depth", depth);
-
 	KDTreeNode* root = new KDTreeNode(maxP, minP);
 	/*
 	if (objects.size() == 3 && 
@@ -69,6 +67,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 
 		int rem = count % 3;
 		root->createWireFrameModel(colors[rem]);
+		root->createCubeFrameModel();
 
 		root->m_objects = objects;
 		
@@ -141,6 +140,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 
 		int rem = count % 3;
 		root->createWireFrameModel(colors[rem]);
+		root->createCubeFrameModel();
 
 		root->m_objects = objects;
 		utl::debug("depth", depth);
@@ -246,6 +246,93 @@ void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float
 
 
 
+void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, int depth, KDTreeNode*& hitNode)
+{
+	if (node == NULL)
+		return;
+	/*
+	if (depth == 2)
+	{
+		hitNode = node;
+		return;
+	}
+	*/
+
+	if (node->isLeaf())
+	{
+
+
+		for (int i = 0; i < node->m_objects.size(); i++)
+		{
+
+			if (lineStart.x > 120)
+			{
+				int a = 1;
+			}
+
+			if (KDTree::testRayAABB(lineStart, lineDir, node->m_objects[i]->m_maxP, node->m_objects[i]->m_minP))
+			{
+				utl::debug("lineStart", lineStart);
+				utl::debug("lineDir", lineDir);
+				object = node->m_objects[i];
+				hitNode = node;
+				return;
+			}
+		}
+		return;
+	}
+
+
+	int dim = node->m_splitDirection;
+	int val = node->m_splitValue;
+
+	int first = lineStart[dim] > node->m_splitValue;
+
+	if (lineDir[dim] == 0.0f)
+	{
+		if (first == 0)
+			visitNodes(node->m_left, lineStart, lineDir, tmax, object, depth + 1, hitNode);
+		else
+			visitNodes(node->m_right, lineStart, lineDir, tmax, object, depth + 1, hitNode);
+	}
+	else
+	{
+		float t = (node->m_splitValue - lineStart[dim]) / lineDir[dim];
+
+		if (0.0f <= t && t < tmax)
+		{
+			if (first == 0)
+			{
+				visitNodes(node->m_left, lineStart, lineDir, tmax, object, depth + 1, hitNode);
+				if (object != NULL)
+					return;
+			
+			//	if (hitNode != NULL)
+			//		return;
+				visitNodes(node->m_right, lineStart + lineDir * t, lineDir, tmax - t, object, depth + 1, hitNode);
+			}
+			else
+			{
+				visitNodes(node->m_right, lineStart, lineDir, tmax, object, depth + 1, hitNode);
+				if (object != NULL)
+					return;
+
+				//if (hitNode != NULL)
+				//	return;
+
+				visitNodes(node->m_left, lineStart + lineDir * t, lineDir, tmax - t, object, depth + 1, hitNode);
+			}
+		}
+		else
+		{
+			if (first == 0)
+				visitNodes(node->m_left, lineStart, lineDir, tmax, object, depth + 1, hitNode);
+			else
+				visitNodes(node->m_right, lineStart, lineDir, tmax, object, depth + 1, hitNode);
+		}
+	}
+}
+
 void KDTree::visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
 {
 	if (node == NULL)
@@ -264,10 +351,16 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& v
 
 	int first = player->m_position[dir] > val;
 
+
+	KDTreeNode* next = (first == 0) ? node->m_left : node->m_right;
+	visitOverlappedNodes(next, player, volNearPt, objects);
+
+	/*
 	if (first == 0)
 		visitOverlappedNodes(node->m_left, player, volNearPt, objects);
 	else
 		visitOverlappedNodes(node->m_right, player, volNearPt, objects);
+	*/
 
 	float oldValue = volNearPt[dir];
 	volNearPt[dir] = val;
@@ -275,10 +368,15 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& v
 	if (glm::length2(volNearPt - player->m_position) < (player->m_scale.x * player->m_scale.x))
 	{
 		first = first ^ 1;
+		next = (first == 0) ? node->m_left : node->m_right;
+		visitOverlappedNodes(next, player, volNearPt, objects);
+
+		/*
 		if (first == 0)
 			visitOverlappedNodes(node->m_left, player, volNearPt, objects);
 		else
 			visitOverlappedNodes(node->m_right, player, volNearPt, objects);
+		*/
 	}
 
 
@@ -353,6 +451,69 @@ void KDTree::renderCubeFrame(KDTreeNode* root, Renderer* r)
 
 }
 
+void KDTree::renderNode(Pipeline& p, Renderer* r, KDTreeNode* root)
+{
+	p.pushMatrix();
+		r->loadUniformLocations(p);
+		root->m_containedModel->render();
+	p.popMatrix();
+}
+
+
+
+// https://tavianator.com/fast-branchless-raybounding-box-intersections/
+
+// P.181
+bool KDTree::testRayAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin)
+{
+	float tMin = -FLT_MIN;
+	float tMax = FLT_MAX;
+	float EPSION = 0.00001;
+
+	for (int i = 0; i < 3; i++)
+	{
+
+		// divide by zero case, so it's handled separately
+		if (abs(d[i]) < EPSION)
+		{
+			if (p[i] < aMin[i] || p[i] > aMax[i])
+				return false;
+		}
+		else
+		{
+			float ood = 1.0f / d[i];
+			float t1 = (aMin[i] - p[i]) * ood;
+			float t2 = (aMax[i] - p[i]) * ood;
+
+			tMin = max(tMin, min(t1, t2));
+			tMax = min(tMax, max(t1, t2));
+
+			/*
+			if (t1 > t2)
+				swap(t1, t2);
+
+			if (t1 > tMin)
+				tMin = t1;
+
+			if (t2 > tMax)
+				tMax = t2;
+
+			if (tMin > tMax)
+				return false;
+			*/
+		}
+	}
+	return tMax >= tMin;
+}
+
+
+
+bool KDTree::testSegmentAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin)
+{
+
+
+	return true;
+}
 
 
 bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)

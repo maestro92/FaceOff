@@ -10,7 +10,8 @@ WorldObject::WorldObject()
     m_rotation = glm::mat4(1.0);
 
 	m_model = DEFAULT_MODEL;
-	isTested = isCollided = false;
+	isTested = isCollided = isHit = false;
+	isHitCounter = 0;
 }
 
 
@@ -127,6 +128,22 @@ void WorldObject::updateAABB()
 				m_maxP[i] += e;
 			}
 		}
+	}
+
+}
+
+
+void WorldObject::updateGameInfo()
+{
+	if (isHit)
+	{
+		isHitCounter++;
+	}
+
+	if (isHitCounter >= 50)
+	{
+		isHit = false;
+		isHitCounter = 0;
 	}
 
 }
