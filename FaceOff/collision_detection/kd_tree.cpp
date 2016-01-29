@@ -52,7 +52,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	// utl::debug("depth", depth);
 
 	KDTreeNode* root = new KDTreeNode(maxP, minP);
- 
+	/*
 	if (objects.size() == 3 && 
 		objects[0]->m_name == "ground" &&
 		objects[1]->m_name == "stairs 20" && 
@@ -60,7 +60,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	{
 		int a = 1;
 	}
-
+	*/
 
 //	if (objects.size() < 3 || depth == 6)
 	if (objects.size() < 3 || depth == 4)
@@ -71,6 +71,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		root->createWireFrameModel(colors[rem]);
 
 		root->m_objects = objects;
+		
 		utl::debug("depth", depth);
 		utl::debug("count", count);
 		utl::debug("max", root->m_maxP);
@@ -243,19 +244,6 @@ void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float
 }
 
 
-bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
-{
-	if (aMax.x <= bMin.x || aMin.x >= bMax.x)
-		return false;
-
-	if (aMax.y <= bMin.y || aMin.y >= bMax.y)
-		return false;
-
-	if (aMax.z <= bMin.z || aMin.z >= bMax.z)
-		return false;
-
-	return true;
-}
 
 
 void KDTree::visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
@@ -364,6 +352,31 @@ void KDTree::renderCubeFrame(KDTreeNode* root, Renderer* r)
 	renderCubeFrame(root->m_right, r);
 
 }
+
+
+
+bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
+{
+	if (aMax.x <= bMin.x || aMin.x >= bMax.x)
+		return false;
+
+	if (aMax.y <= bMin.y || aMin.y >= bMax.y)
+		return false;
+
+	if (aMax.z <= bMin.z || aMin.z >= bMax.z)
+		return false;
+
+	return true;
+}
+
+bool KDTree::testCollision(WorldObject* a, WorldObject* b)
+{
+	if (!KDTree::testAABBAABB(a->m_maxP, a->m_minP, b->m_maxP, b->m_minP))
+		return false;
+	return true;
+}
+
+
 
 void KDTree::print()
 {

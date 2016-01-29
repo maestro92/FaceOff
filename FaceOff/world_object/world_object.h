@@ -26,6 +26,7 @@ class WorldObject
     public:
         WorldObject();
 
+		bool isTested;
 		bool isCollided;
 
 		string m_name;

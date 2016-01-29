@@ -46,7 +46,7 @@ class KDTree
 
 		void insert(WorldObject* object);
 
-		bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
+
 
 		void computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median);
 
@@ -63,6 +63,8 @@ class KDTree
 		void renderSingle(Pipeline& p, Renderer* r);
 		void renderGroup(Pipeline& p, Renderer* r);
 
+		static bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
+		static bool testCollision(WorldObject* a, WorldObject* b);
 
 		void print();
 };

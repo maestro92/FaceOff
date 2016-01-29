@@ -17,10 +17,12 @@ Player::Player(int id)
 	m_model = new ImportedModel("./Assets/models/sphere/sphere.obj", textures);
 	m_model->setMeshRandTextureIdx();
 
+
 	// m_renderer = &RendererManager::r_fullColor;
 	
 	setPosition(0.0, 5.0, 0.0);
 	setScale(5.0);
+	setModel(m_model);
 
 	m_maxHP = 100;
 	m_curHP = 100;
@@ -72,7 +74,12 @@ void Player::update(Pipeline& p)
 	// first person camera: eye = target
 	// third person camera: eye != target
 
+	m_position = m_camera->getTargetPoint();
+	updateAABB();
+
 	updateWeaponTransform();
+
+
 
 	// updateBulletTransform();
 	// adjustWeaponAndBulletPosition();
@@ -81,7 +88,7 @@ void Player::update(Pipeline& p)
 
 void Player::updateWeaponTransform()
 {
-	m_position = m_camera->getTargetPoint();
+
 
 	glm::vec3 xAxis = m_camera->m_targetXAxis;
 	glm::vec3 yAxis = m_camera->m_targetYAxis;

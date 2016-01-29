@@ -939,13 +939,17 @@ void FaceOff::update()
 	*/	
 
 	vector<WorldObject*> neighbors;
-	// m_players[0]->updateCollision(&m_objectKDtree);
 	glm::vec3 volNearPoint(m_players[0]->m_position);
 	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[0], volNearPoint, neighbors);
 
+	for (int i = 0; i < neighbors.size(); i++)
+	{
+		neighbors[i]->isTested = true;
+		if (KDTree::testCollision(m_players[0], neighbors[i]))
+			neighbors[i]->isCollided = true;
+	}
 
-	for(int i=0; i<neighbors.size(); i++)
-		neighbors[i]->isCollided = true;
+
 
 #if NETWORK_FLAG == 1
 
@@ -1233,7 +1237,7 @@ void FaceOff::forwardRender()
 	for (int i = 0; i < m_objects.size(); i++)
 	{
 		WorldObject* object = m_objects[i];
-		if (object->isCollided != true)
+		if (object->isTested != true)
 			object->renderGroup(m_pipeline, p_renderer);
 	}
 	p_renderer->disableShader();
@@ -1269,15 +1273,23 @@ void FaceOff::forwardRender()
 			m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
 	
 
-		p_renderer->setData("u_color", BLUE);
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* object = m_objects[i];
+			
 			if (object->isCollided)
 			{
+				p_renderer->setData("u_color", RED);
 				object->renderGroup(m_pipeline, p_renderer);
 				object->isCollided = false;
 			}
+			else if (object->isTested)
+			{
+				p_renderer->setData("u_color", BLUE);
+				object->renderGroup(m_pipeline, p_renderer);
+				object->isTested = false;
+			}
+			
 		}
 
 		
