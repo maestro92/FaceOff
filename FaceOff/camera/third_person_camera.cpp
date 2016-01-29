@@ -33,6 +33,7 @@ ThirdPersonCamera::ThirdPersonCamera()
 	m_targetZAxis = glm::cross(m_targetXAxis, m_targetYAxis);
 
 	m_idealViewMatrix = m_viewMatrix;
+	setMouseIn(false);
 }
 
 
@@ -118,7 +119,7 @@ void ThirdPersonCamera::control(Pipeline& p)
 	m_forwardSpeed = 0.0f;
 
 
-    SDL_ShowCursor(SDL_DISABLE);
+    // SDL_ShowCursor(SDL_DISABLE);
     Uint8* state=SDL_GetKeyState(NULL);
 
     if(state[SDLK_w])

@@ -225,7 +225,7 @@ class FaceOff
 		WorldObject		o_tree;
 		WorldObject		o_lowPolyTree;
 
-
+		bool containedFlag;
 
 		WorldObject		o_cubeWireFrame;
 		WorldObject     o_worldAxis;

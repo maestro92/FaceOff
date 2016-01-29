@@ -125,6 +125,10 @@ void FirstPersonCamera::updatePipeline(Pipeline& p)
 	m_zAxis = glm::vec3(m_viewMatrix[0][2], m_viewMatrix[1][2], m_viewMatrix[2][2]);
 
 	m_target = m_eye;
+	m_targetXAxis = m_xAxis;	
+	m_targetYAxis = m_yAxis;	
+	m_targetZAxis = m_zAxis;
+
 	p.setViewPosition(m_eye);
 }
 /*

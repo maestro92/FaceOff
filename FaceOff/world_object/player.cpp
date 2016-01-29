@@ -71,30 +71,21 @@ void Player::update(Pipeline& p)
 
 	// first person camera: eye = target
 	// third person camera: eye != target
-	
-	// m_position = m_camera->getEyePoint();
 
-	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
-	{
-		m_position = m_camera->getEyePoint();
-		updateWeaponTransform();
-		updateBulletTransform();
-	}
-	else
-	{
-		m_position = m_camera->getTargetPoint();
-		updateWeaponTransform(m_camera->m_targetXAxis, m_camera->m_targetYAxis, m_camera->m_targetZAxis);
-	}
+	updateWeaponTransform();
+
+	// updateBulletTransform();
 	// adjustWeaponAndBulletPosition();
 }
 
 
 void Player::updateWeaponTransform()
 {
-	glm::vec3 xAxis = m_camera->m_xAxis;
-	glm::vec3 yAxis = m_camera->m_yAxis;
-	glm::vec3 zAxis = m_camera->m_zAxis;
-	zAxis = -zAxis;
+	m_position = m_camera->getTargetPoint();
+
+	glm::vec3 xAxis = m_camera->m_targetXAxis;
+	glm::vec3 yAxis = m_camera->m_targetYAxis;
+	glm::vec3 zAxis = -m_camera->m_targetZAxis;
 
 	xAxis = xAxis * m_weaponPositionOffsets[m_curWeaponIndex].x;
 	yAxis = yAxis * m_weaponPositionOffsets[m_curWeaponIndex].y;
@@ -102,25 +93,68 @@ void Player::updateWeaponTransform()
 
 	glm::vec3 pos = m_position + xAxis + yAxis + zAxis;
 	m_weapons[m_curWeaponIndex]->setPosition(pos);
-	m_weapons[m_curWeaponIndex]->setScale(0.005);
 
+
+	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
+	{
+		m_weapons[m_curWeaponIndex]->setScale(0.005);
+	}
+	else
+	{
+		m_weapons[m_curWeaponIndex]->setScale(0.05);
+		m_weapons[m_curWeaponIndex]->setRotation(m_camera->m_targetRotation);
+	}
 }
 
-
-
-void Player::updateWeaponTransform(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis)
+/*
+void Player::updateWeaponTransform()
 {
-	zAxis = -zAxis;
+	glm::vec3 xAxis, yAxis, zAxis;
 
-	xAxis = xAxis * m_weaponPositionOffsets[m_curWeaponIndex].x;
-	yAxis = yAxis * m_weaponPositionOffsets[m_curWeaponIndex].y;
-	zAxis = zAxis * m_weaponPositionOffsets[m_curWeaponIndex].z;
 
-	glm::vec3 pos = m_camera->getTargetPoint() + xAxis + yAxis + zAxis;
-	m_weapons[m_curWeaponIndex]->setPosition(pos);
-	m_weapons[m_curWeaponIndex]->setScale(0.05);
-	m_weapons[m_curWeaponIndex]->setRotation(m_camera->m_targetRotation);
+	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
+	{
+		m_position = m_camera->getTargetPoint();
+		
+		
+		xAxis = m_camera->m_xAxis;
+		yAxis = m_camera->m_yAxis;
+		zAxis = -m_camera->m_zAxis;
+		
+		//xAxis = m_camera->m_targetXAxis;
+		//yAxis = m_camera->m_targetYAxis;
+		//zAxis = -m_camera->m_targetZAxis;
+
+
+		xAxis = xAxis * m_weaponPositionOffsets[m_curWeaponIndex].x;
+		yAxis = yAxis * m_weaponPositionOffsets[m_curWeaponIndex].y;
+		zAxis = zAxis * m_weaponPositionOffsets[m_curWeaponIndex].z;
+
+		glm::vec3 pos = m_position + xAxis + yAxis + zAxis;
+		m_weapons[m_curWeaponIndex]->setPosition(pos);
+		m_weapons[m_curWeaponIndex]->setScale(0.005);
+	}
+	else
+	{
+		m_position = m_camera->getTargetPoint();
+		xAxis = m_camera->m_targetXAxis;
+		yAxis = m_camera->m_targetYAxis;
+		zAxis = -m_camera->m_targetZAxis;
+
+		xAxis = xAxis * m_weaponPositionOffsets[m_curWeaponIndex].x;
+		yAxis = yAxis * m_weaponPositionOffsets[m_curWeaponIndex].y;
+		zAxis = zAxis * m_weaponPositionOffsets[m_curWeaponIndex].z;
+
+		glm::vec3 pos = m_camera->getTargetPoint() + xAxis + yAxis + zAxis;
+		m_weapons[m_curWeaponIndex]->setPosition(pos);
+		m_weapons[m_curWeaponIndex]->setScale(0.05);
+		m_weapons[m_curWeaponIndex]->setRotation(m_camera->m_targetRotation);
+		
+	}
 }
+*/
+
+
 
 void Player::updateBulletTransform()
 {
@@ -129,7 +163,7 @@ void Player::updateBulletTransform()
 	glm::mat4 rot = glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 	rot = camRot * rot;
 
-	m_weapons[m_curWeaponIndex]->setRotation(rot);
+	// m_weapons[m_curWeaponIndex]->setRotation(rot);
 
 	// setting the bullet position and orientation
 	glm::vec3 xAxis = glm::vec3(camRot[0][0], camRot[0][1], camRot[0][2]);
@@ -160,6 +194,10 @@ void Player::update(Pipeline& p, Terrain* terrain)
 }
 
 
+void Player::updateModel()
+{
+
+}
 
 /*
 void Player::update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis)
@@ -234,6 +272,11 @@ void Player::render(Pipeline& p, Renderer* r)
 
 	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
 	*/
+}
+
+void Player::renderModel(Pipeline& p, Renderer* r)
+{
+	renderGroup(p, r, m_model);
 }
 
 

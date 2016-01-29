@@ -4,6 +4,7 @@
 
 #include "utility.h"
 #include "world_object.h"
+#include "cube_model.h"
 using namespace std;
 
 // check 13.4.1 for optimization
@@ -33,6 +34,18 @@ struct KDTreeNode
 	void createWireFrameModel()
 	{
 		m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
+		m_containedModel = new CubeModel(m_maxP, m_minP);
+	}
+
+	void createWireFrameModel(glm::vec3 color)
+	{
+		m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
+		m_containedModel = new CubeModel(m_maxP, m_minP, color);
+	}
+
+	bool isLeaf()
+	{
+		return m_left == NULL && m_right == NULL;
 	}
 
 
@@ -47,6 +60,7 @@ struct KDTreeNode
 	glm::vec3 m_minP;
 
 	CubeWireFrameModel* m_wireFrameModel;
+	CubeModel* m_containedModel;
 };
 
 

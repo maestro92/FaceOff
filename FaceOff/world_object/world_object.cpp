@@ -10,7 +10,7 @@ WorldObject::WorldObject()
     m_rotation = glm::mat4(1.0);
 
 	m_model = DEFAULT_MODEL;
-
+	isCollided = false;
 }
 
 

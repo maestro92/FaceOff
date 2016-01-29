@@ -7,7 +7,7 @@
 #include <algorithm>
 #include "renderer.h"
 #include "model.h"
-
+#include "player.h"
 using namespace std;
 
 /*
@@ -42,7 +42,7 @@ class KDTree
 					glm::vec3 maxP, glm::vec3 minP);
 
 		KDTreeNode* recursiveBuild(vector<WorldObject*> objects,
-									glm::vec3 maxP, glm::vec3 minP, int depth);
+									glm::vec3 maxP, glm::vec3 minP, int depth, int& count);
 
 		void insert(WorldObject* object);
 
@@ -50,13 +50,21 @@ class KDTree
 
 		void computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median);
 
-		void visitOverlappedNodes(KDTreeNode* node, WorldSphere* sphere);
+//		void visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt);
 
-		void render(Pipeline& p, Renderer* r);
-		void render(KDTreeNode* root, Renderer* r);
+		void visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
+
+		void renderWireFrame(Pipeline& p, Renderer* r);
+		void renderWireFrame(KDTreeNode* root, Renderer* r);
+
+		void renderCubeFrame(Pipeline& p, Renderer* r);
+		void renderCubeFrame(KDTreeNode* root, Renderer* r);
 
 		void renderSingle(Pipeline& p, Renderer* r);
 		void renderGroup(Pipeline& p, Renderer* r);
+
+
+		void print();
 };
 
 

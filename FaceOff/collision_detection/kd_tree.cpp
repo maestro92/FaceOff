@@ -1,7 +1,6 @@
 
 #include "kd_tree.h"
 
-
 struct CompX
 {
 	bool operator() (WorldObject* a, WorldObject* b)
@@ -38,23 +37,41 @@ void KDTree::build(vector<WorldObject*> objects, glm::vec3 maxP, glm::vec3 minP)
 	if (objects.size() == 0)
 		m_head = NULL;
 	else
-		m_head = recursiveBuild(objects, maxP, minP, 0);
+	{
+		int count = 0;
+		m_head = recursiveBuild(objects, maxP, minP, 0, count);
+	}
 }
 
 
 // leaf nodes doens't have splitting planes
 // so it will store items, but not have split items/split direction
 
-KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP, glm::vec3 minP, int depth)
+KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP, glm::vec3 minP, int depth, int& count)
 {
-	utl::debug("depth", depth);
+	// utl::debug("depth", depth);
 
 	KDTreeNode* root = new KDTreeNode(maxP, minP);
  
 //	if (objects.size() < 3 || depth == 6)
-	if (objects.size() < 3 || depth == 6)
+	if (objects.size() < 3 || depth == 4)
 	{
-		root->createWireFrameModel();
+		vector <glm::vec3> colors = { RED, GREEN, BLUE };
+
+		int rem = count % 3;
+		root->createWireFrameModel(colors[rem]);
+
+		root->m_objects = objects;
+		utl::debug("depth", depth);
+		utl::debug("count", count);
+		utl::debug("max", root->m_maxP);
+		utl::debug("min", root->m_minP);
+		count++;
+		for (int i = 0; i < root->m_objects.size(); i++)
+		{
+			utl::debug("obj name", root->m_objects[i]->m_name);
+		}
+		utl::debugLn(2);
 		return root;
 	}
 
@@ -103,23 +120,61 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 			rightObjects.push_back(objects[i]);
 	}
 	
-	if (leftObjects.size() == objects.size() || rightObjects.size() == objects.size())
+	if (leftObjects.size() == objects.size() || 
+		rightObjects.size() == objects.size() || 
+		leftObjects.size() == rightObjects.size() == objects.size())
 		return root;
 
-
+	/*
 	utl::debug("root->m_splitDirection", root->m_splitDirection);
 	utl::debug("root->m_splitValue", root->m_splitValue);
 
 	for (int i = 0; i < leftObjects.size(); i++)
 		utl::debug("obj name", leftObjects[i]->m_name);
+*/
 
-
-	root->m_left = recursiveBuild(leftObjects, lx, ln, depth + 1);
-	root->m_right = recursiveBuild(rightObjects, rx, rn, depth + 1);
+	root->m_left = recursiveBuild(leftObjects, lx, ln, depth + 1, count);
+	root->m_right = recursiveBuild(rightObjects, rx, rn, depth + 1, count);
 
 
 	return root;
 }
+
+/*
+void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median)
+{
+	float mean = 0;
+
+	vector<float> splitValues;
+
+	for (int i = 0; i < objects.size(); i++)
+	{
+		mean += objects[i]->m_position[direction];
+		splitValues.push_back(objects[i]->m_position[direction]);
+	}
+
+	mean /= objects.size();
+
+	variance = -1;
+	for (int i = 0; i < objects.size(); i++)
+	{
+		float diff = objects[i]->m_position[direction] - mean;
+		variance += diff * diff;
+	}
+
+	sort(splitValues.begin(), splitValues.end());
+
+
+	if (direction == 0)
+		sort(objects.begin(), objects.end());
+	else if (direction == 1)
+		sort(objects.begin(), objects.end());
+	else
+		sort(objects.begin(), objects.end());
+
+	median = splitValues[splitValues.size() / 2];
+}
+*/
 
 
 
@@ -151,25 +206,10 @@ void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float
 	}
 
 	sort(splitValues.begin(), splitValues.end());
-
-	/*
-	if (direction == 0)
-		sort(objects.begin(), objects.end());
-	else if (direction == 1)
-		sort(objects.begin(), objects.end());
-	else
-		sort(objects.begin(), objects.end());
-	*/
+	
 	median = splitValues[splitValues.size() / 2];
 }
 
-
-
-
-void KDTree::insert(WorldObject* object)
-{
-
-}
 
 bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
 {
@@ -186,28 +226,52 @@ bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::v
 }
 
 
-
-/*
-NODE_OBJ_RELATION KDTree::checkNodeOjbRelation(glm::vec3 nodeMax, glm::vec3 nodeMin,
-												glm::vec3 objMax, glm::vec3 objMin)
+void KDTree::visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
 {
-	bool xFlag = (nodeMin.x <= objMin.x) && (objMax.x <= nodeMax.x);
-	bool yFlag = (nodeMin.y <= objMin.y) && (objMax.y <= nodeMax.y);
-	bool zFlag = (nodeMin.z <= objMin.z) && (objMax.z <= nodeMax.z);
-	if (xFlag && yFlag && zFlag)
-		return INSIDE;
+	if (node == NULL)
+		return;
+	
+	int dir = node->m_splitDirection;
+	int val = node->m_splitValue;
 
-	xFlag = (objMax.x < nodeMin.x) || (nodeMax.x < objMin.x);
-	yFlag = (objMax.y < nodeMin.y) || (nodeMax.y < objMin.y);
-	zFlag = (objMax.z < nodeMin.z) || (nodeMax.z < objMin.z);
+	// visiting current node
+	if (node->isLeaf())
+	{
+		for (int i = 0; i<node->m_objects.size(); i++)
+			objects.push_back(node->m_objects[i]);
+		return;
+	}
 
-	if (xFlag || yFlag || zFlag)
-		return OUTSIDE;
+	int first = player->m_position[dir] > val;
 
-	return PARTIAL;
+	if (first == 0)
+		visitOverlappedNodes(node->m_left, player, volNearPt, objects);
+	else
+		visitOverlappedNodes(node->m_right, player, volNearPt, objects);
+
+	float oldValue = volNearPt[dir];
+	volNearPt[dir] = val;
+
+	if (glm::length2(volNearPt - player->m_position) < (player->m_scale.x * player->m_scale.x))
+	{
+		first = first ^ 1;
+		if (first == 0)
+			visitOverlappedNodes(node->m_left, player, volNearPt, objects);
+		else
+			visitOverlappedNodes(node->m_right, player, volNearPt, objects);
+	}
+
+
+	volNearPt[dir] = oldValue;
+	
 }
-*/
 
+
+
+void KDTree::insert(WorldObject* object)
+{
+
+}
 
 
 void KDTree::renderSingle(Pipeline& p, Renderer* r)
@@ -229,26 +293,50 @@ void KDTree::renderGroup(Pipeline& p, Renderer* r)
 
 
 
-void KDTree::render(Pipeline& p, Renderer* r)
+void KDTree::renderWireFrame(Pipeline& p, Renderer* r)
 {
 	p.pushMatrix();
 		r->loadUniformLocations(p);
-		render(m_head, r);
+		renderWireFrame(m_head, r);
 	p.popMatrix();
 }
 
-void KDTree::render(KDTreeNode* root, Renderer* r)
+void KDTree::renderWireFrame(KDTreeNode* root, Renderer* r)
 {
 	if (root == NULL)
 		return;
 	
 	root->m_wireFrameModel->render();
-	render(root->m_left, r);
-	render(root->m_right, r);
+	renderWireFrame(root->m_left, r);
+	renderWireFrame(root->m_right, r);
 
 }
 
+void KDTree::renderCubeFrame(Pipeline& p, Renderer* r)
+{
+	p.pushMatrix();
+		r->loadUniformLocations(p);
+		renderCubeFrame(m_head, r);
+	p.popMatrix();
+}
 
+void KDTree::renderCubeFrame(KDTreeNode* root, Renderer* r)
+{
+	if (root == NULL)
+		return;
+
+	if (root->isLeaf())
+		root->m_containedModel->render();
+	
+	renderCubeFrame(root->m_left, r);
+	renderCubeFrame(root->m_right, r);
+
+}
+
+void KDTree::print()
+{
+
+}
 
 
 /*

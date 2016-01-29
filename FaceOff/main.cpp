@@ -58,6 +58,8 @@ FaceOff::FaceOff()
 {
 	isRunning = true;
 
+	containedFlag = false;
+
 	initModels();
 	initObjects();
 	initRenderers();
@@ -237,6 +239,10 @@ void FaceOff::initObjects()
 	float zbound = 50;
 
 	m_objectKDtree.build(m_objects, glm::vec3(xbound+1, ybound+1, zbound+1), glm::vec3(-xbound-1, -1, -zbound-1));
+
+	for (int i = 0; i < m_players.size(); i++)
+		m_objectKDtree.insert(m_players[i]);
+	
 
 }
 
@@ -894,6 +900,10 @@ void FaceOff::start()
 					isRunning = false;
 					break;
 
+				case SDLK_0:
+					containedFlag = !containedFlag;
+					break;
+
 				case SDLK_z:
 					if (m_isServer)
 						m_firstPersonCamera.setMouseIn(false);
@@ -919,6 +929,23 @@ void FaceOff::update()
 
 	m_mouseState.m_pos = glm::vec2(mx, utl::SCREEN_HEIGHT - my);
 
+	/*
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		if (i != m_defaultPlayerID && m_players[i] != NULL)
+			m_players[i]->updateModel();
+		
+	}
+	*/	
+
+	vector<WorldObject*> neighbors;
+	// m_players[0]->updateCollision(&m_objectKDtree);
+	glm::vec3 volNearPoint(m_players[0]->m_position);
+	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[0], volNearPoint, neighbors);
+
+
+	for(int i=0; i<neighbors.size(); i++)
+		neighbors[i]->isCollided = true;
 
 #if NETWORK_FLAG == 1
 
@@ -1187,6 +1214,7 @@ void FaceOff::forwardRender()
 			{
 				//		m_players[i]->render(m_pipeline);
 				//		m_players[i]->renderWeapon(m_pipeline);
+				m_players[i]->renderModel(m_pipeline, p_renderer);
 			}
 			else
 			{
@@ -1205,14 +1233,14 @@ void FaceOff::forwardRender()
 	for (int i = 0; i < m_objects.size(); i++)
 	{
 		WorldObject* object = m_objects[i];
-		object->renderGroup(m_pipeline, p_renderer);
+		if (object->isCollided != true)
+			object->renderGroup(m_pipeline, p_renderer);
 	}
 	p_renderer->disableShader();
 
 
 	
 	p_renderer = &RendererManager::r_fullVertexColor;
-
 	p_renderer->enableShader();
 		p_model = &m_xyzModel;
 		o_worldAxis.renderGroup(m_pipeline, p_renderer, RENDER_PASS1, p_model);
@@ -1225,6 +1253,9 @@ void FaceOff::forwardRender()
 			object->renderWireFrameGroup(m_pipeline, p_renderer);
 		}
 		*/
+		if (containedFlag)
+			m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
+
 	p_renderer->disableShader();
 
 
@@ -1232,8 +1263,23 @@ void FaceOff::forwardRender()
 	p_renderer = &RendererManager::r_fullColor;
 	p_renderer->enableShader();
 		p_renderer->setData("u_color", GREEN);
+		
 		// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
-		m_objectKDtree.render(m_pipeline, p_renderer);
+		// m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
+	
+
+		p_renderer->setData("u_color", BLUE);
+		for (int i = 0; i < m_objects.size(); i++)
+		{
+			WorldObject* object = m_objects[i];
+			if (object->isCollided)
+			{
+				object->renderGroup(m_pipeline, p_renderer);
+				object->isCollided = false;
+			}
+		}
+
+		
 	p_renderer->disableShader();
 
 
@@ -1315,6 +1361,10 @@ int main(int argc, char *argv[])
 		Player* p1 = new Player(1);
 		p1->setPosition(p1->m_id * 10, 5, p1->m_id * 10);
 		Martin.m_players.push_back(p1);
+
+		Player* p2 = new Player(2);
+		p1->setPosition(p1->m_id * 10, 5, p1->m_id * 10);
+		Martin.m_players.push_back(p2);
 	}
 #endif
 

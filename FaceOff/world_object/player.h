@@ -62,14 +62,19 @@ class Player : public WorldObject
 		void update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis);
 		void update(glm::vec3 wPos, float pitch, float yaw);
 
+//		void updateCollision(KDTree* tree);
+
+		void updateModel();
+
 		void updateWeaponTransform();
-		void updateWeaponTransform(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis);
 		void updateBulletTransform();
 		void adjustWeaponAndBulletPosition();
 
 
 		void render(Pipeline& p, Renderer* r);
 		void renderWeapon(Pipeline& p);
+
+		void renderModel(Pipeline& p, Renderer* r);
 
 		void addWeapon(Weapon* weapon);
 		Weapon* getCurWeapon();
