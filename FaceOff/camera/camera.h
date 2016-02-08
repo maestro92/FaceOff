@@ -21,7 +21,11 @@ class Camera
 		inline glm::vec3 getTargetPoint();
 		virtual void control(Pipeline& p);
 		virtual void control(Pipeline& p, Terrain* terrain);
-		//	Pipeline m_pipeline;
+
+		virtual void controlCD();
+		virtual void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
+
+
 		void setMouseIn(bool b);
 		bool getMouseIn();
 
@@ -47,9 +51,6 @@ class Camera
 		glm::vec3 m_targetZAxis;
 		glm::mat4 m_targetRotation;
 
-
-     //   float RAD_TO_DEGREE;
-     //   float DEGREE_TO_RAD;
 		glm::vec3 m_target;
         glm::vec3 m_eye;
 

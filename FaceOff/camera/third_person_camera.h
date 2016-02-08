@@ -23,8 +23,14 @@ class ThirdPersonCamera : public Camera
         void lookAt(glm::vec3& eye, glm::vec3& target, glm::vec3& up);
 
         void control(Pipeline& p);
+		void controlCD();
+
+		void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
+
 
 		void updateTarget();
+		void updateTargetPos();
+		void updateTargetRot();
 		void updateEyePos();
 		void updateViewMatrix(Pipeline& p);
 

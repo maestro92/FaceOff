@@ -964,23 +964,6 @@ void FaceOff::update()
 	}
 	*/	
 
-	vector<WorldObject*> neighbors;
-	glm::vec3 volNearPoint(m_players[0]->m_position);
-	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[0], volNearPoint, neighbors);
-
-	for (int i = 0; i < neighbors.size(); i++)
-	{
-		neighbors[i]->isTested = true;
-		if (KDTree::testCollision(m_players[0], neighbors[i]))
-			neighbors[i]->isCollided = true;
-	}
-
-
-
-	for(int i=0; i<m_objects.size(); i++)
-	{
-		m_objects[i]->updateGameInfo();
-	}
 
 
 #if NETWORK_FLAG == 1
@@ -1201,13 +1184,99 @@ void FaceOff::forwardRender()
 	else
 	*/
 	{
-		m_players[m_defaultPlayerID]->update(m_pipeline);
-		//		m_players[m_defaultPlayerID]->update(m_pipeline, &o_multiTextureTerrain);
+	//	m_players[m_defaultPlayerID]->update(m_pipeline);
+	//	m_players[m_defaultPlayerID]->updateCD(m_pipeline, &m_objectKDtree);
+
+
+		m_players[m_defaultPlayerID]->control();
+		
+		vector<WorldObject*> neighbors;
+		glm::vec3 volNearPoint(m_players[m_defaultPlayerID]->m_position);
+		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], volNearPoint, neighbors);
+
+
+		// collision between static object and dynamic object
+		// Game Physics Engine Development P.129
+		for (int i = 0; i < neighbors.size(); i++)
+		{
+			neighbors[i]->isTested = true;
+
+			ContactData contactData;
+
+			
+			//utl::debug("player position", m_players[m_defaultPlayerID]->m_position);
+			//utl::debug("bounding sphere center", m_players[m_defaultPlayerID]->m_boundingSphere.center);
+			//utl::debug("bounding sphere radius", m_players[m_defaultPlayerID]->m_boundingSphere.radius);
+
+			if (CollisionDetection::testSphereAABB(m_players[m_defaultPlayerID]->m_boundingSphere, 
+													neighbors[i]->m_aabb, 
+													contactData))
+			{
+				neighbors[i]->isCollided = true;
+
+				
+				if (neighbors[i]->m_name == "ground")
+					continue;
+
+				contactData.pair[0] = m_players[m_defaultPlayerID];
+				contactData.pair[1] = NULL;
+				
+
+				//utl::debug("neighbors[i]", neighbors[i]->m_name);
+				//utl::debug("contactData normal", contactData.normal);
+				//utl::debug("contactData depth", contactData.penetrationDepth);
+				//
+				contactData.resolveInterpenetration();
+			
+			}
+		}
+		
+
+
+
+
+
+		// collision detection
+		m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
+
+
 		o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
 //		o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getTargetPoint());
 	}
 
 
+
+
+	
+	/*
+	vector<WorldObject*> neighbors;
+	glm::vec3 volNearPoint(m_players[0]->m_position);
+	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[0], volNearPoint, neighbors);
+
+	for (int i = 0; i < neighbors.size(); i++)
+	{
+		neighbors[i]->isTested = true;
+		if (KDTree::testCollision(m_players[0], neighbors[i]))
+		{
+			neighbors[i]->isCollided = true;
+
+		}
+	}
+	*/
+
+
+
+	for (int i = 0; i<m_objects.size(); i++)
+	{
+		m_objects[i]->updateGameInfo();
+	}
+	
+	/*
+	for (int i = 0; i<m_objects.size(); i++)
+	{
+		m_objects[i]->updateGameInfo();
+	}
+	*/
 
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
 	// o_skybox.setPosition(0.0, 0.0, 0.0);
@@ -1281,14 +1350,21 @@ void FaceOff::forwardRender()
 		p_model = &m_xyzModel;
 		o_worldAxis.renderGroup(m_pipeline, p_renderer, RENDER_PASS1, p_model);
 
-		/*
+		
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* object = m_objects[i];
 			// object->renderGroup(m_pipeline, p_renderer, object->m_wireFrameModel);
 			object->renderWireFrameGroup(m_pipeline, p_renderer);
 		}
-		*/
+		
+
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			WorldObject* object = m_players[i];
+			object->renderWireFrameGroup(m_pipeline, p_renderer);
+		}
+
 		if (containedFlag)
 		{
 			m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
@@ -1338,13 +1414,6 @@ void FaceOff::forwardRender()
 
 		
 	p_renderer->disableShader();
-
-
-
-
-
-
-
 	glEnable(GL_CULL_FACE);
 
 	/*

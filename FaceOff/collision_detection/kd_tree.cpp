@@ -73,8 +73,8 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		
 		utl::debug("depth", depth);
 		utl::debug("count", count);
-		utl::debug("max", root->m_maxP);
-		utl::debug("min", root->m_minP);
+		utl::debug("max", root->m_aabb.max);
+		utl::debug("min", root->m_aabb.min);
 		count++;
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
@@ -123,10 +123,10 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	for (int i = 0; i < objects.size(); i++)
 	{
 		WorldObject* obj = objects[i];
-		if (testAABBAABB(lx, ln, obj->m_maxP, obj->m_minP))
+		if (testAABBAABB(lx, ln, obj->m_aabb.max, obj->m_aabb.min))
 			leftObjects.push_back(obj);
 
-		if (testAABBAABB(rx, rn, obj->m_maxP, obj->m_minP))
+		if (testAABBAABB(rx, rn, obj->m_aabb.max, obj->m_aabb.min))
 			rightObjects.push_back(obj);
 	}
 	
@@ -145,8 +145,8 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		root->m_objects = objects;
 		utl::debug("depth", depth);
 		utl::debug("count", count);
-		utl::debug("max", root->m_maxP);
-		utl::debug("min", root->m_minP);
+		utl::debug("max", root->m_aabb.max);
+		utl::debug("min", root->m_aabb.min);
 		count++;
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
@@ -219,11 +219,19 @@ void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float
 
 	for (int i = 0; i < objects.size(); i++)
 	{
+		/*
 		mean += objects[i]->m_maxP[direction];
 		mean += objects[i]->m_minP[direction];
 
 		splitValues.push_back(objects[i]->m_maxP[direction]);
 		splitValues.push_back(objects[i]->m_minP[direction]);
+		*/
+
+		mean += objects[i]->m_aabb.max[direction];
+		mean += objects[i]->m_aabb.min[direction];
+
+		splitValues.push_back(objects[i]->m_aabb.max[direction]);
+		splitValues.push_back(objects[i]->m_aabb.min[direction]);
 	}
 	
 	mean /= objects.size();
@@ -231,10 +239,16 @@ void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float
 	variance = -1;
 	for (int i = 0; i < objects.size(); i++)
 	{
-		float diff = objects[i]->m_maxP[direction] - mean;
+		//float diff = objects[i]->m_maxP[direction] - mean;
+		//variance += diff * diff;
+
+		//diff = objects[i]->m_minP[direction] - mean;
+		//variance += diff * diff;
+
+		float diff = objects[i]->m_aabb.max[direction] - mean;
 		variance += diff * diff;
 
-		diff = objects[i]->m_minP[direction] - mean;
+		diff = objects[i]->m_aabb.min[direction] - mean;
 		variance += diff * diff;
 	}
 
@@ -270,7 +284,8 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 				int a = 1;
 			}
 
-			if (KDTree::testRayAABB(lineStart, lineDir, node->m_objects[i]->m_maxP, node->m_objects[i]->m_minP))
+//			if (KDTree::testRayAABB(lineStart, lineDir, node->m_objects[i]->m_maxP, node->m_objects[i]->m_minP))
+			if (KDTree::testRayAABB(lineStart, lineDir, node->m_objects[i]->m_aabb))
 			{
 				utl::debug("lineStart", lineStart);
 				utl::debug("lineDir", lineDir);
@@ -333,7 +348,14 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 	}
 }
 
-void KDTree::visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
+#if 0
+void KDTree::visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
+{
+	visitOverlappedNodes(m_head, player, volNearPt, objects);
+}
+#endif
+
+void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
 {
 	if (node == NULL)
 		return;
@@ -382,6 +404,46 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& v
 
 	volNearPt[dir] = oldValue;
 	
+}
+
+
+
+
+
+void KDTree::visitOverlappedNodes(KDTreeNode* node, glm::vec3 newPosition, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
+{
+	if (node == NULL)
+		return;
+
+	int dir = node->m_splitDirection;
+	int val = node->m_splitValue;
+
+	// visiting current node
+	if (node->isLeaf())
+	{
+		for (int i = 0; i<node->m_objects.size(); i++)
+			objects.push_back(node->m_objects[i]);
+		return;
+	}
+
+	int first = newPosition[dir] > val;
+
+
+	KDTreeNode* next = (first == 0) ? node->m_left : node->m_right;
+	visitOverlappedNodes(next, newPosition, player, volNearPt, objects);
+
+
+	float oldValue = volNearPt[dir];
+	volNearPt[dir] = val;
+
+	if (glm::length2(volNearPt - newPosition) < (player->m_scale.x * player->m_scale.x))
+	{
+		first = first ^ 1;
+		next = (first == 0) ? node->m_left : node->m_right;
+		visitOverlappedNodes(next, newPosition, player, volNearPt, objects);
+	}
+
+	volNearPt[dir] = oldValue;
 }
 
 
@@ -462,9 +524,8 @@ void KDTree::renderNode(Pipeline& p, Renderer* r, KDTreeNode* root)
 
 
 // https://tavianator.com/fast-branchless-raybounding-box-intersections/
-
 // P.181
-bool KDTree::testRayAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin)
+bool KDTree::testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb)
 {
 	float tMin = -FLT_MIN;
 	float tMax = FLT_MAX;
@@ -476,30 +537,30 @@ bool KDTree::testRayAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMi
 		// divide by zero case, so it's handled separately
 		if (abs(d[i]) < EPSION)
 		{
-			if (p[i] < aMin[i] || p[i] > aMax[i])
+			if (p[i] < aabb.min[i] || p[i] > aabb.max[i])
 				return false;
 		}
 		else
 		{
 			float ood = 1.0f / d[i];
-			float t1 = (aMin[i] - p[i]) * ood;
-			float t2 = (aMax[i] - p[i]) * ood;
+			float t1 = (aabb.min[i] - p[i]) * ood;
+			float t2 = (aabb.max[i] - p[i]) * ood;
 
 			tMin = max(tMin, min(t1, t2));
 			tMax = min(tMax, max(t1, t2));
 
 			/*
 			if (t1 > t2)
-				swap(t1, t2);
+			swap(t1, t2);
 
 			if (t1 > tMin)
-				tMin = t1;
+			tMin = t1;
 
 			if (t2 > tMax)
-				tMax = t2;
+			tMax = t2;
 
 			if (tMin > tMax)
-				return false;
+			return false;
 			*/
 		}
 	}
@@ -508,13 +569,13 @@ bool KDTree::testRayAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMi
 
 
 
+
+
+/*
 bool KDTree::testSegmentAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin)
 {
-
-
 	return true;
 }
-
 
 bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
 {
@@ -533,6 +594,43 @@ bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::v
 bool KDTree::testCollision(WorldObject* a, WorldObject* b)
 {
 	if (!KDTree::testAABBAABB(a->m_maxP, a->m_minP, b->m_maxP, b->m_minP))
+		return false;
+	return true;
+}
+
+*/
+
+bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
+{
+	if (aMax.x <= bMin.x || aMin.x >= bMax.x)
+		return false;
+
+	if (aMax.y <= bMin.y || aMin.y >= bMax.y)
+		return false;
+
+	if (aMax.z <= bMin.z || aMin.z >= bMax.z)
+		return false;
+
+	return true;
+}
+
+bool KDTree::testAABBAABB(AABB a, AABB b)
+{
+	if (a.max.x <= b.min.x || a.min.x >= b.max.x)
+		return false;
+
+	if (a.max.y <= b.min.y || a.min.y >= b.max.y)
+		return false;
+
+	if (a.max.z <= b.min.z || a.min.z >= b.max.z)
+		return false;
+
+	return true;
+}
+
+bool KDTree::testCollision(WorldObject* a, WorldObject* b)
+{
+	if (!KDTree::testAABBAABB(a->m_aabb, b->m_aabb))
 		return false;
 	return true;
 }

@@ -4,7 +4,9 @@
 #include "utility.h"
 #include "renderer.h"
 #include "model.h"
+#include <string>
 #include "cube_wireframe_model.h"
+#include "bounding_volume.h"
 
 const glm::vec3 NEG_GRAVITY = glm::vec3(0, -9.8, 0);
 const glm::vec3 NEG_HALF_GRAVITY = glm::vec3(0, -4.9, 0);
@@ -13,13 +15,6 @@ const glm::vec3 POS_GRAVITY = glm::vec3(0, 9.8, 0);
 const glm::vec3 POS_HALF_GRAVITY = glm::vec3(0, 4.9, 0);
 
 using namespace std;
-
-
-struct AABB
-{
-	glm::vec3 max;
-	glm::vec3 min;
-};
 
 class WorldObject
 {
@@ -32,14 +27,20 @@ class WorldObject
 		int isHitCounter;
 		string m_name;
 
-		glm::vec3 m_maxP, m_minP;
-
-
-        glm::vec3 m_position;
+		// glm::vec3 m_maxP, m_minP;
+        
+		AABB m_aabb;
+		
+		glm::vec3 m_position;
         glm::vec3 m_velocity;
         glm::vec3 m_scale;
         glm::mat4 m_rotation;
 		glm::mat4 m_modelRotation;
+		glm::mat4 m_modelMatrix;
+
+		float m_mass;
+		float m_invMass;
+
 		Model* m_model;
 
         inline void setScale(float s);
@@ -53,6 +54,8 @@ class WorldObject
         inline void setVelocity(float x, float y, float z);
 
 		inline void setModel(Model* model);
+
+		inline void updateModelMatrix();
 
 		inline glm::vec3 getPosition();
 		inline glm::vec3 getScale();
@@ -78,8 +81,16 @@ class WorldObject
 		CubeWireFrameModel* m_wireFrameModel;
 
 		void renderWireFrameGroup(Pipeline& m_pipeline, Renderer* renderer);
+	
 		void updateAABB();
+		void updateAABB(glm::vec3& maxP, glm::vec3& minP, glm::vec3 pos, glm::mat4 rotation, glm::vec3 scale);
+
 		void updateGameInfo();
+
+		void update(); 
+
+		glm::vec3 m_nextMaxP, m_nextMinP;
+		// glm::vec3 m_nextPosition;
 };
 
 inline void WorldObject::setScale(float s)
@@ -150,11 +161,15 @@ inline void WorldObject::setModel(Model* model)
 	
 
 	updateAABB();
-	m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
+//	m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
+	m_wireFrameModel = new CubeWireFrameModel(m_aabb);
 }
 
 
-
+inline void WorldObject::updateModelMatrix()
+{
+	m_modelMatrix = glm::translate(m_position) * m_rotation * glm::scale(m_scale);
+}
 
 
 #endif

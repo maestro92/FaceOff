@@ -5,6 +5,7 @@
 #include "utility.h"
 #include "world_object.h"
 #include "cube_model.h"
+#include "bounding_volume.h"
 using namespace std;
 
 // check 13.4.1 for optimization
@@ -22,35 +23,44 @@ struct KDTreeNode
 	KDTreeNode() : KDTreeNode(glm::vec3(1,1,1), glm::vec3(0,0,0))
 	{ }
 
+	
 	KDTreeNode(glm::vec3 maxP, glm::vec3 minP)
 	{
-		m_maxP = maxP;
-		m_minP = minP; 
+		// m_maxP = maxP;
+		// m_minP = minP; 
+
+		m_aabb.max = maxP;
+		m_aabb.min = minP;
+
 		m_left = NULL;
 		m_right = NULL;
 		createWireFrameModel();
 		createCubeFrameModel();
 	//	m_containedModel = new CubeModel(glm::vec3(0.0), glm::vec3(0.0));
 	}
+	
 
 	void createWireFrameModel()
 	{
-		m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
+//		m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
+		m_wireFrameModel = new CubeWireFrameModel(m_aabb);
 	}
 
 	void createWireFrameModel(glm::vec3 color)
 	{
-		m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
+		m_wireFrameModel = new CubeWireFrameModel(m_aabb);
 	}
 	
 	void createCubeFrameModel()
 	{
-		m_containedModel = new CubeModel(m_maxP, m_minP);
+//		m_containedModel = new CubeModel(m_maxP, m_minP);
+		m_containedModel = new CubeModel(m_aabb.max, m_aabb.min);
 	}
 
 	void createCubeFrameModel(glm::vec3 color)
 	{
-		m_containedModel = new CubeModel(m_maxP, m_minP, color);
+//		m_containedModel = new CubeModel(m_maxP, m_minP, color);
+		m_containedModel = new CubeModel(m_aabb.max, m_aabb.min, color);
 	}
 
 
@@ -68,8 +78,10 @@ struct KDTreeNode
 
 	vector<WorldObject*> m_objects;
 
-	glm::vec3 m_maxP;
-	glm::vec3 m_minP;
+//	glm::vec3 m_maxP;
+//	glm::vec3 m_minP;
+
+	AABB m_aabb;
 
 	CubeWireFrameModel* m_wireFrameModel;
 	CubeModel* m_containedModel;

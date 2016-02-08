@@ -28,11 +28,8 @@ bool ImportedModel::load(string filename)
 
 	if (scene)
 	{
-	//	m_minX = m_minY = m_minZ = INT_MAX;
-	//	m_maxX = m_maxY = m_maxZ = INT_MIN;
-
-		m_minP = glm::vec3(INT_MAX);
-		m_maxP = glm::vec3(INT_MIN);
+		m_aabb.min = glm::vec3(INT_MAX);
+		m_aabb.max = glm::vec3(INT_MIN);
 
 		cout << "Loading " << filename << endl;
 		ret = initFromAiScene(scene, filename);
@@ -55,8 +52,8 @@ bool ImportedModel::load(string filename, vector<string> textureFiles)
 	if (scene)
 	{
 
-		m_minP = glm::vec3(INT_MAX);
-		m_maxP = glm::vec3(INT_MIN);
+		m_aabb.min = glm::vec3(INT_MAX);
+		m_aabb.max = glm::vec3(INT_MIN);
 
 		cout << "Loading " << filename << endl;
 		ret = initFromAiScene(scene, filename);
@@ -129,9 +126,19 @@ void ImportedModel::initMesh(unsigned int index, const aiMesh* m, const aiScene*
         /// position
         v.m_position = utl::toGlmVec(m->mVertices[i]);
 
+		/*
 		m_minP.x = min(m_minP.x, v.m_position.x);	m_maxP.x = max(m_maxP.x, v.m_position.x);
 		m_minP.y = min(m_minP.y, v.m_position.y);	m_maxP.y = max(m_maxP.y, v.m_position.y);
 		m_minP.z = min(m_minP.z, v.m_position.z);	m_maxP.z = max(m_maxP.z, v.m_position.z);
+		*/
+		m_aabb.min.x = min(m_aabb.min.x, v.m_position.x);
+		m_aabb.max.x = max(m_aabb.max.x, v.m_position.x);
+
+		m_aabb.min.y = min(m_aabb.min.y, v.m_position.y);
+		m_aabb.max.y = max(m_aabb.max.y, v.m_position.y);
+
+		m_aabb.min.z = min(m_aabb.min.z, v.m_position.z);
+		m_aabb.max.z = max(m_aabb.max.z, v.m_position.z);
 
 		
         /// normal

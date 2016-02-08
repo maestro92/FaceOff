@@ -30,6 +30,19 @@ void Camera::control(Pipeline& p, Terrain* terrain)
 
 }
 
+
+void Camera::controlCD()
+{
+
+}
+
+
+void Camera::computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot)
+{
+
+}
+
+
 glm::mat4 Camera::getViewMatrix()
 {
 	return m_viewMatrix;

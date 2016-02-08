@@ -11,7 +11,10 @@
 #include "first_person_camera.h"
 #include "third_person_camera.h"
 
+
+#include "collision_detection/kd_tree.h"
 #include "world_object.h"
+
 #include "renderer.h"
 #include "renderer_manager.h"
 #include "model.h"
@@ -21,12 +24,14 @@
 
 #include <list>
 
+
 #include "world_object/weapon/weapon.h"
 #include "world_object/weapon/assult_rifle.h"
 
 
 using namespace std;
 
+// class KDTree;
 
 class Player : public WorldObject
 {
@@ -44,6 +49,8 @@ class Player : public WorldObject
 //		Renderer* m_renderer;
 		Renderer* r_gun;
 		
+		Sphere m_boundingSphere;
+
 		void setId(int id);
 
 		void setPosition(glm::vec3 position);
@@ -62,6 +69,10 @@ class Player : public WorldObject
 		void update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis);
 		void update(glm::vec3 wPos, float pitch, float yaw);
 
+		void control();
+		void control(KDTree* t);
+
+		void updateCamera(Pipeline& p);
 //		void updateCollision(KDTree* tree);
 
 		void updateModel();

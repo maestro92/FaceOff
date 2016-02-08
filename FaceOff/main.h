@@ -61,6 +61,9 @@
 #include "game_messages.h"
 #include "network_info.h"
 
+#include "collision_detection/contact_data.h"
+#include "collision_detection/collision_detection.h"
+
 #include "collision_detection/kd_tree.h"
 
 #include "terrain/terrain.h"

@@ -17,6 +17,7 @@
 #include <assimp/Importer.hpp>      // C++ importer interface
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "bounding_volume.h"
 #include "texture.h"
 
 using namespace std;
@@ -72,8 +73,9 @@ class Model
         GLuint m_modelGeometry;
 
 
-		glm::vec3 m_maxP, m_minP;
+		// glm::vec3 m_maxP, m_minP;
 
+		AABB m_aabb;
 
         vector<Mesh> m_meshes;
         vector<TextureData> m_textures;

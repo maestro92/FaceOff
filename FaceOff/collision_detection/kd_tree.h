@@ -7,8 +7,9 @@
 #include <algorithm>
 #include "renderer.h"
 #include "model.h"
-#include "player.h"
+// #include "player.h"
 using namespace std;
+#include "bounding_volume.h"
 
 /*
 enum NODE_OBJ_RELATION
@@ -18,6 +19,8 @@ enum NODE_OBJ_RELATION
 	OUTSIDE
 };
 */
+
+
 
 class KDTree
 {
@@ -50,12 +53,16 @@ class KDTree
 
 		void computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median);
 
-//		void visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt);
+		// void visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt);
 		
-//		void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object);
-
+		void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object);
 		void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, int depth, KDTreeNode*& hitNode);
-		void visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
+
+		// void visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
+		void visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
+
+		void visitOverlappedNodes(KDTreeNode* node, glm::vec3 nextPosition, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
+
 
 		void renderWireFrame(Pipeline& p, Renderer* r);
 		void renderWireFrame(KDTreeNode* root, Renderer* r);
@@ -68,10 +75,17 @@ class KDTree
 		void renderSingle(Pipeline& p, Renderer* r);
 		void renderGroup(Pipeline& p, Renderer* r);
 
-		static bool testRayAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin);
-		static bool testSegmentAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin);
+
+//		static bool testSegmentAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin);
+//		static bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
+		// static bool testRayAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin);
+
+		static bool testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb);
+		static bool testAABBAABB(AABB a, AABB b);
 		static bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
 		static bool testCollision(WorldObject* a, WorldObject* b);
+
+
 
 		void print();
 };

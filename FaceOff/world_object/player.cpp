@@ -24,6 +24,9 @@ Player::Player(int id)
 	setScale(5.0);
 	setModel(m_model);
 
+	m_boundingSphere.center = m_position;
+	m_boundingSphere.radius = m_scale.x;
+
 	m_maxHP = 100;
 	m_curHP = 100;
 
@@ -75,21 +78,36 @@ void Player::update(Pipeline& p)
 	// third person camera: eye != target
 
 	m_position = m_camera->getTargetPoint();
+
 	updateAABB();
 
 	updateWeaponTransform();
-
-
 
 	// updateBulletTransform();
 	// adjustWeaponAndBulletPosition();
 }
 
 
+void Player::control()
+{
+	m_camera->controlCD();
+	m_position = m_camera->getTargetPoint();
+}
+
+void Player::updateCamera(Pipeline& p)
+{
+	p.setMatrixMode(VIEW_MATRIX);
+	p.loadIdentity();
+
+	m_camera->m_target = m_position;
+	m_boundingSphere.center = m_position;
+	((ThirdPersonCamera*)m_camera)->updateViewMatrix(p);
+	updateAABB();
+	updateWeaponTransform();
+}
+
 void Player::updateWeaponTransform()
 {
-
-
 	glm::vec3 xAxis = m_camera->m_targetXAxis;
 	glm::vec3 yAxis = m_camera->m_targetYAxis;
 	glm::vec3 zAxis = -m_camera->m_targetZAxis;
@@ -113,53 +131,6 @@ void Player::updateWeaponTransform()
 	}
 }
 
-/*
-void Player::updateWeaponTransform()
-{
-	glm::vec3 xAxis, yAxis, zAxis;
-
-
-	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
-	{
-		m_position = m_camera->getTargetPoint();
-		
-		
-		xAxis = m_camera->m_xAxis;
-		yAxis = m_camera->m_yAxis;
-		zAxis = -m_camera->m_zAxis;
-		
-		//xAxis = m_camera->m_targetXAxis;
-		//yAxis = m_camera->m_targetYAxis;
-		//zAxis = -m_camera->m_targetZAxis;
-
-
-		xAxis = xAxis * m_weaponPositionOffsets[m_curWeaponIndex].x;
-		yAxis = yAxis * m_weaponPositionOffsets[m_curWeaponIndex].y;
-		zAxis = zAxis * m_weaponPositionOffsets[m_curWeaponIndex].z;
-
-		glm::vec3 pos = m_position + xAxis + yAxis + zAxis;
-		m_weapons[m_curWeaponIndex]->setPosition(pos);
-		m_weapons[m_curWeaponIndex]->setScale(0.005);
-	}
-	else
-	{
-		m_position = m_camera->getTargetPoint();
-		xAxis = m_camera->m_targetXAxis;
-		yAxis = m_camera->m_targetYAxis;
-		zAxis = -m_camera->m_targetZAxis;
-
-		xAxis = xAxis * m_weaponPositionOffsets[m_curWeaponIndex].x;
-		yAxis = yAxis * m_weaponPositionOffsets[m_curWeaponIndex].y;
-		zAxis = zAxis * m_weaponPositionOffsets[m_curWeaponIndex].z;
-
-		glm::vec3 pos = m_camera->getTargetPoint() + xAxis + yAxis + zAxis;
-		m_weapons[m_curWeaponIndex]->setPosition(pos);
-		m_weapons[m_curWeaponIndex]->setScale(0.05);
-		m_weapons[m_curWeaponIndex]->setRotation(m_camera->m_targetRotation);
-		
-	}
-}
-*/
 
 
 

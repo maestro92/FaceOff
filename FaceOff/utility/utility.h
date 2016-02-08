@@ -286,6 +286,8 @@ namespace utl
 	void readBitStream(RakNet::BitStream& bsIn, glm::vec3& v);
 	void setBitStream(RakNet::BitStream& bsOut, glm::vec3& v);
 
+
+
 };
 
 template<typename T>

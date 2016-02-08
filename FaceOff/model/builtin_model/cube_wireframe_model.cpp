@@ -4,11 +4,18 @@
 CubeWireFrameModel::CubeWireFrameModel() : CubeWireFrameModel(1, -1, 1, -1, 1, -1)
 {}
 
-
+/*
 CubeWireFrameModel::CubeWireFrameModel(glm::vec3 maxXYZ, glm::vec3 minXYZ) : CubeWireFrameModel(maxXYZ.x, minXYZ.x, 
 																								maxXYZ.y, minXYZ.y, 
 																								maxXYZ.z, minXYZ.z)
 {}
+*/
+CubeWireFrameModel::CubeWireFrameModel(AABB aabb) : CubeWireFrameModel(aabb.max.x, aabb.min.x,
+																	   aabb.max.y, aabb.min.y,
+																	   aabb.max.z, aabb.min.z)
+{}
+
+
 
 CubeWireFrameModel::CubeWireFrameModel(float xmax, float xmin, 
 										float ymax, float ymin,
