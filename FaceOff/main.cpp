@@ -105,7 +105,7 @@ void FaceOff::initModels()
 
 
 	m_groundModel.load("Assets/models/quad.obj");
-
+//	m_groundModel.load("Assets/models/ground.obj");
 	textures.clear();  textures.push_back("Assets/Images/chess.png"); //textures.push_back("Assets/tree.png"); // textures.push_back("Assets/Images/chess.png");
 	m_groundModel.setTextures(textures);
 	m_groundModel.setMeshRandTextureIdx();
@@ -179,7 +179,7 @@ void FaceOff::initObjects()
 	scale = 150;
 	WorldObject::DEFAULT_MODEL = &m_tree;
 	WorldObject* o_temp = new WorldObject();
-	o_temp->setScale(scale, 50.0, scale);
+	o_temp->setScale(scale, 50.0, 1.0);
 	o_temp->setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
 	o_temp->setModel(&m_groundModel);
 	o_temp->m_name = "ground";
@@ -930,6 +930,11 @@ void FaceOff::start()
 					containedFlag = !containedFlag;
 					break;
 
+				case SDLK_SPACE:
+					if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
+						m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 20.0, 0.0);
+					break;
+
 				case SDLK_z:
 					if (m_isServer)
 						m_firstPersonCamera.setMouseIn(false);
@@ -1187,7 +1192,11 @@ void FaceOff::forwardRender()
 	//	m_players[m_defaultPlayerID]->update(m_pipeline);
 	//	m_players[m_defaultPlayerID]->updateCD(m_pipeline, &m_objectKDtree);
 
+		m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.0001f * 0.5f;
+		m_players[m_defaultPlayerID]->m_camera->m_target += m_players[m_defaultPlayerID]->m_velocity;
 
+
+//		m_players[m_defaultPlayerID]->m_camera->m_target.y -= (9.82 * 0.03);
 		m_players[m_defaultPlayerID]->control();
 		
 		vector<WorldObject*> neighbors;
@@ -1197,13 +1206,15 @@ void FaceOff::forwardRender()
 
 		// collision between static object and dynamic object
 		// Game Physics Engine Development P.129
+
+		unordered_set<string> names;
+
 		for (int i = 0; i < neighbors.size(); i++)
 		{
 			neighbors[i]->isTested = true;
 
 			ContactData contactData;
-
-			
+	
 			//utl::debug("player position", m_players[m_defaultPlayerID]->m_position);
 			//utl::debug("bounding sphere center", m_players[m_defaultPlayerID]->m_boundingSphere.center);
 			//utl::debug("bounding sphere radius", m_players[m_defaultPlayerID]->m_boundingSphere.radius);
@@ -1213,10 +1224,15 @@ void FaceOff::forwardRender()
 													contactData))
 			{
 				neighbors[i]->isCollided = true;
-
 				
-				if (neighbors[i]->m_name == "ground")
+				// if (neighbors[i]->m_name == "ground")
+				// 	continue;
+
+				// ground was getting inserted twice. We dont want that!
+				if (names.find(neighbors[i]->m_name) != names.end())
 					continue;
+				else
+					names.insert(neighbors[i]->m_name);
 
 				contactData.pair[0] = m_players[m_defaultPlayerID];
 				contactData.pair[1] = NULL;
@@ -1226,6 +1242,8 @@ void FaceOff::forwardRender()
 				//utl::debug("contactData normal", contactData.normal);
 				//utl::debug("contactData depth", contactData.penetrationDepth);
 				//
+
+				contactData.resolveVelocity();
 				contactData.resolveInterpenetration();
 			
 			}

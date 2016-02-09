@@ -10,7 +10,7 @@ Player::Player(int id)
 {
 	setId(id);
 //
-//	m_camera = new FirstPersonCamera();
+//	m_camera = new FirstPersonCamera();f
 	m_camera = new ThirdPersonCamera();
 
 	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
@@ -23,6 +23,8 @@ Player::Player(int id)
 	setPosition(0.0, 5.0, 0.0);
 	setScale(5.0);
 	setModel(m_model);
+
+	m_camera->m_target = m_position;
 
 	m_boundingSphere.center = m_position;
 	m_boundingSphere.radius = m_scale.x;

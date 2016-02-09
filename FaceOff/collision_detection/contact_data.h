@@ -24,8 +24,6 @@ using namespace std;
 
 struct ContactData
 {
-
-
 	vector<WorldObject*> pair;
 	glm::vec3 point;
 	glm::vec3 normal;

@@ -7,7 +7,7 @@ ContactData::ContactData()
 	point = glm::vec3(1.0);
 	normal = glm::vec3(1.0);
 	penetrationDepth = 1.0;
-	restitution = 0.001;
+	restitution = 0.0;
 }
 
 
@@ -19,7 +19,7 @@ void ContactData::resolve()
 
 void ContactData::resolveVelocity()
 {
-
+	pair[0]->m_velocity = glm::vec3(0.0);
 }
 
 void ContactData::resolveInterpenetration()

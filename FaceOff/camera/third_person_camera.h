@@ -17,7 +17,7 @@ class ThirdPersonCamera : public Camera
 {
     public:
         ThirdPersonCamera();
-        ThirdPersonCamera(Pipeline& m_pipeline);
+		ThirdPersonCamera(Pipeline& m_pipeline);
         ~ThirdPersonCamera();
 
         void lookAt(glm::vec3& eye, glm::vec3& target, glm::vec3& up);
