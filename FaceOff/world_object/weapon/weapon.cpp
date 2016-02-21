@@ -6,7 +6,7 @@ unordered_map<string, ImportedModel> Weapon::s_weaponModels;
 
 Weapon::Weapon()
 {
-
+	m_type = MELEE;
 }
 
 Weapon::~Weapon()
@@ -14,8 +14,23 @@ Weapon::~Weapon()
 
 }
 
-void Weapon::initWeaponModels()
+
+void Weapon::setType(WeaponTypeEnum type)
 {
+	m_type = type;
+}
+
+
+int Weapon::getType()
+{
+	return m_type;
+}
+
+
+void Weapon::initGameWeapons()
+{
+
+
 	// Melee
 
 	// Pistols
@@ -39,9 +54,9 @@ void Weapon::render(Pipeline& p, Renderer* r)
 		p.addMatrix(m_rotation);
 		p.scale(m_scale);
 		r->loadUniformLocations(p);
-		Weapon::s_weaponModels[m_gunType].render();
+		Weapon::s_weaponModels[m_weaponName].render();
 	p.popMatrix();
 	r->disableShader();
-
 }
+
 

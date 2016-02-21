@@ -172,9 +172,9 @@ void FaceOff::initObjects()
 	o_tree.setPosition(50, 0, 50);
 	o_lowPolyTree.setPosition(100, 0, 100);
 
-	
 
-	Weapon::initWeaponModels();
+	WeaponManager::initWeaponsData();
+	Weapon::initGameWeapons();
 
 	scale = 150;
 	WorldObject::DEFAULT_MODEL = &m_tree;

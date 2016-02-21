@@ -9,7 +9,7 @@ AssultRifle::AssultRifle()
 
 AssultRifle::AssultRifle(string gunType)
 {
-	m_gunType = gunType;
+	m_weaponName = gunType;
 
 	for (auto it = Weapon::s_weaponModels.begin(); it != Weapon::s_weaponModels.end(); it++)
 	{

@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./;world_object\weapon;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;world_object\weapon;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include;libraries\json_spirit;C:\Users\Martin\Desktop\boost_1_55_0</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -88,12 +88,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_manager.cpp" />
     <ClCompile Include="camera\camera.cpp" />
     <ClCompile Include="camera\first_person_camera.cpp" />
     <ClCompile Include="camera\third_person_camera.cpp" />
     <ClCompile Include="collision_detection\collision_detection.cpp" />
     <ClCompile Include="collision_detection\kd_tree.cpp" />
     <ClCompile Include="collision_detection\contact_data.cpp" />
+    <ClCompile Include="libraries\json_spirit\json_spirit_reader.cpp" />
+    <ClCompile Include="libraries\json_spirit\json_spirit_value.cpp" />
+    <ClCompile Include="libraries\json_spirit\json_spirit_writer.cpp" />
     <ClCompile Include="model\builtin_model\cube_wireframe_model.cpp" />
     <ClCompile Include="gui\button.cpp" />
     <ClCompile Include="gui\control.cpp" />
@@ -241,16 +245,17 @@
     <ClCompile Include="world_object\terrain\multitexture_terrain.cpp" />
     <ClCompile Include="world_object\terrain\terrain.cpp" />
     <ClCompile Include="world_object\weapon\assult_rifle.cpp" />
-    <ClCompile Include="world_object\weapon\melee.cpp" />
     <ClCompile Include="world_object\particle.cpp" />
-    <ClCompile Include="world_object\weapon\pistol.cpp" />
     <ClCompile Include="world_object\player.cpp" />
     <ClCompile Include="world_object\skybox.cpp" />
     <ClCompile Include="world_object\weapon\weapon.cpp" />
+    <ClCompile Include="world_object\weapon\weapon_manager.cpp" />
     <ClCompile Include="world_object\world_object.cpp" />
     <ClCompile Include="world_object\world_sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_enum.h" />
+    <ClInclude Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_manager.h" />
     <ClInclude Include="camera\camera.h" />
     <ClInclude Include="camera\first_person_camera.h" />
     <ClInclude Include="camera\third_person_camera.h" />
@@ -258,6 +263,16 @@
     <ClInclude Include="collision_detection\kd_tree.h" />
     <ClInclude Include="collision_detection\kd_tree_node.h" />
     <ClInclude Include="collision_detection\contact_data.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_error_position.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_reader.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_reader_template.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_stream_reader.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_utils.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_value.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_writer.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_writer_options.h" />
+    <ClInclude Include="libraries\json_spirit\json_spirit_writer_template.h" />
     <ClInclude Include="model\builtin_model\cube_wireframe_model.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="gui\button.h" />
@@ -451,12 +466,12 @@
     <ClInclude Include="world_object\billboard_list.h" />
     <ClInclude Include="world_object\terrain\terrain.h" />
     <ClInclude Include="world_object\weapon\assult_rifle.h" />
-    <ClInclude Include="world_object\weapon\melee.h" />
     <ClInclude Include="world_object\particle.h" />
-    <ClInclude Include="world_object\weapon\pistol.h" />
     <ClInclude Include="world_object\player.h" />
     <ClInclude Include="world_object\skybox.h" />
     <ClInclude Include="world_object\weapon\weapon.h" />
+    <ClInclude Include="world_object\weapon\weapon_enum.h" />
+    <ClInclude Include="world_object\weapon\weapon_manager.h" />
     <ClInclude Include="world_object\world_object.h" />
     <ClInclude Include="world_object\world_sphere.h" />
   </ItemGroup>

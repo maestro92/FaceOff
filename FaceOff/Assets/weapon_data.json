@@ -1,0 +1,25 @@
+[
+	{
+		"name": 			"Dessert Eagle",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"weaponType":		"PISTOL"
+	},
+
+	{
+		"name": 			"MP5",
+		"damage": 			36,
+		"magazineCapacity": 35,
+		"maxMagazineCount": 3,
+		"weaponType":		"SUBMACHINE_GUN"
+	},
+
+	{
+		"name": 			"AK-47",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"weaponType":		"ASSULT_RIFLE"
+	}
+]

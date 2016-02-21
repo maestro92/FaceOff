@@ -44,6 +44,9 @@
 #include "particle.h"
 #include "skybox.h"
 #include "billboard_list.h"
+#include "weapon_manager.h"
+
+
 #define FRAME_VALUES 10
 #include <list>
 
