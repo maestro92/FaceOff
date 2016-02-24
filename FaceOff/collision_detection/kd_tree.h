@@ -48,8 +48,7 @@ class KDTree
 									glm::vec3 maxP, glm::vec3 minP, int depth, int& count);
 
 		void insert(WorldObject* object);
-
-
+		void insert(KDTreeNode* node, WorldObject* object);
 
 		void computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median);
 
@@ -57,6 +56,8 @@ class KDTree
 		
 		void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object);
 		void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, int depth, KDTreeNode*& hitNode);
+		void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, float& hitObjectSqDist);
+
 
 		// void visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
 		void visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);

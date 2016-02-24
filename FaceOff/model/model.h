@@ -72,9 +72,6 @@ class Model
         void clear();
         GLuint m_modelGeometry;
 
-
-		// glm::vec3 m_maxP, m_minP;
-
 		AABB m_aabb;
 
         vector<Mesh> m_meshes;

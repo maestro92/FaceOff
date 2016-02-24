@@ -46,7 +46,7 @@ class Player : public WorldObject
 
         Camera* m_camera;
 		Model* m_model;
-//		Renderer* m_renderer;
+
 		Renderer* r_gun;
 		
 		Sphere m_boundingSphere;

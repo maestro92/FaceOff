@@ -56,17 +56,28 @@ static float runningTime = 0.0f;
 
 FaceOff::FaceOff()
 {
+
+}
+
+FaceOff::~FaceOff()
+{
+	RakNet::RakPeerInterface::DestroyInstance(peer);
+}
+
+
+void FaceOff::init()
+{
 	isRunning = true;
 
 	containedFlag = false;
 	hitNode = NULL;
 
+	
 	initModels();
 	initObjects();
 	initRenderers();
 	initGUI();
-
-
+	
 	m_defaultPlayerID = 0;
 	//Initialize clear color
 	glClearColor(0.0f, 0.5f, 0.0f, 1.0f);
@@ -84,14 +95,6 @@ FaceOff::FaceOff()
 
 	SDL_WM_SetCaption("FaceOff", NULL);
 }
-
-FaceOff::~FaceOff()
-{
-	RakNet::RakPeerInterface::DestroyInstance(peer);
-}
-
-
-
 
 void FaceOff::initModels()
 {
@@ -182,6 +185,7 @@ void FaceOff::initObjects()
 	o_temp->setScale(scale, 50.0, 1.0);
 	o_temp->setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
 	o_temp->setModel(&m_groundModel);
+	o_temp->updateAABB();
 	o_temp->m_name = "ground";
 	m_objects.push_back(o_temp);
 
@@ -192,6 +196,7 @@ void FaceOff::initObjects()
 	o_temp->setScale(scale);
 	o_temp->setPosition(0, 0, 20);
 	o_temp->setModel(&m_stairs);
+	o_temp->updateAABB();
 	o_temp->m_name = "stairs 20";
 	m_objects.push_back(o_temp);
 
@@ -201,6 +206,7 @@ void FaceOff::initObjects()
 	o_temp->setPosition(0, 0, -20);
 	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
 	o_temp->setModel(&m_stairs);
+	o_temp->updateAABB();
 	o_temp->m_name = "stairs -20";
 	m_objects.push_back(o_temp);
 	
@@ -217,6 +223,7 @@ void FaceOff::initObjects()
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
 		o_temp->setModel(&m_woodenBox);
+		o_temp->updateAABB();
 		m_objects.push_back(o_temp);
 	}
 
@@ -232,8 +239,11 @@ void FaceOff::initObjects()
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
 		o_temp->setModel(&m_woodenBox);
+		o_temp->updateAABB();
 		m_objects.push_back(o_temp);
 	}
+
+
 
 	float xbound = 150;
 	float ybound = 50;
@@ -241,7 +251,43 @@ void FaceOff::initObjects()
 
 	m_objectKDtree.build(m_objects, glm::vec3(xbound+1, ybound+1, zbound+1), glm::vec3(-xbound-1, -1, -zbound-1));
 
-	for (int i = 0; i < m_players.size(); i++)
+	/*
+	if (m_players.size() == 0)
+	{
+		m_defaultPlayerID = 0;
+		m_players.push_back(new Player(m_defaultPlayerID));
+
+		// enemies
+		Player* p1 = new Player(1);
+		p1->setPosition(p1->m_id * 10, 5, p1->m_id * 10);
+		m_players.push_back(p1);
+
+		Player* p2 = new Player(2);
+		p1->setPosition(p1->m_id * 10, 5, p1->m_id * 10);
+		m_players.push_back(p2);
+	}
+	*/
+
+
+	m_defaultPlayerID = 0;
+	m_players.push_back(new Player(m_defaultPlayerID));
+	
+	Player* p = new Player(1);
+	p->setPosition(p->m_id * 25, 5, p->m_id * 10 - 8);
+	p->updateAABB();
+	m_players.push_back(p);
+
+	p = new Player(2);
+	p->setPosition( (p->m_id-1) * 25, 5, p->m_id * 10 + 8);
+	p->updateAABB();
+	m_players.push_back(p);
+
+	utl::debug("0 max", m_players[0]->m_aabb.max);
+	utl::debug("0 min", m_players[0]->m_aabb.min);
+
+	utl::debug("1 max", m_players[1]->m_aabb.max);
+	utl::debug("1 min", m_players[1]->m_aabb.min);
+	for (int i = 1; i < m_players.size(); i++)
 		m_objectKDtree.insert(m_players[i]);
 	
 
@@ -804,6 +850,7 @@ void FaceOff::clientNetworkThread()
 
 void FaceOff::start()
 {
+
 	cout << "Start" << endl;
 	Uint32 startTime = SDL_GetTicks();
 	m_nextGameTick = 0;
@@ -882,7 +929,10 @@ void FaceOff::start()
 							glm::vec3 lineStart = m_players[m_defaultPlayerID]->m_position;
 							glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
 
-							m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
+							// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
+
+							float hitObjectSqDist = FLT_MAX;
+							m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist);
 
 						//	utl::debug("player pos", lineStart);
 						//	utl::debug("target z", lineDir);
@@ -1265,23 +1315,6 @@ void FaceOff::forwardRender()
 
 
 
-	
-	/*
-	vector<WorldObject*> neighbors;
-	glm::vec3 volNearPoint(m_players[0]->m_position);
-	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[0], volNearPoint, neighbors);
-
-	for (int i = 0; i < neighbors.size(); i++)
-	{
-		neighbors[i]->isTested = true;
-		if (KDTree::testCollision(m_players[0], neighbors[i]))
-		{
-			neighbors[i]->isCollided = true;
-
-		}
-	}
-	*/
-
 
 
 	for (int i = 0; i<m_objects.size(); i++)
@@ -1289,6 +1322,10 @@ void FaceOff::forwardRender()
 		m_objects[i]->updateGameInfo();
 	}
 	
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		m_players[i]->updateGameInfo();
+	}
 	/*
 	for (int i = 0; i<m_objects.size(); i++)
 	{
@@ -1313,10 +1350,6 @@ void FaceOff::forwardRender()
 
 
 
-
-
-
-
 	// render the players
 	if (m_isServer)
 	{
@@ -1331,6 +1364,7 @@ void FaceOff::forwardRender()
 	}
 	else
 	{
+		/*
 		for (int i = 0; i < m_players.size(); i++)
 		{
 			if (i != m_defaultPlayerID && m_players[i] != NULL)
@@ -1344,11 +1378,10 @@ void FaceOff::forwardRender()
 				//		m_players[i]->renderWeapon(m_pipeline);
 				m_players[i]->render(m_pipeline, p_renderer);
 			}
-
 		}
+		*/
+		m_players[0]->render(m_pipeline, p_renderer);
 	}
-
-
 
 
 
@@ -1359,6 +1392,17 @@ void FaceOff::forwardRender()
 		if (object->isTested != true && object->isCollided != true && object->isHit != true)
 			object->renderGroup(m_pipeline, p_renderer);
 	}
+
+//	utl::debug("1 max", m_players[1]->m_aabb.max);
+//	utl::debug("1 min", m_players[1]->m_aabb.min);
+
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		Player* player = m_players[i];
+		if (player->isTested != true && player->isCollided != true && player->isHit != true)
+			m_players[i]->renderModel(m_pipeline, p_renderer);
+	}
+
 	p_renderer->disableShader();
 
 
@@ -1379,8 +1423,16 @@ void FaceOff::forwardRender()
 
 		for (int i = 0; i < m_players.size(); i++)
 		{
-			WorldObject* object = m_players[i];
-			object->renderWireFrameGroup(m_pipeline, p_renderer);
+			if (i == m_defaultPlayerID)
+				continue;
+
+			Player* player = m_players[i];
+
+			// utl::debug("max", player->m_aabb.max);
+			// utl::debug("min", player->m_aabb.min);
+			// utl::debug("pos", player->m_position);
+			player->renderWireFrameGroup(m_pipeline, p_renderer);
+
 		}
 
 		if (containedFlag)
@@ -1427,10 +1479,42 @@ void FaceOff::forwardRender()
 				object->renderGroup(m_pipeline, p_renderer);
 				object->isTested = false;
 			}
-			
 		}
 
 		
+
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			if (i == m_defaultPlayerID)
+				continue;
+
+			Player* p = m_players[i];
+
+			//utl::debug("hit", p->isHit);
+			//utl::debug("collided", p->isCollided);
+			//utl::debug("tested", p->isTested);
+
+			if (p->isHit)
+			{
+				p_renderer->setData("u_color", GREEN);
+				p->renderGroup(m_pipeline, p_renderer);
+
+			}
+			else if (p->isCollided)
+			{
+				p_renderer->setData("u_color", PURPLE);
+				p->renderGroup(m_pipeline, p_renderer);
+				p->isCollided = false;
+			}
+			else if (p->isTested)
+			{
+				p_renderer->setData("u_color", BLUE);
+				p->renderGroup(m_pipeline, p_renderer);
+				p->isTested = false;
+			}
+		}
+
+
 	p_renderer->disableShader();
 	glEnable(GL_CULL_FACE);
 
@@ -1495,12 +1579,13 @@ int main(int argc, char *argv[])
 	Martin.initNetwork();
 	Martin.initLobby();
 #else
-
+	
 	if (Martin.m_players.size() == 0)
-	{
+	{/*
 		Martin.m_defaultPlayerID = 0;
 		Martin.m_players.push_back(new Player(Martin.m_defaultPlayerID));
 
+		
 		// enemies
 		Player* p1 = new Player(1);
 		p1->setPosition(p1->m_id * 10, 5, p1->m_id * 10);
@@ -1509,9 +1594,11 @@ int main(int argc, char *argv[])
 		Player* p2 = new Player(2);
 		p1->setPosition(p1->m_id * 10, 5, p1->m_id * 10);
 		Martin.m_players.push_back(p2);
+	*/
 	}
+	
 #endif
-
+	Martin.init();
 	Martin.start();
 
 

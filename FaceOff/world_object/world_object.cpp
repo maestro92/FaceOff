@@ -97,13 +97,26 @@ void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass
 
 
 
+void WorldObject::renderStaticWireFrameGroup(Pipeline& p, Renderer* r)
+{
+	p.pushMatrix();
+		r->loadUniformLocations(p);
+		m_staticWireFrameModel->render();
+	p.popMatrix();
+}
+
+
 void WorldObject::renderWireFrameGroup(Pipeline& p, Renderer* r)
 {
 	p.pushMatrix();
+		p.translate(m_position);
+		p.addMatrix(m_rotation);
+		p.scale(m_scale);
 		r->loadUniformLocations(p);
 		m_wireFrameModel->render();
 	p.popMatrix();
 }
+
 
 void WorldObject::updateAABB()
 {

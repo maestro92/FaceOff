@@ -63,25 +63,27 @@ class WorldObject
 
         virtual inline void setRotation(glm::mat4 rot);
 
-		virtual void renderSingle(Pipeline& m_pipeline, Renderer* renderer);
-		virtual void renderSingle(Pipeline& m_pipeline, Renderer* renderer, int pass);
+		virtual void renderSingle(Pipeline& p, Renderer* r);
+		virtual void renderSingle(Pipeline& p, Renderer* r, int pass);
 
-		virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer);
-		virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass);
+		virtual void renderGroup(Pipeline& p, Renderer* r);
+		virtual void renderGroup(Pipeline& p, Renderer* r, int pass);
 
 
-        virtual void renderSingle(Pipeline& m_pipeline, Renderer* renderer, Model* model);
-        virtual void renderSingle(Pipeline& m_pipeline, Renderer* renderer, int pass, Model* model);
+		virtual void renderSingle(Pipeline& p, Renderer* r, Model* model);
+		virtual void renderSingle(Pipeline& p, Renderer* r, int pass, Model* model);
 
-        virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer, Model* model);
-        virtual void renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass, Model* model);
+		virtual void renderGroup(Pipeline& p, Renderer* r, Model* model);
+		virtual void renderGroup(Pipeline& p, Renderer* r, int pass, Model* model);
 
 		static Model* DEFAULT_MODEL;
 
 		CubeWireFrameModel* m_wireFrameModel;
+		CubeWireFrameModel* m_staticWireFrameModel;
 
-		void renderWireFrameGroup(Pipeline& m_pipeline, Renderer* renderer);
-	
+		void renderStaticWireFrameGroup(Pipeline& p, Renderer* r);
+		void renderWireFrameGroup(Pipeline& p, Renderer* r);
+
 		void updateAABB();
 		void updateAABB(glm::vec3& maxP, glm::vec3& minP, glm::vec3 pos, glm::mat4 rotation, glm::vec3 scale);
 
@@ -156,13 +158,11 @@ inline glm::mat4 WorldObject::getRotation()
 inline void WorldObject::setModel(Model* model)
 {
 	m_model = model;
-		
-//	m_wireFrameModel = new CubeWireFrameModel(m_model->m_maxP, m_model->m_minP);
-	
+	m_wireFrameModel = new CubeWireFrameModel(model->m_aabb);
 
-	updateAABB();
-//	m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
-	m_wireFrameModel = new CubeWireFrameModel(m_aabb);
+//	updateAABB();
+
+//	m_staticWireFrameModel = new CubeWireFrameModel(m_aabb);
 }
 
 

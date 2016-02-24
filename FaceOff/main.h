@@ -279,6 +279,7 @@ class FaceOff
 		~FaceOff();
 
 		/// init functions
+		void init();
 		void initObjects();
 		void initModels();
 		void initRenderers();

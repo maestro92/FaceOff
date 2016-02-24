@@ -34,21 +34,8 @@ const mValue& WeaponManager::findValue(const mObject& obj, const string& name)
 	return it->second;
 }
 
-/*
-{ "MELEE", MELEE },
-{ "PISTOL", PISTOL },
-{ "SHOTGUN", SHOTGUN },
-{ "SUBMACHINE_GUN", SUBMACHINE_GUN },
-{ "ASSULT_RIFLE", ASSULT_RIFLE },
-{ "SNIPER_RIFLE", SNIPER_RIFLE },
-{ "MACHINE_GUN", MACHINE_GUN },
-{ "NUM_WEAPON_TYPE", NUM_WEAPON_TYPE }
-*/
-
 void WeaponManager::initWeaponsData()
 {
-//	unordered_map<string, WeaponTypeEnum> s_weaponTypeStringToEnum =
-
 	s_weaponTypeStringToEnum =
 	unordered_map<string, WeaponTypeEnum>
 	({

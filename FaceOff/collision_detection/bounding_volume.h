@@ -3,7 +3,19 @@
 
 #include "utility/utility.h"
 
-struct AABB
+
+enum BVEnum
+{
+	BV_AABB = 0,
+	BV_SPHERE
+};
+
+struct BoundingVolume
+{
+	virtual BVEnum getType() = 0;
+};
+
+struct AABB : public BoundingVolume
 {
 	glm::vec3 max;
 	glm::vec3 min;
@@ -20,13 +32,21 @@ struct AABB
 		min = b;
 	}
 
+	BVEnum getType()
+	{
+		return BV_AABB;
+	}
 };
 
-
-struct Sphere
+struct Sphere : public BoundingVolume
 {
 	glm::vec3 center;
 	float radius;
+
+	BVEnum getType()
+	{
+		return BV_SPHERE;
+	}
 };
 
 #endif

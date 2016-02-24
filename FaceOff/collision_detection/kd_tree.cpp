@@ -47,6 +47,9 @@ void KDTree::build(vector<WorldObject*> objects, glm::vec3 maxP, glm::vec3 minP)
 // leaf nodes doens't have splitting planes
 // so it will store items, but not have split items/split direction
 
+// Reference !!!!
+// https://graphics.stanford.edu/wikis/cs248-11-winter/Assignment_4/kdtree
+
 KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP, glm::vec3 minP, int depth, int& count)
 {
 	KDTreeNode* root = new KDTreeNode(maxP, minP);
@@ -133,8 +136,6 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	if (leftObjects.size() == objects.size() ||
 		rightObjects.size() == objects.size() ||
 		leftObjects.size() == rightObjects.size() == objects.size())
-
-
 	{
 		vector <glm::vec3> colors = { RED, GREEN, BLUE };
 
@@ -158,7 +159,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 
 		return root;
 	}
-	/*
+/*
 	utl::debug("root->m_splitDirection", root->m_splitDirection);
 	utl::debug("root->m_splitValue", root->m_splitValue);
 
@@ -169,9 +170,39 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	root->m_left = recursiveBuild(leftObjects, lx, ln, depth + 1, count);
 	root->m_right = recursiveBuild(rightObjects, rx, rn, depth + 1, count);
 
-
 	return root;
 }
+
+
+void KDTree::insert(WorldObject* object)
+{
+	insert(m_head, object);
+}
+
+void KDTree::insert(KDTreeNode* node, WorldObject* object)
+{
+	if (node == NULL)
+		return;
+
+
+
+	utl::debug("max", node->m_aabb.max);
+	utl::debug("min", node->m_aabb.min);
+
+	if (node->m_left == NULL && node->m_right == NULL)
+	{
+		node->m_objects.push_back(object);
+		return;
+	}
+
+	if (testAABBAABB(node->m_left->m_aabb, object->m_aabb))
+		insert(node->m_left, object);
+	
+
+	if (testAABBAABB(node->m_right->m_aabb, object->m_aabb))
+		insert(node->m_right, object);
+}
+
 
 /*
 void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median)
@@ -348,6 +379,91 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 	}
 }
 
+
+
+
+void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, float& hitObjectSqDist)
+{
+	if (node == NULL)
+		return;
+
+	if (node->isLeaf())
+	{
+		for (int i = 0; i < node->m_objects.size(); i++)
+		{
+			if (KDTree::testRayAABB(lineStart, lineDir, node->m_objects[i]->m_aabb))
+			{
+				float sqDist = glm::length2(lineStart - node->m_objects[i]->m_position);
+				utl::debug("THIS NEEDS TO BE FIXED!!!! Wrong distance metric");
+				
+				if (sqDist < hitObjectSqDist)
+				{
+					utl::debug("lineStart", lineStart);
+					utl::debug("lineDir", lineDir);
+					hitObjectSqDist = sqDist;
+					object = node->m_objects[i];
+				}
+			}
+		}
+		return;
+	}
+
+
+	int dim = node->m_splitDirection;
+	int val = node->m_splitValue;
+
+	int first = lineStart[dim] > node->m_splitValue;
+
+	if (lineDir[dim] == 0.0f)
+	{
+		if (first == 0)
+			visitNodes(node->m_left, lineStart, lineDir, tmax, object, hitObjectSqDist);
+		else
+			visitNodes(node->m_right, lineStart, lineDir, tmax, object, hitObjectSqDist);
+	}
+	else
+	{
+		float t = (node->m_splitValue - lineStart[dim]) / lineDir[dim];
+
+		if (0.0f <= t && t < tmax)
+		{
+			if (first == 0)
+			{
+				visitNodes(node->m_left, lineStart, lineDir, tmax, object, hitObjectSqDist);
+				if (object != NULL)
+					return;
+
+				visitNodes(node->m_right, lineStart + lineDir * t, lineDir, tmax - t, object, hitObjectSqDist);
+			}
+			else
+			{
+				visitNodes(node->m_right, lineStart, lineDir, tmax, object, hitObjectSqDist);
+				if (object != NULL)
+					return;
+
+				visitNodes(node->m_left, lineStart + lineDir * t, lineDir, tmax - t, object, hitObjectSqDist);
+			}
+		}
+		else
+		{
+			if (first == 0)
+				visitNodes(node->m_left, lineStart, lineDir, tmax, object, hitObjectSqDist);
+			else
+				visitNodes(node->m_right, lineStart, lineDir, tmax, object, hitObjectSqDist);
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
 #if 0
 void KDTree::visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
 {
@@ -444,13 +560,6 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, glm::vec3 newPosition, World
 	}
 
 	volNearPt[dir] = oldValue;
-}
-
-
-
-void KDTree::insert(WorldObject* object)
-{
-
 }
 
 
