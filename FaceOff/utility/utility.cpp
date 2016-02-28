@@ -28,27 +28,11 @@ void utl::checkGLError()
     }
 }
 
-/*
-glm::vec2 utl::scaleGlmVec(const glm::vec2 v, float s)
+
+int utl::createUniqueObjectID()
 {
-    return scaleGlmVec(v,s,s);
-
+	static int counter = 1000;
+	counter++;
+	int temp = counter;
+	return temp;
 }
-
-glm::vec2 utl::scaleGlmVec(const glm::vec2 v, float s1, float s2)
-{
-    return scaleGlmVec(v,s1,s2);
-}
-
-
-glm::vec3 utl::scaleGlmVec(const glm::vec3 v, float s)
-{
-    return scaleGlmVec(v,s,s,s);
-}
-
-glm::vec3 utl::scaleGlmVec(const glm::vec3 v, float s1, float s2, float s3)
-{
-    glm::vec3 newV(s1*v.x, s2*v.y, s3*v.z);
-    return newV;
-}
-*/

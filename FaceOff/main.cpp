@@ -19,6 +19,7 @@
 #define MAX_CLIENTS 10
 #define SERVER_PORT 60000
 
+bool incrFlag = true;
 
 /*
 RakNet Ogre tutorial
@@ -287,7 +288,7 @@ void FaceOff::initObjects()
 
 	utl::debug("1 max", m_players[1]->m_aabb.max);
 	utl::debug("1 min", m_players[1]->m_aabb.min);
-	for (int i = 1; i < m_players.size(); i++)
+	for (int i = 0; i < m_players.size(); i++)
 		m_objectKDtree.insert(m_players[i]);
 	
 
@@ -932,7 +933,7 @@ void FaceOff::start()
 							// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
 
 							float hitObjectSqDist = FLT_MAX;
-							m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist);
+							m_objectKDtree.visitNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist);
 
 						//	utl::debug("player pos", lineStart);
 						//	utl::debug("target z", lineDir);
@@ -1213,8 +1214,10 @@ void FaceOff::update()
 
 /*
 so we want to keep somethings in the server
-
 */
+
+
+
 void FaceOff::forwardRender()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1249,6 +1252,9 @@ void FaceOff::forwardRender()
 //		m_players[m_defaultPlayerID]->m_camera->m_target.y -= (9.82 * 0.03);
 		m_players[m_defaultPlayerID]->control();
 		
+		// utl::debug("Position is", m_players[m_defaultPlayerID]->m_position);
+
+
 		vector<WorldObject*> neighbors;
 		glm::vec3 volNearPoint(m_players[m_defaultPlayerID]->m_position);
 		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], volNearPoint, neighbors);
@@ -1295,14 +1301,64 @@ void FaceOff::forwardRender()
 
 				contactData.resolveVelocity();
 				contactData.resolveInterpenetration();
-			
+		
 			}
 		}
+
+
+
+		int tempId = 2;
+		float tempDist = 100;
+
+		if (incrFlag)
+			m_players[tempId]->m_position.x += 0.05;
+		else
+			m_players[tempId]->m_position.x -= 0.05;
+
+
+		if (m_players[tempId]->m_position.x > tempDist)
+			incrFlag = false;
+		if (m_players[tempId]->m_position.x < -tempDist)
+			incrFlag = true;
 		
 
+		m_players[tempId]->updateAABB();
+
+		for (int i = 0; i < m_players.size(); i++)
+//		for (int i = 0; i < 1; i++)
+		{
+			Player* p = m_players[i];
 
 
+			
+			for (int j = p->m_parentNodes.size()-1; j >= 0; j--)
+			{
+				KDTreeNode* kNode = p->m_parentNodes[j];
+				(kNode->m_objects2).erase(p->m_instanceId);
+		//		p->m_parentNodes.pop_back();
+			}
+			p->m_parentNodes.clear();
 
+			m_objectKDtree.insert(m_players[i]);
+			
+
+
+			/*
+			if (i == 2)
+			{
+				for (int j = 0; j < p->m_parentNodes.size(); j++)
+				{
+					KDTreeNode* kNode = p->m_parentNodes[j];
+			//		utl::debug("node max", kNode->m_aabb.max);
+			//		utl::debug("node min", kNode->m_aabb.min);
+				}
+			}
+			*/
+		}
+
+//		m_objectKDtree.insert(m_players[m_defaultPlayerID]);
+
+		
 
 		// collision detection
 		m_players[m_defaultPlayerID]->updateCamera(m_pipeline);

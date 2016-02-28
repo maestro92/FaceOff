@@ -1,6 +1,9 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+class WorldObject;
+struct KDTreeNode;
+
 #include <cstdlib>
 #include <iostream>
 #include <stdio.h>

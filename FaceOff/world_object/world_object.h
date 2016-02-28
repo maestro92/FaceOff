@@ -1,12 +1,21 @@
 #ifndef WORLD_OBJECT_H_
 #define	WORLD_OBJECT_H_
-
+#pragma warning(disable: 4996)
 #include "utility.h"
 #include "renderer.h"
 #include "model.h"
 #include <string>
 #include "cube_wireframe_model.h"
 #include "bounding_volume.h"
+
+/*
+struct KDTreeNode;
+#include "collision_detection/kd_tree_node.h"
+*/
+struct KDTreeNode;
+// #include "collision_detection/kd_tree_node.h"
+
+#include <vector>
 
 const glm::vec3 NEG_GRAVITY = glm::vec3(0, -9.8, 0);
 const glm::vec3 NEG_HALF_GRAVITY = glm::vec3(0, -4.9, 0);
@@ -20,12 +29,14 @@ class WorldObject
 {
     public:
         WorldObject();
+		string m_name;
+		int m_instanceId;
 
 		bool isTested;
 		bool isCollided;
 		bool isHit;
 		int isHitCounter;
-		string m_name;
+
 
 		// glm::vec3 m_maxP, m_minP;
         
@@ -91,8 +102,17 @@ class WorldObject
 
 		void update(); 
 
-		glm::vec3 m_nextMaxP, m_nextMinP;
-		// glm::vec3 m_nextPosition;
+		/*
+		void removeSelfFromNodes()
+		{
+			for (int i = 0; i < m_parentNodes.size(); i++)
+			{
+				KDTreeNode* kNode = m_parentNodes[i];
+				(kNode->m_objects2).erase(m_instanceId);
+			}
+		}
+		*/
+		vector<KDTreeNode*> m_parentNodes;
 };
 
 inline void WorldObject::setScale(float s)

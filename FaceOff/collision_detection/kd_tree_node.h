@@ -2,10 +2,15 @@
 #define KD_TREE_NODE_H_
 
 
+class WorldObject;
+#include "world_object.h"
+
 #include "utility.h"
 #include "world_object.h"
 #include "cube_model.h"
 #include "bounding_volume.h"
+
+#include <unordered_map>
 using namespace std;
 
 // check 13.4.1 for optimization
@@ -63,8 +68,22 @@ struct KDTreeNode
 		m_containedModel = new CubeModel(m_aabb.max, m_aabb.min, color);
 	}
 
+	void addObject(WorldObject* object)
+	{
+		m_objects2[object->m_instanceId] = object;
+		object->m_parentNodes.push_back(this);
+	}
 
-
+	void setObjects(vector<WorldObject*> & objects)
+	{
+		for (int i = 0; i < objects.size(); i++)
+		{
+			int id = objects[i]->m_instanceId;
+			m_objects2[id] = objects[i];
+			objects[i]->m_parentNodes.push_back(this);
+		}
+	}
+			
 	bool isLeaf()
 	{
 		return m_left == NULL && m_right == NULL;
@@ -76,11 +95,8 @@ struct KDTreeNode
 	int m_splitDirection;
 	float m_splitValue;
 
-	vector<WorldObject*> m_objects;
-
-//	glm::vec3 m_maxP;
-//	glm::vec3 m_minP;
-
+	// vector<WorldObject*> m_objects;
+	unordered_map<int, WorldObject*> m_objects2;
 	AABB m_aabb;
 
 	CubeWireFrameModel* m_wireFrameModel;

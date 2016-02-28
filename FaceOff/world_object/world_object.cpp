@@ -4,6 +4,8 @@ Model* WorldObject::DEFAULT_MODEL;
 
 WorldObject::WorldObject()
 {
+	m_instanceId = utl::createUniqueObjectID();
+
     m_position = glm::vec3(0.0, 0.0, 0.0);
     m_velocity = glm::vec3(0.0, 0.0, 0.0);
     m_scale = glm::vec3(1.0, 1.0, 1.0);
@@ -15,11 +17,6 @@ WorldObject::WorldObject()
 	m_model = DEFAULT_MODEL;
 	isTested = isCollided = isHit = false;
 	isHitCounter = 0;
-
-	// m_maxP = glm::vec3(1.0f);
-	// m_minP = glm::vec3(0.0f);
-	// m_nextMaxP = m_maxP;
-	// m_nextMinP = m_minP;
 }
 
 
@@ -220,6 +217,17 @@ void WorldObject::update()
 {
 
 }
+
+/*
+void WorldObject::removeSelfFromNodes()
+{
+	for (int i = 0; i < m_parentNodes.size(); i++)
+	{
+		KDTreeNode* kNode = m_parentNodes[i];
+		(kNode->m_objects2).erase(m_instanceId);
+	}
+}
+*/
 
 /*
 CubeWireFrameModel WorldObject::createWireFrameModel()

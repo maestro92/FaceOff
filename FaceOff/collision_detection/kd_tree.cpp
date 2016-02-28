@@ -72,17 +72,20 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		root->createWireFrameModel(colors[rem]);
 		root->createCubeFrameModel();
 
-		root->m_objects = objects;
-		
+		// root->m_objects = objects;
+		root->setObjects(objects);
+
 		utl::debug("depth", depth);
 		utl::debug("count", count);
 		utl::debug("max", root->m_aabb.max);
 		utl::debug("min", root->m_aabb.min);
 		count++;
+		/*
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
 			utl::debug("obj name", root->m_objects[i]->m_name);
 		}
+		*/
 		utl::debugLn(2);
 		return root;
 	}
@@ -143,16 +146,19 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		root->createWireFrameModel(colors[rem]);
 		root->createCubeFrameModel();
 
-		root->m_objects = objects;
+//		root->m_objects = objects;
+		root->setObjects(objects);
 		utl::debug("depth", depth);
 		utl::debug("count", count);
 		utl::debug("max", root->m_aabb.max);
 		utl::debug("min", root->m_aabb.min);
 		count++;
+		/*
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
 			utl::debug("obj name", root->m_objects[i]->m_name);
 		}
+		*/
 		utl::debugLn(2);
 		root->m_left = NULL;
 		root->m_right = NULL;
@@ -186,12 +192,13 @@ void KDTree::insert(KDTreeNode* node, WorldObject* object)
 
 
 
-	utl::debug("max", node->m_aabb.max);
-	utl::debug("min", node->m_aabb.min);
+//	utl::debug("max", node->m_aabb.max);
+//	utl::debug("min", node->m_aabb.min);
 
 	if (node->m_left == NULL && node->m_right == NULL)
 	{
-		node->m_objects.push_back(object);
+//		node->m_objects.push_back(object);
+		node->addObject(object);
 		return;
 	}
 
@@ -290,7 +297,7 @@ void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float
 
 
 
-
+#if 0
 void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, int depth, KDTreeNode*& hitNode)
 {
 	if (node == NULL)
@@ -378,17 +385,38 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 		}
 	}
 }
+#endif
 
 
 
-
-void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, float& hitObjectSqDist)
+void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & hitObject, float& hitObjectSqDist)
 {
 	if (node == NULL)
 		return;
 
 	if (node->isLeaf())
 	{
+		for (auto it = node->m_objects2.begin(); it != node->m_objects2.end(); it++)
+		{
+			if (it->second->m_instanceId == player->m_instanceId)
+				continue;
+
+			if (KDTree::testRayAABB(lineStart, lineDir, (it->second)->m_aabb))
+			{
+				float sqDist = glm::length2(lineStart - (it->second)->m_position);
+				utl::debug("THIS NEEDS TO BE FIXED!!!! Wrong distance metric");
+
+				if (sqDist < hitObjectSqDist)
+				{
+					utl::debug("lineStart", lineStart);
+					utl::debug("lineDir", lineDir);
+					hitObjectSqDist = sqDist;
+					hitObject = (it->second);
+				}
+			}
+		}
+
+		/*
 		for (int i = 0; i < node->m_objects.size(); i++)
 		{
 			if (KDTree::testRayAABB(lineStart, lineDir, node->m_objects[i]->m_aabb))
@@ -405,6 +433,7 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 				}
 			}
 		}
+		*/
 		return;
 	}
 
@@ -417,9 +446,9 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 	if (lineDir[dim] == 0.0f)
 	{
 		if (first == 0)
-			visitNodes(node->m_left, lineStart, lineDir, tmax, object, hitObjectSqDist);
+			visitNodes(node->m_left, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
 		else
-			visitNodes(node->m_right, lineStart, lineDir, tmax, object, hitObjectSqDist);
+			visitNodes(node->m_right, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
 	}
 	else
 	{
@@ -429,27 +458,27 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 		{
 			if (first == 0)
 			{
-				visitNodes(node->m_left, lineStart, lineDir, tmax, object, hitObjectSqDist);
-				if (object != NULL)
+				visitNodes(node->m_left, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
+				if (hitObject != NULL)
 					return;
 
-				visitNodes(node->m_right, lineStart + lineDir * t, lineDir, tmax - t, object, hitObjectSqDist);
+				visitNodes(node->m_right, player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist);
 			}
 			else
 			{
-				visitNodes(node->m_right, lineStart, lineDir, tmax, object, hitObjectSqDist);
-				if (object != NULL)
+				visitNodes(node->m_right, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
+				if (hitObject != NULL)
 					return;
 
-				visitNodes(node->m_left, lineStart + lineDir * t, lineDir, tmax - t, object, hitObjectSqDist);
+				visitNodes(node->m_left, player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist);
 			}
 		}
 		else
 		{
 			if (first == 0)
-				visitNodes(node->m_left, lineStart, lineDir, tmax, object, hitObjectSqDist);
+				visitNodes(node->m_left, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
 			else
-				visitNodes(node->m_right, lineStart, lineDir, tmax, object, hitObjectSqDist);
+				visitNodes(node->m_right, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
 		}
 	}
 }
@@ -482,8 +511,17 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::ve
 	// visiting current node
 	if (node->isLeaf())
 	{
+		/*
 		for (int i = 0; i<node->m_objects.size(); i++)
 			objects.push_back(node->m_objects[i]);
+		*/
+
+		for (auto it = node->m_objects2.begin(); it != node->m_objects2.end(); it++)
+		{
+			if (it->second->m_instanceId == player->m_instanceId)
+				continue;
+			objects.push_back(it->second);
+		}
 		return;
 	}
 
@@ -523,44 +561,16 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::ve
 }
 
 
-
-
-
-void KDTree::visitOverlappedNodes(KDTreeNode* node, glm::vec3 newPosition, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
+void KDTree::copyObjects(KDTreeNode* & node, vector<WorldObject*> & objects)
 {
-	if (node == NULL)
-		return;
-
-	int dir = node->m_splitDirection;
-	int val = node->m_splitValue;
-
-	// visiting current node
-	if (node->isLeaf())
+	for (int i = 0; i < objects.size(); i++)
 	{
-		for (int i = 0; i<node->m_objects.size(); i++)
-			objects.push_back(node->m_objects[i]);
-		return;
+		int id = objects[i]->m_instanceId;
+		node->m_objects2[id] = objects[i];
 	}
-
-	int first = newPosition[dir] > val;
-
-
-	KDTreeNode* next = (first == 0) ? node->m_left : node->m_right;
-	visitOverlappedNodes(next, newPosition, player, volNearPt, objects);
-
-
-	float oldValue = volNearPt[dir];
-	volNearPt[dir] = val;
-
-	if (glm::length2(volNearPt - newPosition) < (player->m_scale.x * player->m_scale.x))
-	{
-		first = first ^ 1;
-		next = (first == 0) ? node->m_left : node->m_right;
-		visitOverlappedNodes(next, newPosition, player, volNearPt, objects);
-	}
-
-	volNearPt[dir] = oldValue;
 }
+
+
 
 
 void KDTree::renderSingle(Pipeline& p, Renderer* r)
