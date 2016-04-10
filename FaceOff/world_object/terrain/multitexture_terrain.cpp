@@ -31,13 +31,14 @@ MultiTextureTerrain::MultiTextureTerrain(string heightMap)
 
 void MultiTextureTerrain::render(Pipeline& p)
 {
+	/*
 	RendererManager::r_multiTexTerrain.enableShader();
 		RendererManager::r_multiTexTerrain.setData("u_blendMapTexture", 0, GL_TEXTURE_2D, m_blendMapTextureID);
 		RendererManager::r_multiTexTerrain.setDataArray("u_textures", 1, GL_TEXTURE_2D, m_textureIDs);
 
 		WorldObject::renderGroup(p, &RendererManager::r_multiTexTerrain, m_model);
 	RendererManager::r_multiTexTerrain.disableShader();
-
+	*/
 
 	/*
 	r_multiTexturedTerrain.enableShader();

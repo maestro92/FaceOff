@@ -38,7 +38,7 @@ class WorldObject
 		int isHitCounter;
 
 
-		// glm::vec3 m_maxP, m_minP;
+
         
 		AABB m_aabb;
 		
@@ -79,13 +79,6 @@ class WorldObject
 
 		virtual void renderGroup(Pipeline& p, Renderer* r);
 		virtual void renderGroup(Pipeline& p, Renderer* r, int pass);
-
-
-		virtual void renderSingle(Pipeline& p, Renderer* r, Model* model);
-		virtual void renderSingle(Pipeline& p, Renderer* r, int pass, Model* model);
-
-		virtual void renderGroup(Pipeline& p, Renderer* r, Model* model);
-		virtual void renderGroup(Pipeline& p, Renderer* r, int pass, Model* model);
 
 		static Model* DEFAULT_MODEL;
 

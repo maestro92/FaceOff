@@ -23,7 +23,7 @@ void Terrain::render(Pipeline& p)
 {
 	r_renderer.enableShader();
 		r_renderer.setData("u_texture", 0, GL_TEXTURE_2D, m_textureID);
-		WorldObject::renderGroup(p, &r_renderer, m_model);
+//		WorldObject::renderGroup(p, &r_renderer, m_model);
 	r_renderer.disableShader();
 }
 

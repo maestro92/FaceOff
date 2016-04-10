@@ -16,6 +16,8 @@
 
 #include "network_manager.h"
 
+
+
 #define MAX_CLIENTS 10
 #define SERVER_PORT 60000
 
@@ -99,11 +101,16 @@ void FaceOff::init()
 
 void FaceOff::initModels()
 {
+
+	m_mm.init();
+
+
 	float scale = 1.0;
 
 	vector<string> textures;
 
 	m_xyzModel = XYZAxisModel();
+
 
 
 
@@ -133,6 +140,14 @@ void FaceOff::initModels()
 	textures.clear(); textures.push_back("Assets/models/wooden box/WoodPlanks_Color.jpg");
 	m_woodenBox.load("Assets/models/wooden box/WoodenBoxOpen02.obj", textures);
 	m_woodenBox.setMeshRandTextureIdx();
+
+
+
+
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		m_players[i]->setModel(m_mm.m_player);
+	}
 }
 
 
@@ -145,7 +160,9 @@ void FaceOff::initObjects()
 
 	float scale = 1.0;
 	o_worldAxis.setScale(scale);
+	o_worldAxis.setModel(m_mm.m_xyzAxis);
 	// o_ground.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
+
 
 	o_gun.setPosition(200, 0, 200);
 	o_gun.setRotation(glm::rotate(90.0f, 0.0f, 1.0f, 0.0f));
@@ -156,11 +173,7 @@ void FaceOff::initObjects()
 
 	o_skybox = SkyBox();
 
-	int x = utl::SCREEN_WIDTH - 200;
-	int y = 0;
-	int w = 200;
-	int h = utl::SCREEN_HEIGHT;
-//	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, x, y, w, h);
+
 	
 //	o_terrain = Terrain(0, 0);
 	o_multiTextureTerrain = MultiTextureTerrain("Assets/Images/terrain/heightmap.png");
@@ -300,8 +313,8 @@ void FaceOff::initObjects()
 
 void FaceOff::initRenderers()
 {
-	RendererManager::init();
-	RendererManager::initSceneRendererStaticLightsData(m_lightManager);
+	m_rm.init();
+	m_rm.initSceneRendererStaticLightsData(m_lightManager);
 }
 
 
@@ -1306,6 +1319,9 @@ void FaceOff::forwardRender()
 		}
 
 
+		m_players[m_defaultPlayerID]->updateGameStatus();
+
+
 
 		int tempId = 2;
 		float tempDist = 100;
@@ -1400,73 +1416,78 @@ void FaceOff::forwardRender()
 	
 	glDisable(GL_CULL_FACE);
 
-	p_renderer = &RendererManager::r_texturedObject;
+	p_renderer = &m_rm.r_texturedObject;
 	p_renderer->enableShader();
 	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, tempTexture);
 
-
-
-	// render the players
-	if (m_isServer)
 	{
-		for (int i = 0; i < m_players.size(); i++)
+		// render the players
+		if (m_isServer)
 		{
-			if (i != m_defaultPlayerID && m_players[i] != NULL)
+			for (int i = 0; i < m_players.size(); i++)
 			{
-				cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
-//				m_players[i]->render(m_pipeline);
+				if (i != m_defaultPlayerID && m_players[i] != NULL)
+				{
+					cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
+					//				m_players[i]->render(m_pipeline);
+				}
 			}
 		}
-	}
-	else
-	{
-		/*
-		for (int i = 0; i < m_players.size(); i++)
+		else
 		{
+			/*
+			for (int i = 0; i < m_players.size(); i++)
+			{
 			if (i != m_defaultPlayerID && m_players[i] != NULL)
 			{
-				//		m_players[i]->render(m_pipeline);
-				//		m_players[i]->renderWeapon(m_pipeline);
-				m_players[i]->renderModel(m_pipeline, p_renderer);
+			//		m_players[i]->render(m_pipeline);
+			//		m_players[i]->renderWeapon(m_pipeline);
+			m_players[i]->renderModel(m_pipeline, p_renderer);
 			}
 			else
 			{
-				//		m_players[i]->renderWeapon(m_pipeline);
-				m_players[i]->render(m_pipeline, p_renderer);
+			//		m_players[i]->renderWeapon(m_pipeline);
+			m_players[i]->render(m_pipeline, p_renderer);
+			}
+			}
+			*/
+			//	m_players[0]->render(m_pipeline, p_renderer, m_mm);
+			m_players[0]->renderGroup(m_pipeline, p_renderer);
+		}
+
+
+
+
+		for (int i = 0; i < m_objects.size(); i++)
+		{
+			WorldObject* object = m_objects[i];
+			if (object->isTested != true && object->isCollided != true && object->isHit != true)
+				object->renderGroup(m_pipeline, p_renderer);
+		}
+
+		//	utl::debug("1 max", m_players[1]->m_aabb.max);
+		//	utl::debug("1 min", m_players[1]->m_aabb.min);
+
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			Player* player = m_players[i];
+			if (player->isTested != true && player->isCollided != true && player->isHit != true)
+			{
+
+				m_players[i]->renderGroup(m_pipeline, p_renderer);
 			}
 		}
-		*/
-		m_players[0]->render(m_pipeline, p_renderer);
+
+
 	}
-
-
-
-
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-		if (object->isTested != true && object->isCollided != true && object->isHit != true)
-			object->renderGroup(m_pipeline, p_renderer);
-	}
-
-//	utl::debug("1 max", m_players[1]->m_aabb.max);
-//	utl::debug("1 min", m_players[1]->m_aabb.min);
-
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		Player* player = m_players[i];
-		if (player->isTested != true && player->isCollided != true && player->isHit != true)
-			m_players[i]->renderModel(m_pipeline, p_renderer);
-	}
-
 	p_renderer->disableShader();
 
 
 	
-	p_renderer = &RendererManager::r_fullVertexColor;
+	p_renderer = &m_rm.r_fullVertexColor;
 	p_renderer->enableShader();
-		p_model = &m_xyzModel;
-		o_worldAxis.renderGroup(m_pipeline, p_renderer, RENDER_PASS1, p_model);
+
+		o_worldAxis.renderGroup(m_pipeline, p_renderer);
 
 		
 		for (int i = 0; i < m_objects.size(); i++)
@@ -1504,7 +1525,7 @@ void FaceOff::forwardRender()
 
 
 
-	p_renderer = &RendererManager::r_fullColor;
+	p_renderer = &m_rm.r_fullColor;
 	p_renderer->enableShader();
 		p_renderer->setData("u_color", GREEN);
 		
@@ -1573,6 +1594,9 @@ void FaceOff::forwardRender()
 
 	p_renderer->disableShader();
 	glEnable(GL_CULL_FACE);
+
+
+	renderGUI();
 
 	/*
 	p_renderer = &RendererManager::r_texturedObject;
@@ -1691,79 +1715,35 @@ void FaceOff::GOLModelListBoxCB()
 
 void FaceOff::initGUI()
 {
-
+	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	Control::init("", 25, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 
-	int X_OFFSET = 600;
+	int xOffset = 25;
+	int yOffset = 25;
 
-	int SLIDER_HEIGHT = 35;
-	int BUTTON_WIDTH = 200;
-	int BUTTON_HEIGHT = 30;
+	int HEALTH_BAR_WIDTH = 200;
+	int HEALTH_BAR_HEIGHT = 30;
 
-	Control* temp;
+	Control* temp = new HealthBar(xOffset, yOffset, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, GREEN);
 
-	temp = new Label("GAME OF LIFE",
-		X_OFFSET, 0,
-		BUTTON_WIDTH, 120,
-		BLACK);
-	temp->setFont(50, WHITE);
-	temp->setTextLayout(true, CENTER, CENTER);
+	m_players[m_defaultPlayerID]->m_healthBarGUI = (HealthBar*)temp;
+
 	m_gui.addGUIComponent(temp);
-
-
-	string golDescription = "The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John Horton Conway in 1970.";
-
-	temp = new Label(golDescription,
-		X_OFFSET, 120,
-		BUTTON_WIDTH, 100,
-		BLACK);
-	temp->setFont(15, WHITE);
-	temp->setTextLayout(true, CENTER, TOP_ALIGNED);
-	m_gui.addGUIComponent(temp);
-
-
-
-	ListBox* lb = new ListBox("", X_OFFSET, 220,
-		200, 400,
-		WHITE, BLACK, 2,
-		std::bind(&FaceOff::GOLModelListBoxCB, this));
-	lb->setItemFont(14, GREEN);
-	//	lb->setContent(m_GOLModelManager.getModels());
-	lb->setItemsTextLayout(CENTER, CENTER);
-	m_gui.addGUIComponent(lb);
-
-
-
-	temp = new Button("Start", X_OFFSET, 535,
-		BUTTON_WIDTH, BUTTON_HEIGHT,
-		GRAY, BLACK, DARK_BLUE,
-		std::bind(&FaceOff::startCB, this));
-	temp->setFont(25, GREEN);
-	temp->setTextLayout(false, CENTER, CENTER);
-	m_gui.addGUIComponent(temp);
-
-
-	temp = new Button("Reset", X_OFFSET, 570,
-		BUTTON_WIDTH, BUTTON_HEIGHT,
-		GRAY, BLACK, DARK_BLUE,
-		std::bind(&FaceOff::resetGameBoardCB, this));
-	temp->setFont(25, GREEN);
-	temp->setTextLayout(false, CENTER, CENTER);
-	m_gui.addGUIComponent(temp);
-
 }
 
 
 void FaceOff::renderGUI()
 {
-
+	
 	m_gui.initGUIRenderingSetup();
 	/// http://sdl.beuc.net/sdl.wiki/SDL_Average_FPS_Measurement
-	unsigned int getTicks = SDL_GetTicks();
-
-	//    string final_str = "(" + utl::floatToStr(m_mouseState.m_pos.x) + ", " + utl::floatToStr(m_mouseState.m_pos.y) + ")";
-
+//	unsigned int getTicks = SDL_GetTicks();
+	
+//	static string final_str = "(" + utl::floatToStr(m_mouseState.m_pos.x) + ", " + utl::floatToStr(m_mouseState.m_pos.y) + ")";
 	m_gui.updateAndRender(m_mouseState);
+
+	// healthbar and text
+	
 
 }
 

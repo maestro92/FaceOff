@@ -110,6 +110,28 @@ void Control::setRect(int x, int y, int w, int h)
     m_rect.h = h;
 }
 
+
+void Control::setX(int x)
+{
+	m_rect.x = x;
+}	
+
+void Control::setY(int y)
+{
+	m_rect.y = y;
+}
+
+void Control::setWidth(int w)
+{
+	m_rect.w = w;
+}
+
+void Control::setHeight(int h)
+{
+	m_rect.h = h;
+}
+
+
 bool Control::update(MouseState & state)
 {
     int x = state.m_pos.x;
@@ -288,11 +310,6 @@ void Control::updatePipeline(Renderer* r, Rect rect)
         m_pipeline.scale(rect.w, rect.h, 1.0);
         r->loadUniformLocations(m_pipeline, RENDER_PASS1);
     m_pipeline.popMatrix();
-}
-
-void Control::customRender()
-{
-
 }
 
 

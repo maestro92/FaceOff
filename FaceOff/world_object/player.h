@@ -15,6 +15,7 @@
 #include "collision_detection/kd_tree.h"
 #include "world_object.h"
 
+#include "health_bar.h"
 #include "renderer.h"
 #include "renderer_manager.h"
 #include "model.h"
@@ -28,6 +29,9 @@
 #include "world_object/weapon/weapon.h"
 #include "world_object/weapon/assult_rifle.h"
 
+#include "model_manager.h"
+
+#include "custom_gui/health_bar.h"
 
 using namespace std;
 
@@ -72,8 +76,9 @@ class Player : public WorldObject
 		void control();
 		void control(KDTree* t);
 
+
+		void updateGameStatus();
 		void updateCamera(Pipeline& p);
-//		void updateCollision(KDTree* tree);
 
 		void updateModel();
 
@@ -82,10 +87,12 @@ class Player : public WorldObject
 		void adjustWeaponAndBulletPosition();
 
 
-		void render(Pipeline& p, Renderer* r);
+		//void render(Pipeline& p, Renderer* r);
+	//	void render(Pipeline& p, Renderer* r, ModelManager& mm);
+
 		void renderWeapon(Pipeline& p);
 
-		void renderModel(Pipeline& p, Renderer* r);
+//		void renderModel(Pipeline& p, Renderer* r);
 
 		void addWeapon(Weapon* weapon);
 		Weapon* getCurWeapon();
@@ -95,6 +102,8 @@ class Player : public WorldObject
 
 		float getCameraPitch();
 		float getCameraYaw();
+
+		HealthBar* m_healthBarGUI;
 
 	private:
 		float m_maxHP;

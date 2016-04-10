@@ -50,6 +50,8 @@ struct KDTreeNode;
 #include "weapon_manager.h"
 
 
+#include "model_manager.h"
+
 #define FRAME_VALUES 10
 #include <list>
 
@@ -181,12 +183,43 @@ http://www.toptal.com/game/video-game-physics-part-ii-collision-detection-for-so
 */
 
 
+
+/*
+
+-	UI
+health bar
+bullets
+armor
+
+overhead healthbar?
+
+
+-	core
+redo map
+grenade 
+gun pick up animation
+throw gun animation
+
+
+
+-	Audio
+
+
+
+-	find models for guns
+
+
+
+*/
+
 class FaceOff
 {
 	// private:
 	public:
-		RendererManager              m_rm;
-		Renderer*                    p_renderer;
+		RendererManager				m_rm;
+		ModelManager				m_mm;
+
+		Renderer*					p_renderer;
 
 		/// GUI
 		long long m_runningTime;
@@ -255,6 +288,9 @@ class FaceOff
 		GOLModelManager m_GOLModelManager;
 
 		KDTree m_objectKDtree;
+
+
+
 
 	public:
 

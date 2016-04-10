@@ -394,7 +394,7 @@ class Renderer
 
         vector< unordered_map<string, DataPair*> > m_tables;
         stack<GLuint> m_textureUnitStack;
-    private:
+//    private:
         int m_numShaders;
         int m_curShader;
 

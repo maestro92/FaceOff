@@ -289,6 +289,8 @@ void Renderer::loadUniformLocations(Pipeline& p, int pass)
 
     if(pass != m_curShader)
     {
+		utl::debug("pass", pass);
+		utl::debug("m_curShader", m_curShader);
         utl::debug("######### pass Not Matching");
     }
 

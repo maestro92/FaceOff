@@ -13,7 +13,7 @@ BillboardList::BillboardList(string textureFile)
 
 	m_model = BillboardModel(100, 100, 0.5);
 	setTexture(textureFile);
-	p_renderer = &RendererManager::r_billboardOneQuad;
+//	p_renderer = &RendererManager::r_billboardOneQuad;
 	/*
 	Shader* s = new Shader("billboarding.vs", 
 						   "billboarding_one_quad.gs",
@@ -67,20 +67,21 @@ void BillboardList::setRandomFormation(int maxW, int maxH, int count)
 {
 	m_mode = RANDOM;
 	m_model.createRandFormation(maxW, maxH, count);
-	p_renderer = &RendererManager::r_billboardTwoQuad;
+//	p_renderer = &RendererManager::r_billboardTwoQuad;
 }
 
 void BillboardList::setRandomFormation(int maxW, int maxH, int count, Terrain* terrain)
 {
 	m_mode = RANDOM;
 	m_model.createRandFormation(maxW, maxH, count, terrain);
-	p_renderer = &RendererManager::r_billboardTwoQuad;
+//	p_renderer = &RendererManager::r_billboardTwoQuad;
 }
 
 
 
 void BillboardList::render(Pipeline& p)
 {
+	/*
 	glDisable(GL_CULL_FACE);
 	p_renderer->enableShader();
 	
@@ -92,6 +93,8 @@ void BillboardList::render(Pipeline& p)
 
 	p_renderer->disableShader();
 	glEnable(GL_CULL_FACE);
+*/
+	
 }
 
 

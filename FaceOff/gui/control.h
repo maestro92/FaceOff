@@ -38,6 +38,10 @@ class Control
             LIST_BOX,
             SLIDER,
             TOGGLE,
+
+			// CUSTOM CONTROL_TYPE
+			HEALTH_BAR = 1000, 
+
         };
 
 
@@ -59,7 +63,6 @@ class Control
 
 
         virtual void render() = 0;
-        virtual void customRender();
 
         void updatePipeline(Renderer* r);
         void updatePipeline(Renderer* r, Rect rect);
@@ -81,7 +84,12 @@ class Control
         virtual int getType() = 0;
         void setID(int& ID);
         void setRect(int x, int y, int w, int h);
-        void setText(string text);
+		void setX(int x);
+		void setY(int y);
+		void setWidth(int w);
+		void setHeight(int h);
+
+		void setText(string text);
 
         void setTextLayout(bool setLineBreakFlag, int xLayoutFlag, int yLayoutFlag);
         void setRectTextLayout(LineBreakInfo& lineBreakInfo, float& startingX, float& startingY,

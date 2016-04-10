@@ -228,6 +228,56 @@ bool ListBox::update(MouseState & state)
 
 void ListBox::render()
 {
+
+	Renderer* r = &Control::r_texturedRectRenderer;
+	Renderer* hlr = &Control::r_listBoxHighlightRenderer;
+	for (int y = 0; y < m_curRowNum; y++)
+	{
+		for (int x = 0; x < m_colNum; x++)
+		{
+			int i = y * m_colNum + x;
+
+			if (i == m_items.size())
+				break;
+
+			/*
+			// render texture
+			int offset_x = m_rect.x + x * m_itemWidth;
+			int offset_y = m_rect.y + y * m_itemHeight;
+
+			Rect itemRect(offset_x, offset_y, m_itemWidth, m_itemHeight);
+			*/
+			Rect itemRect = m_items[i].rect;
+			if (i == m_curIndex && m_curIndex >= 0)
+			{
+				float gap = 2;
+				hlr->enableShader();
+				hlr->setData(RENDER_PASS1, "u_x1", itemRect.x + gap);
+				hlr->setData(RENDER_PASS1, "u_x2", itemRect.x + itemRect.w - gap);
+
+				hlr->setData(RENDER_PASS1, "u_y1", Control::toGUICoord(itemRect.y + itemRect.h - gap));
+				hlr->setData(RENDER_PASS1, "u_y2", Control::toGUICoord(itemRect.y + gap));
+
+				updatePipeline(hlr, itemRect);
+				m_quadModel.render();
+				hlr->disableShader();
+			}
+
+			r->enableShader();
+			Rect tempRect = m_items[i].modelRect;
+
+			r->setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, m_items[i].textureID);
+			updatePipeline(r, tempRect);
+			m_quadModel.render();
+
+			r->disableShader();
+
+			// render text
+			Control::m_textEngine.render(m_items[i].text, m_items[i].textStartingX, m_items[i].textStartingY,
+				m_itemFont.size, m_itemFont.color, m_items[i].lineBreakInfo.lineBreaks);
+		}
+	}
+
     /*
     Control::r_coloredRectRenderer.enableShader();
         Control::r_coloredRectRenderer.setData(RENDER_PASS1, "u_color", m_rectColor);
@@ -269,61 +319,6 @@ void ListBox::render()
     }
     */
 }
-
-
-
-void ListBox::customRender()
-{
-    Renderer* r = &Control::r_texturedRectRenderer;
-    Renderer* hlr = &Control::r_listBoxHighlightRenderer;
-        for(int y = 0; y < m_curRowNum; y++)
-        {
-            for(int x = 0; x < m_colNum; x++)
-            {
-                int i = y * m_colNum + x;
-
-                if( i == m_items.size())
-                    break;
-
-/*
-                // render texture
-                int offset_x = m_rect.x + x * m_itemWidth;
-                int offset_y = m_rect.y + y * m_itemHeight;
-
-                Rect itemRect(offset_x, offset_y, m_itemWidth, m_itemHeight);
-*/
-                Rect itemRect = m_items[i].rect;
-                if (i == m_curIndex && m_curIndex >= 0)
-                {
-                    float gap = 2;
-                    hlr->enableShader();
-                        hlr->setData(RENDER_PASS1, "u_x1", itemRect.x + gap);
-                        hlr->setData(RENDER_PASS1, "u_x2", itemRect.x + itemRect.w - gap);
-
-                        hlr->setData(RENDER_PASS1, "u_y1", Control::toGUICoord(itemRect.y + itemRect.h - gap) );
-                        hlr->setData(RENDER_PASS1, "u_y2", Control::toGUICoord(itemRect.y + gap) );
-
-                    updatePipeline(hlr, itemRect);
-                    m_quadModel.render();
-                    hlr->disableShader();
-                }
-
-                r->enableShader();
-                    Rect tempRect = m_items[i].modelRect;
-
-                    r->setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, m_items[i].textureID);
-                    updatePipeline(r, tempRect);
-                    m_quadModel.render();
-
-                r->disableShader();
-
-                // render text
-                Control::m_textEngine.render(m_items[i].text, m_items[i].textStartingX, m_items[i].textStartingY,
-                                             m_itemFont.size, m_itemFont.color, m_items[i].lineBreakInfo.lineBreaks);
-            }
-        }
-}
-
 
 
 

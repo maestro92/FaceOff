@@ -29,9 +29,7 @@ class BillboardList : public WorldObject
 
 		void render(Pipeline& p);
 
-	//	static Renderer r_billboardOneQuad;
-	//	static Renderer r_billboardTwoQuad;
-		Renderer* p_renderer;
+	//	Renderer* p_renderer;
 
 		BillboardModel m_model;
 		GLuint m_textureID;

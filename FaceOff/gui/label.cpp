@@ -29,8 +29,3 @@ void Label::render()
     Control::r_coloredRectRenderer.disableShader();
 }
 
-
-void Label::customRender()
-{
-    render();
-}

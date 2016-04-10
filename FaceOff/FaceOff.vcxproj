@@ -56,13 +56,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./;world_object\weapon;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include;libraries\json_spirit;C:\Users\Martin\Desktop\boost_1_55_0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;world_object\weapon;libraries\RakNet;glm;gui;gui\custom_gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include;libraries\json_spirit;C:\Users\Martin\Desktop\boost_1_55_0;C:\Program Files %28x86%29\OpenAL 1.1 SDK\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;glew32.lib;SDL.lib;SDLmain.lib;SDL_image.lib;ws2_32.lib;freetype.lib;assimp.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>libraries\glew\lib;libraries\freetype\lib;libraries\assimp\lib;libraries\SDL\lib;libraries\SDL_image\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;glew32.lib;SDL.lib;SDLmain.lib;SDL_image.lib;ws2_32.lib;freetype.lib;assimp.lib;OpenAL32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>libraries\glew\lib;libraries\freetype\lib;libraries\assimp\lib;libraries\SDL\lib;libraries\SDL_image\lib\x86;C:\Program Files %28x86%29\OpenAL 1.1 SDK\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <StackReserveSize>
       </StackReserveSize>
     </Link>
@@ -89,12 +89,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_manager.cpp" />
+    <ClCompile Include="audio_manager.cpp" />
     <ClCompile Include="camera\camera.cpp" />
     <ClCompile Include="camera\first_person_camera.cpp" />
     <ClCompile Include="camera\third_person_camera.cpp" />
     <ClCompile Include="collision_detection\collision_detection.cpp" />
     <ClCompile Include="collision_detection\kd_tree.cpp" />
     <ClCompile Include="collision_detection\contact_data.cpp" />
+    <ClCompile Include="gui\custom_gui\health_bar.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_reader.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_value.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_writer.cpp" />
@@ -225,6 +227,7 @@
     <ClCompile Include="model\builtin_model\xyz_axis_model.cpp" />
     <ClCompile Include="model\imported_model.cpp" />
     <ClCompile Include="model\model.cpp" />
+    <ClCompile Include="model\model_manager.cpp" />
     <ClCompile Include="network\network_client.cpp" />
     <ClCompile Include="network\network_manager.cpp" />
     <ClCompile Include="network\network_server.cpp" />
@@ -256,6 +259,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_enum.h" />
     <ClInclude Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_manager.h" />
+    <ClInclude Include="audio_manager.h" />
     <ClInclude Include="camera\camera.h" />
     <ClInclude Include="camera\first_person_camera.h" />
     <ClInclude Include="camera\third_person_camera.h" />
@@ -263,6 +267,7 @@
     <ClInclude Include="collision_detection\kd_tree.h" />
     <ClInclude Include="collision_detection\kd_tree_node.h" />
     <ClInclude Include="collision_detection\contact_data.h" />
+    <ClInclude Include="gui\custom_gui\health_bar.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit_error_position.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit_reader.h" />
@@ -448,6 +453,7 @@
     <ClInclude Include="model\mesh.h" />
     <ClInclude Include="model\imported_model.h" />
     <ClInclude Include="model\model.h" />
+    <ClInclude Include="model\model_manager.h" />
     <ClInclude Include="model\texture.h" />
     <ClInclude Include="model\vertex_data.h" />
     <ClInclude Include="collision_detection\bounding_volume.h" />

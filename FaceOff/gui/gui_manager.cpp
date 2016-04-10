@@ -1,9 +1,7 @@
 #include "gui_manager.h"
 
 
-void GUIManager::init(int screenWidth, int screenHeight,
-                          int paletteX, int paletteY,
-                          int paletteWidth, int paletteHeight)
+void GUIManager::init(int screenWidth, int screenHeight)
 {
     m_GUIComponentsFlags = 0;
 
@@ -21,49 +19,7 @@ void GUIManager::init(int screenWidth, int screenHeight,
 
     m_textureQuad = QuadModel(1,1);
 
-    m_paletteRect.set(paletteX, paletteY, paletteWidth, paletteHeight);
 
-    TextureDataBuffer pixelData = utl::createEmptyBuffer(paletteWidth, paletteHeight);
-
-    for(int y = 0; y < paletteHeight; y++)
-    {
-        for(int x = 0; x < paletteWidth; x++)
-        {
-            if(y == 0 || y == paletteHeight-1 || x == 0 || x == paletteWidth-1)
-            {
-                pixelData[y][x][0] = 255;
-                pixelData[y][x][1] = 0;
-                pixelData[y][x][2] = 0;
-                pixelData[y][x][3] = 0;
-            }
-            else
-            {
-                pixelData[y][x][0] = 255;
-                pixelData[y][x][1] = 255;
-                pixelData[y][x][2] = 255;
-                pixelData[y][x][3] = 255;
-            }
-
-
-            if(y % 100 == 0)
-            {
-                pixelData[y][x][0] = 255;
-                pixelData[y][x][1] = 0;
-                pixelData[y][x][2] = 0;
-                pixelData[y][x][3] = 0;
-            }
-
-
-            if(x == paletteWidth/2)
-            {
-                pixelData[y][x][0] = 255;
-                pixelData[y][x][1] = 0;
-                pixelData[y][x][2] = 0;
-                pixelData[y][x][3] = 0;
-            }
-        }
-    }
-    m_GUIPaletteTexture = utl::loadTexture(pixelData, GL_NEAREST, GL_CLAMP);
 
 
     Shader* s;
@@ -75,13 +31,9 @@ void GUIManager::init(int screenWidth, int screenHeight,
 }
 
 
-GLuint GUIManager::getGUIPaletteTexture()
-{
-    return m_GUIPaletteTexture;
-}
-
 void GUIManager::initGUIRenderingSetup()
 {
+
     glViewport(0, 0, m_screenWidth, m_screenHeight);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -89,31 +41,27 @@ void GUIManager::initGUIRenderingSetup()
 
 
 
-void GUIManager::renderTextureFullScreen(GLuint TextureId)
+void GUIManager::renderTextureFullScreen(GLuint textureId)
 {
-
+	renderTextureFullScreen(textureId, RENDER_TO_SCREEN);
 }
 
-
-void GUIManager::renderTextureFullScreen(GLuint TextrureId, GLuint FboTarget)
+void GUIManager::renderTextureFullScreen(GLuint textureId, GLuint fboTarget)
 {
-
-
+	renderTexture(textureId, fboTarget, 0, 0, m_screenWidth, m_screenHeight);
 }
 
-
-void GUIManager::renderTexture(GLuint TextureId, int x, int y, int width, int height)
+void GUIManager::renderTexture(GLuint textureId, int x, int y, int width, int height)
 {
-
+	renderTexture(textureId, RENDER_TO_SCREEN, x, y, width, height);
 }
 
-
-void GUIManager::renderTexture(GLuint TextureId, GLuint FboTarget, int x, int y, int width, int height)
+void GUIManager::renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height)
 {
     glViewport(0, 0, m_screenWidth, m_screenHeight);
 
     r_textureRenderer.enableShader(RENDER_PASS1);
-    r_textureRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, TextureId);
+    r_textureRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, textureId);
 
     m_GUIPipeline.pushMatrix();
         m_GUIPipeline.translate(x, y, 0);
@@ -164,28 +112,13 @@ void GUIManager::updateAndRender(MouseState mouseState)
     {
         Control* control = m_GUIComponents[i];
         control->update(mouseState);
-        control->customRender();
+		control->render();
     }
 }
 
 
 void GUIManager::addGUIComponent(Control* control)
 {
-    if(control->getType() == Control::CONTROL_TYPE::LIST_BOX)
-        m_GOLModelListBox = (ListBox*)control;
-
     control->setID(m_GUIComponentsID);
     m_GUIComponents.push_back(control);
-}
-
-
-int GUIManager::getGOLModelListBoxIndex()
-{
-    if(m_GOLModelListBox)
-        return m_GOLModelListBox->getIndex();
-    else
-    {
-        utl::debug("In GUIManager::getGOLListBoxIndex(), m_GOLModelListBox is NULL");
-        exit(1);
-    }
 }

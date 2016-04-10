@@ -1,15 +1,19 @@
 
 #include "renderer_manager.h"
 
+/*
 Renderer RendererManager::r_fullVertexColor;
 Renderer RendererManager::r_fullColor;
 Renderer RendererManager::r_fullTexture;
 Renderer RendererManager::r_playerTarget;
 
+
 SceneRenderer RendererManager::r_multiTexTerrain;
 SceneRenderer RendererManager::r_texturedObject;
 SceneRenderer RendererManager::r_billboardOneQuad;
 SceneRenderer RendererManager::r_billboardTwoQuad;
+*/
+
 
 RendererManager::RendererManager()
 {
@@ -40,6 +44,19 @@ void RendererManager::init()
 	s = new Shader("player_target.vs", "player_target.fs");
 	r_playerTarget.addShader(s);
 	r_playerTarget.addDataPair("u_texture", DP_INT);
+
+
+
+
+
+	
+	Renderer r_healthBar;
+
+
+
+
+
+
 
 
 	// scene renderers

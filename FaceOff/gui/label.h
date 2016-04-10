@@ -27,7 +27,6 @@ class Label : public Control
         Label(string text, int x, int y, int width, int height, glm::vec3 color);
         virtual int getType();
         void render();
-        void customRender();
 };
 
 

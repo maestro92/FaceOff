@@ -102,12 +102,12 @@ void Button::setColors(glm::vec3 bgColor, glm::vec3 highlightColor, glm::vec3 pr
     m_pressedColor = pressedColor;
 }
 
-
+/*
 void Button::customRender()
 {
     render();
 }
-
+*/
 
 void Button::render()
 {

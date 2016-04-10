@@ -20,42 +20,36 @@ WorldObject::WorldObject()
 }
 
 
-void WorldObject::renderSingle(Pipeline& m_pipeline, Renderer* renderer)
+void WorldObject::renderSingle(Pipeline& p, Renderer* r)
 {
-	renderSingle(m_pipeline, renderer, RENDER_PASS1);
+	renderSingle(p, r, RENDER_PASS1);
 }
 
-void WorldObject::renderSingle(Pipeline& m_pipeline, Renderer* renderer, int pass)
+void WorldObject::renderSingle(Pipeline& p, Renderer* r, int pass)
 {
-	renderer->enableShader(pass);
-	m_pipeline.pushMatrix();
-		m_pipeline.translate(m_position);
-		m_pipeline.addMatrix(m_rotation);
-		m_pipeline.scale(m_scale);
-		renderer->loadUniformLocations(m_pipeline, pass);
+	r->enableShader(pass);
+		renderGroup(p, r, pass);
+	r->disableShader(pass);
+}
+
+void WorldObject::renderGroup(Pipeline& p, Renderer* r)
+{
+	renderGroup(p, r, RENDER_PASS1);
+}
+
+void WorldObject::renderGroup(Pipeline& p, Renderer* r, int pass)
+{
+	p.pushMatrix();
+		p.translate(m_position);
+		p.addMatrix(m_rotation);
+		p.scale(m_scale);
+		r->loadUniformLocations(p, pass);
 		m_model->render();
-	m_pipeline.popMatrix();
-	renderer->disableShader(pass);
-}
-
-void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer)
-{
-	renderGroup(m_pipeline, renderer, RENDER_PASS1);
-}
-
-void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass)
-{
-	m_pipeline.pushMatrix();
-		m_pipeline.translate(m_position);
-		m_pipeline.addMatrix(m_rotation);
-		m_pipeline.scale(m_scale);
-		renderer->loadUniformLocations(m_pipeline);
-		m_model->render();
-	m_pipeline.popMatrix();
+	p.popMatrix();
 }
 
 
-
+/*
 
 void WorldObject::renderSingle(Pipeline& m_pipeline, Renderer* renderer, Model* model)
 {
@@ -91,8 +85,7 @@ void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass
     m_pipeline.popMatrix();
 }
 
-
-
+*/
 
 void WorldObject::renderStaticWireFrameGroup(Pipeline& p, Renderer* r)
 {

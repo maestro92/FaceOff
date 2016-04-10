@@ -66,7 +66,6 @@ class ListBox : public Control
 //        void render (Pipeline& p, Renderer* r);
         // virtual void renderTextured();
         void render();
-        void customRender();
 
         virtual int getType();
         vector<ListBoxItem> m_items;

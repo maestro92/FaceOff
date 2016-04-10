@@ -23,7 +23,7 @@ class Button : public Control
 
 
         void render();
-        void customRender();
+    //    void customRender();
 
         virtual int getType();
 

@@ -9,7 +9,8 @@ right click on the project and choose "properties"
 
 Configuration Properties -> C/C++ -> General
 Additional Include Directories:
-./;world_object\weapon;libraries\RakNet;glm;gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include
+./;world_object\weapon;libraries\RakNet;glm;gui;gui\custom_gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include;libraries\json_spirit;C:\Users\Martin\Desktop\boost_1_55_0;C:\Program Files %28x86%29\OpenAL 1.1 SDK\include
+
 
 
 Configuration Properties -> Linker -> General

@@ -45,6 +45,8 @@ Player::Player(int id)
 	m_bulletStartPositionOffsetScale.resize(NUM_WEAPON_TYPE, glm::vec3(-0.052, 0.474, 0.952));
 
 	addWeapon(new AssultRifle("Ak-47"));
+
+	m_healthBarGUI = NULL;
 }
 
 Player::~Player()
@@ -96,6 +98,34 @@ void Player::control()
 	m_camera->controlCD();
 	m_position = m_camera->getTargetPoint();
 }
+
+
+
+void Player::updateGameStatus()
+{
+	
+	static bool incrFlag = false;
+
+	if (incrFlag)
+		m_curHP += 1;
+	else
+		m_curHP -= 1;
+
+
+	if (m_curHP >= 100)
+		incrFlag = false;
+	if (m_curHP <= 0)
+		incrFlag = true;
+
+
+
+	if (m_healthBarGUI != NULL)
+	{
+		m_healthBarGUI->computeForegroundWidth(m_curHP);
+	}
+	
+}
+
 
 void Player::updateCamera(Pipeline& p)
 {
@@ -217,53 +247,33 @@ void Player::update(glm::vec3 wPos, float pitch, float yaw)
 	m_weapons[m_curWeaponIndex]->setRotation(rot);
 }
 
-void Player::render(Pipeline& p, Renderer* r)
+
+/*
+
+void Player::render(Pipeline& p, RendererManager& rm, ModelManager& mm)
 {
 	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
 	{
-		// renderWeapon(p);
-//		m_weapons[m_curWeaponIndex]->render(p, r);
+
 	}
 	else
 	{
-//		renderSingle(p, m_renderer, RENDER_PASS1, m_model);
-		/*
-		p.pushMatrix();
-			p.translate(m_position);
-			p.addMatrix(m_rotation);
-			p.scale(m_scale);
-			r->loadUniformLocations(p);
-			m_model->render();
-		p.popMatrix();
-		*/
-
-		renderGroup(p, r, m_model);
-		// m_weapons[m_curWeaponIndex]->render(p, r);
-		m_weapons[m_curWeaponIndex]->renderGroup(p, r, &Weapon::s_weaponModels["Ak-47"]);
 
 
-	//	m_weapons[m_curWeaponIndex]->render(p, r);
-
-	//	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
 	}
-
-	/*
-	m_renderer->setData("u_color", glm::vec3(0.8, 0.8, 0.8));
-	renderSingle(p, m_renderer, RENDER_PASS1, m_model);
-
-	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
-	*/
 }
+*/
 
+/*
 void Player::renderModel(Pipeline& p, Renderer* r)
 {
-	renderGroup(p, r, m_model);
+//	renderGroup(p, r, m_model);
 }
-
+*/
 
 void Player::renderWeapon(Pipeline& p)
 {
-	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
+//	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
 }
 
 

@@ -22,7 +22,24 @@ enum WeaponTypeEnum
 enum WeaponNameEnum
 {
 	BUTTERFLY_KNIFE = 0,
+
+	// SUBMACHINE_GUN
+	MP_5,	
+
+
+	// assult rifle
+	AK_47,
+
+
+
+
+	// gernades
+	FLASH_BANG,
+	SMOKE_GRENADE,
+	HE_GRENADE
 };
+
+
 
 
 

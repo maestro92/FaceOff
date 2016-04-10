@@ -11,32 +11,23 @@
 #include "control.h"
 #include "renderer.h"
 
+#include "custom_gui/health_bar.h"
+
 class GUIManager
 {
     public:
-        void init(int paletteX, int paletteY,
-                  int paletteWidth, int paletteHeight,
-                  int screenWidth, int screenHeight);
-        GLuint getGUIPaletteTexture();
+        void init(int screenWidth, int screenHeight);
 
+		void initGUIRenderingSetup();
+		void renderTextureFullScreen(GLuint textureId);
+		void renderTextureFullScreen(GLuint textureId, GLuint fboTarget);
+		void renderTexture(GLuint textureId, int x, int y, int width, int height);
+		void renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height);
+		void renderTexture(GLuint textureId, GLuint fboTarget, Rect rect);
 
-
-        Rect m_paletteRect;
-        void initGUIRenderingSetup();
-
-
-        int getGOLModelListBoxIndex();
-
-
-        void renderTextureFullScreen(GLuint TextureId);
-        void renderTextureFullScreen(GLuint TextrureId, GLuint FboTarget);
-        void renderTexture(GLuint TextureId, int x, int y, int width, int height);
-        void renderTexture(GLuint TextureId, GLuint FboTarget, int x, int y, int width, int height);
-        void renderTexture(GLuint TextureId, GLuint FboTarget, Rect rect);
-
-        void renderTextureSingle(GLuint TextureId, int x, int y, int width, int height);
-        void renderTextureSingle(GLuint TextureId, GLuint FboTarget, int x, int y, int width, int height);
-        void renderTextureSingle(GLuint TextureId, GLuint FboTarget, Rect rect);
+		void renderTextureSingle(GLuint textureId, int x, int y, int width, int height);
+		void renderTextureSingle(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height);
+		void renderTextureSingle(GLuint textureId, GLuint fboTarget, Rect rect);
 
         void renderGUI();
 
@@ -50,10 +41,8 @@ class GUIManager
         int m_GUIComponentsID;
         int m_GUIComponentsFlags;
         vector<Control*> m_GUIComponents;
-        ListBox* m_GOLModelListBox;
 
         QuadModel m_textureQuad;
-        GLuint m_GUIPaletteTexture;
         Pipeline m_GUIPipeline;
         int m_screenWidth;
         int m_screenHeight;
