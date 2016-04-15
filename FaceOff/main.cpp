@@ -89,7 +89,6 @@ void FaceOff::init()
 	m_pipeline.loadIdentity();
 	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, 0.5, 2000.0);
 
-	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -126,8 +125,7 @@ void FaceOff::initModels()
 	m_bulletModel.load("./Assets/models/cylinder_base.obj");
 
 
-	textures.clear();  textures.push_back("Assets/tree.png");
-	m_tree.load("Assets/tree.obj", textures);
+
 
 	textures.clear();  textures.push_back("Assets/lowPolyTree.png");
 	m_lowPolyTree.load("Assets/lowPolyTree.obj", textures);
@@ -140,8 +138,6 @@ void FaceOff::initModels()
 	textures.clear(); textures.push_back("Assets/models/wooden box/WoodPlanks_Color.jpg");
 	m_woodenBox.load("Assets/models/wooden box/WoodenBoxOpen02.obj", textures);
 	m_woodenBox.setMeshRandTextureIdx();
-
-
 
 
 	for (int i = 0; i < m_players.size(); i++)
@@ -158,10 +154,10 @@ void FaceOff::initObjects()
 	m_firstPersonCamera.setEyePoint(glm::vec3(-59.362, 94.037, 153.189));
 
 
-	float scale = 1.0;
+	float scale = 100.0;
 	o_worldAxis.setScale(scale);
 	o_worldAxis.setModel(m_mm.m_xyzAxis);
-	// o_ground.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
+
 
 
 	o_gun.setPosition(200, 0, 200);
@@ -174,29 +170,25 @@ void FaceOff::initObjects()
 	o_skybox = SkyBox();
 
 
-	
-//	o_terrain = Terrain(0, 0);
-	o_multiTextureTerrain = MultiTextureTerrain("Assets/Images/terrain/heightmap.png");
-	o_grassPatch = BillboardList();
-	o_grassPatch.setTexture("Assets/Images/billboard_grass_alpha_001.png");
-	o_grassPatch.setRandomFormation(800, 800, 1000, &o_multiTextureTerrain);
-
-	o_flowerPatch = BillboardList();
-	o_flowerPatch.setTexture("Assets/Images/billboard_flower_alpha_001.png");
-	o_flowerPatch.setRandomFormation(800, 800, 1000, &o_multiTextureTerrain);
-
-
-	o_tree.setPosition(50, 0, 50);
-	o_lowPolyTree.setPosition(100, 0, 100);
 
 
 	WeaponManager::initWeaponsData();
 	Weapon::initGameWeapons();
 
+	/*
+	float xbound = 150;
+	float ybound = 50;
+	float zbound = 150;
+	*/
+
+	float xbound = 150;
+	float ybound = 50;
+	float zbound = 150;
+
+
 	scale = 150;
-	WorldObject::DEFAULT_MODEL = &m_tree;
 	WorldObject* o_temp = new WorldObject();
-	o_temp->setScale(scale, 50.0, 1.0);
+	o_temp->setScale(xbound, zbound, 1.0);
 	o_temp->setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
 	o_temp->setModel(&m_groundModel);
 	o_temp->updateAABB();
@@ -205,6 +197,45 @@ void FaceOff::initObjects()
 
 
 
+	o_temp = new WorldObject();
+	o_temp->m_name = "south wall";
+	o_temp->setScale(xbound, ybound / 2, 1.0);
+	o_temp->setPosition(0, ybound / 2, zbound);
+	o_temp->setModel(&m_groundModel);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+	o_temp = new WorldObject();
+	o_temp->m_name = "north wall";
+	o_temp->setScale(xbound, ybound / 2, 1.0);
+	o_temp->setPosition(0, ybound / 2, -zbound);
+	o_temp->setModel(&m_groundModel);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+	
+	o_temp = new WorldObject();
+	o_temp->m_name = "west wall";
+	o_temp->setScale(xbound, ybound / 2, 1.0);
+	o_temp->setRotation(glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f));
+	o_temp->setPosition(-xbound, ybound / 2, -0.0);
+	o_temp->setModel(&m_groundModel);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+	o_temp = new WorldObject();
+	o_temp->m_name = "east wall";
+	o_temp->setScale(xbound, ybound / 2, 1.0);
+	o_temp->setRotation(glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f));
+	o_temp->setPosition(xbound, ybound / 2, 0.0);
+	o_temp->setModel(&m_groundModel);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+	
+
+	/*
 	scale = 15.0f;
 	o_temp = new WorldObject();
 	o_temp->setScale(scale);
@@ -223,13 +254,16 @@ void FaceOff::initObjects()
 	o_temp->updateAABB();
 	o_temp->m_name = "stairs -20";
 	m_objects.push_back(o_temp);
-	
+	*/
+
 	scale = 10.0f;
 	float gap = 10.0;
-	for (int i = 0; i < 5; i++)
+	
+	//	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		o_temp = new WorldObject();
-		float x = -10 + i * 2 * gap + 50;
+		float x = 10 + i * 2 * gap + 50;
 		float y = 0;
 		float z = -10 + i * gap;
 
@@ -242,7 +276,8 @@ void FaceOff::initObjects()
 	}
 
 
-	for (int i = 0; i < 5; i++)
+//	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		o_temp = new WorldObject();
 		float x = -10 - i * 2 * gap - 50;
@@ -257,11 +292,82 @@ void FaceOff::initObjects()
 		m_objects.push_back(o_temp);
 	}
 
+	
+
+	float thinGap = 45, thickGap = 80;
+	float halfThinGap = thinGap / 2, halfThickGap = thickGap / 2;
+
+	float pillarXScale = (xbound * 2 - thinGap * 3) / 2;
+	float pillarYScale = 100;
+	float pillarZScale = (zbound * 2 - thickGap * 2 - thinGap) / 2;
+
+	float halfPosXMag = halfThinGap + pillarXScale/2;
+	float halfPosZMag = halfThinGap + pillarZScale/2;
+	
+	utl::debug("scale x is", pillarXScale);
+	utl::debug("scale z is", pillarZScale);
 
 
-	float xbound = 150;
-	float ybound = 50;
-	float zbound = 50;
+	utl::debug("x is", halfPosXMag);
+	utl::debug("z is", halfPosZMag);
+
+	o_temp = new WorldObject();
+	o_temp->m_name = "NW Pillar";
+
+	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
+	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, -halfPosZMag);
+	o_temp->setModel(&m_woodenBox);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+	
+
+	o_temp = new WorldObject();
+	o_temp->m_name = "NE Pillar";
+
+	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
+	o_temp->setPosition(halfPosXMag, pillarYScale / 2, -halfPosZMag);
+	o_temp->setModel(&m_woodenBox);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+	o_temp = new WorldObject();
+	o_temp->m_name = "SW Pillar";
+
+	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
+	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, halfPosZMag);
+	o_temp->setModel(&m_woodenBox);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+	o_temp = new WorldObject();
+	o_temp->m_name = "SE Pillar";
+
+	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
+	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
+	o_temp->setModel(&m_woodenBox);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+	/*
+	o_temp = new WorldObject();
+	o_temp->m_name = "NE Pillar";
+
+
+	o_temp = new WorldObject();
+	o_temp->m_name = "SW Pillar";
+
+
+	o_temp = new WorldObject();
+	o_temp->m_name = "SE Pillar";
+	*/
+
+
+	
+
+
+
 
 	m_objectKDtree.build(m_objects, glm::vec3(xbound+1, ybound+1, zbound+1), glm::vec3(-xbound-1, -1, -zbound-1));
 
@@ -943,6 +1049,8 @@ void FaceOff::start()
 							glm::vec3 lineStart = m_players[m_defaultPlayerID]->m_position;
 							glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
 
+							utl::debug("lineDir", lineDir);
+
 							// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
 
 							float hitObjectSqDist = FLT_MAX;
@@ -1356,7 +1464,6 @@ void FaceOff::forwardRender()
 			p->m_parentNodes.clear();
 
 			m_objectKDtree.insert(m_players[i]);
-			
 
 
 			/*
@@ -1452,7 +1559,7 @@ void FaceOff::forwardRender()
 			}
 			*/
 			//	m_players[0]->render(m_pipeline, p_renderer, m_mm);
-			m_players[0]->renderGroup(m_pipeline, p_renderer);
+			m_players[m_defaultPlayerID]->renderGroup(m_pipeline, p_renderer);
 		}
 
 
@@ -1470,6 +1577,9 @@ void FaceOff::forwardRender()
 
 		for (int i = 0; i < m_players.size(); i++)
 		{
+			if (i == m_defaultPlayerID)
+				continue;
+
 			Player* player = m_players[i];
 			if (player->isTested != true && player->isCollided != true && player->isHit != true)
 			{
@@ -1593,38 +1703,22 @@ void FaceOff::forwardRender()
 
 
 	p_renderer->disableShader();
+
+	/*
+	
+	
+	
+	
+	
+	*/
+
+
+
+
 	glEnable(GL_CULL_FACE);
 
 
 	renderGUI();
-
-	/*
-	p_renderer = &RendererManager::r_texturedObject;
-	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);
-//	p_model = &m_tree;
-	// p_model = &m_groundModel;
-	p_model = &m_groundModel;
-	m_objects[0]->setModel(p_model);
-	m_objects[0]->renderSingle(m_pipeline, p_renderer, RENDER_PASS1);
-	*/
-
-
-	/*
-	o_grassPatch.render(m_pipeline);
-	o_flowerPatch.render(m_pipeline);
-
-
-	p_renderer = &RendererManager::r_texturedObject;
-	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);
-	p_model = &m_gunModel;
-	o_gun.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-	
-	p_model = &m_tree;
-	o_tree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-
-	p_model = &m_lowPolyTree;
-	o_lowPolyTree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-	*/
 }
 
 
@@ -1718,17 +1812,46 @@ void FaceOff::initGUI()
 	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	Control::init("", 25, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 
-	int xOffset = 25;
-	int yOffset = 25;
+	int xOffset = 55;
+	int yOffset = 570;
 
-	int HEALTH_BAR_WIDTH = 200;
-	int HEALTH_BAR_HEIGHT = 30;
+	int BAR_WIDTH = 60;
+	int BAR_HEIGHT = 10;
 
-	Control* temp = new HealthBar(xOffset, yOffset, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, GREEN);
+	Control* HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GREEN, "icon_hp.png");
+	m_players[m_defaultPlayerID]->m_healthBarGUI = (Bar*)HPBar;
 
-	m_players[m_defaultPlayerID]->m_healthBarGUI = (HealthBar*)temp;
+	xOffset = 175;
+	Control* armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_armor.png");
+	m_players[m_defaultPlayerID]->m_armorBarGUI = (Bar*)armorBar;
 
-	m_gui.addGUIComponent(temp);
+	xOffset = 700;
+	Control* ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
+	m_players[m_defaultPlayerID]->m_ammoBarGUI = (Bar*)ammoBar;
+
+	int aimWidth = 20;
+	int aimHeight = 20;
+	
+	int aimX = utl::SCREEN_WIDTH / 2 - aimWidth / 2;
+	int aimY = utl::SCREEN_HEIGHT / 2 ;
+
+	utl::debug("aimX", aimX);
+	utl::debug("aimY", aimY);
+	Control* horiAim = new Label("", aimX, aimY, aimWidth+2, 2, GREEN);
+
+	aimX = utl::SCREEN_WIDTH / 2;
+	aimY = utl::SCREEN_HEIGHT / 2 - aimHeight / 2;
+
+	utl::debug("aimX", aimX);
+	utl::debug("aimY", aimY);
+
+	Control* vertAim = new Label("", aimX, aimY, 2, aimHeight+1, GREEN);
+
+	m_gui.addGUIComponent(HPBar);
+	m_gui.addGUIComponent(armorBar);
+	m_gui.addGUIComponent(ammoBar);
+	m_gui.addGUIComponent(horiAim);
+	m_gui.addGUIComponent(vertAim);
 }
 
 
@@ -1750,144 +1873,3 @@ void FaceOff::renderGUI()
 
 
 
-
-
-/*
-
-
-void FaceOff::forwardRender()
-{
-glBindFramebuffer(GL_FRAMEBUFFER, 0);
-glEnable(GL_DEPTH_TEST);
-// glDisable(GL_CULL_FACE);
-glEnable(GL_CULL_FACE);
-glCullFace(GL_BACK);
-
-glClearColor(0.0, 0.0, 0.0, 1.0);
-glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-m_pipeline.setMatrixMode(VIEW_MATRIX);
-m_pipeline.loadIdentity();
-
-
-if (m_isServer)
-{
-m_firstPersonCamera.control(m_pipeline);
-o_skybox.setPosition(-m_firstPersonCamera.getEyePoint());
-}
-else
-{
-m_players[m_defaultPlayerID]->update(m_pipeline, &o_multiTextureTerrain);
-o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getEyePoint());
-}
-
-
-
-
-o_skybox.render(m_pipeline);
-
-
-m_pipeline.setMatrixMode(MODEL_MATRIX);
-
-// render the players
-if (m_isServer)
-{
-for (int i = 0; i < m_players.size(); i++)
-{
-if (i != m_defaultPlayerID && m_players[i] != NULL)
-{
-cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
-m_players[i]->render(m_pipeline);
-}
-}
-}
-else
-{
-for (int i = 0; i < m_players.size(); i++)
-{
-if (i != m_defaultPlayerID && m_players[i] != NULL)
-{
-m_players[i]->render(m_pipeline);
-m_players[i]->renderWeapon(m_pipeline);
-}
-else
-{
-m_players[i]->renderWeapon(m_pipeline);
-}
-
-}
-}
-
-
-
-p_renderer = &RendererManager::r_fullVertexColor;
-p_model = &m_xyzModel;
-o_worldAxis.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-
-
-p_renderer = &RendererManager::r_fullColor;
-p_renderer->setData("u_color", glm::vec3(0.5, 0.0, 0.0));
-// p_model = &m_groundModel;
-// o_ground.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-
-p_renderer->setData("u_color", glm::vec3(1.0, 1.0, 0.0));
-p_model = &m_bulletModel;
-
-// *********************
-// need to make this constant time removal
-auto it = m_bullets.begin();
-while (it != m_bullets.end())
-{
-(*it).update();
-if ((*it).isAlive())
-{
-(*it).renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-it++;
-}
-else
-{
-auto temp = it;
-temp++;
-m_bullets.erase(it);
-it = temp;
-}
-}
-
-//	o_sampleBullet.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-//	o_terrain.render(m_pipeline);
-o_multiTextureTerrain.render(m_pipeline);
-
-
-o_grassPatch.setPosition(1.0, 0.0, 1.0);
-o_grassPatch.setScale(1.0, 1.0, 1.0);
-o_flowerPatch.setPosition(0.0, 0.0, 0.0);
-o_flowerPatch.setScale(1.0, 1.0, 1.0);
-
-
-o_grassPatch.render(m_pipeline);
-o_flowerPatch.render(m_pipeline);
-
-
-
-//	o_grassPatch.render(m_pipeline);
-//	o_flowerPatch.render(m_pipeline);
-
-
-//	p_renderer = &RendererManager::r_fullTexture;
-p_renderer = &RendererManager::r_texturedObject;
-p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, 0);
-p_model = &m_gunModel;
-o_gun.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-
-p_model = &m_tree;
-o_tree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-
-p_model = &m_lowPolyTree;
-o_lowPolyTree.renderSingle(m_pipeline, p_renderer, RENDER_PASS1, p_model);
-
-//   renderGUI();
-}
-
-
-*/

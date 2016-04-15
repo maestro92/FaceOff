@@ -20,6 +20,7 @@ Control::Control(string text, int x, int y, int width, int height, glm::vec3 col
     m_rectColor = color;
     m_rectTexture = -1;
    // m_funcCallBack = NULL;
+	m_rectBgType = COLORED;
 
     m_font.color = glm::vec3(0.5, 0.8f, 0.2f);
     m_font.size = 35;
@@ -50,7 +51,7 @@ void Control::init(string font, int size, int screenWidth, int screenHeight)
 
     s = new Shader("/gui_shaders/textured_rect.vs", "/gui_shaders/textured_rect.fs");
     r_texturedRectRenderer.addShader(s);
-    r_texturedRectRenderer.addDataPair(RENDER_PASS1, "u_texture",    DP_INT);
+    r_texturedRectRenderer.addDataPair(RENDER_PASS1, "u_texture", DP_INT);
 
 
     s = new Shader("/gui_shaders/list_box_item_highlight.vs", "/gui_shaders/list_box_item_highlight.fs");
@@ -129,6 +130,11 @@ void Control::setWidth(int w)
 void Control::setHeight(int h)
 {
 	m_rect.h = h;
+}
+
+void Control::setRectBgType(RECT_BG_TYPE type)
+{
+	m_rectBgType = type;
 }
 
 

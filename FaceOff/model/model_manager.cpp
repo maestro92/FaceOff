@@ -19,6 +19,10 @@ void ModelManager::init()
 	m_player->setMeshRandTextureIdx();
 
 
+	textures.clear();  textures.push_back("Assets/tree.png");
+	m_tree = new ImportedModel("Assets/tree.obj", textures);
+
+
 	m_healthBar = new QuadModel(1, 1);
 
 

@@ -61,6 +61,7 @@ using namespace std;
 #define WHITE       glm::vec3(1.0,1.0,1.0)
 
 
+
 struct MouseState
 {
     bool m_leftButtonDown;

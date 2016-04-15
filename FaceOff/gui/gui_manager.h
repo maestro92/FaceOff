@@ -11,7 +11,7 @@
 #include "control.h"
 #include "renderer.h"
 
-#include "custom_gui/health_bar.h"
+#include "custom_gui/bar.h"
 
 class GUIManager
 {

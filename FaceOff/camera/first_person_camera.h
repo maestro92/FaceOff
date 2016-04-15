@@ -11,9 +11,10 @@ class FirstPersonCamera : public Camera
         FirstPersonCamera();
         ~FirstPersonCamera();
 
-        void control(Pipeline& p);
-		void control(Pipeline& p, Terrain* terrain);
+  //      void control(Pipeline& p);
+//		void control(Pipeline& p, Terrain* terrain);
 
+		void controlCD();
 
     private:
 
@@ -28,6 +29,9 @@ class FirstPersonCamera : public Camera
 		void updatePipeline(Pipeline& p);
 		void updatePipelineTranslation(Pipeline& p);
 		void updatePipelineRotation(Pipeline& p);
+		void updateViewMatrix(Pipeline& p);
+		
+		
 		virtual CameraType getCameraType();
 
     //    bool m_mouseIn;

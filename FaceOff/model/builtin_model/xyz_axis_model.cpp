@@ -11,7 +11,7 @@ XYZAxisModel::XYZAxisModel()
 
     float scale = 50;
 
-        /// X axis
+    /// X axis
     v.m_position = glm::vec3(0.0,0.0,0.0);
     v.m_color = glm::vec3(1.0,0.0,0.0);
     vertices.push_back(v);

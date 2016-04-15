@@ -15,7 +15,6 @@
 #include "collision_detection/kd_tree.h"
 #include "world_object.h"
 
-#include "health_bar.h"
 #include "renderer.h"
 #include "renderer_manager.h"
 #include "model.h"
@@ -31,7 +30,7 @@
 
 #include "model_manager.h"
 
-#include "custom_gui/health_bar.h"
+#include "custom_gui/bar.h"
 
 using namespace std;
 
@@ -87,7 +86,7 @@ class Player : public WorldObject
 		void adjustWeaponAndBulletPosition();
 
 
-		//void render(Pipeline& p, Renderer* r);
+		void renderGroup(Pipeline& p, Renderer* r);
 	//	void render(Pipeline& p, Renderer* r, ModelManager& mm);
 
 		void renderWeapon(Pipeline& p);
@@ -103,12 +102,16 @@ class Player : public WorldObject
 		float getCameraPitch();
 		float getCameraYaw();
 
-		HealthBar* m_healthBarGUI;
+		Bar* m_healthBarGUI;
+		Bar* m_armorBarGUI;
+		Bar* m_ammoBarGUI;
 
 	private:
-		float m_maxHP;
-		float m_curHP;
+		int m_maxHP;
+		int m_curHP;
 
+		int m_maxArmor;
+		int m_curArmor;
 };
 
 #endif // PLAYER_H_

@@ -23,15 +23,21 @@ class Camera
 		virtual void control(Pipeline& p, Terrain* terrain);
 
 		virtual void controlCD();
-		virtual void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
+		// virtual void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
 
+		virtual void updateViewMatrix(Pipeline& p);
 
 		void setMouseIn(bool b);
 		bool getMouseIn();
 
 		void setEyePoint(glm::vec3 eye);
 
+		// First POV:	both direction will be the same
+		// Third POV:	TargetDirection: aim direction of the player
+		//				ViewDirection: view direction of the camera
+		glm::vec3 getTargetDirection();
 		glm::vec3 getViewDirection();
+
 		glm::mat4 getViewMatrix();
 		glm::mat4 getModelMatrix();
 
@@ -93,7 +99,6 @@ inline bool Camera::getMouseIn()
 {
 	return m_mouseIn;
 }
-
 
 
 #endif

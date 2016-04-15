@@ -24,6 +24,22 @@ enum SPLIT_DIRECTION
 
 struct KDTreeNode
 {
+	// KDTreeNode* m_left, *m_right;
+
+	// 0 = left,	1 = right
+	KDTreeNode* m_child[2];
+	int m_splitDirection;
+	float m_splitValue;
+
+	// vector<WorldObject*> m_objects;
+	unordered_map<int, WorldObject*> m_objects2;
+	AABB m_aabb;
+
+	CubeWireFrameModel* m_wireFrameModel;
+	CubeModel* m_containedModel;
+	CubeModel* m_hitModel;
+
+	int id;
 
 	KDTreeNode() : KDTreeNode(glm::vec3(1,1,1), glm::vec3(0,0,0))
 	{ }
@@ -31,23 +47,19 @@ struct KDTreeNode
 	
 	KDTreeNode(glm::vec3 maxP, glm::vec3 minP)
 	{
-		// m_maxP = maxP;
-		// m_minP = minP; 
-
-		m_aabb.max = maxP;
+		m_aabb.max = maxP;	
 		m_aabb.min = minP;
 
-		m_left = NULL;
-		m_right = NULL;
+		m_child[0] = NULL;
+		m_child[1] = NULL;
+		
 		createWireFrameModel();
 		createCubeFrameModel();
-	//	m_containedModel = new CubeModel(glm::vec3(0.0), glm::vec3(0.0));
 	}
 	
 
 	void createWireFrameModel()
 	{
-//		m_wireFrameModel = new CubeWireFrameModel(m_maxP, m_minP);
 		m_wireFrameModel = new CubeWireFrameModel(m_aabb);
 	}
 
@@ -58,13 +70,11 @@ struct KDTreeNode
 	
 	void createCubeFrameModel()
 	{
-//		m_containedModel = new CubeModel(m_maxP, m_minP);
 		m_containedModel = new CubeModel(m_aabb.max, m_aabb.min);
 	}
 
 	void createCubeFrameModel(glm::vec3 color)
 	{
-//		m_containedModel = new CubeModel(m_maxP, m_minP, color);
 		m_containedModel = new CubeModel(m_aabb.max, m_aabb.min, color);
 	}
 
@@ -83,25 +93,21 @@ struct KDTreeNode
 			objects[i]->m_parentNodes.push_back(this);
 		}
 	}
-			
+		
+
+	void setChildrenToNULL()
+	{
+		m_child[0] = NULL;
+		m_child[1] = NULL;
+	}
+
 	bool isLeaf()
 	{
-		return m_left == NULL && m_right == NULL;
+		return m_child[0] == NULL && m_child[1] == NULL;
 	}
 
 
-	KDTreeNode* m_left, *m_right;
 
-	int m_splitDirection;
-	float m_splitValue;
-
-	// vector<WorldObject*> m_objects;
-	unordered_map<int, WorldObject*> m_objects2;
-	AABB m_aabb;
-
-	CubeWireFrameModel* m_wireFrameModel;
-	CubeModel* m_containedModel;
-	CubeModel* m_hitModel;
 };
 
 

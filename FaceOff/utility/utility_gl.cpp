@@ -43,7 +43,10 @@ void utl::errorCheckFBO()
 
 GLuint utl::loadTexture(string filename, bool mipmapFlag)
 {
-    return loadTexture(filename, GL_LINEAR, GL_CLAMP, mipmapFlag);
+	if (mipmapFlag)
+		return loadTexture(filename, GL_LINEAR_MIPMAP_LINEAR, GL_CLAMP, mipmapFlag);
+	else
+		return loadTexture(filename, GL_LINEAR, GL_CLAMP, mipmapFlag);
 }
 
 

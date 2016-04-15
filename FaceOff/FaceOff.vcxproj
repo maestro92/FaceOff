@@ -96,7 +96,7 @@
     <ClCompile Include="collision_detection\collision_detection.cpp" />
     <ClCompile Include="collision_detection\kd_tree.cpp" />
     <ClCompile Include="collision_detection\contact_data.cpp" />
-    <ClCompile Include="gui\custom_gui\health_bar.cpp" />
+    <ClCompile Include="gui\custom_gui\bar.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_reader.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_value.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_writer.cpp" />
@@ -267,7 +267,7 @@
     <ClInclude Include="collision_detection\kd_tree.h" />
     <ClInclude Include="collision_detection\kd_tree_node.h" />
     <ClInclude Include="collision_detection\contact_data.h" />
-    <ClInclude Include="gui\custom_gui\health_bar.h" />
+    <ClInclude Include="gui\custom_gui\bar.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit_error_position.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit_reader.h" />

@@ -44,6 +44,11 @@ class Control
 
         };
 
+		enum RECT_BG_TYPE
+		{
+			COLORED = 0,
+			TEXTURED,
+		};
 
         Control();
         Control(string text, int x, int y, int width, int height, glm::vec3 color);
@@ -66,21 +71,7 @@ class Control
 
         void updatePipeline(Renderer* r);
         void updatePipeline(Renderer* r, Rect rect);
-        /*
-        virtual void render(Renderer* r, Rect rect);
-        virtual void renderSingle(Renderer* r, Rect rect);
-*/
-/*
-        virtual void renderColored();
-        virtual void renderColoredSingle();
-        virtual void renderColored(Rect rect);
-        virtual void renderColoredSingle(Rect rect);
 
-        virtual void renderTextured();
-        virtual void renderTexturedSingle();
-        virtual void renderTextured(Rect rect);
-        virtual void renderTexturedSingle(Rect rect);
-*/
         virtual int getType() = 0;
         void setID(int& ID);
         void setRect(int x, int y, int w, int h);
@@ -94,6 +85,8 @@ class Control
         void setTextLayout(bool setLineBreakFlag, int xLayoutFlag, int yLayoutFlag);
         void setRectTextLayout(LineBreakInfo& lineBreakInfo, float& startingX, float& startingY,
                                 string text, float fontSize, Rect rect, bool setLineBreakFlag, int xLayoutFlag, int yLayoutFlag);
+
+		void setRectBgType(RECT_BG_TYPE type);
 
         void updateLineBreakInfo();
 
@@ -130,6 +123,8 @@ class Control
         string m_text;
         Rect m_rect;
         Font m_font;
+
+		RECT_BG_TYPE m_rectBgType;
 
         glm::vec3 m_rectColor;
 

@@ -195,7 +195,7 @@ overhead healthbar?
 
 
 -	core
-redo map
+redo map		-		ice world
 grenade 
 gun pick up animation
 throw gun animation
@@ -251,7 +251,7 @@ class FaceOff
 		XYZAxisModel    m_xyzModel;
 		ImportedModel   m_gunModel;
 		ImportedModel	m_bulletModel;
-		ImportedModel	m_tree;
+
 		ImportedModel	m_lowPolyTree;
 		ImportedModel	m_stairs;
 		ImportedModel	m_woodenBox;

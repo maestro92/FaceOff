@@ -36,8 +36,14 @@ void Camera::controlCD()
 
 }
 
-
+/*
 void Camera::computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot)
+{
+
+}
+*/
+
+void Camera::updateViewMatrix(Pipeline& p)
 {
 
 }
@@ -54,8 +60,14 @@ glm::mat4 Camera::getModelMatrix()
 	return m_modelMatrix;
 }
 
+
+glm::vec3 Camera::getTargetDirection()
+{
+	return -m_targetZAxis;
+}
 glm::vec3 Camera::getViewDirection()
 {
 	return -m_zAxis;
 }
+
 

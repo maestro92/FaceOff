@@ -30,6 +30,7 @@ class ModelManager
 		Model* m_healthBar;
 		Model* m_xyzAxis;
 
+		Model* m_tree;
 
 		unordered_map<WeaponNameEnum, Model*> m_weapons;
 

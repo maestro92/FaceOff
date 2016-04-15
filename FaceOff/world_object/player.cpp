@@ -10,8 +10,9 @@ Player::Player(int id)
 {
 	setId(id);
 //
-//	m_camera = new FirstPersonCamera();
-	m_camera = new ThirdPersonCamera();
+	m_camera = new FirstPersonCamera();
+//	m_camera = new ThirdPersonCamera();
+
 
 	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
 	m_model = new ImportedModel("./Assets/models/sphere/sphere.obj", textures);
@@ -32,6 +33,9 @@ Player::Player(int id)
 
 	m_maxHP = 100;
 	m_curHP = 100;
+
+	m_maxArmor = 100;
+	m_curArmor = 100;
 
 	m_weapons.resize(NUM_WEAPON_TYPE);
 
@@ -107,16 +111,25 @@ void Player::updateGameStatus()
 	static bool incrFlag = false;
 
 	if (incrFlag)
+	{
 		m_curHP += 1;
+		m_curArmor += 1;
+	}
 	else
+	{
 		m_curHP -= 1;
-
+		m_curArmor -= 1;
+	}
 
 	if (m_curHP >= 100)
+	{
 		incrFlag = false;
+	}
 	if (m_curHP <= 0)
-		incrFlag = true;
+	{
 
+		incrFlag = true;
+	}
 
 
 	if (m_healthBarGUI != NULL)
@@ -124,6 +137,17 @@ void Player::updateGameStatus()
 		m_healthBarGUI->computeForegroundWidth(m_curHP);
 	}
 	
+	if (m_armorBarGUI != NULL)
+	{
+		m_armorBarGUI->computeForegroundWidth(m_curArmor);
+	}
+
+	if (m_ammoBarGUI != NULL)
+	{
+		m_ammoBarGUI->computeForegroundWidth(m_curHP);
+	}
+
+
 }
 
 
@@ -134,7 +158,9 @@ void Player::updateCamera(Pipeline& p)
 
 	m_camera->m_target = m_position;
 	m_boundingSphere.center = m_position;
-	((ThirdPersonCamera*)m_camera)->updateViewMatrix(p);
+	// ((ThirdPersonCamera*)m_camera)->updateViewMatrix(p);
+	
+	m_camera->updateViewMatrix(p);
 	updateAABB();
 	updateWeaponTransform();
 }
@@ -324,6 +350,12 @@ float Player::getCameraYaw()
 	return m_camera->m_yaw;
 }
 
+
+void Player::renderGroup(Pipeline& p, Renderer* r)
+{
+	if (m_camera->getCameraType() == THIRD_PERSON_CAMERA)
+		WorldObject::renderGroup(p, r);
+}
 
 void Player::adjustWeaponAndBulletPosition()
 {

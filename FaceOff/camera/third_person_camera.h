@@ -3,9 +3,10 @@
 
 #include "camera.h"
 #include "renderer.h"
+#include <math.h>       /* atan2 */
 
-const float BALL_FORWARD_SPEED = 0.25f;
-const float BALL_HEADING_SPEED = 0.25f;
+const float BALL_FORWARD_SPEED = 0.5f;
+const float BALL_HEADING_SPEED = 0.5f;
 const float BALL_ROLLING_SPEED = 10.0f;
 const float MAX_CAMERA_OFFSET = 200.0f;
 const float MIN_CAMERA_OFFSET = 20.0f;
@@ -22,10 +23,10 @@ class ThirdPersonCamera : public Camera
 
         void lookAt(glm::vec3& eye, glm::vec3& target, glm::vec3& up);
 
-        void control(Pipeline& p);
+        // void control(Pipeline& p);
 		void controlCD();
 
-		void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
+		// void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
 
 
 		void updateTarget();

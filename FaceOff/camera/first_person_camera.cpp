@@ -2,14 +2,30 @@
 
 #include "utility.h"
 
-const float CAMERA_ROTATION_SPEED = 0.1;
-const float CAMERA_FORWARD_SPEED = 0.1;
+const float CAMERA_ROTATION_SPEED = 0.5;
+const float CAMERA_FORWARD_SPEED = 0.3;
 
 FirstPersonCamera::FirstPersonCamera()
 {
+
+	m_xAxis = glm::vec3(1.0f, 0.0f, 0.0f);
+	m_yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+	m_zAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+	m_viewMatrix = glm::mat4(1.0);
+
 	m_eye = glm::vec3(0.0, 5.0, 0.0);
 	m_screenMidX = utl::SCREEN_WIDTH/2;
 	m_screenMidY = utl::SCREEN_HEIGHT/2;
+	m_target = m_eye;
+
+
+	/*
+	m_pitch = atan((eye_p.y - target_p.y) / glm::length(hori));
+	m_pitch *= utl::RADIAN_TO_DEGREE;
+
+	m_yaw = atan(-eye_p.x / eye_p.z);
+	m_yaw *= utl::RADIAN_TO_DEGREE;
+	*/
 }
 
 
@@ -33,46 +49,8 @@ void FirstPersonCamera::updatePosY(float dir)
 }
 
 
-void FirstPersonCamera::control(Pipeline& p)
-{
-    if(m_mouseIn)
-    {
-        int tmpx,tmpy;
-		SDL_GetMouseState(&tmpx,&tmpy);
 
-		m_yaw += CAMERA_ROTATION_SPEED * (m_screenMidX - tmpx);
-		m_pitch += CAMERA_ROTATION_SPEED * (m_screenMidY - tmpy);
-
-		restrain();
-        SDL_WarpMouse(m_screenMidX, m_screenMidY);
-		Uint8* state = SDL_GetKeyState(NULL);
-
-		if(state[SDLK_w])
-		{
-            updatePosXZ(0.0);
-			updatePosY(0.0);
-		}
-
-		else if(state[SDLK_s])
-		{
-            updatePosXZ(180.0);
-			updatePosY(180.0);
-		}
-
-		if(state[SDLK_a])
-			updatePosXZ(90.0);
-
-		else if(state[SDLK_d])
-			updatePosXZ(270);
-    }
-
- //   utl::debug("position", m_eye);
-
-    updatePipeline(p);
-}
-
-
-void FirstPersonCamera::control(Pipeline& p, Terrain* terrain)
+void FirstPersonCamera::controlCD()
 {
 	if (m_mouseIn)
 	{
@@ -89,11 +67,13 @@ void FirstPersonCamera::control(Pipeline& p, Terrain* terrain)
 		if (state[SDLK_w])
 		{
 			updatePosXZ(0.0);
+	//		updatePosY(0.0);
 		}
 
 		else if (state[SDLK_s])
 		{
 			updatePosXZ(180.0);
+	//		updatePosY(180.0);
 		}
 
 		if (state[SDLK_a])
@@ -102,16 +82,25 @@ void FirstPersonCamera::control(Pipeline& p, Terrain* terrain)
 		else if (state[SDLK_d])
 			updatePosXZ(270);
 	}
+	// utl::debug("m_pitch", m_pitch);
 
 	//   utl::debug("position", m_eye);
-	m_eye.y = terrain->getHeightAt(m_eye.x, m_eye.z) + 5;
-	updatePipeline(p);
+	m_target = m_eye;
 }
 
 
-void FirstPersonCamera::updatePipeline(Pipeline& p)
+
+
+void FirstPersonCamera::updateViewMatrix(Pipeline& p)
 {
+	m_eye = m_target;
+
+	
+
 	p.setMatrixMode(VIEW_MATRIX);
+
+
+	
 
 	p.rotateX(m_pitch);
 	p.rotateY(m_yaw);
@@ -125,29 +114,15 @@ void FirstPersonCamera::updatePipeline(Pipeline& p)
 	m_zAxis = glm::vec3(m_viewMatrix[0][2], m_viewMatrix[1][2], m_viewMatrix[2][2]);
 
 	m_target = m_eye;
-	m_targetXAxis = m_xAxis;	
-	m_targetYAxis = m_yAxis;	
+	m_targetXAxis = m_xAxis;
+	m_targetYAxis = m_yAxis;
 	m_targetZAxis = m_zAxis;
 
 	p.setViewPosition(m_eye);
 }
-/*
-void FirstPersonCamera::updatePipelineTranslation(Pipeline& p)
-{
-	p.setMatrixMode(VIEW_MATRIX);
-	p.translate(m_eye.x, m_eye.y, m_eye.z);
 
-	p.setViewPosition(m_eye);
-}
 
-void FirstPersonCamera::updatePipelineRotation(Pipeline& p)
-{
-	p.setMatrixMode(VIEW_MATRIX);
-	p.rotateX(m_pitch);
-	p.rotateY(m_yaw);
 
-}
-*/
 
 void FirstPersonCamera::restrain()
 {
@@ -180,3 +155,129 @@ CameraType FirstPersonCamera::getCameraType()
 	return FIRST_PERSON_CAMERA;
 }
 
+
+
+
+
+/*
+void FirstPersonCamera::updatePipelineTranslation(Pipeline& p)
+{
+p.setMatrixMode(VIEW_MATRIX);
+p.translate(m_eye.x, m_eye.y, m_eye.z);
+
+p.setViewPosition(m_eye);
+}
+
+void FirstPersonCamera::updatePipelineRotation(Pipeline& p)
+{
+p.setMatrixMode(VIEW_MATRIX);
+p.rotateX(m_pitch);
+p.rotateY(m_yaw);
+
+}
+*/
+
+
+
+/*
+void FirstPersonCamera::control(Pipeline& p, Terrain* terrain)
+{
+if (m_mouseIn)
+{
+int tmpx, tmpy;
+SDL_GetMouseState(&tmpx, &tmpy);
+
+m_yaw += CAMERA_ROTATION_SPEED * (m_screenMidX - tmpx);
+m_pitch += CAMERA_ROTATION_SPEED * (m_screenMidY - tmpy);
+
+restrain();
+SDL_WarpMouse(m_screenMidX, m_screenMidY);
+Uint8* state = SDL_GetKeyState(NULL);
+
+if (state[SDLK_w])
+{
+updatePosXZ(0.0);
+}
+
+else if (state[SDLK_s])
+{
+updatePosXZ(180.0);
+}
+
+if (state[SDLK_a])
+updatePosXZ(90.0);
+
+else if (state[SDLK_d])
+updatePosXZ(270);
+}
+
+//   utl::debug("position", m_eye);
+m_eye.y = terrain->getHeightAt(m_eye.x, m_eye.z) + 5;
+updatePipeline(p);
+}
+*/
+/*
+void FirstPersonCamera::updatePipeline(Pipeline& p)
+{
+m_eye = m_target;
+p.setMatrixMode(VIEW_MATRIX);
+
+p.rotateX(m_pitch);
+p.rotateY(m_yaw);
+p.translate(m_eye.x, m_eye.y, m_eye.z);
+
+glm::mat4 view = p.getViewMatrix();
+
+m_viewMatrix = p.getViewMatrix();
+m_xAxis = glm::vec3(m_viewMatrix[0][0], m_viewMatrix[1][0], m_viewMatrix[2][0]);
+m_yAxis = glm::vec3(m_viewMatrix[0][1], m_viewMatrix[1][1], m_viewMatrix[2][1]);
+m_zAxis = glm::vec3(m_viewMatrix[0][2], m_viewMatrix[1][2], m_viewMatrix[2][2]);
+
+m_target = m_eye;
+m_targetXAxis = m_xAxis;
+m_targetYAxis = m_yAxis;
+m_targetZAxis = m_zAxis;
+
+p.setViewPosition(m_eye);
+}
+*/
+
+/*
+void FirstPersonCamera::control(Pipeline& p)
+{
+if(m_mouseIn)
+{
+int tmpx,tmpy;
+SDL_GetMouseState(&tmpx,&tmpy);
+
+m_yaw += CAMERA_ROTATION_SPEED * (m_screenMidX - tmpx);
+m_pitch += CAMERA_ROTATION_SPEED * (m_screenMidY - tmpy);
+
+restrain();
+SDL_WarpMouse(m_screenMidX, m_screenMidY);
+Uint8* state = SDL_GetKeyState(NULL);
+
+if(state[SDLK_w])
+{
+updatePosXZ(0.0);
+updatePosY(0.0);
+}
+
+else if(state[SDLK_s])
+{
+updatePosXZ(180.0);
+updatePosY(180.0);
+}
+
+if(state[SDLK_a])
+updatePosXZ(90.0);
+
+else if(state[SDLK_d])
+updatePosXZ(270);
+}
+
+//   utl::debug("position", m_eye);
+
+updatePipeline(p);
+}
+*/
