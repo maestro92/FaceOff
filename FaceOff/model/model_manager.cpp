@@ -1,5 +1,9 @@
 #include "model_manager.h"
 
+/*
+unordered_map<string, WeaponTypeEnum> m_weaponTypeToEnum;
+unordered_map<string, WeaponNameEnum> m_weaponNameToEnum;
+*/
 
 ModelManager::ModelManager()
 {
@@ -30,7 +34,119 @@ void ModelManager::init()
 	m_xyzAxis = new XYZAxisModel();
 
 
+	initWeaponsData();
+
+}
+
+
+WeaponData ModelManager::getWeaponData(WeaponNameEnum name)
+{
+	return m_weaponDatas[name];
+}
+
+void ModelManager::initWeaponsData()
+{
+	m_weaponTypeToEnum =
+		unordered_map<string, WeaponTypeEnum>
+		({
+			{ "MELEE", MELEE },
+			{ "PISTOL", PISTOL },
+			{ "SHOTGUN", SHOTGUN },
+			{ "SUBMACHINE_GUN", SUBMACHINE_GUN },
+			{ "ASSULT_RIFLE", ASSULT_RIFLE },
+			{ "SNIPER_RIFLE", SNIPER_RIFLE },
+			{ "MACHINE_GUN", MACHINE_GUN },
+			{ "NUM_WEAPON_TYPE", NUM_WEAPON_TYPE }
+		});
+
+		
+	m_weaponNameToEnum = 
+		unordered_map<string, WeaponNameEnum>
+		({
+			{ "Dessert Eagle", DESERT_EAGLE },
+			{ "MP5", MP_5 },
+			{ "AK-47", AK_47 }
+		});
+
+	
+
+	char* filename = "Assets/weapon_data.json";
+	ifstream is(filename);
+
+	mValue value;
+	read(is, value);
+
+	const mArray& addr_array = value.get_array();
+
+	for (int i = 0; i < addr_array.size(); i++)
+	{
+		const mObject obj = addr_array[i].get_obj();
+
+		string	name =				findValue(obj, "name").get_str();
+		WeaponNameEnum nameEnum =	m_weaponNameToEnum[name];
+		int damage =				findValue(obj, "damage").get_int();
+		int magazineCapacity =		findValue(obj, "magazineCapacity").get_int();
+		int maxMagazineCount =		findValue(obj, "maxMagazineCount").get_int();
+		string weaponTypeStr =		findValue(obj, "weaponType").get_str();
+		WeaponTypeEnum typeEnum =	m_weaponTypeToEnum[weaponTypeStr];
+		// string modelFileName = findValue(obj, "model").get_str();
+
+		ImportedModel* model = new ImportedModel("./Assets/models/weapons/Ak_47/Ak-47.obj");
+
+		m_weaponDatas[nameEnum] = { name, nameEnum, damage, magazineCapacity, maxMagazineCount, typeEnum, model };
+	}
+
+
+	/*
+	// Pistol
+	s_weaponData["AK-47"] =
+	{
+	"AK-47", 36, 30, 3, ASSULT_RIFLE, new ImportedModel("./Assets/models/weapons/Ak_47/Ak-47.obj")
+	};
+
+	// Assult Rifle
+	s_weaponData["AK-47"] =
+	{
+	"AK-47", 36, 30, 3, ASSULT_RIFLE, new ImportedModel("./Assets/models/weapons/Ak_47/Ak-47.obj")
+	};
+
+	s_weaponData["AK-47"] =
+	{
+	"AK-47", 36, 30, 3, ASSULT_RIFLE, new ImportedModel("./Assets/models/weapons/Ak_47/Ak-47.obj")
+	};
+	*/
 }
 
 
 
+
+const mValue& ModelManager::findValue(const mObject& obj, const string& name)
+{
+	mObject::const_iterator it = obj.find(name);
+
+	assert(it != obj.end());
+	assert(it->first == name);
+
+	return it->second;
+}
+
+/*
+Weapon ModelManager::createWeapon(WeaponNameEnum name)
+{
+	Weapon weapon;
+	WeaponData data = m_weaponDatas[name];
+
+	weapon.setData(data);
+	
+	
+	weapon.m_name = data.name;
+	weapon.m_damage = data.damage;
+	weapon.m_type = data.type;
+	weapon.m_magazine.max = data.magazineCapacity;
+	weapon.m_magazine.cur = data.magazineCapacity;
+	weapon.m_model = data.model;
+
+
+	return weapon;
+}
+*/

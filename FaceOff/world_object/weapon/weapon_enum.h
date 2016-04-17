@@ -22,6 +22,7 @@ enum WeaponTypeEnum
 enum WeaponNameEnum
 {
 	BUTTERFLY_KNIFE = 0,
+	DESERT_EAGLE,
 
 	// SUBMACHINE_GUN
 	MP_5,	

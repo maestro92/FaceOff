@@ -26,7 +26,6 @@
 
 
 #include "world_object/weapon/weapon.h"
-#include "world_object/weapon/assult_rifle.h"
 
 #include "model_manager.h"
 
@@ -35,6 +34,8 @@
 using namespace std;
 
 // class KDTree;
+
+
 
 class Player : public WorldObject
 {
@@ -50,6 +51,11 @@ class Player : public WorldObject
         Camera* m_camera;
 		Model* m_model;
 
+		static glm::vec3 firstPOVWeaponOffset;
+		static glm::vec3 thirdPOVWeaponOffset;
+
+
+
 		Renderer* r_gun;
 		
 		Sphere m_boundingSphere;
@@ -61,11 +67,13 @@ class Player : public WorldObject
 
 
 //		vector<WorldObject*> m_weapons;
-		int m_curWeaponIndex;
-		vector<Weapon*> m_weapons;
+//		int m_curWeaponIndex;
+//		vector<Weapon*> m_weapons;
 		vector<glm::vec3> m_weaponPositionOffsets;
 		vector<glm::vec3> m_bulletStartPositionOffsets;
 		vector<glm::vec3> m_bulletStartPositionOffsetScale;
+
+		glm::vec3 getFirePosition();
 
 		void update(Pipeline& p);
 		void update(Pipeline& p, Terrain* terrain);
@@ -87,13 +95,11 @@ class Player : public WorldObject
 
 
 		void renderGroup(Pipeline& p, Renderer* r);
-	//	void render(Pipeline& p, Renderer* r, ModelManager& mm);
 
-		void renderWeapon(Pipeline& p);
+		void pickUpWeapon(Weapon* weapon);
+		void releaseWeapon(Weapon* weapon);
 
-//		void renderModel(Pipeline& p, Renderer* r);
 
-		void addWeapon(Weapon* weapon);
 		Weapon* getCurWeapon();
 
 		void fireWeapon(list<Particle>& bullets);
@@ -112,6 +118,9 @@ class Player : public WorldObject
 
 		int m_maxArmor;
 		int m_curArmor;
+
+		vector<Weapon*> m_weapons;
+		Weapon* m_curWeapon;
 };
 
 #endif // PLAYER_H_

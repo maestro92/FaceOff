@@ -15,7 +15,7 @@ WorldObject::WorldObject()
 	m_invMass = 1.0/m_invMass;
 	
 	m_model = DEFAULT_MODEL;
-	isTested = isCollided = isHit = false;
+	isTested = isCollided = isHit = alreadyFireTested = false;
 	isHitCounter = 0;
 }
 

@@ -88,7 +88,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_manager.cpp" />
     <ClCompile Include="audio_manager.cpp" />
     <ClCompile Include="camera\camera.cpp" />
     <ClCompile Include="camera\first_person_camera.cpp" />
@@ -247,18 +246,14 @@
     <ClCompile Include="world_object\billboard_list.cpp" />
     <ClCompile Include="world_object\terrain\multitexture_terrain.cpp" />
     <ClCompile Include="world_object\terrain\terrain.cpp" />
-    <ClCompile Include="world_object\weapon\assult_rifle.cpp" />
     <ClCompile Include="world_object\particle.cpp" />
     <ClCompile Include="world_object\player.cpp" />
     <ClCompile Include="world_object\skybox.cpp" />
     <ClCompile Include="world_object\weapon\weapon.cpp" />
-    <ClCompile Include="world_object\weapon\weapon_manager.cpp" />
     <ClCompile Include="world_object\world_object.cpp" />
     <ClCompile Include="world_object\world_sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_enum.h" />
-    <ClInclude Include="..\..\FaceOff - Copy (2)\FaceOff\world_object\weapon\weapon_manager.h" />
     <ClInclude Include="audio_manager.h" />
     <ClInclude Include="camera\camera.h" />
     <ClInclude Include="camera\first_person_camera.h" />
@@ -471,13 +466,12 @@
     <ClInclude Include="utility\utility.h" />
     <ClInclude Include="world_object\billboard_list.h" />
     <ClInclude Include="world_object\terrain\terrain.h" />
-    <ClInclude Include="world_object\weapon\assult_rifle.h" />
     <ClInclude Include="world_object\particle.h" />
     <ClInclude Include="world_object\player.h" />
     <ClInclude Include="world_object\skybox.h" />
     <ClInclude Include="world_object\weapon\weapon.h" />
+    <ClInclude Include="world_object\weapon\weapon_data.h" />
     <ClInclude Include="world_object\weapon\weapon_enum.h" />
-    <ClInclude Include="world_object\weapon\weapon_manager.h" />
     <ClInclude Include="world_object\world_object.h" />
     <ClInclude Include="world_object\world_sphere.h" />
   </ItemGroup>

@@ -59,11 +59,14 @@ class Camera
 
 		glm::vec3 m_target;
         glm::vec3 m_eye;
+		glm::vec3 m_eyeOffset;
 
         /// expressed in degrees
         float m_pitch;
         float m_yaw;	
 	
+		glm::vec3 getFirePosition();
+
 	protected:
 		bool m_mouseIn;
 };
@@ -99,6 +102,8 @@ inline bool Camera::getMouseIn()
 {
 	return m_mouseIn;
 }
+
+
 
 
 #endif

@@ -433,6 +433,9 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 	{
 		for (auto it = node->m_objects2.begin(); it != node->m_objects2.end(); it++)
 		{
+			if ((it->second)->alreadyFireTested)
+				continue;
+
 			if (it->second->m_instanceId == player->m_instanceId)
 				continue;
 
@@ -441,12 +444,15 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 				float sqDist = glm::length2(player->m_position - (it->second)->m_position);
 				utl::debug("THIS NEEDS TO BE FIXED!!!! Wrong distance metric");
 
+				(it->second)->alreadyFireTested = true;
+
 				if (sqDist < hitObjectSqDist)
 				{
 					utl::debug("lineStart", lineStart);
 					utl::debug("lineDir", lineDir);
 					hitObjectSqDist = sqDist;
 					hitObject = (it->second);
+
 				}
 			}
 		}

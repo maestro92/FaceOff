@@ -8,6 +8,8 @@ ThirdPersonCamera::ThirdPersonCamera()
     m_enableSpringSystem = true;
 	m_mouseIn = true;
 
+	m_eyeOffset = glm::vec3(0.0, 5.0f, 0.0);
+
 	m_target    = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_xAxis     = glm::vec3(1.0f, 0.0f, 0.0f);
 	m_yAxis     = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -168,11 +170,11 @@ void ThirdPersonCamera::updateViewMatrix(Pipeline& p)
     glm::vec3 up = glm::vec3(0.0f,1.0f,0.0f);
     lookAt(m_eye, m_target, up);
 
-	float offset = 5.0f;
 
-	m_viewMatrix = m_viewMatrix * glm::translate(0.0f, -offset, 0.0f);
 
-	m_eye.y += offset;
+	m_viewMatrix = m_viewMatrix * glm::translate(0.0f, -m_eyeOffset.y, 0.0f);
+
+	m_eye.y += m_eyeOffset.y;
 
     p.setMatrixMode(VIEW_MATRIX);
     p.addMatrix(m_viewMatrix);
@@ -198,6 +200,10 @@ CameraType ThirdPersonCamera::getCameraType()
 }
 
 
+glm::vec3 ThirdPersonCamera::getFirePosition()
+{
+	return m_target;
+}
 
 
 

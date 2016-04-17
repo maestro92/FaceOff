@@ -13,10 +13,15 @@ FirstPersonCamera::FirstPersonCamera()
 	m_zAxis = glm::vec3(0.0f, 0.0f, 1.0f);
 	m_viewMatrix = glm::mat4(1.0);
 
-	m_eye = glm::vec3(0.0, 5.0, 0.0);
+
 	m_screenMidX = utl::SCREEN_WIDTH/2;
 	m_screenMidY = utl::SCREEN_HEIGHT/2;
-	m_target = m_eye;
+	m_target = glm::vec3(0.0, 5.0f, 0.0);
+
+
+	m_eyeOffset = glm::vec3(0.0, 5.0f, 0.0);
+
+	m_eye = m_target + m_eyeOffset; 
 
 
 	/*
@@ -38,14 +43,20 @@ FirstPersonCamera::~FirstPersonCamera()
 void FirstPersonCamera::updatePosXZ(float dir)
 {
 	float rad = (m_yaw + dir) * utl::DEGREE_TO_RADIAN;
-	m_eye.x -= sin(rad) * CAMERA_FORWARD_SPEED;
-	m_eye.z -= cos(rad) * CAMERA_FORWARD_SPEED;
+//	m_eye.x -= sin(rad) * CAMERA_FORWARD_SPEED;
+//	m_eye.z -= cos(rad) * CAMERA_FORWARD_SPEED;
+
+	m_target.x -= sin(rad) * CAMERA_FORWARD_SPEED;
+	m_target.z -= cos(rad) * CAMERA_FORWARD_SPEED;
+
 }
 
 void FirstPersonCamera::updatePosY(float dir)
 {
 	float rad = (m_pitch + dir) * utl::DEGREE_TO_RADIAN;
-	m_eye.y += sin(rad) * CAMERA_FORWARD_SPEED;
+//	m_eye.y += sin(rad) * CAMERA_FORWARD_SPEED;
+
+	m_target.y += sin(rad) * CAMERA_FORWARD_SPEED;
 }
 
 
@@ -85,7 +96,7 @@ void FirstPersonCamera::controlCD()
 	// utl::debug("m_pitch", m_pitch);
 
 	//   utl::debug("position", m_eye);
-	m_target = m_eye;
+	// m_target = m_eye;
 }
 
 
@@ -93,7 +104,7 @@ void FirstPersonCamera::controlCD()
 
 void FirstPersonCamera::updateViewMatrix(Pipeline& p)
 {
-	m_eye = m_target;
+	m_eye = m_target + m_eyeOffset;
 
 	
 
@@ -113,10 +124,18 @@ void FirstPersonCamera::updateViewMatrix(Pipeline& p)
 	m_yAxis = glm::vec3(m_viewMatrix[0][1], m_viewMatrix[1][1], m_viewMatrix[2][1]);
 	m_zAxis = glm::vec3(m_viewMatrix[0][2], m_viewMatrix[1][2], m_viewMatrix[2][2]);
 
-	m_target = m_eye;
+
 	m_targetXAxis = m_xAxis;
 	m_targetYAxis = m_yAxis;
 	m_targetZAxis = m_zAxis;
+
+
+	float temp[16] = { m_targetXAxis[0], m_targetXAxis[1], m_targetXAxis[2], 0,
+					   m_targetYAxis[0], m_targetYAxis[1], m_targetYAxis[2], 0,
+					   m_targetZAxis[0], m_targetZAxis[1], m_targetZAxis[2], 0,
+					   0, 0, 0, 1 };
+	m_targetRotation = glm::make_mat4(temp);
+	m_targetRotation *= glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
 	p.setViewPosition(m_eye);
 }
@@ -157,6 +176,11 @@ CameraType FirstPersonCamera::getCameraType()
 
 
 
+
+glm::vec3 FirstPersonCamera::getFirePosition()
+{
+	return m_eye;
+}
 
 
 /*

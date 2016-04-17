@@ -50,6 +50,8 @@ class ThirdPersonCamera : public Camera
 
 		virtual CameraType getCameraType();
 
+		glm::vec3 getFirePosition();
+
     private:
 //        glm::vec3 m_target;
         float m_offsetDistance;

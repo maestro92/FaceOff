@@ -47,7 +47,6 @@ struct KDTreeNode;
 #include "particle.h"
 #include "skybox.h"
 #include "billboard_list.h"
-#include "weapon_manager.h"
 
 
 #include "model_manager.h"

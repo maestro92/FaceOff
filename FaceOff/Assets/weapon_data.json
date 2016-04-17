@@ -1,10 +1,11 @@
 [
 	{
-		"name": 			"Dessert Eagle",
+		"name": 			"Desert Eagle",
 		"damage": 			36,
 		"magazineCapacity": 30,
 		"maxMagazineCount": 3,
-		"weaponType":		"PISTOL"
+		"weaponType":		"PISTOL",
+		"model":			"Ak-47.obj"
 	},
 
 	{
@@ -12,7 +13,9 @@
 		"damage": 			36,
 		"magazineCapacity": 35,
 		"maxMagazineCount": 3,
-		"weaponType":		"SUBMACHINE_GUN"
+		"weaponType":		"SUBMACHINE_GUN",
+		"model":			"Ak-47.obj"
+		
 	},
 
 	{
@@ -20,6 +23,7 @@
 		"damage": 			36,
 		"magazineCapacity": 30,
 		"maxMagazineCount": 3,
-		"weaponType":		"ASSULT_RIFLE"
+		"weaponType":		"ASSULT_RIFLE",
+		"model":			"Ak-47.obj"
 	}
 ]

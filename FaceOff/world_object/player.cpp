@@ -1,6 +1,9 @@
 #include "player.h"
 
 
+glm::vec3 Player::firstPOVWeaponOffset = glm::vec3(0.35, -0.64, 1.26);
+glm::vec3 Player::thirdPOVWeaponOffset = glm::vec3(2.11, -2.49, 5.2);
+
 Player::Player() : Player(0)
 {
 
@@ -39,16 +42,18 @@ Player::Player(int id)
 
 	m_weapons.resize(NUM_WEAPON_TYPE);
 
+	/*
 	// this value is obtained visually
 	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
 		m_weaponPositionOffsets.resize(NUM_WEAPON_TYPE, glm::vec3(0.35, -0.64, 1.26));
 	else
 		m_weaponPositionOffsets.resize(NUM_WEAPON_TYPE, glm::vec3(2.11, -2.49, 5.2));
-
+	
 	m_bulletStartPositionOffsets.resize(NUM_WEAPON_TYPE);
 	m_bulletStartPositionOffsetScale.resize(NUM_WEAPON_TYPE, glm::vec3(-0.052, 0.474, 0.952));
+	*/
 
-	addWeapon(new AssultRifle("Ak-47"));
+//	addWeapon(new AssultRifle("Ak-47"));
 
 	m_healthBarGUI = NULL;
 }
@@ -167,6 +172,24 @@ void Player::updateCamera(Pipeline& p)
 
 void Player::updateWeaponTransform()
 {
+
+	if (m_curWeapon != NULL)
+	{
+		glm::vec3 xAxis = m_camera->m_targetXAxis;
+		glm::vec3 yAxis = m_camera->m_targetYAxis;
+		glm::vec3 zAxis = -m_camera->m_targetZAxis;
+
+		xAxis = xAxis * Player::firstPOVWeaponOffset.x;
+		yAxis = yAxis * Player::firstPOVWeaponOffset.y;
+		zAxis = zAxis * Player::firstPOVWeaponOffset.z;
+
+		glm::vec3 pos = m_camera->getEyePoint() + xAxis + yAxis + zAxis;
+		m_curWeapon->setPosition(pos);
+		m_curWeapon->setScale(0.005);
+		m_curWeapon->setRotation(m_camera->m_targetRotation);
+	}
+
+	/*
 	glm::vec3 xAxis = m_camera->m_targetXAxis;
 	glm::vec3 yAxis = m_camera->m_targetYAxis;
 	glm::vec3 zAxis = -m_camera->m_targetZAxis;
@@ -188,6 +211,7 @@ void Player::updateWeaponTransform()
 		m_weapons[m_curWeaponIndex]->setScale(0.05);
 		m_weapons[m_curWeaponIndex]->setRotation(m_camera->m_targetRotation);
 	}
+	*/
 }
 
 
@@ -195,6 +219,7 @@ void Player::updateWeaponTransform()
 
 void Player::updateBulletTransform()
 {
+	/*
 	glm::mat4 camRot = glm::rotate(m_camera->m_yaw, 0.0f, 1.0f, 0.0f);
 	camRot *= glm::rotate(m_camera->m_pitch, 1.0f, 0.0f, 0.0f);
 	glm::mat4 rot = glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
@@ -214,6 +239,7 @@ void Player::updateBulletTransform()
 	glm::vec3 pos = m_weapons[m_curWeaponIndex]->m_position + xAxis + yAxis + zAxis;
 
 	m_bulletStartPositionOffsets[m_curWeaponIndex] = pos;
+	*/
 }
 
 
@@ -263,6 +289,7 @@ void Player::update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis)
 
 void Player::update(glm::vec3 wPos, float pitch, float yaw)
 {
+	/*
 	m_weapons[m_curWeaponIndex]->setPosition(wPos);
 	m_weapons[m_curWeaponIndex]->setScale(0.01);
 
@@ -271,7 +298,12 @@ void Player::update(glm::vec3 wPos, float pitch, float yaw)
 	rot *= glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 
 	m_weapons[m_curWeaponIndex]->setRotation(rot);
+*/
 }
+
+
+
+
 
 
 /*
@@ -297,26 +329,40 @@ void Player::renderModel(Pipeline& p, Renderer* r)
 }
 */
 
+
+/*
 void Player::renderWeapon(Pipeline& p)
 {
 //	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
 }
+*/
 
 
-
-void Player::addWeapon(Weapon* weapon)
+void Player::pickUpWeapon(Weapon* weapon)
 {
-	int type = (int)weapon->getType();
-
-	m_curWeaponIndex = type;
-
-	m_weapons[(int)weapon->getType()] = weapon;
+	/*
+	if (m_curWeapon != NULL && m_curWeapon->getType() == weapon->getType())
+	{
+		releaseWeapon(m_curWeapon);
+	}
+	*/
+	m_curWeapon = weapon;
 }
+
+
+
+void Player::releaseWeapon(Weapon* weapon)
+{
+	m_curWeapon = weapon;
+}
+
+
 
 
 
 void Player::fireWeapon(list<Particle>& bullets)
 {
+	/*
 	Particle bullet;
 
 	glm::mat4 rot = glm::mat4(1.0);
@@ -332,11 +378,14 @@ void Player::fireWeapon(list<Particle>& bullets)
 	bullet.setScale(0.05, 2.0, 0.05);
 
 	bullets.push_back(bullet);
+	*/
 }
+
 
 Weapon* Player::getCurWeapon()
 {
-	return m_weapons[m_curWeaponIndex];
+//	return m_weapons[m_curWeaponIndex];
+	return NULL;
 } 
 
 
@@ -354,7 +403,15 @@ float Player::getCameraYaw()
 void Player::renderGroup(Pipeline& p, Renderer* r)
 {
 	if (m_camera->getCameraType() == THIRD_PERSON_CAMERA)
+	{
 		WorldObject::renderGroup(p, r);
+	}
+
+	// render teh weapon
+	if (m_curWeapon != NULL)
+	{
+		m_curWeapon->renderGroup(p, r);
+	}
 }
 
 void Player::adjustWeaponAndBulletPosition()
@@ -392,7 +449,7 @@ void Player::adjustWeaponAndBulletPosition()
 	{
 		m_bulletStartPositionOffsetScale[m_curWeaponIndex].y -= step;
 	}
-	*/
+
 	
 	if (state[SDLK_t])
 	{
@@ -420,5 +477,24 @@ void Player::adjustWeaponAndBulletPosition()
 	
 	utl::debug("x y z", m_weaponPositionOffsets[m_curWeaponIndex]);
 
+	*/
+}
+
+
+glm::vec3 Player::getFirePosition()
+{
+	return m_camera->getFirePosition();
+}
+
+
+
+
+/*
+
+void Player::addWeapon(Weapon* weapon)
+{
+
 
 }
+
+*/

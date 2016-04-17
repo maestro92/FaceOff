@@ -71,3 +71,7 @@ glm::vec3 Camera::getViewDirection()
 }
 
 
+glm::vec3 Camera::getFirePosition()
+{
+	return m_eye;
+}

@@ -11,9 +11,6 @@ class FirstPersonCamera : public Camera
         FirstPersonCamera();
         ~FirstPersonCamera();
 
-  //      void control(Pipeline& p);
-//		void control(Pipeline& p, Terrain* terrain);
-
 		void controlCD();
 
     private:
@@ -31,6 +28,7 @@ class FirstPersonCamera : public Camera
 		void updatePipelineRotation(Pipeline& p);
 		void updateViewMatrix(Pipeline& p);
 		
+		glm::vec3 getFirePosition();
 		
 		virtual CameraType getCameraType();
 

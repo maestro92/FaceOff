@@ -172,8 +172,8 @@ void FaceOff::initObjects()
 
 
 
-	WeaponManager::initWeaponsData();
-	Weapon::initGameWeapons();
+//	WeaponManager::initWeaponsData();
+//	Weapon::initGameWeapons();
 
 	/*
 	float xbound = 150;
@@ -364,7 +364,11 @@ void FaceOff::initObjects()
 	*/
 
 
-	
+	// init weapons for the map
+
+
+
+
 
 
 
@@ -388,10 +392,17 @@ void FaceOff::initObjects()
 	}
 	*/
 
+	Weapon* ak47 = new Weapon(m_mm.getWeaponData(AK_47));
+
+
 
 	m_defaultPlayerID = 0;
 	m_players.push_back(new Player(m_defaultPlayerID));
 	
+
+	m_players[0]->pickUpWeapon(ak47);
+
+
 	Player* p = new Player(1);
 	p->setPosition(p->m_id * 25, 5, p->m_id * 10 - 8);
 	p->updateAABB();
@@ -410,6 +421,8 @@ void FaceOff::initObjects()
 	for (int i = 0; i < m_players.size(); i++)
 		m_objectKDtree.insert(m_players[i]);
 	
+
+
 
 }
 
@@ -1046,9 +1059,11 @@ void FaceOff::start()
 
 							WorldObject* hitObject = NULL;
 
-							glm::vec3 lineStart = m_players[m_defaultPlayerID]->m_position;
+							glm::vec3 lineStart = m_players[m_defaultPlayerID]->getFirePosition();
 							glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
 
+
+							utl::debug("lineStart", lineStart);
 							utl::debug("lineDir", lineDir);
 
 							// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
@@ -1645,9 +1660,11 @@ void FaceOff::forwardRender()
 	
 
 		for (int i = 0; i < m_objects.size(); i++)
-		{
+		{			
 			WorldObject* object = m_objects[i];
 			
+			object->alreadyFireTested = false;
+
 			if (object->isHit)
 			{
 				p_renderer->setData("u_color", GREEN);
@@ -1672,10 +1689,15 @@ void FaceOff::forwardRender()
 
 		for (int i = 0; i < m_players.size(); i++)
 		{
-			if (i == m_defaultPlayerID)
-				continue;
 
 			Player* p = m_players[i];
+
+			p->alreadyFireTested = false;
+			if (i == m_defaultPlayerID)
+			{
+
+				continue;
+			}
 
 			//utl::debug("hit", p->isHit);
 			//utl::debug("collided", p->isCollided);
@@ -1704,13 +1726,7 @@ void FaceOff::forwardRender()
 
 	p_renderer->disableShader();
 
-	/*
-	
-	
-	
-	
-	
-	*/
+
 
 
 

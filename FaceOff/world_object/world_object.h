@@ -35,6 +35,10 @@ class WorldObject
 		bool isTested;
 		bool isCollided;
 		bool isHit;
+		
+		bool alreadyTested;
+		bool alreadyFireTested;
+
 		int isHitCounter;
 
 
