@@ -16,7 +16,7 @@ ThirdPersonCamera::ThirdPersonCamera()
 	m_zAxis     = glm::vec3(0.0f, 0.0f, 1.0f);
     m_viewMatrix = glm::mat4(1.0);
 
-    glm::vec3 eye_p     = glm::vec3(80.0, 30.0, 0.0);
+    glm::vec3 eye_p     = glm::vec3(80.0, 320.0, 0.0);
     glm::vec3 target_p  = glm::vec3(0.0, 5.0, 0.0);
     glm::vec3 up_p      = glm::vec3(0.0, 1.0, 0.0);
 

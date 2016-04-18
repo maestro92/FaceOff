@@ -6,6 +6,7 @@ using namespace std;
 #include <unordered_map>
 
 
+#include "utility.h"
 
 #include "model.h"
 #include "quad_model.h"
@@ -41,7 +42,7 @@ class ModelManager
 
 
 		void init();
-		const mValue& findValue(const mObject& obj, const string& name);
+
 		void writeWeaponJsonFiles();
 		void readWeaponData(const mObject& obj);
 		void initWeaponData(WeaponData& data);
@@ -54,6 +55,8 @@ class ModelManager
 		Model* m_xyzAxis;
 		Model* m_tree;
 
+		const mValue& findValue(const mObject& obj, const string& name);
+		glm::vec3 findVec3(const mObject& obj, const string& name);
 
 		unordered_map<string, WeaponTypeEnum> m_weaponTypeToEnum;
 		unordered_map<string, WeaponNameEnum> m_weaponNameToEnum;

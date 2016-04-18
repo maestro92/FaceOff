@@ -31,7 +31,8 @@ enum WeaponNameEnum
 	// assult rifle
 	AK_47,
 
-
+	M16,
+	SNIPER,		// same as AWP
 
 
 	// gernades

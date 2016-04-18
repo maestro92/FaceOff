@@ -48,6 +48,10 @@ void WorldObject::renderGroup(Pipeline& p, Renderer* r, int pass)
 	p.popMatrix();
 }
 
+WorldObjectType WorldObject::getObjectType()
+{
+	return SCENE_OBJECT;
+}
 
 /*
 

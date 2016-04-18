@@ -65,7 +65,9 @@ void ModelManager::initWeaponsData()
 		({
 			{ "Dessert Eagle", DESERT_EAGLE },
 			{ "MP5", MP_5 },
-			{ "AK-47", AK_47 }
+			{ "AK-47", AK_47 },
+			{ "M16", M16 },
+			{ "Sniper", SNIPER }
 		});
 
 	
@@ -78,22 +80,40 @@ void ModelManager::initWeaponsData()
 
 	const mArray& addr_array = value.get_array();
 
+	string modelPath = "./Assets/models/weapons/";
+
 	for (int i = 0; i < addr_array.size(); i++)
 	{
 		const mObject obj = addr_array[i].get_obj();
 
-		string	name =				findValue(obj, "name").get_str();
-		WeaponNameEnum nameEnum =	m_weaponNameToEnum[name];
-		int damage =				findValue(obj, "damage").get_int();
-		int magazineCapacity =		findValue(obj, "magazineCapacity").get_int();
-		int maxMagazineCount =		findValue(obj, "maxMagazineCount").get_int();
-		string weaponTypeStr =		findValue(obj, "weaponType").get_str();
-		WeaponTypeEnum typeEnum =	m_weaponTypeToEnum[weaponTypeStr];
-		// string modelFileName = findValue(obj, "model").get_str();
+		string	name =					findValue(obj, "name").get_str();
+		WeaponNameEnum nameEnum =		m_weaponNameToEnum[name];
+		int damage =					findValue(obj, "damage").get_int();
+		int magazineCapacity =			findValue(obj, "magazineCapacity").get_int();
+		int maxMagazineCount =			findValue(obj, "maxMagazineCount").get_int();
+		
+		float modelScale =				findValue(obj, "modelScale").get_real();
 
-		ImportedModel* model = new ImportedModel("./Assets/models/weapons/Ak_47/Ak-47.obj");
+		string weaponTypeStr =			findValue(obj, "weaponType").get_str();
+		WeaponTypeEnum typeEnum =		m_weaponTypeToEnum[weaponTypeStr];
+		
+		glm::vec3 fPOVOffset =			findVec3(obj, "firstPOVOffset");
+		
+		string modelFileName =			modelPath + findValue(obj, "model").get_str();
+		// modelFileName = path + modelFileName;
+		utl::debug("fPOVOffset", fPOVOffset);
 
-		m_weaponDatas[nameEnum] = { name, nameEnum, damage, magazineCapacity, maxMagazineCount, typeEnum, model };
+		ImportedModel* model = new ImportedModel(modelFileName);
+
+		m_weaponDatas[nameEnum] = { name, 
+									nameEnum, 
+									damage, 
+									magazineCapacity, 
+									maxMagazineCount, 
+									modelScale, 
+									fPOVOffset, 
+									typeEnum, 
+									model };
 	}
 
 
@@ -117,6 +137,19 @@ void ModelManager::initWeaponsData()
 	*/
 }
 
+
+glm::vec3 ModelManager::findVec3(const mObject& obj, const string& name)
+{
+	const mObject vec3Obj = findValue(obj, name).get_obj();
+
+	float x = findValue(vec3Obj, "x").get_real();
+	float y = findValue(vec3Obj, "y").get_real();
+	float z = findValue(vec3Obj, "z").get_real();
+
+	glm::vec3 vec3Value(x, y, z);
+
+	return vec3Value;
+}
 
 
 

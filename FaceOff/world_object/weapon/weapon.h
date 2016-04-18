@@ -9,6 +9,8 @@
 using namespace std;
 
 
+const float ROTATION_SPEED = 0.0005;
+
 struct Magazine
 {
 	int cur;
@@ -35,9 +37,21 @@ class Weapon : public WorldObject
 		Magazine m_magazine;
 		int m_magazineCount;
 
+		virtual void updateGameInfo();
+
+		bool hasOwner;
+
+		virtual WorldObjectType getObjectType();
+
+		glm::vec3 m_firstPOVOffset;
+		float m_modelScale;
+
 	private:
 		WeaponTypeEnum m_type;
 		WeaponNameEnum m_name;
+
+
+		float m_angle;
 };
 
 

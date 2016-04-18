@@ -350,30 +350,45 @@ void FaceOff::initObjects()
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 
-	/*
-	o_temp = new WorldObject();
-	o_temp->m_name = "NE Pillar";
 
 
-	o_temp = new WorldObject();
-	o_temp->m_name = "SW Pillar";
-
-
-	o_temp = new WorldObject();
-	o_temp->m_name = "SE Pillar";
-	*/
-
+	float formationGap = 40.0f;
 
 	// init weapons for the map
+	o_temp = new Weapon(m_mm.getWeaponData(AK_47));
+	o_temp->m_name = "AK 47";
+
+//	o_temp->setScale(0.05);
+	o_temp->setPosition(-formationGap, 5, -140);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+	
+
+
+	o_temp = new Weapon(m_mm.getWeaponData(M16));
+	o_temp->m_name = "M16";
+
+	o_temp->setPosition(formationGap, 5, -140);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
 
 
 
 
-
+	/*
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		utl::debug("name", m_objects[i]->m_name);
+		utl::debug("obj type", m_objects[i]->getObjectType());
+	}
+	*/
 
 
 
 	m_objectKDtree.build(m_objects, glm::vec3(xbound+1, ybound+1, zbound+1), glm::vec3(-xbound-1, -1, -zbound-1));
+
+
+
 
 	/*
 	if (m_players.size() == 0)
@@ -392,8 +407,8 @@ void FaceOff::initObjects()
 	}
 	*/
 
-	Weapon* ak47 = new Weapon(m_mm.getWeaponData(AK_47));
-
+//	Weapon* ak47 = new Weapon(m_mm.getWeaponData(AK_47));
+	Weapon* ak47 = new Weapon(m_mm.getWeaponData(M16));
 
 
 	m_defaultPlayerID = 0;
@@ -1583,8 +1598,16 @@ void FaceOff::forwardRender()
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* object = m_objects[i];
-			if (object->isTested != true && object->isCollided != true && object->isHit != true)
+			if (object->getObjectType() == WEAPON)
+			{
 				object->renderGroup(m_pipeline, p_renderer);
+				continue;
+			}
+				
+			if( object->isTested != true && object->isCollided != true && object->isHit != true)
+			{
+				object->renderGroup(m_pipeline, p_renderer);
+			}
 		}
 
 		//	utl::debug("1 max", m_players[1]->m_aabb.max);
@@ -1662,8 +1685,13 @@ void FaceOff::forwardRender()
 		for (int i = 0; i < m_objects.size(); i++)
 		{			
 			WorldObject* object = m_objects[i];
-			
+
 			object->alreadyFireTested = false;
+
+			if (object->getObjectType() == WEAPON)
+			{
+				continue;
+			}
 
 			if (object->isHit)
 			{

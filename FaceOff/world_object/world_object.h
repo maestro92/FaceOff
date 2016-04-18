@@ -25,6 +25,15 @@ const glm::vec3 POS_HALF_GRAVITY = glm::vec3(0, 4.9, 0);
 
 using namespace std;
 
+
+
+enum WorldObjectType
+{
+	SCENE_OBJECT = 0,
+	PLAYER,
+	WEAPON
+};
+
 class WorldObject
 {
     public:
@@ -42,7 +51,7 @@ class WorldObject
 		int isHitCounter;
 
 
-
+		virtual WorldObjectType getObjectType();
         
 		AABB m_aabb;
 		
@@ -95,7 +104,7 @@ class WorldObject
 		void updateAABB();
 		void updateAABB(glm::vec3& maxP, glm::vec3& minP, glm::vec3 pos, glm::mat4 rotation, glm::vec3 scale);
 
-		void updateGameInfo();
+		virtual void updateGameInfo();
 
 		void update(); 
 

@@ -97,7 +97,7 @@ class Player : public WorldObject
 		void renderGroup(Pipeline& p, Renderer* r);
 
 		void pickUpWeapon(Weapon* weapon);
-		void releaseWeapon(Weapon* weapon);
+		void releaseWeapon();
 
 
 		Weapon* getCurWeapon();
@@ -111,6 +111,8 @@ class Player : public WorldObject
 		Bar* m_healthBarGUI;
 		Bar* m_armorBarGUI;
 		Bar* m_ammoBarGUI;
+
+		virtual WorldObjectType getWorldObject();
 
 	private:
 		int m_maxHP;

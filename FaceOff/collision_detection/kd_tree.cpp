@@ -283,6 +283,36 @@ void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float
 
 
 
+
+
+void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median)
+{
+	float mean = 0;
+
+	vector<float> splitValues;
+
+	for (int i = 0; i < objects.size(); i++)
+	{
+		mean += objects[i]->m_position[direction];
+		splitValues.push_back(objects[i]->m_position[direction]);
+	}
+
+	mean /= objects.size();
+
+	variance = 0;
+	for (int i = 0; i < objects.size(); i++)
+	{
+		float diff = objects[i]->m_position[direction] - mean;
+		variance += diff * diff;
+	}
+
+	sort(splitValues.begin(), splitValues.end());
+
+	median = splitValues[splitValues.size() / 2];
+}
+
+
+#if 0
 void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median)
 {
 	float mean = 0;
@@ -328,7 +358,7 @@ void KDTree::computeSplitInfo(vector<WorldObject*> objects, int direction, float
 	
 	median = splitValues[splitValues.size() / 2];
 }
-
+#endif
 
 
 #if 0

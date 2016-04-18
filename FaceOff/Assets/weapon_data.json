@@ -1,29 +1,40 @@
 [
 	{
-		"name": 			"Desert Eagle",
-		"damage": 			36,
-		"magazineCapacity": 30,
-		"maxMagazineCount": 3,
-		"weaponType":		"PISTOL",
-		"model":			"Ak-47.obj"
-	},
-
-	{
-		"name": 			"MP5",
-		"damage": 			36,
-		"magazineCapacity": 35,
-		"maxMagazineCount": 3,
-		"weaponType":		"SUBMACHINE_GUN",
-		"model":			"Ak-47.obj"
-		
-	},
-
-	{
 		"name": 			"AK-47",
 		"damage": 			36,
 		"magazineCapacity": 30,
 		"maxMagazineCount": 3,
+		"modelScale":		0.05,
 		"weaponType":		"ASSULT_RIFLE",
-		"model":			"Ak-47.obj"
+		
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.35,
+			"y":			-0.64,
+			"z":			1.26
+		},
+
+		"model":			"Ak_47/Ak-47.obj"
+	},
+
+	{
+		"name": 			"M16",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.25,
+		"weaponType":		"ASSULT_RIFLE",
+
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.33,
+			"y":			-0.35,
+			"z":			1.66
+		},
+
+		"model":			"M16/m16.obj"
 	}
+
 ]
