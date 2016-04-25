@@ -1,0 +1,14 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl mactex.jpg
+Ka 0.878431 0.878431 0.878431
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+Ns 96.078431
+map_Kd mactex.jpg
+
+# num_materials: 1

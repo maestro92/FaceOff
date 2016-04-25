@@ -1,0 +1,15 @@
+In your material editor/manager, find the material that you need to fix, and load the picture into that spot. For example, if you load the 
+file and the seat texture is missing, open the Seat material, and load the color and bump pictures into the correct spots. They would be
+names Seat_C (seat color) and Seat_B (seat Bump) or something obvious.
+
+C for Color
+B for Bump
+R for Reflection
+S for Specularity
+T for Transparency
+D for Diffuse
+N for Normal
+
+For further help, email me at shadesters@hotmail.com
+
+Thanks.

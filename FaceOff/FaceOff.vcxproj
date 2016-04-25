@@ -99,6 +99,7 @@
     <ClCompile Include="libraries\json_spirit\json_spirit_reader.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_value.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_writer.cpp" />
+    <ClCompile Include="map_manager.cpp" />
     <ClCompile Include="model\builtin_model\cube_wireframe_model.cpp" />
     <ClCompile Include="gui\button.cpp" />
     <ClCompile Include="gui\control.cpp" />
@@ -243,6 +244,7 @@
     <ClCompile Include="utility\utility_math.cpp" />
     <ClCompile Include="utility\utility_sdl.cpp" />
     <ClCompile Include="utility\utility_network.cpp" />
+    <ClCompile Include="utility\utility_json.cpp" />
     <ClCompile Include="world_object\billboard_list.cpp" />
     <ClCompile Include="world_object\terrain\multitexture_terrain.cpp" />
     <ClCompile Include="world_object\terrain\terrain.cpp" />
@@ -273,6 +275,7 @@
     <ClInclude Include="libraries\json_spirit\json_spirit_writer.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit_writer_options.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit_writer_template.h" />
+    <ClInclude Include="map_manager.h" />
     <ClInclude Include="model\builtin_model\cube_wireframe_model.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="gui\button.h" />

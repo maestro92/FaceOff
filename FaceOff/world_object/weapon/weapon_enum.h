@@ -21,19 +21,33 @@ enum WeaponTypeEnum
 
 enum WeaponNameEnum
 {
-	BUTTERFLY_KNIFE = 0,
+	KNIFE = 0,
+	KATANA,
+	
+	// PISTOL
 	DESERT_EAGLE,
 
+
+	MAC_11,
+
 	// SUBMACHINE_GUN
-	MP_5,	
+	MP5,	
 
 
 	// assult rifle
 	AK_47,
 
 	M16,
-	SNIPER,		// same as AWP
+	AWM,		// same as AWP
 
+
+
+	MINIGUN,
+
+	PISTOL_SHOTGUN,
+
+
+	MG42,
 
 	// gernades
 	FLASH_BANG,

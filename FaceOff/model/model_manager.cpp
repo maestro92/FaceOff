@@ -63,11 +63,17 @@ void ModelManager::initWeaponsData()
 	m_weaponNameToEnum = 
 		unordered_map<string, WeaponNameEnum>
 		({
-			{ "Dessert Eagle", DESERT_EAGLE },
-			{ "MP5", MP_5 },
-			{ "AK-47", AK_47 },
+			{ "KNIFE", KNIFE },
+			{ "DESERT_EAGLE", DESERT_EAGLE },
+			{ "KATANA", KATANA },
+			{ "MAC_11", MAC_11 },
+			{ "MP5", MP5 },
+			{ "AK_47", AK_47 },
 			{ "M16", M16 },
-			{ "Sniper", SNIPER }
+			{ "AWM", AWM },
+			{ "MINIGUN", MINIGUN },
+			{ "PISTOL_SHOTGUN", PISTOL_SHOTGUN },
+			{ "MG42", MG42 }
 		});
 
 	
@@ -103,7 +109,31 @@ void ModelManager::initWeaponsData()
 		// modelFileName = path + modelFileName;
 		utl::debug("fPOVOffset", fPOVOffset);
 
+		if (nameEnum == MP5)
+		{
+			int a = 1;
+		}
+
 		ImportedModel* model = new ImportedModel(modelFileName);
+
+		/*
+		if (nameEnum == KATANA)
+		{
+			model = new ImportedModel();
+			vector<string> textures;
+			textures.push_back("Assets/models/weapons/katana/Katana_CM_01.jpg");
+
+			model->load(modelFileName, textures);
+//			model->setTextures(textures);
+	//		model->setMeshRandTextureIdx(); 
+		}
+		else
+		{
+
+		*/
+		//	model = new ImportedModel(modelFileName);
+		// }
+
 
 		m_weaponDatas[nameEnum] = { name, 
 									nameEnum, 
@@ -138,6 +168,7 @@ void ModelManager::initWeaponsData()
 }
 
 
+
 glm::vec3 ModelManager::findVec3(const mObject& obj, const string& name)
 {
 	const mObject vec3Obj = findValue(obj, name).get_obj();
@@ -152,7 +183,6 @@ glm::vec3 ModelManager::findVec3(const mObject& obj, const string& name)
 }
 
 
-
 const mValue& ModelManager::findValue(const mObject& obj, const string& name)
 {
 	mObject::const_iterator it = obj.find(name);
@@ -162,6 +192,9 @@ const mValue& ModelManager::findValue(const mObject& obj, const string& name)
 
 	return it->second;
 }
+
+
+
 
 /*
 Weapon ModelManager::createWeapon(WeaponNameEnum name)

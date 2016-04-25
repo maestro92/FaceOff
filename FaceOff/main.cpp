@@ -354,6 +354,70 @@ void FaceOff::initObjects()
 
 	float formationGap = 40.0f;
 
+
+
+
+
+	o_temp = new Weapon(m_mm.getWeaponData(MAC_11));
+	o_temp->m_name = "MAC_11";
+
+	o_temp->setPosition(-3 * formationGap, 5, -110);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+	
+	o_temp = new Weapon(m_mm.getWeaponData(AWM));
+	o_temp->m_name = "AWM";
+
+	o_temp->setPosition(-2 * formationGap, 5, -110);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+
+
+	o_temp = new Weapon(m_mm.getWeaponData(MINIGUN));
+	o_temp->m_name = "MINIGUN";
+
+	o_temp->setPosition(-1 * formationGap, 5, -110);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+
+	o_temp = new Weapon(m_mm.getWeaponData(KNIFE));
+	o_temp->m_name = "knife";
+
+	o_temp->setPosition(formationGap, 5, -110);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+
+
+
+
+
+
+	o_temp = new Weapon(m_mm.getWeaponData(MP5));
+	o_temp->m_name = "MP5";
+
+	o_temp->setPosition(-3 * formationGap, 5, -140);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+
+
+
+	o_temp = new Weapon(m_mm.getWeaponData(MG42));
+	o_temp->m_name = "MG42";
+
+	o_temp->setPosition(-2 * formationGap, 5, -140);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+	
+
 	// init weapons for the map
 	o_temp = new Weapon(m_mm.getWeaponData(AK_47));
 	o_temp->m_name = "AK 47";
@@ -365,10 +429,29 @@ void FaceOff::initObjects()
 	
 
 
+
+
 	o_temp = new Weapon(m_mm.getWeaponData(M16));
 	o_temp->m_name = "M16";
 
 	o_temp->setPosition(formationGap, 5, -140);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+	o_temp = new Weapon(m_mm.getWeaponData(KATANA));
+	o_temp->m_name = "katana";
+
+	o_temp->setPosition(2 * formationGap, 5, -140);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
+
+
+
+	o_temp = new Weapon(m_mm.getWeaponData(PISTOL_SHOTGUN));
+	o_temp->m_name = "shotgun";
+
+	o_temp->setPosition(3 * formationGap, 5, -140);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 

@@ -38,6 +38,24 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
+
+
+#include "json_spirit.h"
+#include "json_spirit_reader_template.h"
+#include "json_spirit_writer_template.h"
+#include <cassert>
+#include <fstream>
+
+#ifndef JSON_SPIRIT_MVALUE_ENABLED
+#error Please define JSON_SPIRIT_MVALUE_ENABLED for the mValue type to be enabled 
+#endif
+
+using namespace std;
+using namespace json_spirit;
+
+
+
+
 #define DEBUG_FLAG 1
 
 
@@ -288,6 +306,9 @@ namespace utl
 	void setBitStream(RakNet::BitStream& bsOut, glm::vec3& v);
 
 
+	/// utl_json.cpp
+	const mValue& findValue(const mObject& obj, const string& name);
+	glm::vec3 findVec3(const mObject& obj, const string& name);
 
 };
 
@@ -320,4 +341,12 @@ void utl::debug(string s, vector< vector<T> > v)
     }
     cout << endl;
 }
+
+
+
+
+
+
+
+
 #endif
