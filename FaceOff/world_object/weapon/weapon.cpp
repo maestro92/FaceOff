@@ -4,7 +4,7 @@
 
 Weapon::Weapon()
 {
-	m_type = MELEE;
+//	m_type = MELEE;
 	hasOwner = false;
 	m_angle = 0.0f;
 }
@@ -31,15 +31,18 @@ void Weapon::setData(WeaponData data)
 	m_magazine.max = data.magazineCapacity;
 	m_magazineCount = data.maxMagazineCount;
 
-	m_type = data.type;
+//	m_type = data.type;
 	m_name = data.name;
 
 	m_modelScale = data.modelScale;
 
 	setScale(m_modelScale);
 
+	m_firstPOVScale = data.firstPOVScale;
 	m_firstPOVOffset = data.firstPOVOffset;
 
+
+	m_slot = data.slot;
 	m_model = data.model;
 
 	m_wireFrameModel = new CubeWireFrameModel(m_model->m_aabb);

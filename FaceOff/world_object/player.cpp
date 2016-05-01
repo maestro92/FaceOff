@@ -47,7 +47,7 @@ Player::Player(int id)
 	m_maxArmor = 100;
 	m_curArmor = 100;
 
-	m_weapons.resize(NUM_WEAPON_TYPE);
+	m_weapons.resize(NUM_WEAPON_SLOTS);
 
 	/*
 	// this value is obtained visually
@@ -105,7 +105,7 @@ void Player::update(Pipeline& p)
 	updateWeaponTransform();
 
 	// updateBulletTransform();
-//	adjustWeaponAndBulletPosition();
+	// adjustWeaponAndBulletPosition();
 }
 
 
@@ -113,6 +113,9 @@ void Player::control()
 {
 	m_camera->controlCD();
 	m_position = m_camera->getTargetPoint();
+
+
+
 }
 
 
@@ -190,14 +193,23 @@ void Player::updateWeaponTransform()
 
 		glm::vec3 wOffset = m_curWeapon->m_firstPOVOffset;
 
-		xAxis = xAxis * wOffset.x; // Player::firstPOVWeaponOffset.x;
+#if 1
+		xAxis = xAxis * wOffset.x;
 		yAxis = yAxis * wOffset.y;
 		zAxis = zAxis * wOffset.z;
+#else			
+		xAxis = xAxis * Player::firstPOVWeaponOffset.x;
+		yAxis = yAxis * Player::firstPOVWeaponOffset.y;
+		zAxis = zAxis * Player::firstPOVWeaponOffset.z;
+#endif
 
 		glm::vec3 pos = m_camera->getEyePoint() + xAxis + yAxis + zAxis;
 //		glm::vec3 pos = m_camera->getTargetPoint() + xAxis + yAxis + zAxis;
 		m_curWeapon->setPosition(pos);
 //		m_curWeapon->setScale(0.005);
+
+//		glm::mat4 rot = m_camera->m_targetRotation * 
+
 		m_curWeapon->setRotation(m_camera->m_targetRotation);
 	}
 
@@ -354,6 +366,28 @@ void Player::renderWeapon(Pipeline& p)
 */
 
 
+
+void Player::switchWeapon(WeaponSlotEnum slot)
+{
+	utl::debug("weapon slot", slot);
+
+
+
+
+	if (m_weapons[slot] != NULL)
+	{
+		m_curWeapon = m_weapons[slot];
+		utl::debug("m_curWeapon slot", m_curWeapon->m_slot);
+	}
+	else
+	{
+		m_curWeapon = NULL;
+		utl::debug("swtiching NULL");
+	}
+
+}
+
+
 void Player::pickUpWeapon(Weapon* weapon)
 {
 	/*
@@ -362,8 +396,30 @@ void Player::pickUpWeapon(Weapon* weapon)
 		releaseWeapon(m_curWeapon);
 	}
 	*/
-	weapon->setScale(weapon->m_modelScale / 10.0f);
+	
+	utl::debug("		weapon slot", weapon->m_slot); 
+
+	m_weapons[weapon->m_slot] = weapon;
+
+	// if (m_curWeapon->m_slot == MAIN)
+	weapon->setScale(weapon->m_firstPOVScale);
+
+
 	m_curWeapon = weapon;
+
+	/*
+	if (m_curWeapon != NULL)
+	{
+
+
+	}
+	else
+	{
+		m_weapons[weapon->m_slot] = weapon;
+		weapon->setScale(weapon->m_modelScale / 10.0f);
+		m_curWeapon = weapon;
+	}
+	*/
 }
 
 
@@ -468,7 +524,8 @@ void Player::adjustWeaponAndBulletPosition()
 	}
 	else if (state[SDLK_m])
 	{
-		m_bulletStartPositionOffsetScale[m_curWeaponIndex].y -= step;
+		m_bulletStartPositionOf
+		fsetScale[m_curWeaponIndex].y -= step;
 	}
 	*/
 	
@@ -476,7 +533,6 @@ void Player::adjustWeaponAndBulletPosition()
 	{
 		firstPOVWeaponOffset.z += step;
 	}
-
 	else if (state[SDLK_g])
 	{
 		firstPOVWeaponOffset.z -= step;

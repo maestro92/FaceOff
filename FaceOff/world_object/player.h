@@ -96,6 +96,7 @@ class Player : public WorldObject
 
 		void renderGroup(Pipeline& p, Renderer* r);
 
+		void switchWeapon(WeaponSlotEnum slot);
 		void pickUpWeapon(Weapon* weapon);
 		void releaseWeapon();
 

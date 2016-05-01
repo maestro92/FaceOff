@@ -1,9 +1,5 @@
 #include "model_manager.h"
 
-/*
-unordered_map<string, WeaponTypeEnum> m_weaponTypeToEnum;
-unordered_map<string, WeaponNameEnum> m_weaponNameToEnum;
-*/
 
 ModelManager::ModelManager()
 {
@@ -46,7 +42,18 @@ WeaponData ModelManager::getWeaponData(WeaponNameEnum name)
 
 void ModelManager::initWeaponsData()
 {
-	m_weaponTypeToEnum =
+	
+	m_weaponSlotToEnum =
+		unordered_map<string, WeaponSlotEnum>
+		({
+			{ "MAIN", MAIN },
+			{ "PISTOL", PISTOL },
+			{ "MELEE", MELEE },
+			{ "PROJECTILE", PROJECTILE }
+		});
+
+
+		/*
 		unordered_map<string, WeaponTypeEnum>
 		({
 			{ "MELEE", MELEE },
@@ -55,10 +62,9 @@ void ModelManager::initWeaponsData()
 			{ "SUBMACHINE_GUN", SUBMACHINE_GUN },
 			{ "ASSULT_RIFLE", ASSULT_RIFLE },
 			{ "SNIPER_RIFLE", SNIPER_RIFLE },
-			{ "MACHINE_GUN", MACHINE_GUN },
-			{ "NUM_WEAPON_TYPE", NUM_WEAPON_TYPE }
+			{ "MACHINE_GUN", MACHINE_GUN }
 		});
-
+		*/
 		
 	m_weaponNameToEnum = 
 		unordered_map<string, WeaponNameEnum>
@@ -73,7 +79,8 @@ void ModelManager::initWeaponsData()
 			{ "AWM", AWM },
 			{ "MINIGUN", MINIGUN },
 			{ "PISTOL_SHOTGUN", PISTOL_SHOTGUN },
-			{ "MG42", MG42 }
+			{ "MG42", MG42 },
+			{ "FRAG_GRENADE", FRAG_GRENADE }
 		});
 
 	
@@ -100,9 +107,15 @@ void ModelManager::initWeaponsData()
 		
 		float modelScale =				findValue(obj, "modelScale").get_real();
 
-		string weaponTypeStr =			findValue(obj, "weaponType").get_str();
-		WeaponTypeEnum typeEnum =		m_weaponTypeToEnum[weaponTypeStr];
+		// string weaponTypeStr =			findValue(obj, "weaponType").get_str();
+		// WeaponTypeEnum typeEnum =		m_weaponTypeToEnum[weaponTypeStr];
 		
+		string weaponSlotStr =			findValue(obj, "slot").get_str();
+		WeaponSlotEnum slotEnum =		m_weaponSlotToEnum[weaponSlotStr];
+
+		utl::debug("slotENum", slotEnum);
+
+		float fPOVScale =				findValue(obj, "firstPOVScale").get_real();
 		glm::vec3 fPOVOffset =			findVec3(obj, "firstPOVOffset");
 		
 		string modelFileName =			modelPath + findValue(obj, "model").get_str();
@@ -141,8 +154,9 @@ void ModelManager::initWeaponsData()
 									magazineCapacity, 
 									maxMagazineCount, 
 									modelScale, 
-									fPOVOffset, 
-									typeEnum, 
+									fPOVScale,
+									fPOVOffset,
+									slotEnum,
 									model };
 	}
 

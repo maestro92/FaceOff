@@ -18,9 +18,11 @@ struct WeaponData
 	int maxMagazineCount;
 	float modelScale;
 
+	float firstPOVScale;
 	glm::vec3 firstPOVOffset;
 
-	WeaponTypeEnum type;
+	WeaponSlotEnum slot;
+//	WeaponTypeEnum type;
 	Model* model;
 };
 

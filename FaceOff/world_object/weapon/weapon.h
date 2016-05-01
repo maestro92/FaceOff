@@ -27,7 +27,7 @@ class Weapon : public WorldObject
 
 		void setData(WeaponData data);
 
-		void setType(WeaponTypeEnum type);
+		// void setType(WeaponTypeEnum type);
 		int getType();
 
 		void setName(WeaponNameEnum type);
@@ -43,11 +43,17 @@ class Weapon : public WorldObject
 
 		virtual WorldObjectType getObjectType();
 
-		glm::vec3 m_firstPOVOffset;
 		float m_modelScale;
 
+
+		glm::vec3 m_firstPOVOffset;
+		float m_firstPOVScale;
+
+
+		WeaponSlotEnum m_slot;
+
 	private:
-		WeaponTypeEnum m_type;
+	//	WeaponTypeEnum m_type;
 		WeaponNameEnum m_name;
 
 

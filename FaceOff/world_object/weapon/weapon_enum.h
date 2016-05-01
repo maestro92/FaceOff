@@ -6,6 +6,16 @@
 using namespace std;
 
 
+enum WeaponSlotEnum
+{
+	MAIN = 0,
+	PISTOL, 
+	MELEE,
+	PROJECTILE,
+	NUM_WEAPON_SLOTS
+};
+
+/*
 enum WeaponTypeEnum
 {
 	MELEE = 0,
@@ -15,8 +25,9 @@ enum WeaponTypeEnum
 	ASSULT_RIFLE,
 	SNIPER_RIFLE,
 	MACHINE_GUN,
-	NUM_WEAPON_TYPE
+	NUM_WEAPON_TYPES
 };
+*/
 
 
 enum WeaponNameEnum
@@ -52,7 +63,7 @@ enum WeaponNameEnum
 	// gernades
 	FLASH_BANG,
 	SMOKE_GRENADE,
-	HE_GRENADE
+	FRAG_GRENADE
 };
 
 

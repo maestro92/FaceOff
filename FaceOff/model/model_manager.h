@@ -59,7 +59,8 @@ class ModelManager
 		const mValue& findValue(const mObject& obj, const string& name);
 		glm::vec3 findVec3(const mObject& obj, const string& name);
 
-		unordered_map<string, WeaponTypeEnum> m_weaponTypeToEnum;
+		// unordered_map<string, WeaponTypeEnum> m_weaponTypeToEnum;
+		unordered_map<string, WeaponSlotEnum> m_weaponSlotToEnum;
 		unordered_map<string, WeaponNameEnum> m_weaponNameToEnum;
 
 		WeaponData getWeaponData(WeaponNameEnum name);

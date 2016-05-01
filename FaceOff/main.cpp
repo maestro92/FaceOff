@@ -394,6 +394,12 @@ void FaceOff::initObjects()
 
 
 
+	o_temp = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	o_temp->m_name = "FRAG_GRENADE";
+
+	o_temp->setPosition(2 * formationGap, 5, -110);
+	o_temp->updateAABB();
+	m_objects.push_back(o_temp);
 
 
 
@@ -405,9 +411,6 @@ void FaceOff::initObjects()
 	o_temp->setPosition(-3 * formationGap, 5, -140);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
-
-
-
 
 
 	o_temp = new Weapon(m_mm.getWeaponData(MG42));
@@ -490,15 +493,28 @@ void FaceOff::initObjects()
 	}
 	*/
 
-//	Weapon* ak47 = new Weapon(m_mm.getWeaponData(AK_47));
-	Weapon* ak47 = new Weapon(m_mm.getWeaponData(M16));
+//	Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(AWM));
+	Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(M16));
+//	Weapon* pistol = new Weapon(m_mm.getWeaponData());
+	Weapon* knife = new Weapon(m_mm.getWeaponData(KNIFE));
+	Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
 
+	
+	utl::debug("mainWeapon slot", (int)(mainWeapon->m_slot));
+	utl::debug("knife slot", (int)(knife->m_slot));
+	utl::debug("grenade slot", (int)(grenade->m_slot));
+	
 
 	m_defaultPlayerID = 0;
 	m_players.push_back(new Player(m_defaultPlayerID));
 	
 
-	m_players[0]->pickUpWeapon(ak47);
+
+	
+	m_players[0]->pickUpWeapon(mainWeapon);
+	m_players[0]->pickUpWeapon(knife);
+	m_players[0]->pickUpWeapon(grenade);
+	
 
 
 	Player* p = new Player(1);
@@ -1214,6 +1230,29 @@ void FaceOff::start()
 				case SDLK_0:
 					containedFlag = !containedFlag;
 					break;
+
+
+				// main gun
+				case SDLK_1:
+					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MAIN);
+					break;
+
+				// pistol
+				case SDLK_2:
+					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PISTOL);
+					break;
+
+				// MELEE
+				case SDLK_3:
+					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MELEE);
+					break;
+
+				// GRENADES
+				case SDLK_4:
+					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
+					break;
+
+
 
 				case SDLK_SPACE:
 					if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
