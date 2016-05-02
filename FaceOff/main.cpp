@@ -425,7 +425,6 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(AK_47));
 	o_temp->m_name = "AK 47";
 
-//	o_temp->setScale(0.05);
 	o_temp->setPosition(-formationGap, 5, -140);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
@@ -460,18 +459,24 @@ void FaceOff::initObjects()
 
 
 
-
-	/*
+	vector<WorldObject*> objectsForKDTree;
+	
 	for (int i = 0; i < m_objects.size(); i++)
 	{
-		utl::debug("name", m_objects[i]->m_name);
-		utl::debug("obj type", m_objects[i]->getObjectType());
+	//	utl::debug("name", m_objects[i]->m_name);
+	//	utl::debug("obj type", m_objects[i]->getObjectType());
+
+		WorldObject* obj = m_objects[i];
+
+		if (obj->getObjectType() == WEAPON && ((Weapon*)(obj))->hasOwner == true)
+		{
+			continue;
+		}
+		objectsForKDTree.push_back(obj);
 	}
-	*/
 
 
-
-	m_objectKDtree.build(m_objects, glm::vec3(xbound+1, ybound+1, zbound+1), glm::vec3(-xbound-1, -1, -zbound-1));
+	m_objectKDtree.build(objectsForKDTree, glm::vec3(xbound + 1, ybound + 1, zbound + 1), glm::vec3(-xbound - 1, -1, -zbound - 1));
 
 
 
@@ -500,9 +505,9 @@ void FaceOff::initObjects()
 	Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
 
 	
-	utl::debug("mainWeapon slot", (int)(mainWeapon->m_slot));
-	utl::debug("knife slot", (int)(knife->m_slot));
-	utl::debug("grenade slot", (int)(grenade->m_slot));
+	utl::debug("mainWeapon slot", (int)(mainWeapon->m_slotEnum));
+	utl::debug("knife slot", (int)(knife->m_slotEnum));
+	utl::debug("grenade slot", (int)(grenade->m_slotEnum));
 	
 
 	m_defaultPlayerID = 0;
@@ -1141,6 +1146,12 @@ void FaceOff::start()
 					m_mouseState.m_leftButtonDown = false;
 					SDL_GetMouseState(&tmpx, &tmpy);
 
+					if (m_players[m_defaultPlayerID]->inGrenadeGatherMode())
+					{
+						Weapon* grenade = m_players[m_defaultPlayerID]->throwGrenade();
+
+					}
+
 					hitNode = NULL;
 
 					break;
@@ -1169,7 +1180,9 @@ void FaceOff::start()
 					{
 						if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
 						{
-							m_players[m_defaultPlayerID]->fireWeapon(m_bullets);
+							m_players[m_defaultPlayerID]->fireWeapon();
+
+							
 
 							WorldObject* hitObject = NULL;
 
@@ -1252,6 +1265,16 @@ void FaceOff::start()
 					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
 					break;
 
+				case SDLK_r:
+					
+					utl::debug("Reloading Weapon");
+					m_players[m_defaultPlayerID]->reloadWeapon();
+					break;
+
+				case SDLK_g:
+					utl::debug("Dropping Weapon");
+				//	Weapon* droppedWeapon = m_players[m_defaultPlayerID]->dropWeapon();
+					break;
 
 
 				case SDLK_SPACE:
@@ -1580,6 +1603,11 @@ void FaceOff::forwardRender()
 
 
 		m_players[m_defaultPlayerID]->updateGameStatus();
+
+
+
+
+
 
 
 

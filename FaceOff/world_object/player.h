@@ -54,7 +54,7 @@ class Player : public WorldObject
 		static glm::vec3 firstPOVWeaponOffset;
 		static glm::vec3 thirdPOVWeaponOffset;
 
-
+		Weapon* m_curCollidedWeapon;
 
 		Renderer* r_gun;
 		
@@ -66,6 +66,8 @@ class Player : public WorldObject
 		void setPosition(float x, float y, float z);
 
 
+		
+		
 //		vector<WorldObject*> m_weapons;
 //		int m_curWeaponIndex;
 //		vector<Weapon*> m_weapons;
@@ -98,13 +100,12 @@ class Player : public WorldObject
 
 		void switchWeapon(WeaponSlotEnum slot);
 		void pickUpWeapon(Weapon* weapon);
-		void releaseWeapon();
-
-
+		Weapon* dropWeapon();
+		void reloadWeapon();
 		Weapon* getCurWeapon();
 
-		void fireWeapon(list<Particle>& bullets);
-
+		void fireWeapon();
+		Weapon* throwGrenade();
 
 		float getCameraPitch();
 		float getCameraYaw();
@@ -115,6 +116,8 @@ class Player : public WorldObject
 
 		virtual WorldObjectType getWorldObject();
 
+		bool inGrenadeGatherMode();
+
 	private:
 		int m_maxHP;
 		int m_curHP;
@@ -124,6 +127,8 @@ class Player : public WorldObject
 
 		vector<Weapon*> m_weapons;
 		Weapon* m_curWeapon;
+
+		bool m_grenadeGatherMode = false;
 };
 
 #endif // PLAYER_H_

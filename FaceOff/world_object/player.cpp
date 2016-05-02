@@ -49,6 +49,9 @@ Player::Player(int id)
 
 	m_weapons.resize(NUM_WEAPON_SLOTS);
 
+	m_curCollidedWeapon = NULL;
+
+	m_grenadeGatherMode = false;
 	/*
 	// this value is obtained visually
 	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
@@ -192,7 +195,7 @@ void Player::updateWeaponTransform()
 		glm::vec3 zAxis = -m_camera->m_targetZAxis;
 
 		glm::vec3 wOffset = m_curWeapon->m_firstPOVOffset;
-
+/*
 #if 1
 		xAxis = xAxis * wOffset.x;
 		yAxis = yAxis * wOffset.y;
@@ -202,9 +205,25 @@ void Player::updateWeaponTransform()
 		yAxis = yAxis * Player::firstPOVWeaponOffset.y;
 		zAxis = zAxis * Player::firstPOVWeaponOffset.z;
 #endif
-
-		glm::vec3 pos = m_camera->getEyePoint() + xAxis + yAxis + zAxis;
+*/
+		glm::vec3 pos;
 //		glm::vec3 pos = m_camera->getTargetPoint() + xAxis + yAxis + zAxis;
+		
+		if (m_grenadeGatherMode)
+		{
+			xAxis = xAxis * wOffset.x;
+			yAxis = yAxis * (wOffset.y + 0.05f);
+			zAxis = zAxis * wOffset.z;
+		}
+		else
+		{
+			xAxis = xAxis * wOffset.x;
+			yAxis = yAxis * wOffset.y;
+			zAxis = zAxis * wOffset.z;	
+		}
+
+		pos = m_camera->getEyePoint() + xAxis + yAxis + zAxis;
+
 		m_curWeapon->setPosition(pos);
 //		m_curWeapon->setScale(0.005);
 
@@ -371,13 +390,14 @@ void Player::switchWeapon(WeaponSlotEnum slot)
 {
 	utl::debug("weapon slot", slot);
 
+	m_grenadeGatherMode = false;
 
 
 
 	if (m_weapons[slot] != NULL)
 	{
 		m_curWeapon = m_weapons[slot];
-		utl::debug("m_curWeapon slot", m_curWeapon->m_slot);
+		utl::debug("m_curWeapon slot", m_curWeapon->m_slotEnum);
 	}
 	else
 	{
@@ -393,13 +413,14 @@ void Player::pickUpWeapon(Weapon* weapon)
 	/*
 	if (m_curWeapon != NULL && m_curWeapon->getType() == weapon->getType())
 	{
-		releaseWeapon(m_curWeapon);
+		dropWeapon(m_curWeapon);
 	}
 	*/
 	
-	utl::debug("		weapon slot", weapon->m_slot); 
+	utl::debug("		weapon slot", weapon->m_slotEnum);
 
-	m_weapons[weapon->m_slot] = weapon;
+	weapon->hasOwner = true;
+	m_weapons[weapon->m_slotEnum] = weapon;
 
 	// if (m_curWeapon->m_slot == MAIN)
 	weapon->setScale(weapon->m_firstPOVScale);
@@ -422,23 +443,71 @@ void Player::pickUpWeapon(Weapon* weapon)
 	*/
 }
 
-
-
-void Player::releaseWeapon()
+Weapon* Player::throwGrenade()
 {
-	m_curWeapon->setScale(0.005);
+	m_grenadeGatherMode = false;
 
+	Weapon* temp = m_curWeapon;
 
+	if (m_weapons[MAIN] != NULL)
+		switchWeapon(MAIN);
+
+	else if (m_weapons[PISTOL] != NULL)
+		switchWeapon(PISTOL);
+
+	else if (m_weapons[MELEE] != NULL)
+		switchWeapon(MELEE);
+
+	else if (m_weapons[PROJECTILE] != NULL)
+		switchWeapon(PROJECTILE);
+
+	else
+		m_curWeapon = NULL;
+
+	return temp;
+}
+
+Weapon* Player::dropWeapon()
+{
+	if (m_curWeapon == NULL)
+		return NULL;
+
+	Weapon* drop = m_curWeapon;
+
+	drop->hasOwner = false;
+	// set it back to world model scale
+	drop->setScale(drop->m_modelScale);
+
+	int slot = m_curWeapon->m_slotEnum;
+
+	slot += 1;
+	if (slot >= NUM_WEAPON_SLOTS)
+	{
+		m_curWeapon = NULL;
+		return drop;
+	}
+
+	m_curWeapon = m_weapons[slot];
+
+	return drop;
 
 //	m_curWeapon = weapon;
 }
 
-
-
-
-
-void Player::fireWeapon(list<Particle>& bullets)
+void Player::reloadWeapon()
 {
+
+
+}
+
+
+void Player::fireWeapon()
+{
+	if (m_curWeapon->m_slotEnum == PROJECTILE)
+	{
+		m_grenadeGatherMode = true;
+	}
+
 	/*
 	Particle bullet;
 
@@ -458,6 +527,13 @@ void Player::fireWeapon(list<Particle>& bullets)
 	*/
 }
 
+
+
+
+bool Player::inGrenadeGatherMode()
+{
+	return m_grenadeGatherMode;
+}
 
 Weapon* Player::getCurWeapon()
 {
@@ -487,6 +563,12 @@ void Player::renderGroup(Pipeline& p, Renderer* r)
 	// render teh weapon
 	if (m_curWeapon != NULL)
 	{
+
+		if (m_grenadeGatherMode)
+		{
+			utl::debug("weapon pos is", m_curWeapon->m_position);
+		}
+
 		m_curWeapon->renderGroup(p, r);
 	}
 }

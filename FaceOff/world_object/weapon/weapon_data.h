@@ -12,7 +12,7 @@ using namespace std;
 struct WeaponData
 {
 	string displayedName;
-	WeaponNameEnum name;
+	WeaponNameEnum nameEnum;
 	int damage;
 	int magazineCapacity;
 	int maxMagazineCount;
@@ -21,7 +21,7 @@ struct WeaponData
 	float firstPOVScale;
 	glm::vec3 firstPOVOffset;
 
-	WeaponSlotEnum slot;
+	WeaponSlotEnum slotEnum;
 //	WeaponTypeEnum type;
 	Model* model;
 };

@@ -32,7 +32,7 @@ void Weapon::setData(WeaponData data)
 	m_magazineCount = data.maxMagazineCount;
 
 //	m_type = data.type;
-	m_name = data.name;
+	m_nameEnum = data.nameEnum;
 
 	m_modelScale = data.modelScale;
 
@@ -42,7 +42,7 @@ void Weapon::setData(WeaponData data)
 	m_firstPOVOffset = data.firstPOVOffset;
 
 
-	m_slot = data.slot;
+	m_slotEnum = data.slotEnum;
 	m_model = data.model;
 
 	m_wireFrameModel = new CubeWireFrameModel(m_model->m_aabb);

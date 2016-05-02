@@ -16,6 +16,8 @@ struct KDTreeNode;
 #include "define.h"
 #include "utility.h"
 
+#include <queue>
+
 #include <GL/glew.h>
 
 
@@ -276,7 +278,9 @@ class FaceOff
 		WorldObject		o_sampleBullet;
 
 		list<Particle> m_bullets;
-
+		queue<int> m_objectIndexPool;
+	//	list<WorldObject*> m_dynamicObjects;
+	
 		int m_defaultPlayerID;
 
 		vector<Player*> m_players;

@@ -50,11 +50,11 @@ class Weapon : public WorldObject
 		float m_firstPOVScale;
 
 
-		WeaponSlotEnum m_slot;
+		WeaponSlotEnum m_slotEnum;
+		WeaponNameEnum m_nameEnum;
 
 	private:
-	//	WeaponTypeEnum m_type;
-		WeaponNameEnum m_name;
+
 
 
 		float m_angle;
