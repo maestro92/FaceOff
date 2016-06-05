@@ -195,6 +195,20 @@ void WorldObject::updateAABB(glm::vec3& maxP, glm::vec3& minP, glm::vec3 pos, gl
 
 
 
+void WorldObject::setAABBByPosition(float x, float y, float z)
+{
+	setPosition(x, y, z);
+	updateAABB();
+}
+
+
+void WorldObject::setAABBByPosition(glm::vec3 pos)
+{
+	setPosition(pos);
+	updateAABB();
+}
+
+
 void WorldObject::updateGameInfo()
 {
 	if (isHit)

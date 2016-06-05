@@ -101,8 +101,12 @@ class WorldObject
 		void renderStaticWireFrameGroup(Pipeline& p, Renderer* r);
 		void renderWireFrameGroup(Pipeline& p, Renderer* r);
 
+	
 		void updateAABB();
 		void updateAABB(glm::vec3& maxP, glm::vec3& minP, glm::vec3 pos, glm::mat4 rotation, glm::vec3 scale);
+		void setAABBByPosition(float x, float y, float z);
+		void setAABBByPosition(glm::vec3 pos);
+
 
 		virtual void updateGameInfo();
 

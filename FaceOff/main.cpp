@@ -361,16 +361,18 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(MAC_11));
 	o_temp->m_name = "MAC_11";
 
-	o_temp->setPosition(-3 * formationGap, 5, -110);
-	o_temp->updateAABB();
+//	o_temp->setPosition(-3 * formationGap, 5, -110);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(-3 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
 	
 	o_temp = new Weapon(m_mm.getWeaponData(AWM));
 	o_temp->m_name = "AWM";
 
-	o_temp->setPosition(-2 * formationGap, 5, -110);
-	o_temp->updateAABB();
+//	o_temp->setPosition(-2 * formationGap, 5, -110);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(-2 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
 
@@ -379,8 +381,9 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(MINIGUN));
 	o_temp->m_name = "MINIGUN";
 
-	o_temp->setPosition(-1 * formationGap, 5, -110);
-	o_temp->updateAABB();
+//	o_temp->setPosition(-1 * formationGap, 5, -110);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(-1 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
 
@@ -388,8 +391,9 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(KNIFE));
 	o_temp->m_name = "knife";
 
-	o_temp->setPosition(formationGap, 5, -110);
-	o_temp->updateAABB();
+//	o_temp->setPosition(formationGap, 5, -110);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
 
@@ -397,8 +401,9 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
 	o_temp->m_name = "FRAG_GRENADE";
 
-	o_temp->setPosition(2 * formationGap, 5, -110);
-	o_temp->updateAABB();
+//	o_temp->setPosition(2 * formationGap, 5, -110);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(2 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
 
@@ -408,16 +413,18 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(MP5));
 	o_temp->m_name = "MP5";
 
-	o_temp->setPosition(-3 * formationGap, 5, -140);
-	o_temp->updateAABB();
+//	o_temp->setPosition(-3 * formationGap, 5, -140);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(-3 * formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 
 
 	o_temp = new Weapon(m_mm.getWeaponData(MG42));
 	o_temp->m_name = "MG42";
 
-	o_temp->setPosition(-2 * formationGap, 5, -140);
-	o_temp->updateAABB();
+//	o_temp->setPosition(-2 * formationGap, 5, -140);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(-2 * formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 	
 
@@ -425,8 +432,9 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(AK_47));
 	o_temp->m_name = "AK 47";
 
-	o_temp->setPosition(-formationGap, 5, -140);
-	o_temp->updateAABB();
+//	o_temp->setPosition(-formationGap, 5, -140);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(-formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 	
 
@@ -436,16 +444,18 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(M16));
 	o_temp->m_name = "M16";
 
-	o_temp->setPosition(formationGap, 5, -140);
-	o_temp->updateAABB();
+//	o_temp->setPosition(formationGap, 5, -140);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 
 
 	o_temp = new Weapon(m_mm.getWeaponData(KATANA));
 	o_temp->m_name = "katana";
 
-	o_temp->setPosition(2 * formationGap, 5, -140);
-	o_temp->updateAABB();
+//	o_temp->setPosition(2 * formationGap, 5, -140);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(2 * formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 
 
@@ -453,9 +463,19 @@ void FaceOff::initObjects()
 	o_temp = new Weapon(m_mm.getWeaponData(PISTOL_SHOTGUN));
 	o_temp->m_name = "shotgun";
 
-	o_temp->setPosition(3 * formationGap, 5, -140);
-	o_temp->updateAABB();
+//	o_temp->setPosition(3 * formationGap, 5, -140);
+//	o_temp->updateAABB();
+	o_temp->setAABBByPosition(3 * formationGap, 5, -140);
 	m_objects.push_back(o_temp);
+
+
+
+
+
+
+
+
+
 
 
 
@@ -498,28 +518,40 @@ void FaceOff::initObjects()
 	}
 	*/
 
-//	Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(AWM));
+
+
+	//	Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(AWM));
 	Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(M16));
-//	Weapon* pistol = new Weapon(m_mm.getWeaponData());
+	//	Weapon* pistol = new Weapon(m_mm.getWeaponData());
 	Weapon* knife = new Weapon(m_mm.getWeaponData(KNIFE));
 	Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
 
-	
+
+
+
+
 	utl::debug("mainWeapon slot", (int)(mainWeapon->m_slotEnum));
 	utl::debug("knife slot", (int)(knife->m_slotEnum));
 	utl::debug("grenade slot", (int)(grenade->m_slotEnum));
-	
+
 
 	m_defaultPlayerID = 0;
 	m_players.push_back(new Player(m_defaultPlayerID));
-	
 
 
-	
+
+
 	m_players[0]->pickUpWeapon(mainWeapon);
 	m_players[0]->pickUpWeapon(knife);
 	m_players[0]->pickUpWeapon(grenade);
-	
+
+
+
+	m_objects.push_back(mainWeapon);
+	m_objects.push_back(knife);
+	m_objects.push_back(grenade);
+
+
 
 
 	Player* p = new Player(1);
@@ -1266,14 +1298,21 @@ void FaceOff::start()
 					break;
 
 				case SDLK_r:
-					
+				{
 					utl::debug("Reloading Weapon");
 					m_players[m_defaultPlayerID]->reloadWeapon();
+				}
 					break;
 
 				case SDLK_g:
+				{
 					utl::debug("Dropping Weapon");
-				//	Weapon* droppedWeapon = m_players[m_defaultPlayerID]->dropWeapon();
+					Weapon* droppedWeapon = m_players[m_defaultPlayerID]->dropWeapon();
+					if (droppedWeapon != NULL)
+					{
+						m_objectKDtree.insert(droppedWeapon);
+					}
+				}
 					break;
 
 
@@ -1586,6 +1625,13 @@ void FaceOff::forwardRender()
 				else
 					names.insert(neighbors[i]->m_name);
 
+				/*
+				if (neighbors[i]->getObjectType() == WEAPON)
+				{
+					continue;
+				}
+				*/
+
 				contactData.pair[0] = m_players[m_defaultPlayerID];
 				contactData.pair[1] = NULL;
 				
@@ -1750,8 +1796,10 @@ void FaceOff::forwardRender()
 			WorldObject* object = m_objects[i];
 			if (object->getObjectType() == WEAPON)
 			{
-				object->renderGroup(m_pipeline, p_renderer);
-				continue;
+				if (((Weapon*)object)->hasOwner == true)
+					continue;				
+				else
+					object->renderGroup(m_pipeline, p_renderer);
 			}
 				
 			if( object->isTested != true && object->isCollided != true && object->isHit != true)
@@ -1781,7 +1829,7 @@ void FaceOff::forwardRender()
 	p_renderer->disableShader();
 
 
-	
+	// Rendering wireframes
 	p_renderer = &m_rm.r_fullVertexColor;
 	p_renderer->enableShader();
 
@@ -1791,7 +1839,13 @@ void FaceOff::forwardRender()
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* object = m_objects[i];
-			// object->renderGroup(m_pipeline, p_renderer, object->m_wireFrameModel);
+
+			if (object->getObjectType() == WEAPON)
+			{
+				if (((Weapon*)object)->hasOwner == true)
+					continue;
+			}
+			
 			object->renderWireFrameGroup(m_pipeline, p_renderer);
 		}
 		

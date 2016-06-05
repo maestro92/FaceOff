@@ -477,8 +477,31 @@ Weapon* Player::dropWeapon()
 	drop->hasOwner = false;
 	// set it back to world model scale
 	drop->setScale(drop->m_modelScale);
+	drop->setRotation(glm::mat4(1.0));
+
+	glm::vec3 pos = this->m_position;
+
+//	utl::debug("player pos is", pos);
+//	utl::debug("zAxis is", this->m_camera->m_zAxis);
+
+
+
+	glm::vec3 dir = this->m_camera->m_zAxis;
+	dir.y = 0.0f;
+
+	dir = glm::normalize(dir);
+
+	pos += -10.0f * dir;
+
+
+//	utl::debug("weapon pos is", pos);
+
+//	drop->setPosition(pos);
+//	drop->updateAABB();
+	drop->setAABBByPosition(pos);
 
 	int slot = m_curWeapon->m_slotEnum;
+	m_weapons[slot] = NULL;
 
 	slot += 1;
 	if (slot >= NUM_WEAPON_SLOTS)
@@ -560,7 +583,7 @@ void Player::renderGroup(Pipeline& p, Renderer* r)
 		WorldObject::renderGroup(p, r);
 	}
 
-	// render teh weapon
+	// render the weapon
 	if (m_curWeapon != NULL)
 	{
 
