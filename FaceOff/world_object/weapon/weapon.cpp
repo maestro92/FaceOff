@@ -7,6 +7,7 @@ Weapon::Weapon()
 //	m_type = MELEE;
 	hasOwner = false;
 	m_angle = 0.0f;
+	m_dynamicType = DYNAMIC;
 }
 
 Weapon::Weapon(WeaponData data)
@@ -14,6 +15,7 @@ Weapon::Weapon(WeaponData data)
 	setData(data);
 	hasOwner = false;
 	m_angle = 0.0f;
+	m_dynamicType = DYNAMIC;
 }
 
 

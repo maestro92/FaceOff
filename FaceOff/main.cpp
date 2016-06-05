@@ -329,6 +329,7 @@ void FaceOff::initObjects()
 	o_temp->setModel(&m_woodenBox);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
+	utl::debug("id is", o_temp->m_instanceId);
 
 
 	o_temp = new WorldObject();
@@ -339,6 +340,7 @@ void FaceOff::initObjects()
 	o_temp->setModel(&m_woodenBox);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
+	utl::debug("id is", o_temp->m_instanceId);
 
 
 	o_temp = new WorldObject();
@@ -348,9 +350,10 @@ void FaceOff::initObjects()
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
 	o_temp->setModel(&m_woodenBox);
 	o_temp->updateAABB();
+	
 	m_objects.push_back(o_temp);
 
-
+	utl::debug("id is", o_temp->m_instanceId);
 
 	float formationGap = 40.0f;
 
@@ -360,18 +363,12 @@ void FaceOff::initObjects()
 
 	o_temp = new Weapon(m_mm.getWeaponData(MAC_11));
 	o_temp->m_name = "MAC_11";
-
-//	o_temp->setPosition(-3 * formationGap, 5, -110);
-//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(-3 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
 	
 	o_temp = new Weapon(m_mm.getWeaponData(AWM));
 	o_temp->m_name = "AWM";
-
-//	o_temp->setPosition(-2 * formationGap, 5, -110);
-//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(-2 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
@@ -380,9 +377,6 @@ void FaceOff::initObjects()
 
 	o_temp = new Weapon(m_mm.getWeaponData(MINIGUN));
 	o_temp->m_name = "MINIGUN";
-
-//	o_temp->setPosition(-1 * formationGap, 5, -110);
-//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(-1 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
@@ -390,9 +384,6 @@ void FaceOff::initObjects()
 
 	o_temp = new Weapon(m_mm.getWeaponData(KNIFE));
 	o_temp->m_name = "knife";
-
-//	o_temp->setPosition(formationGap, 5, -110);
-//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
@@ -400,9 +391,6 @@ void FaceOff::initObjects()
 
 	o_temp = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
 	o_temp->m_name = "FRAG_GRENADE";
-
-//	o_temp->setPosition(2 * formationGap, 5, -110);
-//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(2 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
 
@@ -1180,6 +1168,7 @@ void FaceOff::start()
 
 					if (m_players[m_defaultPlayerID]->inGrenadeGatherMode())
 					{
+						utl::debug("here in Grenade gather mode");
 						Weapon* grenade = m_players[m_defaultPlayerID]->throwGrenade();
 
 					}
@@ -1598,7 +1587,8 @@ void FaceOff::forwardRender()
 		// collision between static object and dynamic object
 		// Game Physics Engine Development P.129
 
-		unordered_set<string> names;
+//		unordered_set<string> names;
+		unordered_set<int> names;
 
 		for (int i = 0; i < neighbors.size(); i++)
 		{
@@ -1620,10 +1610,10 @@ void FaceOff::forwardRender()
 				// 	continue;
 
 				// ground was getting inserted twice. We dont want that!
-				if (names.find(neighbors[i]->m_name) != names.end())
+				if (names.find(neighbors[i]->m_instanceId) != names.end())
 					continue;
 				else
-					names.insert(neighbors[i]->m_name);
+					names.insert(neighbors[i]->m_instanceId);
 
 				/*
 				if (neighbors[i]->getObjectType() == WEAPON)

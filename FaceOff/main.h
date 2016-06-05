@@ -293,8 +293,6 @@ class FaceOff
 		KDTree m_objectKDtree;
 
 
-
-
 	public:
 
 		Player p;

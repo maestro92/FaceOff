@@ -26,6 +26,12 @@ const glm::vec3 POS_HALF_GRAVITY = glm::vec3(0, 4.9, 0);
 using namespace std;
 
 
+enum DynamicType
+{
+	STATIC = 0,
+	DYNAMIC
+};
+
 
 enum WorldObjectType
 {
@@ -50,9 +56,11 @@ class WorldObject
 
 		int isHitCounter;
 
+		DynamicType m_dynamicType;
 
 		virtual WorldObjectType getObjectType();
-        
+		DynamicType getDynamicType();
+
 		AABB m_aabb;
 		
 		glm::vec3 m_position;

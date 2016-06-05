@@ -66,6 +66,8 @@ Player::Player(int id)
 //	addWeapon(new AssultRifle("Ak-47"));
 
 	m_healthBarGUI = NULL;
+
+	m_dynamicType = DYNAMIC;
 }
 
 Player::~Player()
@@ -447,7 +449,7 @@ Weapon* Player::throwGrenade()
 {
 	m_grenadeGatherMode = false;
 
-	Weapon* temp = m_curWeapon;
+	Weapon* grenade = m_curWeapon;
 
 	if (m_weapons[MAIN] != NULL)
 		switchWeapon(MAIN);
@@ -464,7 +466,39 @@ Weapon* Player::throwGrenade()
 	else
 		m_curWeapon = NULL;
 
-	return temp;
+	/*
+	temp->setAABBByPosition(this->getPosition());
+
+	glm::vec3 dir = -this->m_camera->m_zAxis;
+	dir = 5.0f * dir;
+
+	temp->setVelocity(dir);
+	*/
+
+
+	grenade->hasOwner = false;
+	// set it back to world model scale
+	grenade->setScale(grenade->m_modelScale);
+	grenade->setRotation(glm::mat4(1.0));
+
+
+	// glm::vec3 pos = this->getPosition() - 50.0f * this->m_camera->m_zAxis;
+	
+//	utl::debug("pos is ", this->getPosition());
+//	utl::debug("fire pos is", this->getFirePosition());
+
+
+	grenade->setAABBByPosition(this->getFirePosition());
+
+	glm::vec3 dir = -this->m_camera->m_zAxis;
+	dir = 5.0f * dir;
+	grenade->setVelocity(dir);
+
+	// utl::debug("ThrowGrenade pos is", pos);
+	// grenade->setVelocity(pos);
+
+
+	return grenade;
 }
 
 Weapon* Player::dropWeapon()
@@ -480,18 +514,13 @@ Weapon* Player::dropWeapon()
 	drop->setRotation(glm::mat4(1.0));
 
 	glm::vec3 pos = this->m_position;
-
-//	utl::debug("player pos is", pos);
-//	utl::debug("zAxis is", this->m_camera->m_zAxis);
-
-
-
 	glm::vec3 dir = this->m_camera->m_zAxis;
 	dir.y = 0.0f;
 
 	dir = glm::normalize(dir);
 
 	pos += -10.0f * dir;
+
 
 
 //	utl::debug("weapon pos is", pos);

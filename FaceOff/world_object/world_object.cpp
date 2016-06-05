@@ -17,6 +17,8 @@ WorldObject::WorldObject()
 	m_model = DEFAULT_MODEL;
 	isTested = isCollided = isHit = alreadyFireTested = false;
 	isHitCounter = 0;
+
+	m_dynamicType = STATIC;
 }
 
 
@@ -51,6 +53,11 @@ void WorldObject::renderGroup(Pipeline& p, Renderer* r, int pass)
 WorldObjectType WorldObject::getObjectType()
 {
 	return SCENE_OBJECT;
+}
+
+DynamicType WorldObject::getDynamicType()
+{
+	return m_dynamicType;
 }
 
 /*
