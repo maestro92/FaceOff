@@ -181,10 +181,14 @@ void FaceOff::initObjects()
 	float zbound = 150;
 	*/
 
+	float wallWidth = 10.0f;
+
 	float xbound = 150;
 	float ybound = 50;
 	float zbound = 150;
 
+	float xboundWithWalls = 150 + wallWidth * 2;
+	float zboundWithWalls = 150 + wallWidth * 2;
 
 	scale = 150;
 	WorldObject* o_temp = new WorldObject();
@@ -199,38 +203,39 @@ void FaceOff::initObjects()
 
 	o_temp = new WorldObject();
 	o_temp->m_name = "south wall";
-	o_temp->setScale(xbound, ybound / 2, 1.0);
-	o_temp->setPosition(0, ybound / 2, zbound);
-	o_temp->setModel(&m_groundModel);
+	o_temp->setScale(xbound, ybound / 2, wallWidth);
+	o_temp->setPosition(0, ybound / 2, zbound + wallWidth);
+//	o_temp->setModel(&m_groundModel);
+	o_temp->setModel(m_mm.m_cube);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 
 
 	o_temp = new WorldObject();
 	o_temp->m_name = "north wall";
-	o_temp->setScale(xbound, ybound / 2, 1.0);
-	o_temp->setPosition(0, ybound / 2, -zbound);
-	o_temp->setModel(&m_groundModel);
+	o_temp->setScale(xbound, ybound / 2, wallWidth);
+	o_temp->setPosition(0, ybound / 2, -zbound - wallWidth);
+	o_temp->setModel(m_mm.m_cube);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 
 	
 	o_temp = new WorldObject();
 	o_temp->m_name = "west wall";
-	o_temp->setScale(xbound, ybound / 2, 1.0);
-	o_temp->setRotation(glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f));
-	o_temp->setPosition(-xbound, ybound / 2, -0.0);
-	o_temp->setModel(&m_groundModel);
+	o_temp->setScale(wallWidth, ybound / 2, zbound);
+	// o_temp->setRotation(glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f));
+	o_temp->setPosition(-xbound - wallWidth, ybound / 2, 0.0);
+	o_temp->setModel(m_mm.m_cube);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 
 
 	o_temp = new WorldObject();
 	o_temp->m_name = "east wall";
-	o_temp->setScale(xbound, ybound / 2, 1.0);
-	o_temp->setRotation(glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f));
-	o_temp->setPosition(xbound, ybound / 2, 0.0);
-	o_temp->setModel(&m_groundModel);
+	o_temp->setScale(wallWidth, ybound / 2, zbound);
+	// o_temp->setRotation(glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f));
+	o_temp->setPosition(xbound + wallWidth, ybound / 2, 0.0);
+	o_temp->setModel(m_mm.m_cube);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 	
@@ -388,12 +393,12 @@ void FaceOff::initObjects()
 	m_objects.push_back(o_temp);
 
 
-
+	/*
 	o_temp = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
 	o_temp->m_name = "FRAG_GRENADE";
 	o_temp->setAABBByPosition(2 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
-
+	*/
 
 
 
@@ -484,7 +489,7 @@ void FaceOff::initObjects()
 	}
 
 
-	m_objectKDtree.build(objectsForKDTree, glm::vec3(xbound + 1, ybound + 1, zbound + 1), glm::vec3(-xbound - 1, -1, -zbound - 1));
+	m_objectKDtree.build(objectsForKDTree, glm::vec3(xboundWithWalls + 1, ybound + 1, zboundWithWalls + 1), glm::vec3(-xboundWithWalls - 1, -1, -zboundWithWalls - 1));
 
 
 
@@ -1286,6 +1291,12 @@ void FaceOff::start()
 					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
 					break;
 
+
+				case SDLK_9:
+				//	if (m_players[m_defaultPlayerID]->has
+					break;
+
+
 				case SDLK_r:
 				{
 					utl::debug("Reloading Weapon");
@@ -1583,12 +1594,11 @@ void FaceOff::forwardRender()
 		glm::vec3 volNearPoint(m_players[m_defaultPlayerID]->m_position);
 		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], volNearPoint, neighbors);
 
-
+		m_players[m_defaultPlayerID]->m_boundingSphere.center = m_players[m_defaultPlayerID]->m_position;
 		// collision between static object and dynamic object
-		// Game Physics Engine Development P.129
+		// Game Physics Engine Development P.109 - 119
 
-//		unordered_set<string> names;
-		unordered_set<int> names;
+		unordered_set<int> objectsAlreadyTested;
 
 		for (int i = 0; i < neighbors.size(); i++)
 		{
@@ -1596,24 +1606,17 @@ void FaceOff::forwardRender()
 
 			ContactData contactData;
 	
-			//utl::debug("player position", m_players[m_defaultPlayerID]->m_position);
-			//utl::debug("bounding sphere center", m_players[m_defaultPlayerID]->m_boundingSphere.center);
-			//utl::debug("bounding sphere radius", m_players[m_defaultPlayerID]->m_boundingSphere.radius);
-
 			if (CollisionDetection::testSphereAABB(m_players[m_defaultPlayerID]->m_boundingSphere, 
 													neighbors[i]->m_aabb, 
 													contactData))
 			{
 				neighbors[i]->isCollided = true;
-				
-				// if (neighbors[i]->m_name == "ground")
-				// 	continue;
 
 				// ground was getting inserted twice. We dont want that!
-				if (names.find(neighbors[i]->m_instanceId) != names.end())
+				if (objectsAlreadyTested.find(neighbors[i]->m_instanceId) != objectsAlreadyTested.end())
 					continue;
 				else
-					names.insert(neighbors[i]->m_instanceId);
+					objectsAlreadyTested.insert(neighbors[i]->m_instanceId);
 
 				/*
 				if (neighbors[i]->getObjectType() == WEAPON)
@@ -1626,10 +1629,6 @@ void FaceOff::forwardRender()
 				contactData.pair[1] = NULL;
 				
 
-				//utl::debug("neighbors[i]", neighbors[i]->m_name);
-				//utl::debug("contactData normal", contactData.normal);
-				//utl::debug("contactData depth", contactData.penetrationDepth);
-				//
 
 				contactData.resolveVelocity();
 				contactData.resolveInterpenetration();
@@ -1638,13 +1637,13 @@ void FaceOff::forwardRender()
 		}
 
 
-		m_players[m_defaultPlayerID]->updateGameStatus();
+		m_players[m_defaultPlayerID]->updateGameStats();
 
 
 
 
-
-
+	//	utl::debug("player pos is ", m_players[m_defaultPlayerID]->m_position);
+	//	utl::debug("player vel is ", m_players[m_defaultPlayerID]->m_velocity);
 
 
 		int tempId = 2;
@@ -1665,7 +1664,6 @@ void FaceOff::forwardRender()
 		m_players[tempId]->updateAABB();
 
 		for (int i = 0; i < m_players.size(); i++)
-//		for (int i = 0; i < 1; i++)
 		{
 			Player* p = m_players[i];
 
@@ -1680,32 +1678,18 @@ void FaceOff::forwardRender()
 			p->m_parentNodes.clear();
 
 			m_objectKDtree.insert(m_players[i]);
-
-
-			/*
-			if (i == 2)
-			{
-				for (int j = 0; j < p->m_parentNodes.size(); j++)
-				{
-					KDTreeNode* kNode = p->m_parentNodes[j];
-			//		utl::debug("node max", kNode->m_aabb.max);
-			//		utl::debug("node min", kNode->m_aabb.min);
-				}
-			}
-			*/
 		}
 
-//		m_objectKDtree.insert(m_players[m_defaultPlayerID]);
-
-		
 
 		// collision detection
 		m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
 
-
 		o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
-//		o_skybox.setPosition(-m_players[m_defaultPlayerID]->m_camera->getTargetPoint());
 	}
+
+
+
+
 
 
 
@@ -1714,9 +1698,148 @@ void FaceOff::forwardRender()
 
 	for (int i = 0; i<m_objects.size(); i++)
 	{
-		m_objects[i]->updateGameInfo();
+		WorldObject* object = m_objects[i];
+
+		object->updateGameInfo();
+
+		
+		if (object->getDynamicType() == STATIC)
+		{
+			continue;
+		}
+
+		if (object->getObjectType() == WEAPON)
+		{
+			Weapon* wObject = (Weapon*)object;
+
+			if (wObject->hasOwner == true || wObject->m_slotEnum != PROJECTILE)
+			{
+				continue;
+			}
+		}
+
+		/*
+		utl::debug("	*** testing");
+		utl::debug("object name is", object->m_name);
+		utl::debug("object pos is", object->m_position);
+		utl::debug("object vel is", object->m_velocity);
+		*/
+
+		object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
+		object->m_position += object->m_velocity;
+		object->updateAABB();
+
+
+		vector<WorldObject*> neighbors;
+		glm::vec3 volNearPoint(object->m_position);
+		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, object, volNearPoint, neighbors);
+
+
+		
+		unordered_set<int> objectsAlreadyTested;
+
+		// utl::debug("neighbor size is", neighbors.size());
+		for (int i = 0; i < neighbors.size(); i++)
+		{
+			ContactData contactData;
+			WorldObject* neighbor = neighbors[i];
+
+			if (neighbor->getObjectType() == PLAYER)
+			{
+				continue;
+			}
+
+
+			if (CollisionDetection::testAABBAABB(object->m_aabb,
+				neighbor->m_aabb,
+				contactData))
+			{
+
+				// ground was getting inserted twice. We dont want that!
+				if (objectsAlreadyTested.find(neighbor->m_instanceId) != objectsAlreadyTested.end())
+					continue;
+				else
+					objectsAlreadyTested.insert(neighbor->m_instanceId);
+
+				
+				if (neighbor->getObjectType() == WEAPON)
+				{
+					continue;
+				}
+				
+				
+				// utl::debug("object name is", object->m_name);
+				/*
+				utl::debug("normal is", contactData.normal);
+				utl::debug("neighbor name is", neighbor->m_name);
+				*/
+
+				contactData.pair[0] = object;
+				contactData.pair[1] = NULL;
+
+				contactData.resolveVelocity1();
+				contactData.resolveInterpenetration();
+			}
+		}
+
+		object->updateAABB();
+
+		for (int j = object->m_parentNodes.size() - 1; j >= 0; j--)
+		{
+			KDTreeNode* kNode = object->m_parentNodes[j];
+			(kNode->m_objects2).erase(object->m_instanceId);
+			//		p->m_parentNodes.pop_back();
+		}
+		object->m_parentNodes.clear();
+
+		m_objectKDtree.insert(object);
+
+		/*
+		vector<WorldObject*> neighbors;
+		glm::vec3 volNearPoint(m_objects[i]->m_position);
+		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_objects[i], volNearPoint, neighbors);
+		
+		unordered_set<int> objectsAlreadyTested;
+
+		for (int i = 0; i < neighbors.size(); i++)
+		{
+			neighbors[i]->isTested = true;
+
+			ContactData contactData;
+
+			if (CollisionDetection::testSphereAABB(m_players[m_defaultPlayerID]->m_boundingSphere,
+				neighbors[i]->m_aabb,
+				contactData))
+			{
+				neighbors[i]->isCollided = true;
+
+				if (names.find(neighbors[i]->m_instanceId) != names.end())
+					continue;
+				else
+					names.insert(neighbors[i]->m_instanceId);
+
+				contactData.pair[0] = m_players[m_defaultPlayerID];
+				contactData.pair[1] = NULL;
+
+				contactData.resolveVelocity();
+				contactData.resolveInterpenetration();
+
+			}
+		}
+		*/
+
+
 	}
 	
+
+
+
+
+
+
+
+
+
 	for (int i = 0; i < m_players.size(); i++)
 	{
 		m_players[i]->updateGameInfo();

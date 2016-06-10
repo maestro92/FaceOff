@@ -21,6 +21,7 @@ using namespace std;
 	- angular velocity
 */
 
+const float VEL_THRESHOLD = 0.0005;
 
 struct ContactData
 {
@@ -29,10 +30,15 @@ struct ContactData
 	glm::vec3 normal;
 	float penetrationDepth;
 	float restitution;
+	float friction;
 
 	ContactData();
+
+	float calculateSeparatingVelocity();
+
 	void resolve();
 	void resolveVelocity();
+	void resolveVelocity1();
 	void resolveInterpenetration();
 };
 

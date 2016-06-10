@@ -12,13 +12,14 @@ WorldObject::WorldObject()
     m_rotation = glm::mat4(1.0);
 
 	m_mass = 1.0;
-	m_invMass = 1.0/m_invMass;
+	m_invMass = 1.0 / m_mass;
 	
 	m_model = DEFAULT_MODEL;
 	isTested = isCollided = isHit = alreadyFireTested = false;
 	isHitCounter = 0;
 
 	m_dynamicType = STATIC;
+	m_BVType = BV_AABB;
 }
 
 
@@ -58,6 +59,12 @@ WorldObjectType WorldObject::getObjectType()
 DynamicType WorldObject::getDynamicType()
 {
 	return m_dynamicType;
+}
+
+
+BVEnum WorldObject::getBoundingVolumeType()
+{
+	return m_BVType;
 }
 
 /*
@@ -179,9 +186,6 @@ void WorldObject::updateAABB(glm::vec3& maxP, glm::vec3& minP, glm::vec3 pos, gl
 
 		for (int j = 0; j < 3; j++)
 		{
-//			float e = M[i][j] * m_model->m_minP[j];
-//			float f = M[i][j] * m_model->m_maxP[j];
-
 			float e = M[i][j] * m_model->m_aabb.min[j];
 			float f = M[i][j] * m_model->m_aabb.max[j];
 

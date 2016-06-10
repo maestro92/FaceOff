@@ -60,15 +60,21 @@ class WorldObject
 
 		virtual WorldObjectType getObjectType();
 		DynamicType getDynamicType();
+		BVEnum getBoundingVolumeType();
+
+		BVEnum m_BVType;
 
 		AABB m_aabb;
 		
+
 		glm::vec3 m_position;
         glm::vec3 m_velocity;
         glm::vec3 m_scale;
         glm::mat4 m_rotation;
 		glm::mat4 m_modelRotation;
 		glm::mat4 m_modelMatrix;
+
+		float m_longestExtentFromCenter;
 
 		float m_mass;
 		float m_invMass;
@@ -90,8 +96,12 @@ class WorldObject
 		inline void updateModelMatrix();
 
 		inline glm::vec3 getPosition();
+		inline glm::vec3 getVelocity();
 		inline glm::vec3 getScale();
 		inline glm::mat4 getRotation();
+
+		inline float getMass();
+		inline float getInvMass();
 
         virtual inline void setRotation(glm::mat4 rot);
 
@@ -183,6 +193,11 @@ inline glm::vec3 WorldObject::getPosition()
 	return m_position;
 }
 
+inline glm::vec3 WorldObject::getVelocity()
+{
+	return m_velocity;
+}
+
 inline glm::vec3 WorldObject::getScale()
 {
 	return m_scale;
@@ -207,6 +222,17 @@ inline void WorldObject::setModel(Model* model)
 inline void WorldObject::updateModelMatrix()
 {
 	m_modelMatrix = glm::translate(m_position) * m_rotation * glm::scale(m_scale);
+}
+
+
+inline float WorldObject::getMass()
+{
+	return m_mass;
+}
+
+inline float WorldObject::getInvMass()
+{
+	return m_invMass;
 }
 
 

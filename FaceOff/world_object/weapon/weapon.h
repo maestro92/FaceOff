@@ -25,13 +25,9 @@ class Weapon : public WorldObject
 		Weapon(WeaponData data);
 		~Weapon();
 
-		void setData(WeaponData data);
 
-		// void setType(WeaponTypeEnum type);
-		int getType();
-
-		void setName(WeaponNameEnum type);
-		int getName();
+		WeaponSlotEnum m_slotEnum;
+		WeaponNameEnum m_nameEnum;
 
 		int m_damage;
 		Magazine m_magazine;
@@ -41,7 +37,6 @@ class Weapon : public WorldObject
 
 		bool hasOwner;
 
-		virtual WorldObjectType getObjectType();
 
 		float m_modelScale;
 
@@ -50,8 +45,20 @@ class Weapon : public WorldObject
 		float m_firstPOVScale;
 
 
-		WeaponSlotEnum m_slotEnum;
-		WeaponNameEnum m_nameEnum;
+
+
+
+
+		void setData(WeaponData data);
+
+		// void setType(WeaponTypeEnum type);
+		int getType();
+
+		void setName(WeaponNameEnum type);
+		int getName();
+
+		WorldObjectType getObjectType();
+
 
 	private:
 

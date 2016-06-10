@@ -23,6 +23,9 @@ void ModelManager::init()
 	m_tree = new ImportedModel("Assets/tree.obj", textures);
 
 
+	m_cube = new ImportedModel("Assets/models/unit_cube.obj");
+
+
 	m_healthBar = new QuadModel(1, 1);
 
 

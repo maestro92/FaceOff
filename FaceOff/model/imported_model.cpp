@@ -85,10 +85,6 @@ bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename
         initMesh(i, mesh, scene);
     }
 
-
-
-
-	
     utl::debug("m_meshes size", m_meshes.size());
     utl::debug("m_textures size", m_textures.size());
 	/*

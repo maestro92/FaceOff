@@ -68,6 +68,7 @@ Player::Player(int id)
 	m_healthBarGUI = NULL;
 
 	m_dynamicType = DYNAMIC;
+	m_BVType = BV_SPHERE;
 }
 
 Player::~Player()
@@ -125,7 +126,7 @@ void Player::control()
 
 
 
-void Player::updateGameStatus()
+void Player::updateGameStats()
 {
 	
 	static bool incrFlag = false;
@@ -260,7 +261,7 @@ void Player::updateWeaponTransform()
 }
 
 
-WorldObjectType Player::getWorldObject()
+WorldObjectType Player::getObjectType()
 {
 	return PLAYER; 
 }
@@ -410,6 +411,12 @@ void Player::switchWeapon(WeaponSlotEnum slot)
 }
 
 
+bool Player::hasWeaponAtSlot(WeaponSlotEnum slot)
+{
+	return m_weapons[slot] != NULL;
+
+}
+
 void Player::pickUpWeapon(Weapon* weapon)
 {
 	/*
@@ -491,10 +498,13 @@ Weapon* Player::throwGrenade()
 	grenade->setAABBByPosition(this->getFirePosition());
 
 	glm::vec3 dir = -this->m_camera->m_zAxis;
-	dir = 5.0f * dir;
+	dir = 2.0f * dir;
 	grenade->setVelocity(dir);
 
-	// utl::debug("ThrowGrenade pos is", pos);
+
+	utl::debug("ThrowGrenade pos is", this->getFirePosition());
+	utl::debug("ThrowGrenade dir is", dir);
+
 	// grenade->setVelocity(pos);
 
 
@@ -618,7 +628,7 @@ void Player::renderGroup(Pipeline& p, Renderer* r)
 
 		if (m_grenadeGatherMode)
 		{
-			utl::debug("weapon pos is", m_curWeapon->m_position);
+		//	utl::debug("weapon pos is", m_curWeapon->m_position);
 		}
 
 		m_curWeapon->renderGroup(p, r);

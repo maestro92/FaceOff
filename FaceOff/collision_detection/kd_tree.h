@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "renderer.h"
 #include "model.h"
+#include "collision_detection.h"
 // #include "player.h"
 using namespace std;
 #include "bounding_volume.h"
@@ -59,7 +60,7 @@ class KDTree
 
 		// void visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt);
 		// void visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
-		void visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
+		void visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects);
 
 
 

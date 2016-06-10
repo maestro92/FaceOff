@@ -55,6 +55,7 @@ class ModelManager
 		Model* m_healthBar;
 		Model* m_xyzAxis;
 		Model* m_tree;
+		Model* m_cube;
 
 		const mValue& findValue(const mObject& obj, const string& name);
 		glm::vec3 findVec3(const mObject& obj, const string& name);

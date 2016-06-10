@@ -86,7 +86,7 @@ class Player : public WorldObject
 		void control(KDTree* t);
 
 
-		void updateGameStatus();
+		void updateGameStats();
 		void updateCamera(Pipeline& p);
 
 		void updateModel();
@@ -104,6 +104,8 @@ class Player : public WorldObject
 		void reloadWeapon();
 		Weapon* getCurWeapon();
 
+		bool hasWeaponAtSlot(WeaponSlotEnum slot);
+
 		void fireWeapon();
 		Weapon* throwGrenade();
 
@@ -114,7 +116,7 @@ class Player : public WorldObject
 		Bar* m_armorBarGUI;
 		Bar* m_ammoBarGUI;
 
-		virtual WorldObjectType getWorldObject();
+		WorldObjectType getObjectType();
 
 		bool inGrenadeGatherMode();
 

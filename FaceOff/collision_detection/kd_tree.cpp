@@ -615,7 +615,7 @@ void KDTree::visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<W
 }
 #endif
 
-void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
+void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects)
 {
 	if (node == NULL)
 		return;
@@ -628,29 +628,38 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::ve
 	{
 		for (auto it = node->m_objects2.begin(); it != node->m_objects2.end(); it++)
 		{
-			if (it->second->m_instanceId == player->m_instanceId)
+			if (it->second->m_instanceId == testObject->m_instanceId)
 				continue;
 			objects.push_back(it->second);
 		}
 		return;
 	}
 
-	int first = player->m_position[dir] > val;
+	int first = testObject->m_position[dir] > val;
 
-	visitOverlappedNodes(node->m_child[first], player, volNearPt, objects);
+	visitOverlappedNodes(node->m_child[first], testObject, volNearPt, objects);
 
 
 	float oldValue = volNearPt[dir];
 	volNearPt[dir] = val;
 
-	if (glm::length2(volNearPt - player->m_position) < (player->m_scale.x * player->m_scale.x))
+
+	if (testObject->getBoundingVolumeType() == BV_SPHERE)
 	{
-		visitOverlappedNodes(node->m_child[first ^ 1], player, volNearPt, objects);
+		if (glm::length2(volNearPt - testObject->m_position) < (testObject->m_scale.x * testObject->m_scale.x))
+		{
+			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects);
+		}
+	}
+	else if (testObject->getBoundingVolumeType() == BV_AABB)
+	{
+		if (CollisionDetection::testAABBAABB(testObject->m_aabb, node->m_child[first ^ 1]->m_aabb))
+		{
+			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects);
+		}
 	}
 
-
 	volNearPt[dir] = oldValue;
-	
 }
 
 
