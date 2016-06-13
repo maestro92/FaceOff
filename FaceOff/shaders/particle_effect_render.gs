@@ -17,7 +17,7 @@ out vec2 gf_UV;
 
 void main()
 {                                
-    vec3 pos = gl_in[0].gl_Position.xyz - u_centerPosition;                                            
+    vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(u_eyePoint - pos);                                    
     vec3 up = vec3(0.0, 1.0, 0.0);
     vec3 right = cross(toCamera, up) * u_billBoardSize;                              
@@ -25,7 +25,7 @@ void main()
     up = cross(right, toCamera);
     up = normalize(up);
 
-    pos -= right;
+    pos -= right * 0.5;
     gl_Position = u_modelViewProjMat * vec4(pos, 1.0);                                             
     gf_UV = vec2(0.0, 0.0);
     EmitVertex();

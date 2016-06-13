@@ -278,7 +278,7 @@ class FaceOff
 		SkyBox          o_skybox;
 		WorldObject		o_sampleBullet;
 
-		ParticleEffect		o_grenadeParticleEffect;
+
 
 		list<Particle> m_bullets;
 		queue<int> m_objectIndexPool;
@@ -317,6 +317,9 @@ class FaceOff
 
 
 		vector<WorldObject*> m_objects;
+		queue<WorldObject*> m_emptyBucketPool;
+
+		vector<ParticleEffect*> m_particleEffects;
 
 		FaceOff();
 		~FaceOff();

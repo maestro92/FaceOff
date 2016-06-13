@@ -5,6 +5,7 @@
 #include "imported_model.h"
 #include "weapon_enum.h"
 #include "weapon_data.h"
+#include "particle_effect.h"
 
 using namespace std;
 
@@ -26,8 +27,7 @@ class Weapon : public WorldObject
 		~Weapon();
 
 
-		WeaponSlotEnum m_slotEnum;
-		WeaponNameEnum m_nameEnum;
+
 
 		int m_damage;
 		Magazine m_magazine;
@@ -36,7 +36,6 @@ class Weapon : public WorldObject
 		virtual void updateGameInfo();
 
 		bool hasOwner;
-
 
 		float m_modelScale;
 
@@ -60,11 +59,33 @@ class Weapon : public WorldObject
 		WorldObjectType getObjectType();
 
 
+
+
+
+		ParticleEffect* explode();
+
+
+		void startExplodeDelayTimer();
+
+
+		WeaponSlotEnum getWeaponSlot();
+		WeaponNameEnum getWeaponName();
+
+		bool shouldExplode();
+		
 	private:
+		long long m_explodeDelayStartTime;
+		long long m_explodeDelayTime;
 
-
+		bool m_explodeDelayMode;
+		bool m_readyToExplode;
 
 		float m_angle;
+
+
+
+		WeaponSlotEnum m_slotEnum;
+		WeaponNameEnum m_nameEnum;
 };
 
 

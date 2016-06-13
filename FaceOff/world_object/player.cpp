@@ -400,7 +400,7 @@ void Player::switchWeapon(WeaponSlotEnum slot)
 	if (m_weapons[slot] != NULL)
 	{
 		m_curWeapon = m_weapons[slot];
-		utl::debug("m_curWeapon slot", m_curWeapon->m_slotEnum);
+		utl::debug("m_curWeapon slot", m_curWeapon->getWeaponSlot());
 	}
 	else
 	{
@@ -426,10 +426,10 @@ void Player::pickUpWeapon(Weapon* weapon)
 	}
 	*/
 	
-	utl::debug("		weapon slot", weapon->m_slotEnum);
+	utl::debug("		weapon slot", weapon->getWeaponSlot());
 
 	weapon->hasOwner = true;
-	m_weapons[weapon->m_slotEnum] = weapon;
+	m_weapons[weapon->getWeaponSlot()] = weapon;
 
 	// if (m_curWeapon->m_slot == MAIN)
 	weapon->setScale(weapon->m_firstPOVScale);
@@ -501,6 +501,7 @@ Weapon* Player::throwGrenade()
 	dir = 2.0f * dir;
 	grenade->setVelocity(dir);
 
+	grenade->startExplodeDelayTimer();
 
 	utl::debug("ThrowGrenade pos is", this->getFirePosition());
 	utl::debug("ThrowGrenade dir is", dir);
@@ -539,7 +540,7 @@ Weapon* Player::dropWeapon()
 //	drop->updateAABB();
 	drop->setAABBByPosition(pos);
 
-	int slot = m_curWeapon->m_slotEnum;
+	int slot = m_curWeapon->getWeaponSlot();
 	m_weapons[slot] = NULL;
 
 	slot += 1;
@@ -565,7 +566,7 @@ void Player::reloadWeapon()
 
 void Player::fireWeapon()
 {
-	if (m_curWeapon->m_slotEnum == PROJECTILE)
+	if (m_curWeapon->getWeaponSlot() == PROJECTILE)
 	{
 		m_grenadeGatherMode = true;
 	}

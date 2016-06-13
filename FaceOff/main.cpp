@@ -515,17 +515,15 @@ void FaceOff::initObjects()
 
 	//	Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(AWM));
 	Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(M16));
+	mainWeapon->m_name = "player mainWeapon";
+
 	//	Weapon* pistol = new Weapon(m_mm.getWeaponData());
 	Weapon* knife = new Weapon(m_mm.getWeaponData(KNIFE));
+	knife->m_name = "player knife";
+
 	Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	grenade->m_name = "player grenade";
 
-
-
-
-
-	utl::debug("mainWeapon slot", (int)(mainWeapon->m_slotEnum));
-	utl::debug("knife slot", (int)(knife->m_slotEnum));
-	utl::debug("grenade slot", (int)(grenade->m_slotEnum));
 
 
 	m_defaultPlayerID = 0;
@@ -570,14 +568,14 @@ void FaceOff::initObjects()
 
 
 	// Grenade particle effect
-	o_grenadeParticleEffect.setPosition(glm::vec3(0.0, 0.0, 0.0));
-	o_grenadeParticleEffect.setScale(50.0);
+	ParticleEffect* sampleEffect = new ParticleEffect();
+	sampleEffect->setPosition(glm::vec3(0.0, 0.0, 0.0));
+	sampleEffect->setScale(50.0);
 
-	o_grenadeParticleEffect.init();
+	sampleEffect->init();
+	sampleEffect->setTexture("Assets/fireworks_red.jpg");
 
-
-
-	o_grenadeParticleEffect.setTexture("Assets/fireworks_red.jpg");
+	m_particleEffects.push_back(sampleEffect);
 }
 
 
@@ -1700,40 +1698,71 @@ void FaceOff::forwardRender()
 
 
 
-
-
-
-
-
-
-	for (int i = 0; i<m_objects.size(); i++)
+	
+	for (int i = 0; i < m_objects.size(); i++)
 	{
 		WorldObject* object = m_objects[i];
+
+		if (object == NULL)
+			continue;
 
 		object->updateGameInfo();
 
 		
+		if (object->getObjectType() == WEAPON)
+		{
+			Weapon* wObject = (Weapon*)object;
+			if (wObject->getWeaponSlot() == PROJECTILE && wObject->shouldExplode())
+			{
+				utl::debug("Exploding");
+				
+				ParticleEffect* effect = wObject->explode();
+
+				
+
+				m_particleEffects.push_back(effect); 
+			
+		
+				delete wObject;
+				wObject = NULL;
+				m_objects[i] = NULL;
+			}
+		}
+		
+	}
+	
+
+	for (int i = 0; i<m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+		
+
+		if (object == NULL)
+			continue;
+		
+
+//		object->updateGameInfo();
+
+
+
 		if (object->getDynamicType() == STATIC)
 		{
 			continue;
 		}
 
+		// utl::debug("object name is", object->m_name);
+		
 		if (object->getObjectType() == WEAPON)
 		{
 			Weapon* wObject = (Weapon*)object;
 
-			if (wObject->hasOwner == true || wObject->m_slotEnum != PROJECTILE)
+			if (wObject->hasOwner == true || wObject->getWeaponSlot() != PROJECTILE)
 			{
 				continue;
 			}
 		}
 
-		/*
-		utl::debug("	*** testing");
-		utl::debug("object name is", object->m_name);
-		utl::debug("object pos is", object->m_position);
-		utl::debug("object vel is", object->m_velocity);
-		*/
+
 
 		object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
 		object->m_position += object->m_velocity;
@@ -1853,6 +1882,7 @@ void FaceOff::forwardRender()
 	for (int i = 0; i < m_players.size(); i++)
 	{
 		m_players[i]->updateGameInfo();
+
 	}
 	/*
 	for (int i = 0; i<m_objects.size(); i++)
@@ -1917,6 +1947,11 @@ void FaceOff::forwardRender()
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* object = m_objects[i];
+			
+			if (object == NULL)
+				continue;
+			
+			
 			if (object->getObjectType() == WEAPON)
 			{
 				if (((Weapon*)object)->hasOwner == true)
@@ -1931,8 +1966,8 @@ void FaceOff::forwardRender()
 			}
 		}
 
-		//	utl::debug("1 max", m_players[1]->m_aabb.max);
-		//	utl::debug("1 min", m_players[1]->m_aabb.min);
+
+
 
 		for (int i = 0; i < m_players.size(); i++)
 		{
@@ -1963,6 +1998,10 @@ void FaceOff::forwardRender()
 		{
 			WorldObject* object = m_objects[i];
 
+			if (object == NULL)
+				continue;
+
+
 			if (object->getObjectType() == WEAPON)
 			{
 				if (((Weapon*)object)->hasOwner == true)
@@ -1980,9 +2019,6 @@ void FaceOff::forwardRender()
 
 			Player* player = m_players[i];
 
-			// utl::debug("max", player->m_aabb.max);
-			// utl::debug("min", player->m_aabb.min);
-			// utl::debug("pos", player->m_position);
 			player->renderWireFrameGroup(m_pipeline, p_renderer);
 
 		}
@@ -2012,6 +2048,9 @@ void FaceOff::forwardRender()
 		for (int i = 0; i < m_objects.size(); i++)
 		{			
 			WorldObject* object = m_objects[i];
+
+			if (object == NULL)
+				continue;
 
 			object->alreadyFireTested = false;
 
@@ -2089,29 +2128,40 @@ void FaceOff::forwardRender()
 	int deltaTimeMillis = (unsigned int)(timeNowMillis - m_currentTimeMillis);		
 	m_currentTimeMillis = timeNowMillis;
 
-	o_grenadeParticleEffect.m_time += deltaTimeMillis;
-
 	
+
 	p_renderer = &m_rm.r_particleEffectUpdate;
 	p_renderer->enableShader();
-		p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, o_grenadeParticleEffect.m_randomTextureId);
-		p_renderer->setData("u_time", (float)o_grenadeParticleEffect.m_time);
-		p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
+		for (int i = 0; i < m_particleEffects.size(); i++)
+		{
+			ParticleEffect* effect = m_particleEffects[i];
+			
+			effect->m_time += deltaTimeMillis;
+			p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, effect->m_randomTextureId);
+			p_renderer->setData("u_time", (float)effect->m_time);
+			p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
 
-		o_grenadeParticleEffect.update(m_pipeline, p_renderer);
+			effect->update(m_pipeline, p_renderer);
+		}
+
 	p_renderer->disableShader();
-	
 
-	
+
+
 	p_renderer = &m_rm.r_particleEffectRender;
 	p_renderer->enableShader();
-		p_renderer->setData("u_centerPosition", o_grenadeParticleEffect.getPosition());
-		p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, o_grenadeParticleEffect.m_textureId);
-		o_grenadeParticleEffect.render(m_pipeline, p_renderer);
-	p_renderer->disableShader();
-	
+		for (int i = 0; i < m_particleEffects.size(); i++)
+		{
+			ParticleEffect* effect = m_particleEffects[i];
 
-	
+			p_renderer->setData("u_centerPosition", effect->getPosition());
+			p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
+			effect->render(m_pipeline, p_renderer);
+		}
+	p_renderer->disableShader();
+
+
+
 	glEnable(GL_CULL_FACE);
 
 	renderGUI();

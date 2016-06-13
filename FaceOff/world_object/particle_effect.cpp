@@ -15,6 +15,8 @@ ParticleEffect::ParticleEffect()
 	m_isFirst = true;
 	m_textureId = NULL;
 	m_time = 0;
+
+	m_boundingVolume = new Sphere();
 }
 
 ParticleEffect::~ParticleEffect()
@@ -92,13 +94,14 @@ bool ParticleEffect::initRandomTexture(int size)
 
 	delete[] pRandomData;
 
-
+	
 	// check OpenGL error
 	GLenum err;
 	if ((err = glGetError()) != GL_NO_ERROR)
 	{
 		cout << "random texture error: " << err << endl;
 	}
+	
 	cout << "random texture very nice" << endl;
 
 	return true;
