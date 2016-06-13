@@ -84,9 +84,9 @@ void utl::debug(string s)
 void utl::debug(string s, bool b)
 {
     if(b)
-        cout << s << "true" << endl;
+        cout << s << " true" << endl;
     else
-        cout << s << "false" << endl;
+        cout << s << " false" << endl;
 }
 
 void utl::debug(string s, char c)

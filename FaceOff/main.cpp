@@ -568,6 +568,16 @@ void FaceOff::initObjects()
 
 
 
+
+	// Grenade particle effect
+	o_grenadeParticleEffect.setPosition(glm::vec3(0.0, 0.0, 0.0));
+	o_grenadeParticleEffect.setScale(50.0);
+
+	o_grenadeParticleEffect.init();
+
+
+
+	o_grenadeParticleEffect.setTexture("Assets/fireworks_red.jpg");
 }
 
 
@@ -2072,16 +2082,54 @@ void FaceOff::forwardRender()
 	p_renderer->disableShader();
 
 
+	
+//	long long timeNowMillis = utl::getCurrentTimeMillis();
+	long long timeNowMillis = getCurrentTimeMillis();
 
+	int deltaTimeMillis = (unsigned int)(timeNowMillis - m_currentTimeMillis);		
+	m_currentTimeMillis = timeNowMillis;
 
+	o_grenadeParticleEffect.m_time += deltaTimeMillis;
 
+	
+	p_renderer = &m_rm.r_particleEffectUpdate;
+	p_renderer->enableShader();
+		p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, o_grenadeParticleEffect.m_randomTextureId);
+		p_renderer->setData("u_time", (float)o_grenadeParticleEffect.m_time);
+		p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
 
+		o_grenadeParticleEffect.update(m_pipeline, p_renderer);
+	p_renderer->disableShader();
+	
+
+	
+	p_renderer = &m_rm.r_particleEffectRender;
+	p_renderer->enableShader();
+		p_renderer->setData("u_centerPosition", o_grenadeParticleEffect.getPosition());
+		p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, o_grenadeParticleEffect.m_textureId);
+		o_grenadeParticleEffect.render(m_pipeline, p_renderer);
+	p_renderer->disableShader();
+	
+
+	
 	glEnable(GL_CULL_FACE);
-
 
 	renderGUI();
 }
 
+
+long long FaceOff::getCurrentTimeMillis()
+{
+#ifdef WIN32
+	return GetTickCount();
+#else
+	timeval t;
+	gettimeofday(&t, NULL);
+
+	long long ret = t.tv_sec * 1000 + t.tv_usec / 1000;
+	return ret;
+#endif
+}
 
 
 

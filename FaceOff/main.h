@@ -50,6 +50,7 @@ struct KDTreeNode;
 #include "skybox.h"
 #include "billboard_list.h"
 
+#include "world_object\particle_effect.h"
 
 #include "model_manager.h"
 
@@ -277,6 +278,8 @@ class FaceOff
 		SkyBox          o_skybox;
 		WorldObject		o_sampleBullet;
 
+		ParticleEffect		o_grenadeParticleEffect;
+
 		list<Particle> m_bullets;
 		queue<int> m_objectIndexPool;
 	//	list<WorldObject*> m_dynamicObjects;
@@ -298,7 +301,7 @@ class FaceOff
 		Player p;
 
 		KDTreeNode* hitNode;
-
+		long long m_currentTimeMillis;
 
 		bool m_isServer;
 		RakNet::RakPeerInterface* peer;
@@ -346,6 +349,7 @@ class FaceOff
 		void clientNetworkThread();
 		void serverNetworkThread();
 
+		long long getCurrentTimeMillis();
 };
 
 #endif

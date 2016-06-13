@@ -274,8 +274,10 @@ void Renderer::loadUniformLocations()
 
 void Renderer::loadUniformLocations(int pass)
 {
-    for ( auto local_it = m_tables[pass].begin(); local_it!= m_tables[pass].end(); ++local_it )
-        (local_it->second)->setUniLoc();
+	for (auto local_it = m_tables[pass].begin(); local_it != m_tables[pass].end(); ++local_it)
+	{
+		(local_it->second)->setUniLoc();
+	}
 }
 
 void Renderer::loadUniformLocations(Pipeline& p)

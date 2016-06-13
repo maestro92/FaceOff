@@ -220,7 +220,7 @@ namespace utl
 
 	TextureDataBuffer createEmptyBuffer(int w, int h);
 
-	GLuint loadTexture(string filename, bool mipmapFlag = false);
+	GLuint loadTexture(string filename, bool mipmapFlag = true);
 	GLuint loadTexture(string filename, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag = false);
 	GLuint loadTexture(vector<vector<vector<GLubyte>>> data, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag = false);
 	void setTexture2DParams(GLuint target, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag);
@@ -252,7 +252,7 @@ namespace utl
 	glm::mat4 toGlmMat(aiMatrix4x4& m);
 	glm::mat4 toGlmMat(const aiMatrix4x4& m);
 
-	/// utl_Debug.cpp
+	/// utl_debug.cpp
 	void debugLn(int l = 1);
 	void debugLn(string s, int l = 1);
 	void debugLn(string s, bool b, int l = 1);
@@ -272,6 +272,7 @@ namespace utl
 	void debug(string s, bool b);
 	void debug(string s, char c);
 	void debug(string s, string s2);
+	void debug(string s, const char* s2);
 	void debug(string s, unsigned int i);
 	void debug(string s, int i);
 	void debug(string s, float f);
@@ -304,6 +305,11 @@ namespace utl
 	/// utl_network.cpp
 	void readBitStream(RakNet::BitStream& bsIn, glm::vec3& v);
 	void setBitStream(RakNet::BitStream& bsOut, glm::vec3& v);
+
+
+
+	// utl_time.cpp
+	long long getCurrentTimeMillis();
 
 
 	/// utl_json.cpp

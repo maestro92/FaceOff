@@ -46,16 +46,48 @@ void RendererManager::init()
 	r_playerTarget.addDataPair("u_texture", DP_INT);
 
 
-
-
-
-	
 	Renderer r_healthBar;
 
+	
+	s = new Shader("particle_effect_update.vs", "particle_effect_update.gs", "particle_effect_update.fs");
+	r_particleEffectUpdate.addShader(s);
+
+	const GLchar* varyings[4];
+	varyings[0] = "type1";
+	varyings[1] = "position1";
+	varyings[2] = "velocity1";
+	varyings[3] = "age1";
+
+	glTransformFeedbackVaryings(s->getProgramId(), 4, varyings, GL_INTERLEAVED_ATTRIBS);
+
+	s->linkShader();
+	s->useShader();
+	r_particleEffectUpdate.addDataPair("u_deltaTimeMillis", DP_FLOAT);
+	r_particleEffectUpdate.addDataPair("u_time", DP_FLOAT);
+	r_particleEffectUpdate.addDataPair("u_randomTexture", DP_INT);
+	r_particleEffectUpdate.addDataPair("u_launcherLifeTime", DP_FLOAT);
+	r_particleEffectUpdate.addDataPair("u_shellLifeTime", DP_FLOAT);
+	r_particleEffectUpdate.addDataPair("u_secondaryShellLifeTime", DP_FLOAT);
+
+
+	r_particleEffectUpdate.enableShader();
+		r_particleEffectUpdate.setData("u_launcherLifeTime", 100.0f);
+		r_particleEffectUpdate.setData("u_shellLifeTime", 10000.0f);
+		r_particleEffectUpdate.setData("u_secondaryShellLifeTime", 100.0f);
+	r_particleEffectUpdate.disableShader();
 
 
 
 
+	s = new Shader("particle_effect_render.vs", "particle_effect_render.gs", "particle_effect_render.fs");
+	r_particleEffectRender.addShader(s);
+	r_particleEffectRender.addDataPair("u_texture", DP_INT);
+	r_particleEffectRender.addDataPair("u_billBoardSize", DP_FLOAT);
+	r_particleEffectRender.addDataPair("u_centerPosition", DP_VEC3);
+
+	r_particleEffectRender.enableShader();
+		r_particleEffectRender.setData("u_billBoardSize", 0.1f);
+	r_particleEffectUpdate.disableShader();
 
 
 
@@ -86,6 +118,9 @@ void RendererManager::init()
 	r_billboardTwoQuad.addDataPair("u_centerPosition", DP_VEC3);
 	r_billboardTwoQuad.addDataPair("u_billboardWidthScale", DP_FLOAT);
 	r_billboardTwoQuad.addDataPair("u_billboardHeightScale", DP_FLOAT);
+
+
+	char* filename = "Assets/renderer_data.json";
 
 }
 

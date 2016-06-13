@@ -21,12 +21,16 @@ class RendererManager
 		
 		Renderer		r_healthBar;
 
+		Renderer		r_particleEffectUpdate;
+		Renderer		r_particleEffectRender;
+
 
 		Renderer r_multiTexturedTerrain;
 		SceneRenderer r_multiTexTerrain;
 		SceneRenderer r_texturedObject;
 		SceneRenderer r_billboardOneQuad;
 		SceneRenderer r_billboardTwoQuad;
+
 
 
         void init();

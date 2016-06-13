@@ -22,7 +22,6 @@ void utl::checkGLError()
                 case GL_INVALID_FRAMEBUFFER_OPERATION:  error="INVALID_FRAMEBUFFER_OPERATION";  break;
         }
 
-   //     cerr << "GL_" << error.c_str() <<" - "":"<<line<<endl;
         cout << "GL_" << error.c_str() << endl;
         err=glGetError();
     }

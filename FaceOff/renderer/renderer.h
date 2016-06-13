@@ -56,8 +56,9 @@ struct DataPair
 
     void printError()
     {
-        utl::debug(name, "unmatched type");
-        exit(1);
+//		utl::debug(name, "unmatched type");
+		cout << name  << " unmatched type" << endl;
+		exit(1);
     }
     virtual void setValue(bool value){printError();};
     virtual void setValue(int value){printError();};
@@ -393,6 +394,11 @@ class Renderer
         vector<Shader*> m_shaders;
 
         vector< unordered_map<string, DataPair*> > m_tables;
+
+
+		vector< vector<DataPair*> > m_tables1;
+
+
         stack<GLuint> m_textureUnitStack;
 //    private:
         int m_numShaders;

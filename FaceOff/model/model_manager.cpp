@@ -108,48 +108,16 @@ void ModelManager::initWeaponsData()
 		int magazineCapacity =			findValue(obj, "magazineCapacity").get_int();
 		int maxMagazineCount =			findValue(obj, "maxMagazineCount").get_int();
 		
-		float modelScale =				findValue(obj, "modelScale").get_real();
-
-		// string weaponTypeStr =			findValue(obj, "weaponType").get_str();
-		// WeaponTypeEnum typeEnum =		m_weaponTypeToEnum[weaponTypeStr];
-		
+		float modelScale =				findValue(obj, "modelScale").get_real();	
 		string weaponSlotStr =			findValue(obj, "slot").get_str();
 		WeaponSlotEnum slotEnum =		m_weaponSlotToEnum[weaponSlotStr];
-
-		utl::debug("slotENum", slotEnum);
 
 		float fPOVScale =				findValue(obj, "firstPOVScale").get_real();
 		glm::vec3 fPOVOffset =			findVec3(obj, "firstPOVOffset");
 		
 		string modelFileName =			modelPath + findValue(obj, "model").get_str();
-		// modelFileName = path + modelFileName;
-		utl::debug("fPOVOffset", fPOVOffset);
-
-		if (nameEnum == MP5)
-		{
-			int a = 1;
-		}
-
+		
 		ImportedModel* model = new ImportedModel(modelFileName);
-
-		/*
-		if (nameEnum == KATANA)
-		{
-			model = new ImportedModel();
-			vector<string> textures;
-			textures.push_back("Assets/models/weapons/katana/Katana_CM_01.jpg");
-
-			model->load(modelFileName, textures);
-//			model->setTextures(textures);
-	//		model->setMeshRandTextureIdx(); 
-		}
-		else
-		{
-
-		*/
-		//	model = new ImportedModel(modelFileName);
-		// }
-
 
 		m_weaponDatas[nameEnum] = { name, 
 									nameEnum, 

@@ -20,6 +20,9 @@ WorldObject::WorldObject()
 
 	m_dynamicType = STATIC;
 	m_BVType = BV_AABB;
+
+
+
 }
 
 
@@ -167,43 +170,6 @@ void WorldObject::updateAABB()
 	}
 
 }
-
-
-
-void WorldObject::updateAABB(glm::vec3& maxP, glm::vec3& minP, glm::vec3 pos, glm::mat4 rotation, glm::vec3 scale)
-{
-	/*
-	The following Two are equivalent
-	glm::mat4 M = m_rotation * glm::scale(m_scale);
-	M = glm::transpose(M);
-	*/
-	glm::mat4 M = glm::scale(scale) * rotation;
-
-
-	for (int i = 0; i < 3; i++)
-	{
-		minP[i] = maxP[i] = pos[i];
-
-		for (int j = 0; j < 3; j++)
-		{
-			float e = M[i][j] * m_model->m_aabb.min[j];
-			float f = M[i][j] * m_model->m_aabb.max[j];
-
-
-			if (e < f)
-			{
-				minP[i] += e;
-				maxP[i] += f;
-			}
-			else
-			{
-				minP[i] += f;
-				maxP[i] += e;
-			}
-		}
-	}
-}
-
 
 
 void WorldObject::setAABBByPosition(float x, float y, float z)

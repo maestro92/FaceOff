@@ -40,7 +40,7 @@ Shader::Shader(const char* vs_source, const char* fs_source)
 
 
 
-Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_source)
+Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_source, bool feedBack)
 {
     string source;
 	cout << endl << endl << endl << "vs: " << vs_source << ", gs:" << gs_source << ", fs: " << fs_source << endl << endl;
@@ -72,15 +72,17 @@ Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_sour
     glAttachShader(program, fs);
 
 
-  //  glBindAttribLocation(program, SlotPosition, "Position");
-  //  glBindAttribLocation(program, SlotTexCoord, "TexCoord");
-    // links the program object
-    glLinkProgram(program);
-    // this will use this Shader program
-    glUseProgram(program);
+	if (!feedBack)
+	{
+		// links the program object
+		glLinkProgram(program);
+		// this will use this Shader program
+		glUseProgram(program);
+	}
+
 }
 
-
+/*
 Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_source, bool feedBack)
 {
     string source;
@@ -106,7 +108,7 @@ Shader::Shader(const char* vs_source, const char* gs_source, const char* fs_sour
     glAttachShader(program, gs);
     glAttachShader(program, fs);
 }
-
+*/
 
 
 

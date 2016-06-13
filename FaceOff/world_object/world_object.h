@@ -37,7 +37,8 @@ enum WorldObjectType
 {
 	SCENE_OBJECT = 0,
 	PLAYER,
-	WEAPON
+	WEAPON,
+	PARTICLE_EFFECT
 };
 
 class WorldObject
@@ -66,6 +67,9 @@ class WorldObject
 
 		AABB m_aabb;
 		
+
+		BoundingVolume* m_boundingVolume;
+
 
 		glm::vec3 m_position;
         glm::vec3 m_velocity;
@@ -121,7 +125,6 @@ class WorldObject
 
 	
 		void updateAABB();
-		void updateAABB(glm::vec3& maxP, glm::vec3& minP, glm::vec3 pos, glm::mat4 rotation, glm::vec3 scale);
 		void setAABBByPosition(float x, float y, float z);
 		void setAABBByPosition(glm::vec3 pos);
 

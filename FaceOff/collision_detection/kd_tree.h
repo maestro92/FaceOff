@@ -2,7 +2,6 @@
 #define KD_TREE_H_
 
 #include "kd_tree_node.h"
-#include "world_sphere.h"
 #include "cube_wireframe_model.h"
 #include <algorithm>
 #include "renderer.h"

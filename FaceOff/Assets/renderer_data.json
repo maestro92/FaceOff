@@ -1,0 +1,227 @@
+[
+
+	{
+		"name": 			"KNIFE",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.5,
+		"weaponType":		"MELEE",
+		"slot":				"MELEE",
+		"firstPOVScale":	0.1,
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.13,
+			"y":			-0.12,
+			"z":			0.560001
+		},
+		"model":			"knife/knife.obj"
+	},
+
+
+	{
+		"name": 			"KATANA",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.05,
+		"weaponType":		"MELEE",
+		"slot":				"MELEE",
+		"firstPOVScale":	1.0,	
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.35,
+			"y":			-0.64,
+			"z":			1.26
+		},
+		"model":			"katana/Katana.obj"
+	},
+
+
+	{
+		"name": 			"MAC_11",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.5,
+		"weaponType":		"ASSULT_RIFLE",
+		"slot":				"MAIN",
+
+		"firstPOVScale":	1.0,
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.33,
+			"y":			-0.35,
+			"z":			1.66
+		},
+		"model":			"MAC_11/MAC_11.obj"
+	},
+
+
+	{
+		"name": 			"MP5",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.05,
+		"weaponType":		"ASSULT_RIFLE",
+		"slot":				"MAIN",
+		"firstPOVScale":	1.0,	
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.33,
+			"y":			-0.35,
+			"z":			1.66
+		},
+		"model":			"MP5/MP5K.obj"
+	},
+
+
+	{
+		"name": 			"M16",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.25,
+		"weaponType":		"ASSULT_RIFLE",
+		"slot":				"MAIN",
+		"firstPOVScale":	0.025,
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.33,
+			"y":			-0.35,
+			"z":			1.66
+		},
+		"model":			"M16/m16.obj"
+	},
+
+
+	{
+		"name": 			"AK_47",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		1.0,
+		"weaponType":		"ASSULT_RIFLE",
+		"slot":				"MAIN",
+
+		"firstPOVScale":	1.0,
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.76,
+			"y":			-2.29,
+			"z":			3.74
+		},
+		"model":			"AK_47/AK_47.obj"
+	},
+
+
+
+
+
+	{
+		"name": 			"MG42",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.05,
+		"weaponType":		"MACHINE_GUN",
+		"slot":				"MAIN",
+		"firstPOVScale":	1.0,			
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.35,
+			"y":			-0.64,
+			"z":			1.26
+		},
+		"model":			"MG42/mg42.obj"
+	},
+
+
+	{
+		"name": 			"AWM",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		1.0,
+		"weaponType":		"MACHINE_GUN",
+		"slot":				"MAIN",
+		"firstPOVScale":	1.0,			
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.71,
+			"y":			-1.65,
+			"z":			4.71
+		},
+		"model":			"AWM/AWM.obj"
+	},
+
+
+	{
+		"name": 			"MINIGUN",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		1.0,
+		"weaponType":		"MACHINE_GUN",
+		"slot":				"MAIN",
+		"firstPOVScale":	1.0,	
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.35,
+			"y":			-0.64,
+			"z":			1.26
+		},
+		"model":			"minigun/minigun.obj"
+	},
+
+	{
+		"name": 			"PISTOL_SHOTGUN",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.25,
+		"weaponType":		"ASSULT_RIFLE",
+		"slot":				"MAIN",
+		"firstPOVScale":	0.025,		
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.33,
+			"y":			-0.35,
+			"z":			1.66
+		},
+		"model":			"shotgun/pistol_grip_pump_shotgun.obj"
+	}, 
+
+
+	{
+		"name": 			"FRAG_GRENADE",
+		"damage": 			36,
+		"magazineCapacity": 30,
+		"maxMagazineCount": 3,
+		"modelScale":		0.5,
+		"weaponType":		"MACHINE_GUN",
+		"slot":				"PROJECTILE",
+		"firstPOVScale":	0.05,		
+		"firstPOVOffset":
+		{
+			"type":			"vec3",
+			"x":			0.2,
+			"y":			-0.23,
+			"z":			0.93
+		},
+		"model":			"frag_grenade/frag grenade.obj"
+	},
+
+
+]

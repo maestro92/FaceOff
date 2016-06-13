@@ -245,7 +245,9 @@
     <ClCompile Include="utility\utility_sdl.cpp" />
     <ClCompile Include="utility\utility_network.cpp" />
     <ClCompile Include="utility\utility_json.cpp" />
+    <ClCompile Include="utility\utility_time.cpp" />
     <ClCompile Include="world_object\billboard_list.cpp" />
+    <ClCompile Include="world_object\particle_effect.cpp" />
     <ClCompile Include="world_object\terrain\multitexture_terrain.cpp" />
     <ClCompile Include="world_object\terrain\terrain.cpp" />
     <ClCompile Include="world_object\particle.cpp" />
@@ -253,7 +255,6 @@
     <ClCompile Include="world_object\skybox.cpp" />
     <ClCompile Include="world_object\weapon\weapon.cpp" />
     <ClCompile Include="world_object\world_object.cpp" />
-    <ClCompile Include="world_object\world_sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="audio_manager.h" />
@@ -455,6 +456,8 @@
     <ClInclude Include="model\texture.h" />
     <ClInclude Include="model\vertex_data.h" />
     <ClInclude Include="collision_detection\bounding_volume.h" />
+    <ClInclude Include="renderer\renderer_constants.h" />
+    <ClInclude Include="world_object\particle_effect.h" />
     <ClInclude Include="world_object\terrain\multitexture_terrain.h" />
     <ClInclude Include="network\network_info.h" />
     <ClInclude Include="network\game_messages.h" />
@@ -476,7 +479,6 @@
     <ClInclude Include="world_object\weapon\weapon_data.h" />
     <ClInclude Include="world_object\weapon\weapon_enum.h" />
     <ClInclude Include="world_object\world_object.h" />
-    <ClInclude Include="world_object\world_sphere.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="libraries\RakNet\CMakeLists.txt" />
