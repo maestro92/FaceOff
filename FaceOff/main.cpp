@@ -584,7 +584,7 @@ void FaceOff::initObjects()
 
 void FaceOff::initRenderers()
 {
-	m_rm.init();
+	m_rm.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	m_rm.initSceneRendererStaticLightsData(m_lightManager);
 }
 

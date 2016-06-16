@@ -26,7 +26,7 @@ RendererManager::~RendererManager()
 }
 
 
-void RendererManager::init()
+void RendererManager::init(int width, int height)
 {
     Shader* s;
 
@@ -91,6 +91,17 @@ void RendererManager::init()
 
 
 
+
+	s = new Shader("background_and_particle_composite.vs", "background_and_particle_composite.fs");
+	r_composite.addShader(s);
+	r_composite.addDataPair("u_backgroundTexutre", DP_INT);
+	r_composite.addDataPair("u_particlesTexture", DP_INT);
+
+
+
+
+
+
 	// scene renderers
 	s = new Shader("scene_shaders/multitexture_terrain.vs", "scene_shaders/multitexture_terrain.fs");
 	r_multiTexTerrain.addShader(s);
@@ -121,6 +132,11 @@ void RendererManager::init()
 
 
 	char* filename = "Assets/renderer_data.json";
+
+
+
+	m_backGroundLayerFBO = utl::createFrameBufferObject(width, height);
+	m_particleLayerFBO = utl::createFrameBufferObject(width, height);
 
 }
 

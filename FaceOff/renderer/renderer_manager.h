@@ -24,6 +24,8 @@ class RendererManager
 		Renderer		r_particleEffectUpdate;
 		Renderer		r_particleEffectRender;
 
+		Renderer		r_composite;
+
 
 		Renderer r_multiTexturedTerrain;
 		SceneRenderer r_multiTexTerrain;
@@ -31,9 +33,10 @@ class RendererManager
 		SceneRenderer r_billboardOneQuad;
 		SceneRenderer r_billboardTwoQuad;
 
+		FrameBufferObject m_backGroundLayerFBO;
+		FrameBufferObject m_particleLayerFBO;
 
-
-        void init();
+		void init(int width, int height);
 		void initSceneRendererStaticLightsData(LightManager lightManager);
 };
 
