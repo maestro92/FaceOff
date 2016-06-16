@@ -50,7 +50,9 @@ struct KDTreeNode;
 #include "skybox.h"
 #include "billboard_list.h"
 
-#include "world_object\particle_effect.h"
+#include "world_object\particle_effect\particle_effect.h"
+#include "world_object\particle_effect\fire_work_effect.h"
+#include "world_object\particle_effect\smoke_effect.h"
 
 #include "model_manager.h"
 
@@ -319,7 +321,9 @@ class FaceOff
 		vector<WorldObject*> m_objects;
 		queue<WorldObject*> m_emptyBucketPool;
 
-		vector<ParticleEffect*> m_particleEffects;
+		vector<FireWorkEffect*> m_fireWorkEffects;
+		vector<SmokeEffect*> m_smokeEffects;
+		// vector<FireWorkEffect*> m_fireWorkEffects;
 
 		FaceOff();
 		~FaceOff();

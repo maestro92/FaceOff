@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./;world_object\weapon;libraries\RakNet;glm;gui;gui\custom_gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include;libraries\json_spirit;C:\Users\Martin\Desktop\boost_1_55_0;C:\Program Files %28x86%29\OpenAL 1.1 SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;libraries\RakNet;glm;gui;gui\custom_gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\weapon;world_object\terrain;world_object\particle_effect;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include;libraries\json_spirit;C:\Users\Martin\Desktop\boost_1_55_0;C:\Program Files %28x86%29\OpenAL 1.1 SDK\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -247,7 +247,9 @@
     <ClCompile Include="utility\utility_json.cpp" />
     <ClCompile Include="utility\utility_time.cpp" />
     <ClCompile Include="world_object\billboard_list.cpp" />
-    <ClCompile Include="world_object\particle_effect.cpp" />
+    <ClCompile Include="world_object\particle_effect\fire_work_effect.cpp" />
+    <ClCompile Include="world_object\particle_effect\particle_effect.cpp" />
+    <ClCompile Include="world_object\particle_effect\smoke_effect.cpp" />
     <ClCompile Include="world_object\terrain\multitexture_terrain.cpp" />
     <ClCompile Include="world_object\terrain\terrain.cpp" />
     <ClCompile Include="world_object\particle.cpp" />
@@ -457,7 +459,9 @@
     <ClInclude Include="model\vertex_data.h" />
     <ClInclude Include="collision_detection\bounding_volume.h" />
     <ClInclude Include="renderer\renderer_constants.h" />
-    <ClInclude Include="world_object\particle_effect.h" />
+    <ClInclude Include="world_object\particle_effect\fire_work_effect.h" />
+    <ClInclude Include="world_object\particle_effect\smoke_effect.h" />
+    <ClInclude Include="world_object\particle_effect\particle_effect.h" />
     <ClInclude Include="world_object\terrain\multitexture_terrain.h" />
     <ClInclude Include="network\network_info.h" />
     <ClInclude Include="network\game_messages.h" />

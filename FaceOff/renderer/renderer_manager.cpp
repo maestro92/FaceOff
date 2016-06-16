@@ -79,11 +79,18 @@ void RendererManager::init(int width, int height)
 
 
 
-	s = new Shader("particle_effect_render.vs", "particle_effect_render.gs", "particle_effect_render.fs");
+	s = new Shader("particle_effect_render2.vs", "particle_effect_render2.gs", "particle_effect_render2.fs");
 	r_particleEffectRender.addShader(s);
-	r_particleEffectRender.addDataPair("u_texture", DP_INT);
+	// vs
+	r_particleEffectRender.addDataPair("u_time", DP_FLOAT);
+	r_particleEffectRender.addDataPair("u_fadeRate", DP_FLOAT);
+	
+	// gs
 	r_particleEffectRender.addDataPair("u_billBoardSize", DP_FLOAT);
 	r_particleEffectRender.addDataPair("u_centerPosition", DP_VEC3);
+
+	// fs
+	r_particleEffectRender.addDataPair("u_texture", DP_INT);
 
 	r_particleEffectRender.enableShader();
 		r_particleEffectRender.setData("u_billBoardSize", 0.1f);

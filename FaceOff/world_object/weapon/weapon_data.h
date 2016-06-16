@@ -5,6 +5,7 @@
 
 using namespace std;
 
+#include "fire_work_effect.h"
 #include "weapon_enum.h"
 #include "model.h"
 #include "utility.h"

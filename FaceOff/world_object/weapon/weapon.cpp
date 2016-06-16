@@ -132,9 +132,12 @@ bool Weapon::shouldExplode()
 
 ParticleEffect* Weapon::explode()
 {
-	ParticleEffect* effect = new ParticleEffect();
+	FireWorkEffect* effect = new FireWorkEffect();
 
 	effect->setPosition(m_position);
+
+	utl::debug("position", m_position);
+
 	effect->setScale(50.0);
 
 	effect->init();

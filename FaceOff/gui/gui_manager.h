@@ -19,15 +19,18 @@ class GUIManager
         void init(int screenWidth, int screenHeight);
 
 		void initGUIRenderingSetup();
+		void setupRenderToScreen(int x, int y, int width, int height);
 		void renderTextureFullScreen(GLuint textureId);
 		void renderTextureFullScreen(GLuint textureId, GLuint fboTarget);
 		void renderTexture(GLuint textureId, int x, int y, int width, int height);
 		void renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height);
 		void renderTexture(GLuint textureId, GLuint fboTarget, Rect rect);
 
+		/*
 		void renderTextureSingle(GLuint textureId, int x, int y, int width, int height);
 		void renderTextureSingle(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height);
 		void renderTextureSingle(GLuint textureId, GLuint fboTarget, Rect rect);
+		*/
 
         void renderGUI();
 

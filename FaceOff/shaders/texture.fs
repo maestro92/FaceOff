@@ -16,7 +16,7 @@ void main()
 	value.z = pow(value.z,32);
 	FragColor = value;
 #else
-	vec2 tc = vf_UV;	 // tc.y = 1.0 - tc.y;
+	vec2 tc = vf_UV;	tc.y = 1.0 - tc.y;
 	// pos = tc;
 
 	

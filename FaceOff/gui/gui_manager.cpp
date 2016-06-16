@@ -33,13 +33,15 @@ void GUIManager::init(int screenWidth, int screenHeight)
 
 void GUIManager::initGUIRenderingSetup()
 {
-
-    glViewport(0, 0, m_screenWidth, m_screenHeight);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+	setupRenderToScreen(0, 0, m_screenWidth, m_screenHeight);
 }
 
-
+void GUIManager::setupRenderToScreen(int x, int y, int width, int height)
+{
+	glViewport(x, y, width, height);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+}
 
 void GUIManager::renderTextureFullScreen(GLuint textureId)
 {
@@ -58,7 +60,7 @@ void GUIManager::renderTexture(GLuint textureId, int x, int y, int width, int he
 
 void GUIManager::renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height)
 {
-    glViewport(0, 0, m_screenWidth, m_screenHeight);
+	setupRenderToScreen(x, y, width, height);
 
     r_textureRenderer.enableShader(RENDER_PASS1);
     r_textureRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, textureId);
@@ -80,29 +82,11 @@ void GUIManager::renderTexture(GLuint TextureId, GLuint FboTarget, Rect rect)
 }
 
 
-void GUIManager::renderTextureSingle(GLuint TextureId, int x, int y, int width, int height)
+
+void GUIManager::addGUIComponent(Control* control)
 {
-
-}
-
-void GUIManager::renderTextureSingle(GLuint TextureId, GLuint FboTarget, int x, int y, int width, int height)
-{
-    r_textureRenderer.enableShader();
-    r_textureRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, TextureId);
-
-    m_GUIPipeline.pushMatrix();
-        m_GUIPipeline.translate(x, y, 0);
-        m_GUIPipeline.scale(width, height, 1.0);
-
-        r_textureRenderer.loadUniformLocations(m_GUIPipeline);
-        m_textureQuad.render();
-    m_GUIPipeline.popMatrix();
-    r_textureRenderer.disableShader();
-}
-
-void GUIManager::renderTextureSingle(GLuint TextureId, GLuint FboTarget, Rect rect)
-{
-
+	control->setID(m_GUIComponentsID);
+	m_GUIComponents.push_back(control);
 }
 
 
@@ -117,8 +101,35 @@ void GUIManager::updateAndRender(MouseState mouseState)
 }
 
 
-void GUIManager::addGUIComponent(Control* control)
+
+
+
+/*
+void GUIManager::renderTextureSingle(GLuint TextureId, int x, int y, int width, int height)
 {
-    control->setID(m_GUIComponentsID);
-    m_GUIComponents.push_back(control);
+
 }
+
+void GUIManager::renderTextureSingle(GLuint TextureId, GLuint FboTarget, int x, int y, int width, int height)
+{
+	r_textureRenderer.enableShader();
+	r_textureRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, TextureId);
+
+	m_GUIPipeline.pushMatrix();
+	m_GUIPipeline.translate(x, y, 0);
+	m_GUIPipeline.scale(width, height, 1.0);
+
+	r_textureRenderer.loadUniformLocations(m_GUIPipeline);
+	m_textureQuad.render();
+	m_GUIPipeline.popMatrix();
+	r_textureRenderer.disableShader();
+}
+
+void GUIManager::renderTextureSingle(GLuint TextureId, GLuint FboTarget, Rect rect)
+{
+
+}
+*/
+
+
+
