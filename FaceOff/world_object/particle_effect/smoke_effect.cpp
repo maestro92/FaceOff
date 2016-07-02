@@ -1,12 +1,12 @@
 #include "smoke_effect.h"
 
 
-#define MAX_PARTICLES 1000
+#define MAX_PARTICLES 500
 #define PARTICLE_LIFETIME 10.0f
 
 #define PARTICLE_TYPE_LAUNCHER 0.0f
-#define PARTICLE_TYPE_SHELL 1.0f
-#define PARTICLE_TYPE_SECONDARY_SHELL 2.0f
+#define PARTICLE_TYPE_EXPLODE 1.0f
+#define PARTICLE_TYPE_FLOAT 2.0f
 
 SmokeEffect::SmokeEffect()
 {
@@ -16,7 +16,10 @@ SmokeEffect::SmokeEffect()
 	m_textureId = NULL;
 	m_time = 0;
 
+	m_startingParticleCount = MAX_PARTICLES;
+
 	m_boundingVolume = new Sphere();
+	m_particleRotation = 0;
 }
 
 SmokeEffect::~SmokeEffect()
@@ -35,14 +38,36 @@ SmokeEffect::~SmokeEffect()
 
 void SmokeEffect::init()
 {
+	m_startingParticleCount = 100;
+
 	SmokeParticle particles[MAX_PARTICLES];
 	memset(particles, 0, sizeof(particles));
 
-	// we set the first particle as a Laucher
-	particles[0].type = PARTICLE_TYPE_LAUNCHER;
-	particles[0].position = glm::vec3(0.0f, 0.0f, 0.0f);
-	particles[0].velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-	particles[0].lifetimeMillis = 0.0f;
+	// we set the first few particles as Lauchers
+	for (int i = 0; i < m_startingParticleCount; i++)
+	{
+		particles[i].type = PARTICLE_TYPE_LAUNCHER;
+//		particles[i].position = glm::vec3(0.0f, 0.0f, 0.0f);
+//		particles[i].velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+
+		float x = utl::randFloat(-1.0f, 1.0f);
+		float y = 0.0;
+		float z = utl::randFloat(-1.0f, 1.0f);
+
+
+		float scale = 5.0f;
+
+		float vx = utl::randFloat(-scale, scale);
+		float vy = utl::randFloat(0.0, scale);
+		float vz = utl::randFloat(-scale, scale);
+
+
+		particles[i].position = glm::vec3(x, y, z);
+		particles[i].velocity = glm::vec3(vx, vy, vz);
+
+		
+		particles[i].lifetimeMillis = 0.0f;
+	}
 
 	// making two transform feedback
 	// we create two transformfeedback objects by calling glGenTransformFeedbacks
@@ -106,6 +131,17 @@ bool SmokeEffect::initRandomTexture(int size)
 void SmokeEffect::update(Pipeline& p, Renderer* r)
 {
 	//   m_randomTexture.Bind(RANDOM_TEXTURE_UNIT);
+	
+	
+	
+	float scale = 0.001;
+	m_particleRotation += scale;
+	if (m_particleRotation > 360.0)
+	{
+		m_particleRotation -= 360.0;
+	}
+
+
 	p.pushMatrix();
 
 	r->loadUniformLocations(p);
@@ -134,12 +170,13 @@ void SmokeEffect::update(Pipeline& p, Renderer* r)
 	// first drawing function, since we know we're drawing one point
 	if (m_isFirst)
 	{
-		glDrawArrays(GL_POINTS, 0, 1);
+		glDrawArrays(GL_POINTS, 0, m_startingParticleCount);
 		m_isFirst = false;
 	}
 	else
 	{
 		glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currVB]);
+		// glDrawArrays(GL_POINTS, 0, MAX_PARTICLES);
 	}
 
 	glEndTransformFeedback();
@@ -173,7 +210,7 @@ void SmokeEffect::render(Pipeline& p, Renderer* r)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SmokeParticle), (const GLvoid*)4);  // position
 
 	glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currTFB]);
-
+	// glDrawArrays(GL_POINTS, 0, MAX_PARTICLES);
 	glDisableVertexAttribArray(0);
 
 	p.popMatrix();
@@ -183,24 +220,6 @@ void SmokeEffect::render(Pipeline& p, Renderer* r)
 
 }
 
-
-
-
-void SmokeEffect::renderParticles()
-{
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_textureId);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[m_currTFB]);
-
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SmokeParticle), (const GLvoid*)4);  // position
-
-	glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currTFB]);
-
-	glDisableVertexAttribArray(0);
-}
 
 
 ParticleEffectType SmokeEffect::getParticleEffectType()

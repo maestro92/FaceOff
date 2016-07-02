@@ -13,11 +13,14 @@ void utl::debugLn(string s, int l)
     debugLn(l);
 }
 
+
 void utl::debugLn(string s, bool b, int l)
 {
     debug(s, b);
     debugLn(l);
 }
+
+
 void utl::debugLn(string s, char c, int l)
 {
     debug(s, c);
@@ -81,6 +84,7 @@ void utl::debug(string s)
     cout << s << endl;
 }
 
+
 void utl::debug(string s, bool b)
 {
     if(b)
@@ -88,6 +92,7 @@ void utl::debug(string s, bool b)
     else
         cout << s << " false" << endl;
 }
+
 
 void utl::debug(string s, char c)
 {

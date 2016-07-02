@@ -21,8 +21,12 @@ class RendererManager
 		
 		Renderer		r_healthBar;
 
-		Renderer		r_particleEffectUpdate;
-		Renderer		r_particleEffectRender;
+		Renderer		r_fireWorkEffectUpdate;
+		Renderer		r_fireWorkEffectRender;
+
+		Renderer		r_smokeEffectUpdate;
+		Renderer		r_smokeEffectRender;
+
 
 		Renderer		r_composite;
 

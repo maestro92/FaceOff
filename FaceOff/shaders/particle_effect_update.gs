@@ -78,7 +78,8 @@ void main()
                 EndPrimitive();                                                     
             }                                                                       
             else 
-            {                                                                  
+            {    
+                                              
                 for (int i = 0 ; i < 10 ; i++) 
                 {                                    
                      type1 = PARTICLE_TYPE_SECONDARY_SHELL;                         
@@ -88,7 +89,8 @@ void main()
                      age1 = 0.0f;                                                   
                      EmitVertex();                                                  
                      EndPrimitive();                                                
-                }                                                                   
+                } 
+                                                                                 
             }                                                                       
         }                                                                           
         else 

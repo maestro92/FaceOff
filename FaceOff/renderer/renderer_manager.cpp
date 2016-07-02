@@ -49,8 +49,8 @@ void RendererManager::init(int width, int height)
 	Renderer r_healthBar;
 
 	
-	s = new Shader("particle_effect_update.vs", "particle_effect_update.gs", "particle_effect_update.fs");
-	r_particleEffectUpdate.addShader(s);
+	s = new Shader("particle_effect_update.vs", "particle_effect_update.gs", "particle_effect_update.fs", true);
+	r_fireWorkEffectUpdate.addShader(s);
 
 	const GLchar* varyings[4];
 	varyings[0] = "type1";
@@ -62,39 +62,93 @@ void RendererManager::init(int width, int height)
 
 	s->linkShader();
 	s->useShader();
-	r_particleEffectUpdate.addDataPair("u_deltaTimeMillis", DP_FLOAT);
-	r_particleEffectUpdate.addDataPair("u_time", DP_FLOAT);
-	r_particleEffectUpdate.addDataPair("u_randomTexture", DP_INT);
-	r_particleEffectUpdate.addDataPair("u_launcherLifeTime", DP_FLOAT);
-	r_particleEffectUpdate.addDataPair("u_shellLifeTime", DP_FLOAT);
-	r_particleEffectUpdate.addDataPair("u_secondaryShellLifeTime", DP_FLOAT);
+	r_fireWorkEffectUpdate.addDataPair("u_deltaTimeMillis", DP_FLOAT);
+	r_fireWorkEffectUpdate.addDataPair("u_time", DP_FLOAT);
+	r_fireWorkEffectUpdate.addDataPair("u_randomTexture", DP_INT);
+	r_fireWorkEffectUpdate.addDataPair("u_launcherLifeTime", DP_FLOAT);
+	r_fireWorkEffectUpdate.addDataPair("u_shellLifeTime", DP_FLOAT);
+	r_fireWorkEffectUpdate.addDataPair("u_secondaryShellLifeTime", DP_FLOAT);
 
 
-	r_particleEffectUpdate.enableShader();
-		r_particleEffectUpdate.setData("u_launcherLifeTime", 100.0f);
-		r_particleEffectUpdate.setData("u_shellLifeTime", 10000.0f);
-		r_particleEffectUpdate.setData("u_secondaryShellLifeTime", 100.0f);
-	r_particleEffectUpdate.disableShader();
+	r_fireWorkEffectUpdate.enableShader();
+		r_fireWorkEffectUpdate.setData("u_launcherLifeTime", 100.0f);
+		r_fireWorkEffectUpdate.setData("u_shellLifeTime", 10000.0f);
+		r_fireWorkEffectUpdate.setData("u_secondaryShellLifeTime", 100.0f);
+	r_fireWorkEffectUpdate.disableShader();
 
 
 
 
 	s = new Shader("particle_effect_render2.vs", "particle_effect_render2.gs", "particle_effect_render2.fs");
-	r_particleEffectRender.addShader(s);
+	r_fireWorkEffectRender.addShader(s);
 	// vs
-	r_particleEffectRender.addDataPair("u_time", DP_FLOAT);
-	r_particleEffectRender.addDataPair("u_fadeRate", DP_FLOAT);
-	
+	r_fireWorkEffectRender.addDataPair("u_time", DP_FLOAT);
+	r_fireWorkEffectRender.addDataPair("u_fadeRate", DP_FLOAT);
+
 	// gs
-	r_particleEffectRender.addDataPair("u_billBoardSize", DP_FLOAT);
-	r_particleEffectRender.addDataPair("u_centerPosition", DP_VEC3);
+	r_fireWorkEffectRender.addDataPair("u_billBoardSize", DP_FLOAT);
+	r_fireWorkEffectRender.addDataPair("u_centerPosition", DP_VEC3);
 
 	// fs
-	r_particleEffectRender.addDataPair("u_texture", DP_INT);
+	r_fireWorkEffectRender.addDataPair("u_texture", DP_INT);
 
-	r_particleEffectRender.enableShader();
-		r_particleEffectRender.setData("u_billBoardSize", 0.1f);
-	r_particleEffectUpdate.disableShader();
+	r_fireWorkEffectRender.enableShader();
+		r_fireWorkEffectRender.setData("u_billBoardSize", 0.1f);
+	r_fireWorkEffectRender.disableShader();
+
+
+
+	
+	// smoke renderer
+	s = new Shader("smoke_effect_update.vs", "smoke_effect_update.gs", "smoke_effect_update.fs", true);
+	r_smokeEffectUpdate.addShader(s);
+
+	varyings[0] = "type1";
+	varyings[1] = "position1";
+	varyings[2] = "velocity1";
+	varyings[3] = "age1";
+
+	glTransformFeedbackVaryings(s->getProgramId(), 4, varyings, GL_INTERLEAVED_ATTRIBS);
+
+	s->linkShader();
+	s->useShader();
+	r_smokeEffectUpdate.addDataPair("u_deltaTimeMillis", DP_FLOAT);
+	r_smokeEffectUpdate.addDataPair("u_time", DP_FLOAT);
+	r_smokeEffectUpdate.addDataPair("u_randomTexture", DP_INT);
+	r_smokeEffectUpdate.addDataPair("u_launcherLifeTime", DP_FLOAT);
+	r_smokeEffectUpdate.addDataPair("u_shellLifeTime", DP_FLOAT);
+	r_smokeEffectUpdate.addDataPair("u_secondaryShellLifeTime", DP_FLOAT);
+
+
+	r_smokeEffectUpdate.enableShader();
+	r_smokeEffectUpdate.setData("u_launcherLifeTime", 100.0f);
+	r_smokeEffectUpdate.setData("u_shellLifeTime", 10000.0f);
+	r_smokeEffectUpdate.setData("u_secondaryShellLifeTime", 1000.0f);
+	r_smokeEffectUpdate.disableShader();
+
+
+
+
+	s = new Shader("smoke_effect_render.vs", "smoke_effect_render.gs", "smoke_effect_render.fs");
+	r_smokeEffectRender.addShader(s);
+	// vs
+	r_smokeEffectRender.addDataPair("u_time", DP_FLOAT);
+	r_smokeEffectRender.addDataPair("u_fadeRate", DP_FLOAT);
+
+	// gs
+	r_smokeEffectRender.addDataPair("u_angle", DP_FLOAT);
+	r_smokeEffectRender.addDataPair("u_billBoardSize", DP_FLOAT);
+	r_smokeEffectRender.addDataPair("u_centerPosition", DP_VEC3);
+
+	// fs
+	r_smokeEffectRender.addDataPair("u_texture", DP_INT);
+
+	r_smokeEffectRender.enableShader();
+		r_smokeEffectRender.setData("u_billBoardSize", 0.1f);
+	r_smokeEffectRender.disableShader();
+
+
+
 
 
 

@@ -14,20 +14,22 @@ struct SmokeParticle
 
 class SmokeEffect : public ParticleEffect
 {
-	SmokeEffect();
-	~SmokeEffect();
+	public:
+		SmokeEffect();
+		~SmokeEffect();
 
-	virtual void init();
-	virtual void update(Pipeline& p, Renderer* r);
-	virtual void render(Pipeline& p, Renderer* r);
-	void renderParticles();
+		virtual void init();
+		virtual void update(Pipeline& p, Renderer* r);
+		virtual void render(Pipeline& p, Renderer* r);
 
-	bool initRandomTexture(int size);
 
-	GLuint m_randomTextureId;
+		bool initRandomTexture(int size);
+		
+		GLuint m_randomTextureId;
+		int m_startingParticleCount;
+		float m_particleRotation;
 
-	virtual ParticleEffectType getParticleEffectType();
-
+		virtual ParticleEffectType getParticleEffectType();
 };
 
 

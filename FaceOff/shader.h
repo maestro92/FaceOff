@@ -44,8 +44,10 @@ class Shader
 
     public:
 
+		Shader(const char* vs_source);
         Shader(const char* vs_source, const char* fs_source);
 		Shader(const char* vs_source, const char* gs_source, const char* fs_source, bool feedBack = false);
+
 
         Shader(const char* vs_source, bool feedBack);
         Shader(const char* vs_source, const char* gs_source, bool feedBack);

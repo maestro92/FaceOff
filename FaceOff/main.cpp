@@ -87,7 +87,7 @@ void FaceOff::init()
 
 	m_pipeline.setMatrixMode(PROJECTION_MATRIX);
 	m_pipeline.loadIdentity();
-	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, 0.5, 2000.0);
+	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, 0.01, 2000.0);
 
 	glCullFace(GL_BACK);
 
@@ -577,7 +577,19 @@ void FaceOff::initObjects()
 	fwEffect->init();
 	fwEffect->setTexture("Assets/fireworks_red.jpg");
 
-	m_fireWorkEffects.push_back(fwEffect);
+	// m_fireWorkEffects.push_back(fwEffect);
+
+
+
+	SmokeEffect* smEffect = new SmokeEffect();
+//	smEffect->setPosition(glm::vec3(15.0, 0.0, -13.0));
+	smEffect->setPosition(glm::vec3(0.0, 0.0, 0.0));
+	smEffect->setScale(20.0);
+
+	smEffect->init();
+	smEffect->setTexture("Assets/fireworks_red.jpg");
+
+	m_smokeEffects.push_back(smEffect);
 }
 
 
@@ -1307,6 +1319,16 @@ void FaceOff::start()
 					break;
 
 
+				case SDLK_8:
+				{
+
+
+				}
+
+					break;
+
+
+
 				case SDLK_9:
 					//	if (m_players[m_defaultPlayerID]->has
 					break;
@@ -1329,6 +1351,8 @@ void FaceOff::start()
 							   }
 				}
 					break;
+
+
 
 
 				case SDLK_SPACE:
@@ -2138,44 +2162,80 @@ void FaceOff::forwardRender()
 	int deltaTimeMillis = (unsigned int)(timeNowMillis - m_currentTimeMillis);
 	m_currentTimeMillis = timeNowMillis;
 
-
-	p_renderer = &m_rm.r_particleEffectUpdate;
-	p_renderer->enableShader();
-	for (int i = 0; i < m_fireWorkEffects.size(); i++)
+	if (m_fireWorkEffects.size() > 0)
 	{
-		ParticleEffect* effect = m_fireWorkEffects[i];
-		effect->m_time += deltaTimeMillis;
-
-		if (effect->getParticleEffectType() == FIRE_WORK)
+		p_renderer = &m_rm.r_fireWorkEffectUpdate;
+		p_renderer->enableShader();
+		for (int i = 0; i < m_fireWorkEffects.size(); i++)
 		{
-			FireWorkEffect* fw = (FireWorkEffect*)effect;
-			p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, fw->m_randomTextureId);
-			p_renderer->setData("u_time", (float)fw->m_time);
+			FireWorkEffect* effect = m_fireWorkEffects[i];
+			effect->m_time += deltaTimeMillis;
+
+			p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, effect->m_randomTextureId);
+			p_renderer->setData("u_time", (float)effect->m_time);
 			p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
+
+			effect->update(m_pipeline, p_renderer);
 		}
-		else if (effect->getParticleEffectType() == SMOKE)
+		p_renderer->disableShader();
+
+
+		p_renderer = &m_rm.r_fireWorkEffectRender;
+		p_renderer->enableShader();
+		for (int i = 0; i < m_fireWorkEffects.size(); i++)
 		{
+			FireWorkEffect* effect = m_fireWorkEffects[i];
 
+			p_renderer->setData("u_centerPosition", effect->getPosition());
+			p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
+			effect->render(m_pipeline, p_renderer);
 		}
-
-		effect->update(m_pipeline, p_renderer);
+		p_renderer->disableShader();
 	}
 
-	p_renderer->disableShader();
 
 
-
-	p_renderer = &m_rm.r_particleEffectRender;
-	p_renderer->enableShader();
-	for (int i = 0; i < m_fireWorkEffects.size(); i++)
+	// smoke effects
+	if (m_smokeEffects.size() > 0)
 	{
-		ParticleEffect* effect = m_fireWorkEffects[i];
+		p_renderer = &m_rm.r_smokeEffectUpdate;
+		p_renderer->enableShader();
+		for (int i = 0; i < m_smokeEffects.size(); i++)
+		{
+			SmokeEffect* effect = m_smokeEffects[i];
+			effect->m_time += deltaTimeMillis;
 
-		p_renderer->setData("u_centerPosition", effect->getPosition());
-		p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
-		effect->render(m_pipeline, p_renderer);
+			p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, effect->m_randomTextureId);
+			p_renderer->setData("u_time", (float)effect->m_time);
+			p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
+
+			effect->update(m_pipeline, p_renderer);
+		}
+		p_renderer->disableShader();
+
+
+		p_renderer = &m_rm.r_smokeEffectRender;
+		p_renderer->enableShader();
+		for (int i = 0; i < m_smokeEffects.size(); i++)
+		{
+			SmokeEffect* effect = m_smokeEffects[i];
+
+			
+			p_renderer->setData("u_angle", effect->m_particleRotation);
+			p_renderer->setData("u_centerPosition", effect->getPosition());
+			p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
+			effect->render(m_pipeline, p_renderer);
+		}
+		p_renderer->disableShader();
+
+
+
 	}
-	p_renderer->disableShader();
+
+
+
+
+
 
 
 

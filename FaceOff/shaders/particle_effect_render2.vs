@@ -2,8 +2,6 @@
 
 layout (location = 0) in vec3 position;
 
-
-
 uniform float u_time;
 uniform float u_fadeRate;
 
