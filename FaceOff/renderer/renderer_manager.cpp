@@ -138,13 +138,19 @@ void RendererManager::init(int width, int height)
 	// gs
 	r_smokeEffectRender.addDataPair("u_angle", DP_FLOAT);
 	r_smokeEffectRender.addDataPair("u_billBoardSize", DP_FLOAT);
-	r_smokeEffectRender.addDataPair("u_centerPosition", DP_VEC3);
 
 	// fs
 	r_smokeEffectRender.addDataPair("u_texture", DP_INT);
+	r_smokeEffectRender.addDataPair("u_depthTexture", DP_INT);
+	r_smokeEffectRender.addDataPair("u_inverseScreenSize", DP_VEC2);
+	r_smokeEffectRender.addDataPair("u_zNear", DP_FLOAT);
+	r_smokeEffectRender.addDataPair("u_zFar", DP_FLOAT);
 
 	r_smokeEffectRender.enableShader();
-		r_smokeEffectRender.setData("u_billBoardSize", 0.1f);
+		r_smokeEffectRender.setData("u_billBoardSize", 1.0f);
+		r_smokeEffectRender.setData("u_inverseScreenSize", glm::vec2(1.0f / utl::SCREEN_WIDTH, 1.0f / utl::SCREEN_HEIGHT));
+		r_smokeEffectRender.setData("u_zNear", utl::Z_NEAR);
+		r_smokeEffectRender.setData("u_zFar", utl::Z_FAR);
 	r_smokeEffectRender.disableShader();
 
 

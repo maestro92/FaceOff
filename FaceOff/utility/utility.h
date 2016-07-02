@@ -179,6 +179,8 @@ class LinkedList
 
 namespace utl
 {
+	const float Z_NEAR = 0.05;
+	const float Z_FAR = 2000.0;
 	const int SCREEN_WIDTH = 800;
 	const int SCREEN_HEIGHT = 600;
 

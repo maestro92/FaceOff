@@ -87,7 +87,7 @@ void FaceOff::init()
 
 	m_pipeline.setMatrixMode(PROJECTION_MATRIX);
 	m_pipeline.loadIdentity();
-	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, 0.01, 2000.0);
+	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
 
 	glCullFace(GL_BACK);
 
@@ -381,7 +381,6 @@ void FaceOff::initObjects()
 
 
 
-
 	o_temp = new Weapon(m_mm.getWeaponData(MINIGUN));
 	o_temp->m_name = "MINIGUN";
 	o_temp->setAABBByPosition(-1 * formationGap, 5, -110);
@@ -577,14 +576,14 @@ void FaceOff::initObjects()
 	fwEffect->init();
 	fwEffect->setTexture("Assets/fireworks_red.jpg");
 
-	// m_fireWorkEffects.push_back(fwEffect);
+	m_fireWorkEffects.push_back(fwEffect);
 
 
 
 	SmokeEffect* smEffect = new SmokeEffect();
-//	smEffect->setPosition(glm::vec3(15.0, 0.0, -13.0));
-	smEffect->setPosition(glm::vec3(0.0, 0.0, 0.0));
-	smEffect->setScale(20.0);
+	smEffect->setPosition(glm::vec3(15.0, 0.0, -13.0));
+//	smEffect->setPosition(glm::vec3(0.0, 0.0, 0.0));
+	smEffect->setScale(5.0);
 
 	smEffect->init();
 	smEffect->setTexture("Assets/fireworks_red.jpg");
@@ -598,7 +597,6 @@ void FaceOff::initObjects()
 
 void FaceOff::initRenderers()
 {
-
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
@@ -2194,7 +2192,7 @@ void FaceOff::forwardRender()
 	}
 
 
-
+	/*
 	// smoke effects
 	if (m_smokeEffects.size() > 0)
 	{
@@ -2227,11 +2225,8 @@ void FaceOff::forwardRender()
 			effect->render(m_pipeline, p_renderer);
 		}
 		p_renderer->disableShader();
-
-
-
 	}
-
+	*/
 
 
 
@@ -2244,7 +2239,53 @@ void FaceOff::forwardRender()
 	m_gui.initGUIRenderingSetup();
 
 	m_gui.renderTextureFullScreen(m_rm.m_backGroundLayerFBO.colorTexture);
+//	m_gui.renderTextureFullScreen(m_rm.m_backGroundLayerFBO.depthTexture);
 	//	m_gui.renderTextureFullScreen(tempTexture);
+
+
+	
+	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	// smoke effects
+	if (m_smokeEffects.size() > 0)
+	{
+		p_renderer = &m_rm.r_smokeEffectUpdate;
+		p_renderer->enableShader();
+		for (int i = 0; i < m_smokeEffects.size(); i++)
+		{
+			SmokeEffect* effect = m_smokeEffects[i];
+			effect->m_time += deltaTimeMillis;
+
+			p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, effect->m_randomTextureId);
+			p_renderer->setData("u_time", (float)effect->m_time);
+			p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
+
+			effect->update(m_pipeline, p_renderer);
+		}
+		p_renderer->disableShader();
+
+
+		p_renderer = &m_rm.r_smokeEffectRender;
+		p_renderer->enableShader();
+		for (int i = 0; i < m_smokeEffects.size(); i++)
+		{
+			SmokeEffect* effect = m_smokeEffects[i];
+
+			p_renderer->setData("u_angle", effect->m_particleRotation);
+			p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
+			p_renderer->setData("u_depthTexture", 1, GL_TEXTURE_2D, m_rm.m_backGroundLayerFBO.depthTexture);
+			effect->render(m_pipeline, p_renderer);
+		}
+		p_renderer->disableShader();
+	}
+	
+
+	glDisable(GL_BLEND);
+	
+	
+
 
 
 	m_gui.updateAndRender(m_mouseState);
