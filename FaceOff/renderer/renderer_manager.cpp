@@ -1,19 +1,6 @@
 
 #include "renderer_manager.h"
 
-/*
-Renderer RendererManager::r_fullVertexColor;
-Renderer RendererManager::r_fullColor;
-Renderer RendererManager::r_fullTexture;
-Renderer RendererManager::r_playerTarget;
-
-
-SceneRenderer RendererManager::r_multiTexTerrain;
-SceneRenderer RendererManager::r_texturedObject;
-SceneRenderer RendererManager::r_billboardOneQuad;
-SceneRenderer RendererManager::r_billboardTwoQuad;
-*/
-
 
 RendererManager::RendererManager()
 {
@@ -121,9 +108,9 @@ void RendererManager::init(int width, int height)
 
 
 	r_smokeEffectUpdate.enableShader();
-	r_smokeEffectUpdate.setData("u_launcherLifeTime", 100.0f);
-	r_smokeEffectUpdate.setData("u_shellLifeTime", 10000.0f);
-	r_smokeEffectUpdate.setData("u_secondaryShellLifeTime", 1000.0f);
+		r_smokeEffectUpdate.setData("u_launcherLifeTime", 100.0f);
+		r_smokeEffectUpdate.setData("u_shellLifeTime", 10000.0f);
+		r_smokeEffectUpdate.setData("u_secondaryShellLifeTime", 1000.0f);
 	r_smokeEffectUpdate.disableShader();
 
 
@@ -147,7 +134,7 @@ void RendererManager::init(int width, int height)
 	r_smokeEffectRender.addDataPair("u_zFar", DP_FLOAT);
 
 	r_smokeEffectRender.enableShader();
-		r_smokeEffectRender.setData("u_billBoardSize", 1.0f);
+		r_smokeEffectRender.setData("u_billBoardSize", 4.0f);
 		r_smokeEffectRender.setData("u_inverseScreenSize", glm::vec2(1.0f / utl::SCREEN_WIDTH, 1.0f / utl::SCREEN_HEIGHT));
 		r_smokeEffectRender.setData("u_zNear", utl::Z_NEAR);
 		r_smokeEffectRender.setData("u_zFar", utl::Z_FAR);

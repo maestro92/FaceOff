@@ -6,6 +6,7 @@
 #include "weapon_enum.h"
 #include "weapon_data.h"
 #include "particle_effect.h"
+#include "smoke_effect.h"
 
 using namespace std;
 

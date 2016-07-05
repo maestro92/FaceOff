@@ -132,18 +132,20 @@ bool Weapon::shouldExplode()
 
 ParticleEffect* Weapon::explode()
 {
-	FireWorkEffect* effect = new FireWorkEffect();
+	SmokeEffect* effect = new SmokeEffect();
 
 	effect->setPosition(m_position);
+	effect->m_position.y += 5.0;
+
+//	effect->m_position.y = 5.0;
 
 	utl::debug("position", m_position);
 
-	effect->setScale(50.0);
+	effect->setScale(5.0);
 
 	effect->init();
-	effect->setTexture("Assets/fireworks_red.jpg");
+//	effect->setTexture("Assets/Images/smoke_sprite.png");
 
 	return effect;
 }
-
 

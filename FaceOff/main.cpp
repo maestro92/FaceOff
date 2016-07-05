@@ -567,7 +567,7 @@ void FaceOff::initObjects()
 
 
 
-
+	
 	// Grenade particle effect
 	FireWorkEffect* fwEffect = new FireWorkEffect();
 	fwEffect->setPosition(glm::vec3(15.0, 0.0, 13.0));
@@ -577,18 +577,16 @@ void FaceOff::initObjects()
 	fwEffect->setTexture("Assets/fireworks_red.jpg");
 
 	m_fireWorkEffects.push_back(fwEffect);
+	
 
-
-
+	
 	SmokeEffect* smEffect = new SmokeEffect();
-	smEffect->setPosition(glm::vec3(15.0, 0.0, -13.0));
-//	smEffect->setPosition(glm::vec3(0.0, 0.0, 0.0));
+	smEffect->setPosition(glm::vec3(15.0, 5.0, -13.0));
 	smEffect->setScale(5.0);
 
 	smEffect->init();
-	smEffect->setTexture("Assets/fireworks_red.jpg");
-
 	m_smokeEffects.push_back(smEffect);
+	
 }
 
 
@@ -1747,7 +1745,8 @@ void FaceOff::forwardRender()
 
 
 
-				m_fireWorkEffects.push_back((FireWorkEffect*)effect);
+
+				m_smokeEffects.push_back((SmokeEffect*)effect);
 
 
 				delete wObject;
@@ -2239,15 +2238,30 @@ void FaceOff::forwardRender()
 	m_gui.initGUIRenderingSetup();
 
 	m_gui.renderTextureFullScreen(m_rm.m_backGroundLayerFBO.colorTexture);
-//	m_gui.renderTextureFullScreen(m_rm.m_backGroundLayerFBO.depthTexture);
 	//	m_gui.renderTextureFullScreen(tempTexture);
 
-
-	
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
+//	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	/*
+	utl::debug("u_deltaTimeMillis", deltaTimeMillis);
+
+	if (m_smokeEffects.size() > 1)
+	{
+		utl::debug("m_smokeEffects[1]", m_smokeEffects);
+	}
+	*/
+
+	/*
+	for (int i = 0; i < m_smokeEffects.size(); i++)
+	{
+		SmokeEffect* effect = m_smokeEffects[i];
+		utl::debug("time is", (float)effect->m_time);
+	}
+	*/
+
 	// smoke effects
 	if (m_smokeEffects.size() > 0)
 	{

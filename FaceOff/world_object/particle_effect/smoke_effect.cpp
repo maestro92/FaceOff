@@ -1,7 +1,7 @@
 #include "smoke_effect.h"
 
 
-#define MAX_PARTICLES 500
+#define MAX_PARTICLES 25
 #define PARTICLE_LIFETIME 10.0f
 
 #define PARTICLE_TYPE_LAUNCHER 0.0f
@@ -38,8 +38,6 @@ SmokeEffect::~SmokeEffect()
 
 void SmokeEffect::init()
 {
-	m_startingParticleCount = 100;
-
 	SmokeParticle particles[MAX_PARTICLES];
 	memset(particles, 0, sizeof(particles));
 
@@ -55,7 +53,7 @@ void SmokeEffect::init()
 		float z = utl::randFloat(-1.0f, 1.0f);
 
 
-		float scale = 5.0f;
+		float scale = 10.0f;
 
 		float vx = utl::randFloat(-scale, scale);
 		float vy = utl::randFloat(0.0, scale);
@@ -91,12 +89,15 @@ void SmokeEffect::init()
 	}
 
 	initRandomTexture(1000);
+	m_textureId = utl::loadTexture("Assets/Images/smoke_sprite2.png");
+
 
 }
 
 
 bool SmokeEffect::initRandomTexture(int size)
 {
+	
 	glm::vec3* pRandomData = new glm::vec3[size];
 	for (unsigned int i = 0; i < size; i++)
 	{
@@ -123,7 +124,7 @@ bool SmokeEffect::initRandomTexture(int size)
 	}
 
 	cout << "random texture very nice" << endl;
-
+	
 	return true;
 }
 
