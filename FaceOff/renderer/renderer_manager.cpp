@@ -15,7 +15,6 @@ RendererManager::~RendererManager()
 
 void RendererManager::init(int width, int height)
 {
-	/*
 	m_stringToDPTypeEnum =
 		unordered_map<string, DATA_PAIR_TYPE>
 		({
@@ -29,20 +28,15 @@ void RendererManager::init(int width, int height)
 			{ "DP_MAT4", DP_MAT4 }
 	});
 
-	char* filename = "Assets/renderer_data.json";
+	char* filename = "renderer/renderer_data.json";
 
 	Value vContent = utl::readJsonFileToVector(filename);
-
 	const Array& vArray = vContent.get_array();
 
-	*/
-	
+	initRenderer(vArray, &r_fullVertexColor, "r_fullVertexColor");
+
+
 	Shader* s;
-
-
-	
-
-
 
     s = new Shader("full_vertex_color.vs", "full_vertex_color.fs");
     r_fullVertexColor.addShader(s);
@@ -217,30 +211,125 @@ void RendererManager::init(int width, int height)
 
 }
 
-/*
-void RendererManager::initRenderer(Renderer* r, Object obj)
+Object RendererManager::findRendererObject(const Array arr, string rName)
 {
-	char* filename = "Assets/renderer_data.json";
-
-	Value vContent = utl::readJsonFileToVector(filename);
-
-	const Array& vArray = vContent.get_array();
-
-	for (int i = 0; i < vArray.size(); i++)
+	Object rObj;
+	bool found = false;
+	for (int i = 0; i < arr.size(); i++)
 	{
-		const Object obj = vArray[i].get_obj();
-
-		for (Object::size_type j = 0; j != obj.size(); j++)
+		const Object obj = arr[i].get_obj();
+		for (Object::size_type i = 0; i != obj.size(); i++)
 		{
-			const Pair& pair = obj[j];
-
+			const Pair& pair = obj[i];
 			const string& name = pair.name_;
 			const Value&  value = pair.value_;
-			utl::debug("name is", name);
+
+			if (name == "r" && value.get_str() == rName)
+			{
+				rObj = obj;
+				found = true;
+			}
+
+			break;
+		}
+
+		if (found)
+			break;
+	}
+
+	if (found == false)
+	{
+		cout << rName << " not found" << endl;
+		exit(1);
+	}
+
+	return rObj;
+}
+
+void RendererManager::initRenderer(const Array arr, Renderer* r, string name)
+{
+	Object obj = findRendererObject(arr, name);
+	initRenderer(obj, r);
+}
+
+void RendererManager::initRenderer(const Object obj, Renderer* r)
+{
+	string vs = "";
+	string gs = "";
+	string fs = "";
+	GLchar** varyings = NULL;
+
+	bool hasGs = false;
+	bool transform = false;
+
+	for (Object::size_type i = 0; i != obj.size(); i++)
+	{
+		const Pair& pair = obj[i];
+		const string& name = pair.name_;
+		const Value&  value = pair.value_;
+
+		if (name == "vs")
+		{
+			vs = value.get_str();
+		}
+
+		else if (name == "gs")
+		{
+			gs = value.get_str();
+			hasGs = true;
+		}
+
+		else if (name == "fs")
+		{
+			fs = value.get_str();
+		}
+
+		else if (name == "tf_data")
+		{
+			transform = true;
+			const Array& array = value.get_array();
+
+			int size = array.size();
+			varyings = new GLchar*[size];
+
+			for (int j = 0; j < size; j++)
+			{
+				string str = array[j].get_str();
+				varyings[j] = (GLchar*)str.c_str();
+			}
+		}
+
+		else if (name == "data")
+		{
+
+			Shader* s;
+			if (hasGs)
+			{
+				s = new Shader(vs.c_str(), gs.c_str(), fs.c_str(), transform);
+			}
+			else
+			{
+				s = new Shader(vs.c_str(), fs.c_str(), transform);
+			}
+
+			const Object& dataObj = value.get_obj();
+
+			int size = dataObj.size();
+			for (int j = 0; j < size; j++)
+			{
+				const Pair& pair1 = dataObj[i];
+				const string& name1 = pair1.name_;
+				const Value&  value1 = pair1.value_;
+
+				utl::debug("name1", name1);
+				utl::debug("value1", value1.get_str());
+			}
+
+
 		}
 	}
 }
-*/
+
 
 
 void RendererManager::initSceneRendererStaticLightsData(LightManager lightManager)

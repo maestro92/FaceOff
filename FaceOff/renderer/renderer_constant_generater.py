@@ -98,7 +98,6 @@ for entry in data:
 
 
 
-
 #print (type(data))
 #pprint(data)
 

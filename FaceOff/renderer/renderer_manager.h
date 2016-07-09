@@ -42,9 +42,17 @@ class RendererManager
 		FrameBufferObject m_particleLayerFBO;
 
 		void init(int width, int height);
-		void initSceneRendererStaticLightsData(LightManager lightManager);
-		void initRenderer(Renderer* r);
 
+		void initRenderer(const Array arr, Renderer* r, string name);
+		Object findRendererObject(const Array arr, string name);
+		void initRenderer(const Object obj, Renderer* r);
+
+
+
+
+		void initSceneRendererStaticLightsData(LightManager lightManager);
+
+		
 		unordered_map<string, DATA_PAIR_TYPE> m_stringToDPTypeEnum;
 };
 

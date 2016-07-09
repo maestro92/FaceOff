@@ -1,72 +1,108 @@
 [
 	{
 
-		"r": 			"r_fullVertexColor"
+		"r": 			"r_fullVertexColor",
+		"vs":			"full_vertex_color.vs",
+		"fs":			"full_vertex_color.fs"
 	},
 
 
 	{
 		"r": 			"r_fullColor",
+		"vs":			"full_color.vs",
+		"fs":			"full_color.fs",
 		"data":
-		[
-			"u_color"
-		]
+		{
+			"u_color":		"DP_VEC3"
+		}
 	},
 
 
 	{
 		"r": 			"r_fullTexture",
+		"vs":			"full_texture.vs",
+		"fs":			"full_texture.fs",
 		"data":
-		[
-			"u_texture"
-		]
+		{
+			"u_texture":	"DP_INT"
+		}
 	},
 
 
 	{
 		"r": 			"r_playerTarget",
+		"vs":			"player_target.vs",
+		"fs":			"player_target.fs",
 		"data":
-		[
-			"u_texture"
-		]
+		{
+			"u_texture":	"DP_INT"
+		}
 	},
 
 
 	{
 		"r": 			"r_fireWorkEffectUpdate",
-		"data":
+		"vs":			"particle_effect_update.vs",
+		"gs":			"particle_effect_update.gs",
+		"fs":			"particle_effect_update.fs",
+		"tf_data":
 		[
-			"u_deltaTimeMillis",
-			"u_time",
-			"u_randomTexture",
-			"u_launcherLifeTime",
-			"u_shellLifeTime",
-			"u_secondaryShellLifeTime"
-		]
+			"type1",
+			"position1",
+			"velocity1",
+			"age1"
+		],
+		"data":
+		{
+			"u_deltaTimeMillis":			"DP_FLOAT",
+			"u_time":						"DP_FLOAT",
+			"u_randomTexture":				"DP_INT",
+			"u_launcherLifeTime":			"DP_FLOAT",
+			"u_shellLifeTime":				"DP_FLOAT",
+			"u_secondaryShellLifeTime":		"DP_FLOAT"
+		}
+
 	},
 
 	{
 		"r": 			"r_smokeEffectUpdate",
-		"data":
+		"vs":			"smoke_effect_update.vs",
+		"gs":			"smoke_effect_update.gs",
+		"fs":			"smoke_effect_update.fs",
+		"tf_data":
 		[
-			"u_deltaTimeMillis",
-			"u_time",
-			"u_randomTexture",
-			"u_launcherLifeTime",
-			"u_shellLifeTime",
-			"u_secondaryShellLifeTime"
-		]
+			"type1",
+			"position1",
+			"velocity1",
+			"age1"
+		],
+		"data":
+		{
+			"u_deltaTimeMillis":			"DP_FLOAT",
+			"u_time":						"DP_FLOAT",
+			"u_randomTexture":				"DP_INT",
+			"u_launcherLifeTime":			"DP_FLOAT",
+			"u_shellLifeTime":				"DP_FLOAT",
+			"u_secondaryShellLifeTime":		"DP_FLOAT"
+		}
 	},
 
 	{
 		"r": 			"r_smokeEffectRender",
+		"vs":			"smoke_effect_render.vs",
+		"gs":			"smoke_effect_render.gs",
+		"fs":			"smoke_effect_render.fs",
 		"data":
-		[
-			"u_time",
-			"u_fadeRate",
-			"u_billBoardSize",
-			"u_centerPosition",
-			"u_texture"
-		]
+		{
+			"u_time":				"DP_FLOAT",
+			"u_fadeRate":			"DP_FLOAT",
+			"u_angle":				"DP_FLOAT",
+			"u_billBoardSize":		"DP_FLOAT",
+			"u_texture":			"DP_INT",
+			"u_depthTexture":		"DP_INT",
+			"u_inverseScreenSize":	"DP_VEC2",
+			"u_zNear":				"DP_FLOAT",
+			"u_zFar":				"DP_FLOAT"
+		}
 	}
 ]
