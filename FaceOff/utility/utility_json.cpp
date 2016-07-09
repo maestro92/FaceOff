@@ -2,13 +2,59 @@
 
 
 
+mValue utl::readJsonFileToMap(char* filename)
+{
+	ifstream is(filename);
+
+	mValue content;
+	try
+	{
+		read_or_throw(is, content);
+	}
+	catch (Error_position errorPosition)
+	{
+		cout << "	error reading " << filename << endl;
+		cout << "	line " << errorPosition.line_ << endl;
+		cout << "	column " << errorPosition.column_ << endl;
+		cout << "	" << errorPosition.reason_ << endl;
+		exit(1);
+	}
+	return content;
+}
+
+
+Value utl::readJsonFileToVector(char* filename)
+{
+	ifstream is(filename);
+
+	Value content;
+	try
+	{
+		read_or_throw(is, content);
+	}
+	catch (Error_position errorPosition)
+	{
+		cout << "	error reading " << filename << endl;
+		cout << "	line " << errorPosition.line_ << endl;
+		cout << "	column " << errorPosition.column_ << endl;
+		cout << "	" << errorPosition.reason_ << endl;
+		exit(1);
+	}
+	return content;
+}
+
 
 const mValue& utl::findValue(const mObject& obj, const string& name)
 {
 	mObject::const_iterator it = obj.find(name);
 
-	assert(it != obj.end());
-	assert(it->first == name);
+	if (it == obj.end() || it->first != name)
+	{
+		cout << "error findingValue " << name << endl;
+		//		assert(it != obj.end());
+		//		assert(it->first == name);
+		exit(1);
+	}
 
 	return it->second;
 }

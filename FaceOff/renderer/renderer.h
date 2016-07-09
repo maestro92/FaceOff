@@ -310,9 +310,14 @@ enum DATA_PAIR_TYPE
 };
 
 
+
+
 class Renderer
 {
     public:
+
+
+
         Renderer();
         virtual ~Renderer();
 

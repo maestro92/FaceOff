@@ -15,7 +15,34 @@ RendererManager::~RendererManager()
 
 void RendererManager::init(int width, int height)
 {
-    Shader* s;
+	/*
+	m_stringToDPTypeEnum =
+		unordered_map<string, DATA_PAIR_TYPE>
+		({
+			{ "DP_BOOL", DP_BOOL },
+			{ "DP_INT", DP_INT },
+			{ "DP_FLOAT", DP_FLOAT },
+			{ "DP_VEC2", DP_VEC2 },
+			{ "DP_VEC3", DP_VEC3 },
+			{ "DP_VEC4", DP_VEC4 },
+			{ "DP_MAT3", DP_MAT3 },
+			{ "DP_MAT4", DP_MAT4 }
+	});
+
+	char* filename = "Assets/renderer_data.json";
+
+	Value vContent = utl::readJsonFileToVector(filename);
+
+	const Array& vArray = vContent.get_array();
+
+	*/
+	
+	Shader* s;
+
+
+	
+
+
 
     s = new Shader("full_vertex_color.vs", "full_vertex_color.fs");
     r_fullVertexColor.addShader(s);
@@ -145,15 +172,11 @@ void RendererManager::init(int width, int height)
 
 
 
-
+	
 	s = new Shader("background_and_particle_composite.vs", "background_and_particle_composite.fs");
 	r_composite.addShader(s);
 	r_composite.addDataPair("u_backgroundTexutre", DP_INT);
 	r_composite.addDataPair("u_particlesTexture", DP_INT);
-
-
-
-
 
 
 	// scene renderers
@@ -184,8 +207,8 @@ void RendererManager::init(int width, int height)
 	r_billboardTwoQuad.addDataPair("u_billboardWidthScale", DP_FLOAT);
 	r_billboardTwoQuad.addDataPair("u_billboardHeightScale", DP_FLOAT);
 
+	
 
-	char* filename = "Assets/renderer_data.json";
 
 
 
@@ -193,6 +216,32 @@ void RendererManager::init(int width, int height)
 	m_particleLayerFBO = utl::createFrameBufferObject(width, height);
 
 }
+
+/*
+void RendererManager::initRenderer(Renderer* r, Object obj)
+{
+	char* filename = "Assets/renderer_data.json";
+
+	Value vContent = utl::readJsonFileToVector(filename);
+
+	const Array& vArray = vContent.get_array();
+
+	for (int i = 0; i < vArray.size(); i++)
+	{
+		const Object obj = vArray[i].get_obj();
+
+		for (Object::size_type j = 0; j != obj.size(); j++)
+		{
+			const Pair& pair = obj[j];
+
+			const string& name = pair.name_;
+			const Value&  value = pair.value_;
+			utl::debug("name is", name);
+		}
+	}
+}
+*/
+
 
 void RendererManager::initSceneRendererStaticLightsData(LightManager lightManager)
 {
@@ -212,3 +261,14 @@ void RendererManager::initSceneRendererStaticLightsData(LightManager lightManage
 		r_billboardTwoQuad.setDirLightData(lightManager.getDirLight(0));
 	r_texturedObject.disableShader();
 }
+
+
+
+
+
+
+
+
+
+
+

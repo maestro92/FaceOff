@@ -315,9 +315,12 @@ namespace utl
 
 
 	/// utl_json.cpp
-	const mValue& findValue(const mObject& obj, const string& name);
-	glm::vec3 findVec3(const mObject& obj, const string& name);
+	mValue readJsonFileToMap(char* file);
+	Value readJsonFileToVector(char* file);
 
+	const mValue& findValue(const mObject& obj, const string& name);
+
+	glm::vec3 findVec3(const mObject& obj, const string& name);
 };
 
 template<typename T>

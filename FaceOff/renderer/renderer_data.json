@@ -1,0 +1,72 @@
+[
+	{
+
+		"r": 			"r_fullVertexColor"
+	},
+
+
+	{
+		"r": 			"r_fullColor",
+		"data":
+		[
+			"u_color"
+		]
+	},
+
+
+	{
+		"r": 			"r_fullTexture",
+		"data":
+		[
+			"u_texture"
+		]
+	},
+
+
+	{
+		"r": 			"r_playerTarget",
+		"data":
+		[
+			"u_texture"
+		]
+	},
+
+
+	{
+		"r": 			"r_fireWorkEffectUpdate",
+		"data":
+		[
+			"u_deltaTimeMillis",
+			"u_time",
+			"u_randomTexture",
+			"u_launcherLifeTime",
+			"u_shellLifeTime",
+			"u_secondaryShellLifeTime"
+		]
+	},
+
+	{
+		"r": 			"r_smokeEffectUpdate",
+		"data":
+		[
+			"u_deltaTimeMillis",
+			"u_time",
+			"u_randomTexture",
+			"u_launcherLifeTime",
+			"u_shellLifeTime",
+			"u_secondaryShellLifeTime"
+		]
+	},
+
+	{
+		"r": 			"r_smokeEffectRender",
+		"data":
+		[
+			"u_time",
+			"u_fadeRate",
+			"u_billBoardSize",
+			"u_centerPosition",
+			"u_texture"
+		]
+	}
+]

@@ -1,0 +1,4 @@
+
+#ifndef RENDERER_CONSTANT_H_
+#define RENDERER_CONSTANT_H_
+#endif

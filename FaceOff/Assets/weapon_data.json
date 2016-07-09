@@ -1,5 +1,4 @@
 [
-
 	{
 		"name": 			"KNIFE",
 		"damage": 			36,
@@ -220,8 +219,6 @@
 			"y":			-0.23,
 			"z":			0.93
 		},
-		"model":			"frag_grenade/frag grenade.obj",
-	},
-
-
+		"model":			"frag_grenade/frag grenade.obj"
+	}
 ]

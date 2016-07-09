@@ -68,7 +68,7 @@ void ModelManager::initWeaponsData()
 			{ "MACHINE_GUN", MACHINE_GUN }
 		});
 		*/
-		
+
 	m_weaponNameToEnum = 
 		unordered_map<string, WeaponNameEnum>
 		({
@@ -89,33 +89,32 @@ void ModelManager::initWeaponsData()
 	
 
 	char* filename = "Assets/weapon_data.json";
-	ifstream is(filename);
+	mValue content = utl::readJsonFileToMap(filename);
 
-	mValue value;
-	read(is, value);
-
-	const mArray& addr_array = value.get_array();
+	const mArray& addr_array = content.get_array();
 
 	string modelPath = "./Assets/models/weapons/";
 
 	for (int i = 0; i < addr_array.size(); i++)
 	{
 		const mObject obj = addr_array[i].get_obj();
+		//const mArray& arr = addr_array[i].get_array();
+		//cout << "val size is " << arr.size() << endl;
 
-		string	name =					findValue(obj, "name").get_str();
+		string name =					utl::findValue(obj, "name").get_str();
 		WeaponNameEnum nameEnum =		m_weaponNameToEnum[name];
-		int damage =					findValue(obj, "damage").get_int();
-		int magazineCapacity =			findValue(obj, "magazineCapacity").get_int();
-		int maxMagazineCount =			findValue(obj, "maxMagazineCount").get_int();
-		
-		float modelScale =				findValue(obj, "modelScale").get_real();	
-		string weaponSlotStr =			findValue(obj, "slot").get_str();
+		int damage =					utl::findValue(obj, "damage").get_int();
+		int magazineCapacity =			utl::findValue(obj, "magazineCapacity").get_int();
+		int maxMagazineCount =			utl::findValue(obj, "maxMagazineCount").get_int();
+
+		float modelScale =				utl::findValue(obj, "modelScale").get_real();
+		string weaponSlotStr =			utl::findValue(obj, "slot").get_str();
 		WeaponSlotEnum slotEnum =		m_weaponSlotToEnum[weaponSlotStr];
 
-		float fPOVScale =				findValue(obj, "firstPOVScale").get_real();
-		glm::vec3 fPOVOffset =			findVec3(obj, "firstPOVOffset");
-		
-		string modelFileName =			modelPath + findValue(obj, "model").get_str();
+		float fPOVScale =				utl::findValue(obj, "firstPOVScale").get_real();
+		glm::vec3 fPOVOffset =			utl::findVec3(obj, "firstPOVOffset");
+
+		string modelFileName =			modelPath + utl::findValue(obj, "model").get_str();
 		
 		ImportedModel* model = new ImportedModel(modelFileName);
 
@@ -130,6 +129,79 @@ void ModelManager::initWeaponsData()
 									slotEnum,
 									model };
 	}
+	
+
+
+	Value vContent = utl::readJsonFileToVector(filename);
+
+	const Array& vArray = vContent.get_array();
+
+	for (int i = 0; i < vArray.size(); i++)
+	{
+		const Object obj = vArray[i].get_obj();
+
+		for (Object::size_type j = 0; j != obj.size(); j++)
+		{
+			const Pair& pair = obj[j];
+
+			const string& name = pair.name_;
+			const Value&  value = pair.value_;
+			utl::debug("name is", name);
+		}
+	}
+
+
+
+
+	/*
+	ifstream is(filename);
+
+	Value vContent;
+	read_or_throw(is, vContent);
+
+
+
+	const Array& vArray = vContent.get_array();
+
+	for (int i = 0; i < vArray.size(); i++)
+	{
+		const Object obj = vArray[i].get_obj();
+		//const mArray& arr = addr_array[i].get_array();
+		//cout << "val size is " << arr.size() << endl;
+
+		string name = utl::findValue(obj, "name").get_str();
+		WeaponNameEnum nameEnum = m_weaponNameToEnum[name];
+		int damage = utl::findValue(obj, "damage").get_int();
+		int magazineCapacity = utl::findValue(obj, "magazineCapacity").get_int();
+		int maxMagazineCount = utl::findValue(obj, "maxMagazineCount").get_int();
+
+		float modelScale = utl::findValue(obj, "modelScale").get_real();
+		string weaponSlotStr = utl::findValue(obj, "slot").get_str();
+		WeaponSlotEnum slotEnum = m_weaponSlotToEnum[weaponSlotStr];
+
+		float fPOVScale = utl::findValue(obj, "firstPOVScale").get_real();
+		glm::vec3 fPOVOffset = utl::findVec3(obj, "firstPOVOffset");
+
+
+	}
+
+	*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	/*
@@ -154,6 +226,7 @@ void ModelManager::initWeaponsData()
 
 
 
+/*
 glm::vec3 ModelManager::findVec3(const mObject& obj, const string& name)
 {
 	const mObject vec3Obj = findValue(obj, name).get_obj();
@@ -167,17 +240,22 @@ glm::vec3 ModelManager::findVec3(const mObject& obj, const string& name)
 	return vec3Value;
 }
 
-
 const mValue& ModelManager::findValue(const mObject& obj, const string& name)
 {
 	mObject::const_iterator it = obj.find(name);
 
-	assert(it != obj.end());
-	assert(it->first == name);
+	
+	if (it == obj.end() || it->first != name)
+	{
+		cout << "error findingValue " << name);
+//		assert(it != obj.end());
+//		assert(it->first == name);
+		exit(1);
+	}
 
 	return it->second;
 }
-
+*/
 
 
 

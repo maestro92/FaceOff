@@ -12,6 +12,7 @@ class RendererManager
         ~RendererManager();
 
 
+
         Renderer		r_fullVertexColor;
 		Renderer		r_fullColor;
 		Renderer		r_fullTexture;
@@ -42,6 +43,9 @@ class RendererManager
 
 		void init(int width, int height);
 		void initSceneRendererStaticLightsData(LightManager lightManager);
+		void initRenderer(Renderer* r);
+
+		unordered_map<string, DATA_PAIR_TYPE> m_stringToDPTypeEnum;
 };
 
 #endif
