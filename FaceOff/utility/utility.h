@@ -10,7 +10,7 @@
 #include <fstream>
 #include <cstdio>
 #include <iomanip>
-
+#include <queue>
 #include <GL/glew.h>
 
 //#define NO_SDL_GLEXT

@@ -545,7 +545,7 @@ void FaceOff::initObjects()
 
 
 
-
+	
 	Player* p = new Player(1);
 	p->setPosition(p->m_id * 25, 5, p->m_id * 10 - 8);
 	p->updateAABB();
@@ -555,6 +555,7 @@ void FaceOff::initObjects()
 	p->setPosition((p->m_id - 1) * 25, 5, p->m_id * 10 + 8);
 	p->updateAABB();
 	m_players.push_back(p);
+	
 
 	utl::debug("0 max", m_players[0]->m_aabb.max);
 	utl::debug("0 min", m_players[0]->m_aabb.min);
@@ -587,6 +588,9 @@ void FaceOff::initObjects()
 	smEffect->init();
 	m_smokeEffects.push_back(smEffect);
 	
+
+	utl::debug("Printing Tree");
+	m_objectKDtree.print();
 }
 
 
@@ -1678,7 +1682,7 @@ void FaceOff::forwardRender()
 		//	utl::debug("player pos is ", m_players[m_defaultPlayerID]->m_position);
 		//	utl::debug("player vel is ", m_players[m_defaultPlayerID]->m_velocity);
 
-
+#if 1 
 		int tempId = 2;
 		float tempDist = 100;
 
@@ -1695,22 +1699,34 @@ void FaceOff::forwardRender()
 
 
 		m_players[tempId]->updateAABB();
+#endif
 
 		for (int i = 0; i < m_players.size(); i++)
 		{
 			Player* p = m_players[i];
 
-
-
-			for (int j = p->m_parentNodes.size() - 1; j >= 0; j--)
+			for (int j = 0; j < p->m_parentNodes.size(); j++)
 			{
-				KDTreeNode* kNode = p->m_parentNodes[j];
-				(kNode->m_objects2).erase(p->m_instanceId);
-				//		p->m_parentNodes.pop_back();
-			}
-			p->m_parentNodes.clear();
+				KDTreeNode* kNode = p->m_parentNodes[j]; 
 
-			m_objectKDtree.insert(m_players[i]);
+				if (kNode == NULL)
+					continue;
+
+				kNode->removeObject(p);
+			}
+
+			// removing, we pop empty our queue, and set everything in vector to NULL
+			while (!p->m_emptyIndexPool.empty())
+			{
+				p->m_emptyIndexPool.pop();
+			}
+			for (int j = 0; j < p->m_parentNodes.size(); j++)
+			{
+				p->m_parentNodes[j] = NULL;
+				p->m_emptyIndexPool.push(j);
+			}
+
+			m_objectKDtree.insert(p);
 		}
 
 
@@ -1757,7 +1773,7 @@ void FaceOff::forwardRender()
 
 	}
 
-
+#if 1
 	for (int i = 0; i<m_objects.size(); i++)
 	{
 		WorldObject* object = m_objects[i];
@@ -1832,13 +1848,6 @@ void FaceOff::forwardRender()
 					continue;
 				}
 
-
-				// utl::debug("object name is", object->m_name);
-				/*
-				utl::debug("normal is", contactData.normal);
-				utl::debug("neighbor name is", neighbor->m_name);
-				*/
-
 				contactData.pair[0] = object;
 				contactData.pair[1] = NULL;
 
@@ -1849,54 +1858,31 @@ void FaceOff::forwardRender()
 
 		object->updateAABB();
 
-		for (int j = object->m_parentNodes.size() - 1; j >= 0; j--)
+
+		for (int j = 0; j < object->m_parentNodes.size(); j++)
 		{
 			KDTreeNode* kNode = object->m_parentNodes[j];
-			(kNode->m_objects2).erase(object->m_instanceId);
-			//		p->m_parentNodes.pop_back();
+			if (kNode == NULL)
+				continue;
+			kNode->removeObject(object);
 		}
-		object->m_parentNodes.clear();
 
+
+
+		// removing, we pop empty our queue, and set everything in vector to NULL
+		while (!object->m_emptyIndexPool.empty())
+		{
+			object->m_emptyIndexPool.pop();
+		}
+		for (int j = 0; j < object->m_parentNodes.size(); j++)
+		{
+			object->m_parentNodes[j] = NULL;
+			object->m_emptyIndexPool.push(j);
+		}
 		m_objectKDtree.insert(object);
-
-		/*
-		vector<WorldObject*> neighbors;
-		glm::vec3 volNearPoint(m_objects[i]->m_position);
-		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_objects[i], volNearPoint, neighbors);
-
-		unordered_set<int> objectsAlreadyTested;
-
-		for (int i = 0; i < neighbors.size(); i++)
-		{
-		neighbors[i]->isTested = true;
-
-		ContactData contactData;
-
-		if (CollisionDetection::testSphereAABB(m_players[m_defaultPlayerID]->m_boundingSphere,
-		neighbors[i]->m_aabb,
-		contactData))
-		{
-		neighbors[i]->isCollided = true;
-
-		if (names.find(neighbors[i]->m_instanceId) != names.end())
-		continue;
-		else
-		names.insert(neighbors[i]->m_instanceId);
-
-		contactData.pair[0] = m_players[m_defaultPlayerID];
-		contactData.pair[1] = NULL;
-
-		contactData.resolveVelocity();
-		contactData.resolveInterpenetration();
-
-		}
-		}
-		*/
-
-
 	}
 
-
+#endif
 
 
 

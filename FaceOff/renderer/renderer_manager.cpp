@@ -357,9 +357,6 @@ void RendererManager::initRenderer(const Object obj, Renderer* r)
 	}
 
 	int size = dataObj.size();
-
-	utl::debug("size", size);
-
 	r->setShader(s);
 
 	for (int j = 0; j < size; j++)
