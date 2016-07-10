@@ -3,21 +3,24 @@
 
 void SceneRenderer::addShader(Shader* s)
 {
+	/*
 	Renderer::addShader(s);
 
 	addDirLightUniLocs();
 	addPointLightUniLocs();
 	addSpotLightUniLocs();
+	*/
 }
 
 
 bool SceneRenderer::addDirLightUniLocs()
 {
+	/*
 	addDataPair("u_dirLight.base.color", DP_VEC3);
 	addDataPair("u_dirLight.base.ambientIntensity", DP_FLOAT);
 	addDataPair("u_dirLight.base.diffuseIntensity", DP_FLOAT);
 	addDataPair("u_dirLight.direction", DP_VEC3);
-
+	*/
 	return true;
 }
 
@@ -34,10 +37,12 @@ bool SceneRenderer::addSpotLightUniLocs()
 
 void SceneRenderer::setDirLightData(DirectionalLight light)
 {
+	/*
 	setData("u_dirLight.base.color", light.color);
 	setData("u_dirLight.base.ambientIntensity", light.ambientIntensity);
 	setData("u_dirLight.base.diffuseIntensity", light.diffuseIntensity);
 	setData("u_dirLight.direction", light.direction);
+	*/
 }
 
 void SceneRenderer::setPointLightData(PointLight light)

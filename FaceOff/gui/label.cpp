@@ -33,6 +33,7 @@ void Label::render()
 
 void Label::render()
 {
+	/*
 	if (m_rectBgType == COLORED)
 	{
 		Control::r_coloredRectRenderer.enableShader();
@@ -53,7 +54,7 @@ void Label::render()
 
 		Control::m_textEngine.render(m_text, m_textStartingXs[0], m_textStartingYs[0], m_font.size, m_font.color, m_lineBreakInfos[0].lineBreaks);
 	}
-
+	*/
 }
 
 

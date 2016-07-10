@@ -23,11 +23,12 @@ void GUIManager::init(int screenWidth, int screenHeight)
 
 
     Shader* s;
-
+	
     /// r_textureRenderer
     s = new Shader("texture.vs", "texture.fs");
-    r_textureRenderer.addShader(s);
-    r_textureRenderer.addDataPair(RENDER_PASS1, "u_texture",    DP_INT);
+    r_textureRenderer.setShader(s);
+    r_textureRenderer.addDataPair("u_texture",    DP_INT);
+	
 }
 
 
@@ -61,18 +62,17 @@ void GUIManager::renderTexture(GLuint textureId, int x, int y, int width, int he
 void GUIManager::renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height)
 {
 	setupRenderToScreen(x, y, width, height);
-
-    r_textureRenderer.enableShader(RENDER_PASS1);
-    r_textureRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, textureId);
+    r_textureRenderer.enableShader();
+    r_textureRenderer.setData(R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, textureId);
 
     m_GUIPipeline.pushMatrix();
         m_GUIPipeline.translate(x, y, 0);
         m_GUIPipeline.scale(width, height, 1.0);
 
-        r_textureRenderer.loadUniformLocations(m_GUIPipeline, RENDER_PASS1);
+        r_textureRenderer.setUniLocs(m_GUIPipeline);
         m_textureQuad.render();
     m_GUIPipeline.popMatrix();
-    r_textureRenderer.disableShader(RENDER_PASS1);
+    r_textureRenderer.disableShader();
 }
 
 
@@ -119,7 +119,7 @@ void GUIManager::renderTextureSingle(GLuint TextureId, GLuint FboTarget, int x, 
 	m_GUIPipeline.translate(x, y, 0);
 	m_GUIPipeline.scale(width, height, 1.0);
 
-	r_textureRenderer.loadUniformLocations(m_GUIPipeline);
+	r_textureRenderer.setUniLocs(m_GUIPipeline);
 	m_textureQuad.render();
 	m_GUIPipeline.popMatrix();
 	r_textureRenderer.disableShader();

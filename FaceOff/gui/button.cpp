@@ -111,6 +111,7 @@ void Button::customRender()
 
 void Button::render()
 {
+#if 0
     Control::r_coloredRectRenderer.enableShader();
 
     if(m_isInside && !m_down)
@@ -129,6 +130,7 @@ void Button::render()
  //   Control::m_textEngine.render(m_text, m_textStartingXs[0], m_textStartingYs[0], m_font.size, m_font.color);
     Control::m_textEngine.render(m_text, m_textStartingXs[0], m_textStartingYs[0], m_font.size, m_font.color, m_lineBreakInfos[0].lineBreaks);
     Control::r_coloredRectRenderer.disableShader();
+#endif
 
  //   cout << "offset_x " << offset_x << endl;
  //   cout << "offset_y " << offset_y << endl;
@@ -143,7 +145,7 @@ void Button::render()
         p.pushMatrix();
             p.scale(m_rect.w, m_rect.y, 0);
             p.translate(m_rect.x, m_rect.y, 0);
-            Renderer->loadUniformLocations(p, RenderPassID);
+            Renderer->setUniLocs(p, RenderPassID);
             m_quadModel.render();
         p.popMatrix();
 

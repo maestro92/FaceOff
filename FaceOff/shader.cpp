@@ -128,6 +128,10 @@ Shader::Shader(const char* vs_source, const char* gs_source, bool feedBack)
 {
     string source;
     cout << "vs: " << vs_source << ", gs:" << gs_source << endl << endl;
+
+	m_vsName = vs_source;
+	m_gsName = gs_source;
+
     loadFile(vs_source, source);
     /// load the vertex shader
     vs = loadShader(source, GL_VERTEX_SHADER);
@@ -142,7 +146,7 @@ Shader::Shader(const char* vs_source, const char* gs_source, bool feedBack)
     glAttachShader(program, gs);
 }
 
-
+/*
 Shader::Shader(string path, string vs_source, string fs_source) : Shader( (path + vs_source).c_str(),  (path + fs_source).c_str())
 {
 
@@ -152,6 +156,7 @@ Shader::Shader(string path, string vs_source, string gs_source, string fs_source
 {
 
 }
+*/
 
 /*
 Shader::Shader(string path, string vs_source, bool feedBack) : Shader( (path + vs_source).c_str(), feedBack)

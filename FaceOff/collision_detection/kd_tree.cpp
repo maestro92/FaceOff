@@ -744,7 +744,7 @@ void KDTree::renderSingle(Pipeline& p, Renderer* r)
 void KDTree::renderGroup(Pipeline& p, Renderer* r)
 {
 	p.pushMatrix();
-		r->loadUniformLocations(p);		
+		r->setUniLocs(p);		
 		m_head->m_wireFrameModel->render();
 	p.popMatrix();
 }
@@ -755,7 +755,7 @@ void KDTree::renderGroup(Pipeline& p, Renderer* r)
 void KDTree::renderWireFrame(Pipeline& p, Renderer* r)
 {
 	p.pushMatrix();
-		r->loadUniformLocations(p);
+		r->setUniLocs(p);
 		renderWireFrame(m_head, r);
 	p.popMatrix();
 }
@@ -779,7 +779,7 @@ void KDTree::renderWireFrame(KDTreeNode* root, Renderer* r)
 void KDTree::renderCubeFrame(Pipeline& p, Renderer* r)
 {
 	p.pushMatrix();
-		r->loadUniformLocations(p);
+		r->setUniLocs(p);
 		renderCubeFrame(m_head, r);
 	p.popMatrix();
 }
@@ -803,7 +803,7 @@ void KDTree::renderCubeFrame(KDTreeNode* root, Renderer* r)
 void KDTree::renderNode(Pipeline& p, Renderer* r, KDTreeNode* root)
 {
 	p.pushMatrix();
-		r->loadUniformLocations(p);
+		r->setUniLocs(p);
 		root->m_containedModel->render();
 	p.popMatrix();
 }

@@ -1,6 +1,7 @@
 # pip install simplejson
 
 import json
+from collections import OrderedDict
 from pprint import pprint
 
 def process_renderer_name(renderer):
@@ -21,41 +22,48 @@ def process_renderer_name(renderer):
 	return s
 
 
-def write_renderer_enum(file, renderer, enum_list):
-	s = "\n\nenum ";
+def write_renderer_enum(file, renderer, enum_dict):
+	s = "\n\nnamespace ";
 	
 	s = s + process_renderer_name(renderer)
 
 	s = s + "\n{\n"
+	s = s + "	enum E\n	{\n"
 	file.write(s)
 
 
-	write_enums(file, enum_list)
+	write_enums(file, enum_dict)
 
-	s = "\n};"
+	s = "\n	};"
+
+	s = s + "\n}"
 
 	file.write(s)
 
 
-def write_enums(file, enum_list):
+def write_enums(file, enum_dict):
 	s = "	";
-	for i in range(0, len(enum_list)):
+	indent = "		"
+	i = 0
+	for enum in enum_dict:
+
 		if(i == 0):
 	
-			if( len(enum_list) == 1):
-				s = "	" + enum_list[i] + " = 0"
+			if( len(enum_dict) == 1):
+				s = indent + enum + " = 0"
 			else:
-				s = "	" + enum_list[i] + " = 0,\n"
+				s = indent + enum + " = 0,\n"
 
-		elif (i==len(enum_list) - 1):
-			s = "	" + enum_list[i]
+		elif (i==len(enum_dict) - 1):
+			s = indent + enum
 
 		else:
-			s = "	" + enum_list[i] + ",\n"
+			s = indent + enum + ",\n"
 
+
+		i+=1
 		file.write(s)
 
-	# file.write(s)
 
 # if you see 
 #	ValueError: No JSON object could be decoded
@@ -71,6 +79,8 @@ output_file = open(output_filename, 'w')
 # header
 header = """#ifndef RENDERER_CONSTANT_H_
 #define RENDERER_CONSTANT_H_
+
+// http://stackoverflow.com/questions/23288934/c-how-to-have-same-enum-members-name-in-different-enum-names-without-getting-e
 """
 
 output_file.write(header)
@@ -79,23 +89,22 @@ output_file.write(header)
 
 # data
 with open(input_filename) as data_file:    
-    data = json.load(data_file)
+    data = json.load(data_file, object_pairs_hook = OrderedDict)
 
 for entry in data:
 	#print (entry)
 	#print (type(entry))
 
-	print (entry)
+	# print (entry)
 
 
 	if("data" in entry):
 		renderer = entry["r"]
 
-		enum_list = entry["data"]
+		enum_dict = entry["data"]
 	
-		print (renderer)
-		write_renderer_enum(output_file, renderer, enum_list)
-
+		print (str(renderer))
+		write_renderer_enum(output_file, renderer, enum_dict)
 
 
 #print (type(data))

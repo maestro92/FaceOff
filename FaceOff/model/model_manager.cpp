@@ -130,29 +130,6 @@ void ModelManager::initWeaponsData()
 									model };
 	}
 	
-
-
-	Value vContent = utl::readJsonFileToVector(filename);
-
-	const Array& vArray = vContent.get_array();
-
-	for (int i = 0; i < vArray.size(); i++)
-	{
-		const Object obj = vArray[i].get_obj();
-
-		for (Object::size_type j = 0; j != obj.size(); j++)
-		{
-			const Pair& pair = obj[j];
-
-			const string& name = pair.name_;
-			const Value&  value = pair.value_;
-			utl::debug("name is", name);
-		}
-	}
-
-
-
-
 	/*
 	ifstream is(filename);
 

@@ -38,6 +38,7 @@ struct KDTreeNode;
 
 #include "renderer_manager.h"
 #include "renderer.h"
+#include "renderer_constants.h"
 #include "player.h"
 
 #include "light\light_manager.h"

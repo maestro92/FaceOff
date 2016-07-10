@@ -29,35 +29,39 @@ void SkyBox::init(string* files)
 
     m_staticCubeMapID = utl::loadCubemapTexture(files);
 
+	/*
     Shader* s;
 
     s = new Shader("skybox.vs", "skybox.fs");
     r_skybox.addShader(s);
     r_skybox.addDataPair("u_cubeMapTextureID",  DP_INT);
+	*/
 }
 
 
-void SkyBox::render(Pipeline& m_pipeline)
+void SkyBox::render(Pipeline& m_pipeline, Renderer* r)
 {
-
+	
     glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-    r_skybox.enableShader();
-    r_skybox.setData("u_cubeMapTextureID", 0, GL_TEXTURE_CUBE_MAP, m_staticCubeMapID);
+	
+	r->enableShader();
+	r->setData(R_SKYBOX::u_cubeMapTextureID, 0, GL_TEXTURE_CUBE_MAP, m_staticCubeMapID);
 
     m_pipeline.pushMatrix();
         m_pipeline.translate(m_position);
 	//	m_pipeline.rotate(angle, 0.0f, 1.0f, 0.0f);
 		m_pipeline.scale(m_scale);
 
-        r_skybox.loadUniformLocations(m_pipeline);
+        r->setUniLocs(m_pipeline);
         m_cubeModel.render();
     m_pipeline.popMatrix();
-    r_skybox.disableShader();
+    r->disableShader();
 
 	angle += 0.001;
 	if (angle > 360)
 		angle -= 360;
+	
 	glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 }

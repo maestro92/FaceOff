@@ -34,8 +34,36 @@ void RendererManager::init(int width, int height)
 	const Array& vArray = vContent.get_array();
 
 	initRenderer(vArray, &r_fullVertexColor, "r_fullVertexColor");
+	initRenderer(vArray, &r_fullColor, "r_fullColor");
+	initRenderer(vArray, &r_fullTexture, "r_fullTexture");
+	initRenderer(vArray, &r_playerTarget, "r_playerTarget");
+	initRenderer(vArray, &r_skybox, "r_skybox");
+
+	initRenderer(vArray, &r_smokeEffectUpdate, "r_smokeEffectUpdate");
+	r_smokeEffectUpdate.enableShader();
+		r_smokeEffectUpdate.setData(R_SMOKE_EFFECT_UPDATE::u_launcherLifeTime, 100.0f);
+		r_smokeEffectUpdate.setData(R_SMOKE_EFFECT_UPDATE::u_shellLifeTime, 10000.0f);
+		r_smokeEffectUpdate.setData(R_SMOKE_EFFECT_UPDATE::u_secondaryShellLifeTime, 1000.0f);
+	r_smokeEffectUpdate.disableShader();
 
 
+	initRenderer(vArray, &r_smokeEffectRender, "r_smokeEffectRender");
+	r_smokeEffectRender.enableShader();
+		r_smokeEffectRender.setData(R_SMOKE_EFFECT_RENDER::u_billBoardSize, 4.0f);
+		r_smokeEffectRender.setData(R_SMOKE_EFFECT_RENDER::u_inverseScreenSize, glm::vec2(1.0f / utl::SCREEN_WIDTH, 1.0f / utl::SCREEN_HEIGHT));
+		r_smokeEffectRender.setData(R_SMOKE_EFFECT_RENDER::u_zNear, utl::Z_NEAR);
+		r_smokeEffectRender.setData(R_SMOKE_EFFECT_RENDER::u_zFar, utl::Z_FAR);
+	r_smokeEffectRender.disableShader();
+
+
+	r_fullVertexColor.printDataPairs();
+	r_fullColor.printDataPairs();
+	r_fullTexture.printDataPairs();
+	r_playerTarget.printDataPairs();
+
+	r_smokeEffectUpdate.printDataPairs();
+	r_smokeEffectRender.printDataPairs();
+	/*
 	Shader* s;
 
     s = new Shader("full_vertex_color.vs", "full_vertex_color.fs");
@@ -52,11 +80,12 @@ void RendererManager::init(int width, int height)
 	s = new Shader("player_target.vs", "player_target.fs");
 	r_playerTarget.addShader(s);
 	r_playerTarget.addDataPair("u_texture", DP_INT);
-
+	
 
 	Renderer r_healthBar;
+	*/
 
-	
+	/*
 	s = new Shader("particle_effect_update.vs", "particle_effect_update.gs", "particle_effect_update.fs", true);
 	r_fireWorkEffectUpdate.addShader(s);
 
@@ -171,9 +200,12 @@ void RendererManager::init(int width, int height)
 	r_composite.addShader(s);
 	r_composite.addDataPair("u_backgroundTexutre", DP_INT);
 	r_composite.addDataPair("u_particlesTexture", DP_INT);
-
+	*/
 
 	// scene renderers
+
+
+/*
 	s = new Shader("scene_shaders/multitexture_terrain.vs", "scene_shaders/multitexture_terrain.fs");
 	r_multiTexTerrain.addShader(s);
 	r_multiTexTerrain.addDataPair("u_blendMapTexture", DP_INT);
@@ -200,8 +232,8 @@ void RendererManager::init(int width, int height)
 	r_billboardTwoQuad.addDataPair("u_centerPosition", DP_VEC3);
 	r_billboardTwoQuad.addDataPair("u_billboardWidthScale", DP_FLOAT);
 	r_billboardTwoQuad.addDataPair("u_billboardHeightScale", DP_FLOAT);
+	*/
 
-	
 
 
 
@@ -261,6 +293,9 @@ void RendererManager::initRenderer(const Object obj, Renderer* r)
 
 	bool hasGs = false;
 	bool transform = false;
+	int transformSize = 0;
+
+	Object dataObj;
 
 	for (Object::size_type i = 0; i != obj.size(); i++)
 	{
@@ -289,44 +324,51 @@ void RendererManager::initRenderer(const Object obj, Renderer* r)
 			transform = true;
 			const Array& array = value.get_array();
 
-			int size = array.size();
-			varyings = new GLchar*[size];
+			transformSize = array.size();
+			varyings = new GLchar*[transformSize];
 
-			for (int j = 0; j < size; j++)
+			for (int j = 0; j < transformSize; j++)
 			{
-				string str = array[j].get_str();
-				varyings[j] = (GLchar*)str.c_str();
+				varyings[j] = (GLchar*)((array[j].get_str()).c_str());
 			}
 		}
 
 		else if (name == "data")
 		{
-
-			Shader* s;
-			if (hasGs)
-			{
-				s = new Shader(vs.c_str(), gs.c_str(), fs.c_str(), transform);
-			}
-			else
-			{
-				s = new Shader(vs.c_str(), fs.c_str(), transform);
-			}
-
-			const Object& dataObj = value.get_obj();
-
-			int size = dataObj.size();
-			for (int j = 0; j < size; j++)
-			{
-				const Pair& pair1 = dataObj[i];
-				const string& name1 = pair1.name_;
-				const Value&  value1 = pair1.value_;
-
-				utl::debug("name1", name1);
-				utl::debug("value1", value1.get_str());
-			}
-
-
+			dataObj = value.get_obj();
 		}
+	}
+
+
+	Shader* s;
+	if (hasGs && transform)
+	{
+		s = new Shader(vs.c_str(), gs.c_str(), fs.c_str(), true);
+		glTransformFeedbackVaryings(s->getProgramId(), transformSize, varyings, GL_INTERLEAVED_ATTRIBS);
+		s->linkShader();
+	}
+	else if (hasGs)
+	{
+		s = new Shader(vs.c_str(), gs.c_str(), fs.c_str());
+	}
+	else
+	{
+		s = new Shader(vs.c_str(), fs.c_str());
+	}
+
+	int size = dataObj.size();
+
+	utl::debug("size", size);
+
+	r->setShader(s);
+
+	for (int j = 0; j < size; j++)
+	{
+		const string& varName = dataObj[j].name_;
+		const Value&  varType = dataObj[j].value_;
+
+		DATA_PAIR_TYPE dpType = m_stringToDPTypeEnum[varType.get_str()];
+		r->addDataPair(varName, dpType);
 	}
 }
 
@@ -334,6 +376,7 @@ void RendererManager::initRenderer(const Object obj, Renderer* r)
 
 void RendererManager::initSceneRendererStaticLightsData(LightManager lightManager)
 {
+	/*
 	r_multiTexTerrain.enableShader();
 		r_multiTexTerrain.setDirLightData(lightManager.getDirLight(0));
 	r_multiTexTerrain.disableShader();
@@ -349,6 +392,7 @@ void RendererManager::initSceneRendererStaticLightsData(LightManager lightManage
 	r_texturedObject.enableShader();
 		r_billboardTwoQuad.setDirLightData(lightManager.getDirLight(0));
 	r_texturedObject.disableShader();
+	*/
 }
 
 

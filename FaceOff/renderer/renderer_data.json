@@ -39,6 +39,15 @@
 		}
 	},
 
+	{
+		"r": 			"r_skybox",
+		"vs":			"skybox.vs",
+		"fs":			"skybox.fs",
+		"data":
+		{
+			"u_cubeMapTextureID":	"DP_INT"
+		}
+	},
 
 	{
 		"r": 			"r_fireWorkEffectUpdate",
@@ -104,5 +113,17 @@
 			"u_zNear":				"DP_FLOAT",
 			"u_zFar":				"DP_FLOAT"
 		}
+	},
+
+	{
+		"r": 			"r_texturedRect",
+		"vs":			"/gui_shaders/textured_rect.vs",
+		"fs":			"/gui_shaders/textured_rect.fs",
+		"data":
+		{
+			"u_texture":			"DP_INT"
+		}
 	}
+
+
 ]

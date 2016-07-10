@@ -1931,13 +1931,13 @@ void FaceOff::forwardRender()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// the render function disables depth test Cull face already and enables it afterwards
-	o_skybox.render(m_pipeline);
+	o_skybox.render(m_pipeline, &m_rm.r_skybox);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 
-	p_renderer = &m_rm.r_texturedObject;
+	p_renderer = &m_rm.r_fullTexture;
 	p_renderer->enableShader();
-	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, tempTexture);
+	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 
 	{
 		// render the players
@@ -2071,7 +2071,9 @@ void FaceOff::forwardRender()
 
 	p_renderer = &m_rm.r_fullColor;
 	p_renderer->enableShader();
-	p_renderer->setData("u_color", GREEN);
+		// p_renderer->setData("u_color", GREEN);
+		p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+	
 
 	// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
 	if (!containedFlag)
@@ -2094,19 +2096,19 @@ void FaceOff::forwardRender()
 
 		if (object->isHit)
 		{
-			p_renderer->setData("u_color", GREEN);
+			p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 			object->renderGroup(m_pipeline, p_renderer);
 
 		}
 		else if (object->isCollided)
 		{
-			p_renderer->setData("u_color", PURPLE);
+			p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
 			object->renderGroup(m_pipeline, p_renderer);
 			object->isCollided = false;
 		}
 		else if (object->isTested)
 		{
-			p_renderer->setData("u_color", BLUE);
+			p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
 			object->renderGroup(m_pipeline, p_renderer);
 			object->isTested = false;
 		}
@@ -2132,19 +2134,19 @@ void FaceOff::forwardRender()
 
 		if (p->isHit)
 		{
-			p_renderer->setData("u_color", GREEN);
+			p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 			p->renderGroup(m_pipeline, p_renderer);
 
 		}
 		else if (p->isCollided)
 		{
-			p_renderer->setData("u_color", PURPLE);
+			p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
 			p->renderGroup(m_pipeline, p_renderer);
 			p->isCollided = false;
 		}
 		else if (p->isTested)
 		{
-			p_renderer->setData("u_color", BLUE);
+			p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
 			p->renderGroup(m_pipeline, p_renderer);
 			p->isTested = false;
 		}
@@ -2158,7 +2160,7 @@ void FaceOff::forwardRender()
 
 	int deltaTimeMillis = (unsigned int)(timeNowMillis - m_currentTimeMillis);
 	m_currentTimeMillis = timeNowMillis;
-
+	/*
 	if (m_fireWorkEffects.size() > 0)
 	{
 		p_renderer = &m_rm.r_fireWorkEffectUpdate;
@@ -2189,43 +2191,8 @@ void FaceOff::forwardRender()
 		}
 		p_renderer->disableShader();
 	}
-
-
-	/*
-	// smoke effects
-	if (m_smokeEffects.size() > 0)
-	{
-		p_renderer = &m_rm.r_smokeEffectUpdate;
-		p_renderer->enableShader();
-		for (int i = 0; i < m_smokeEffects.size(); i++)
-		{
-			SmokeEffect* effect = m_smokeEffects[i];
-			effect->m_time += deltaTimeMillis;
-
-			p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, effect->m_randomTextureId);
-			p_renderer->setData("u_time", (float)effect->m_time);
-			p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
-
-			effect->update(m_pipeline, p_renderer);
-		}
-		p_renderer->disableShader();
-
-
-		p_renderer = &m_rm.r_smokeEffectRender;
-		p_renderer->enableShader();
-		for (int i = 0; i < m_smokeEffects.size(); i++)
-		{
-			SmokeEffect* effect = m_smokeEffects[i];
-
-			
-			p_renderer->setData("u_angle", effect->m_particleRotation);
-			p_renderer->setData("u_centerPosition", effect->getPosition());
-			p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
-			effect->render(m_pipeline, p_renderer);
-		}
-		p_renderer->disableShader();
-	}
 	*/
+
 
 
 
@@ -2240,29 +2207,16 @@ void FaceOff::forwardRender()
 	m_gui.renderTextureFullScreen(m_rm.m_backGroundLayerFBO.colorTexture);
 	//	m_gui.renderTextureFullScreen(tempTexture);
 
-	
+#if 1
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 //	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	/*
-	utl::debug("u_deltaTimeMillis", deltaTimeMillis);
 
-	if (m_smokeEffects.size() > 1)
-	{
-		utl::debug("m_smokeEffects[1]", m_smokeEffects);
-	}
-	*/
-
-	/*
-	for (int i = 0; i < m_smokeEffects.size(); i++)
-	{
-		SmokeEffect* effect = m_smokeEffects[i];
-		utl::debug("time is", (float)effect->m_time);
-	}
-	*/
 
 	// smoke effects
+
+	
 	if (m_smokeEffects.size() > 0)
 	{
 		p_renderer = &m_rm.r_smokeEffectUpdate;
@@ -2272,9 +2226,9 @@ void FaceOff::forwardRender()
 			SmokeEffect* effect = m_smokeEffects[i];
 			effect->m_time += deltaTimeMillis;
 
-			p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, effect->m_randomTextureId);
-			p_renderer->setData("u_time", (float)effect->m_time);
-			p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
+			p_renderer->setData(R_SMOKE_EFFECT_UPDATE::u_randomTexture, 3, GL_TEXTURE_1D, effect->m_randomTextureId);
+			p_renderer->setData(R_SMOKE_EFFECT_UPDATE::u_time, (float)effect->m_time);
+			p_renderer->setData(R_SMOKE_EFFECT_UPDATE::u_deltaTimeMillis, (float)deltaTimeMillis);
 
 			effect->update(m_pipeline, p_renderer);
 		}
@@ -2287,9 +2241,9 @@ void FaceOff::forwardRender()
 		{
 			SmokeEffect* effect = m_smokeEffects[i];
 
-			p_renderer->setData("u_angle", effect->m_particleRotation);
-			p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
-			p_renderer->setData("u_depthTexture", 1, GL_TEXTURE_2D, m_rm.m_backGroundLayerFBO.depthTexture);
+			p_renderer->setData(R_SMOKE_EFFECT_RENDER::u_angle, effect->m_particleRotation);
+			p_renderer->setData(R_SMOKE_EFFECT_RENDER::u_texture, 0, GL_TEXTURE_2D, effect->m_textureId);
+			p_renderer->setData(R_SMOKE_EFFECT_RENDER::u_depthTexture, 1, GL_TEXTURE_2D, m_rm.m_backGroundLayerFBO.depthTexture);
 			effect->render(m_pipeline, p_renderer);
 		}
 		p_renderer->disableShader();
@@ -2301,9 +2255,9 @@ void FaceOff::forwardRender()
 	
 
 
+#endif
 
-	m_gui.updateAndRender(m_mouseState);
-
+//	m_gui.updateAndRender(m_mouseState);
 
 
 

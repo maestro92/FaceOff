@@ -2,6 +2,7 @@
 #define RENDERER_MANAGER_H_
 
 #include "quad_model.h"
+#include "renderer_constants.h"
 #include "renderer.h"
 #include "scene_renderer.h"
 #include "light/light_manager.h"
@@ -17,7 +18,7 @@ class RendererManager
 		Renderer		r_fullColor;
 		Renderer		r_fullTexture;
 		Renderer		r_playerTarget;
-
+		Renderer		r_skybox;
 
 		
 		Renderer		r_healthBar;
@@ -31,12 +32,13 @@ class RendererManager
 
 		Renderer		r_composite;
 
-
+		
 		Renderer r_multiTexturedTerrain;
 		SceneRenderer r_multiTexTerrain;
 		SceneRenderer r_texturedObject;
 		SceneRenderer r_billboardOneQuad;
 		SceneRenderer r_billboardTwoQuad;
+		
 
 		FrameBufferObject m_backGroundLayerFBO;
 		FrameBufferObject m_particleLayerFBO;

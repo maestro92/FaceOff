@@ -1,49 +1,105 @@
 #ifndef RENDERER_CONSTANT_H_
 #define RENDERER_CONSTANT_H_
 
+// http://stackoverflow.com/questions/23288934/c-how-to-have-same-enum-members-name-in-different-enum-names-without-getting-e
 
-enum R_FULL_COLOR
-{
-	u_color = 0
-};
 
-enum R_FULL_TEXTURE
+namespace R_FULL_COLOR
 {
-	u_texture = 0
-};
+	enum E
+	{
+		u_color = 0
+	};
+}
 
-enum R_PLAYER_TARGET
+namespace R_FULL_TEXTURE
 {
-	u_texture = 0
-};
+	enum E
+	{
+		u_texture = 0
+	};
+}
 
-enum R_FIRE_WORK_EFFECT_UPDATE
+namespace R_PLAYER_TARGET
 {
-	u_deltaTimeMillis = 0,
-	u_time,
-	u_randomTexture,
-	u_launcherLifeTime,
-	u_shellLifeTime,
-	u_secondaryShellLifeTime
-};
+	enum E
+	{
+		u_texture = 0
+	};
+}
 
-enum R_SMOKE_EFFECT_UPDATE
+namespace R_SKYBOX
 {
-	u_deltaTimeMillis = 0,
-	u_time,
-	u_randomTexture,
-	u_launcherLifeTime,
-	u_shellLifeTime,
-	u_secondaryShellLifeTime
-};
+	enum E
+	{
+		u_cubeMapTextureID = 0
+	};
+}
 
-enum R_SMOKE_EFFECT_RENDER
+namespace R_FIRE_WORK_EFFECT_UPDATE
 {
-	u_time = 0,
-	u_fadeRate,
-	u_billBoardSize,
-	u_centerPosition,
-	u_texture
-};
+	enum E
+	{
+		u_deltaTimeMillis = 0,
+		u_time,
+		u_randomTexture,
+		u_launcherLifeTime,
+		u_shellLifeTime,
+		u_secondaryShellLifeTime
+	};
+}
+
+namespace R_SMOKE_EFFECT_UPDATE
+{
+	enum E
+	{
+		u_deltaTimeMillis = 0,
+		u_time,
+		u_randomTexture,
+		u_launcherLifeTime,
+		u_shellLifeTime,
+		u_secondaryShellLifeTime
+	};
+}
+
+namespace R_SMOKE_EFFECT_RENDER
+{
+	enum E
+	{
+		u_time = 0,
+		u_fadeRate,
+		u_angle,
+		u_billBoardSize,
+		u_texture,
+		u_depthTexture,
+		u_inverseScreenSize,
+		u_zNear,
+		u_zFar
+	};
+}
+
+namespace R_COLOR_RECT
+{
+	enum E
+	{
+		u_time = 0,
+		u_fadeRate,
+		u_angle,
+		u_billBoardSize,
+		u_texture,
+		u_depthTexture,
+		u_inverseScreenSize,
+		u_zNear,
+		u_zFar
+	};
+}
+
+namespace R_TEXTURED_RECT
+{
+	enum E
+	{
+		u_texture = 0
+	};
+}
 
 #endif

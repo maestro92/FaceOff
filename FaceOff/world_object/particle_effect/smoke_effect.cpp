@@ -145,7 +145,7 @@ void SmokeEffect::update(Pipeline& p, Renderer* r)
 
 	p.pushMatrix();
 
-	r->loadUniformLocations(p);
+	r->setUniLocs(p);
 
 	// We have another draw call later on that does that.
 	// Calling glEnable() with the GL_RASTERIZER_DISCARD flag
@@ -201,8 +201,7 @@ void SmokeEffect::render(Pipeline& p, Renderer* r)
 	p.scale(m_scale);
 
 
-	r->loadUniformLocations(p);
-
+	r->setUniLocs(p);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[m_currTFB]);
 

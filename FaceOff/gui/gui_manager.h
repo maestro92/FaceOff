@@ -12,6 +12,7 @@
 #include "renderer.h"
 
 #include "custom_gui/bar.h"
+#include "renderer_constants.h"
 
 class GUIManager
 {

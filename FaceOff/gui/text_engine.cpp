@@ -99,11 +99,13 @@ TextEngine::TextEngine(string font, int fontPixelSize, int screenWidth, int scre
     /// set shader
     Shader* s;
 
+	/*
     /// r_TextRenderer
     s = new Shader("/gui_shaders/text.vs", "/gui_shaders/text.fs");
     r_textRenderer.addShader(s);
     r_textRenderer.addDataPair(RENDER_PASS1, "u_texture",   DP_INT);
     r_textRenderer.addDataPair(RENDER_PASS1, "u_color",     DP_VEC3);
+	*/
 }
 
 
@@ -139,11 +141,13 @@ float TextEngine::getMaxDecenderHeight(float fontPixelSize)
 
 void TextEngine::render(string text, float x, float y, float fontPixelSize, glm::vec3 color)
 {
+
     float scale = fontPixelSize/m_initFontPixelSize;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+#if 0
     r_textRenderer.enableShader();
         r_textRenderer.setData(RENDER_PASS1, "u_color", color);
 
@@ -164,7 +168,7 @@ void TextEngine::render(string text, float x, float y, float fontPixelSize, glm:
                 m_pipeline.scale(w, h, 0);
 
                 r_textRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, ch.textureID);
-                r_textRenderer.loadUniformLocations(m_pipeline, RENDER_PASS1);
+                r_textRenderer.setUniLocs(m_pipeline, RENDER_PASS1);
 
                 m_quad.render();
 
@@ -174,6 +178,9 @@ void TextEngine::render(string text, float x, float y, float fontPixelSize, glm:
         }
 
     r_textRenderer.disableShader();
+
+#endif
+
     glDisable(GL_BLEND);
 }
 
@@ -186,6 +193,9 @@ void TextEngine::render(string text, float x, float y, float fontPixelSize, glm:
     float scale = fontPixelSize/m_initFontPixelSize;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+#if 0
+
     float offsetY = y;
     float offsetX = x;
     int j = 0;
@@ -218,7 +228,7 @@ void TextEngine::render(string text, float x, float y, float fontPixelSize, glm:
                 m_pipeline.scale(w, h, 0);
 
                 r_textRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, ch.textureID);
-                r_textRenderer.loadUniformLocations(m_pipeline, RENDER_PASS1);
+                r_textRenderer.setUniLocs(m_pipeline, RENDER_PASS1);
 
                 m_quad.render();
 
@@ -228,6 +238,8 @@ void TextEngine::render(string text, float x, float y, float fontPixelSize, glm:
         }
 
     r_textRenderer.disableShader();
+
+#endif
     glDisable(GL_BLEND);
 }
 
@@ -659,7 +671,7 @@ void TextEngine::render(string text, GLfloat x, GLfloat y, GLfloat scale, glm::v
             };
 
             r_textRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE0, ch.textureID);
-            r_textRenderer.loadUniformLocations(m_pipeline, RENDER_PASS1);
+            r_textRenderer.setUniLocs(m_pipeline, RENDER_PASS1);
 
 
 

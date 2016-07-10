@@ -110,10 +110,8 @@ class WorldObject
         virtual inline void setRotation(glm::mat4 rot);
 
 		virtual void renderSingle(Pipeline& p, Renderer* r);
-		virtual void renderSingle(Pipeline& p, Renderer* r, int pass);
-
 		virtual void renderGroup(Pipeline& p, Renderer* r);
-		virtual void renderGroup(Pipeline& p, Renderer* r, int pass);
+
 
 		static Model* DEFAULT_MODEL;
 

@@ -2,6 +2,7 @@
 #define SKY_BOX_H_
 
 #include "utility.h"
+#include "renderer_constants.h"
 #include "world_object.h"
 #include "cube_model.h"
 #include "camera.h"
@@ -14,8 +15,7 @@ class SkyBox : public WorldObject
         void init(string* files);
         CubeModel m_cubeModel;
 
-        virtual void render(Pipeline& m_pipeline);
-
+		virtual void render(Pipeline& m_pipeline, Renderer* r);
         virtual inline void setRotation(glm::mat4 rot);
       //  virtual inline void setMatrix(Camera* camera);
 

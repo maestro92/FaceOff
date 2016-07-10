@@ -42,25 +42,27 @@ void Control::init(string font, int size, int screenWidth, int screenHeight)
     m_textEngine = TextEngine("", size, screenWidth, screenHeight);
     m_quadModel = QuadModel(1,1);
 
+#if 0
     Shader* s;
 
-    /// r_coloredRect and r_texturedRect
-    s = new Shader("/gui_shaders/colored_rect.vs", "/gui_shaders/colored_rect.fs");
-    r_coloredRectRenderer.addShader(s);
-    r_coloredRectRenderer.addDataPair(RENDER_PASS1, "u_color", DP_VEC3);
+	/// r_coloredRect and r_texturedRect
+	s = new Shader("/gui_shaders/colored_rect.vs", "/gui_shaders/colored_rect.fs");
+	r_coloredRectRenderer.addShader(s);
+	r_coloredRectRenderer.addDataPair(RENDER_PASS1, "u_color", DP_VEC3);
 
-    s = new Shader("/gui_shaders/textured_rect.vs", "/gui_shaders/textured_rect.fs");
-    r_texturedRectRenderer.addShader(s);
-    r_texturedRectRenderer.addDataPair(RENDER_PASS1, "u_texture", DP_INT);
+	s = new Shader("/gui_shaders/textured_rect.vs", "/gui_shaders/textured_rect.fs");
+	r_texturedRectRenderer.addShader(s);
+	r_texturedRectRenderer.addDataPair(RENDER_PASS1, "u_texture", DP_INT);
 
 
-    s = new Shader("/gui_shaders/list_box_item_highlight.vs", "/gui_shaders/list_box_item_highlight.fs");
-    r_listBoxHighlightRenderer.addShader(s);
-    r_listBoxHighlightRenderer.addDataPair(RENDER_PASS1, "u_x1",    DP_FLOAT);
-    r_listBoxHighlightRenderer.addDataPair(RENDER_PASS1, "u_x2",    DP_FLOAT);
-    r_listBoxHighlightRenderer.addDataPair(RENDER_PASS1, "u_y1",    DP_FLOAT);
-    r_listBoxHighlightRenderer.addDataPair(RENDER_PASS1, "u_y2",    DP_FLOAT);
+	s = new Shader("/gui_shaders/list_box_item_highlight.vs", "/gui_shaders/list_box_item_highlight.fs");
+	r_listBoxHighlightRenderer.addShader(s);
+	r_listBoxHighlightRenderer.addDataPair(RENDER_PASS1, "u_x1", DP_FLOAT);
+	r_listBoxHighlightRenderer.addDataPair(RENDER_PASS1, "u_x2", DP_FLOAT);
+	r_listBoxHighlightRenderer.addDataPair(RENDER_PASS1, "u_y1", DP_FLOAT);
+	r_listBoxHighlightRenderer.addDataPair(RENDER_PASS1, "u_y2", DP_FLOAT);
 
+#endif
     /// http://stackoverflow.com/questions/25416820/set-origin-to-top-left-corner-of-screen-in-opengl-es-2
     /// to set the top left (0,0), we invert bot with top in the ortho matrix
 
@@ -314,7 +316,7 @@ void Control::updatePipeline(Renderer* r, Rect rect)
     m_pipeline.pushMatrix();
         m_pipeline.translate(rect.x, rect.y, 0);
         m_pipeline.scale(rect.w, rect.h, 1.0);
-        r->loadUniformLocations(m_pipeline, RENDER_PASS1);
+        r->setUniLocs(m_pipeline);
     m_pipeline.popMatrix();
 }
 

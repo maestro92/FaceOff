@@ -228,7 +228,7 @@ bool ListBox::update(MouseState & state)
 
 void ListBox::render()
 {
-
+#if 0
 	Renderer* r = &Control::r_texturedRectRenderer;
 	Renderer* hlr = &Control::r_listBoxHighlightRenderer;
 	for (int y = 0; y < m_curRowNum; y++)
@@ -277,6 +277,7 @@ void ListBox::render()
 				m_itemFont.size, m_itemFont.color, m_items[i].lineBreakInfo.lineBreaks);
 		}
 	}
+#endif
 
     /*
     Control::r_coloredRectRenderer.enableShader();
