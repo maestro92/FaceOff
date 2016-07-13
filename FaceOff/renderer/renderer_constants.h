@@ -78,28 +78,4 @@ namespace R_SMOKE_EFFECT_RENDER
 	};
 }
 
-namespace R_COLOR_RECT
-{
-	enum E
-	{
-		u_time = 0,
-		u_fadeRate,
-		u_angle,
-		u_billBoardSize,
-		u_texture,
-		u_depthTexture,
-		u_inverseScreenSize,
-		u_zNear,
-		u_zFar
-	};
-}
-
-namespace R_TEXTURED_RECT
-{
-	enum E
-	{
-		u_texture = 0
-	};
-}
-
 #endif

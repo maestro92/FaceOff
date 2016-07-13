@@ -11,6 +11,7 @@
 #include "control.h"
 #include "renderer.h"
 
+#include "gui_renderer_constants.h"
 #include "custom_gui/bar.h"
 #include "renderer_constants.h"
 
@@ -33,9 +34,19 @@ class GUIManager
 		void renderTextureSingle(GLuint textureId, GLuint fboTarget, Rect rect);
 		*/
 
+
+		void initRenderer(const Array arr, Renderer* r, string name);
+		Object findRendererObject(const Array arr, string name);
+		void initRenderer(const Object obj, Renderer* r);
+
+
+
         void renderGUI();
 
-        Renderer  r_textureRenderer;
+		Renderer r_texture;
+		Renderer r_coloredRect;
+		Renderer r_texturedRect;
+		Renderer r_listBoxItemHighlight;
 
         void updateAndRender(MouseState mouseState);
         void renderGUIComponents();

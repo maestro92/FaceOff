@@ -35,10 +35,6 @@ class Slider : public Control
         virtual bool update(MouseState &state, unsigned int& groupFlag);
         virtual bool update1(MouseState & state, unsigned int& groupFlag);
 
-        virtual void render(Pipeline& p,
-                            Renderer* r,
-                            int RenderPassID);
-
         void render();
 
         virtual int getType();

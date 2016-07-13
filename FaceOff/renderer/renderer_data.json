@@ -113,17 +113,5 @@
 			"u_zNear":				"DP_FLOAT",
 			"u_zFar":				"DP_FLOAT"
 		}
-	},
-
-	{
-		"r": 			"r_texturedRect",
-		"vs":			"/gui_shaders/textured_rect.vs",
-		"fs":			"/gui_shaders/textured_rect.fs",
-		"data":
-		{
-			"u_texture":			"DP_INT"
-		}
 	}
-
-
 ]

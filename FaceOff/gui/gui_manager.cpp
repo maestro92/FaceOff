@@ -19,17 +19,23 @@ void GUIManager::init(int screenWidth, int screenHeight)
 
     m_textureQuad = QuadModel(1,1);
 
-
-
-
-    Shader* s;
 	
-    /// r_textureRenderer
-    s = new Shader("texture.vs", "texture.fs");
-    r_textureRenderer.setShader(s);
-    r_textureRenderer.addDataPair("u_texture",    DP_INT);
-	
+	char* filename = "gui/gui_renderer_data.json";
+
+	Value vContent = utl::readJsonFileToVector(filename);
+	const Array& vArray = vContent.get_array();
+
+	string path = "gui_shaders/";
+
+	Renderer::initRendererWrapper(vArray, &r_texture, "r_texture", path);
+	Renderer::initRendererWrapper(vArray, &r_coloredRect, "r_coloredRect", path);
+	Renderer::initRendererWrapper(vArray, &r_texturedRect, "r_texturedRect", path);
+	Renderer::initRendererWrapper(vArray, &r_listBoxItemHighlight, "r_listBoxItemHighlight", path);
 }
+
+
+
+
 
 
 void GUIManager::initGUIRenderingSetup()
@@ -62,17 +68,17 @@ void GUIManager::renderTexture(GLuint textureId, int x, int y, int width, int he
 void GUIManager::renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height)
 {
 	setupRenderToScreen(x, y, width, height);
-    r_textureRenderer.enableShader();
-    r_textureRenderer.setData(R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, textureId);
+	r_texture.enableShader();
+	r_texture.setData(R_TEXTURE::u_texture, 0, GL_TEXTURE_2D, textureId);
 
     m_GUIPipeline.pushMatrix();
         m_GUIPipeline.translate(x, y, 0);
         m_GUIPipeline.scale(width, height, 1.0);
 
-        r_textureRenderer.setUniLocs(m_GUIPipeline);
+		r_texture.setUniLocs(m_GUIPipeline);
         m_textureQuad.render();
     m_GUIPipeline.popMatrix();
-    r_textureRenderer.disableShader();
+	r_texture.disableShader();
 }
 
 
@@ -96,7 +102,7 @@ void GUIManager::updateAndRender(MouseState mouseState)
     {
         Control* control = m_GUIComponents[i];
         control->update(mouseState);
-		control->render();
+	//	control->render();
     }
 }
 

@@ -191,7 +191,8 @@ void Shader::loadFile(const char* fn, string & str)
 
     if(!in.is_open())
     {
-        cout << "The file " << fn << "cannot be openned\n" << endl;
+        cout << "The file " << fn << " cannot be openned\n" << endl;
+		exit(1);
         return;
     }
 

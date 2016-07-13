@@ -70,11 +70,14 @@ def write_enums(file, enum_dict):
 # check for ending ","
 
 input_filename = "renderer_data.json"
+gui_input_filename = "../gui/gui_renderer_data.json"
+
 output_filename = "renderer_constants.h"
-
-
+gui_output_filename = "../gui/gui_renderer_constants.h"
 
 output_file = open(output_filename, 'w')
+gui_output_file = open(gui_output_filename, 'w')
+
 
 # header
 header = """#ifndef RENDERER_CONSTANT_H_
@@ -82,8 +85,16 @@ header = """#ifndef RENDERER_CONSTANT_H_
 
 // http://stackoverflow.com/questions/23288934/c-how-to-have-same-enum-members-name-in-different-enum-names-without-getting-e
 """
-
 output_file.write(header)
+
+
+header = """#ifndef GUI_RENDERER_CONSTANT_H_
+#define GUI_RENDERER_CONSTANT_H_
+
+// http://stackoverflow.com/questions/23288934/c-how-to-have-same-enum-members-name-in-different-enum-names-without-getting-e
+"""
+gui_output_file.write(header)
+
 
 
 
@@ -91,13 +102,10 @@ output_file.write(header)
 with open(input_filename) as data_file:    
     data = json.load(data_file, object_pairs_hook = OrderedDict)
 
+with open(gui_input_filename) as gui_data_file:
+	gui_data = json.load(gui_data_file, object_pairs_hook = OrderedDict)
+
 for entry in data:
-	#print (entry)
-	#print (type(entry))
-
-	# print (entry)
-
-
 	if("data" in entry):
 		renderer = entry["r"]
 
@@ -107,8 +115,17 @@ for entry in data:
 		write_renderer_enum(output_file, renderer, enum_dict)
 
 
-#print (type(data))
-#pprint(data)
+
+for entry in gui_data:
+	if("data" in entry):
+		renderer = entry["r"]
+
+		enum_dict = entry["data"]
+	
+		print (str(renderer))
+		write_renderer_enum(gui_output_file, renderer, enum_dict)
+
+
 
 
 
@@ -117,3 +134,4 @@ footer = "\n\n#endif"
 
 
 output_file.write(footer)
+gui_output_file.write(footer)

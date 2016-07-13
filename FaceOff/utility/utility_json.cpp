@@ -73,3 +73,10 @@ glm::vec3 utl::findVec3(const mObject& obj, const string& name)
 	return vec3Value;
 }
 
+
+
+
+
+
+
+

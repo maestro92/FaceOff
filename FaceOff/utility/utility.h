@@ -78,6 +78,9 @@ using namespace std;
 #define LIGHT_GRAY  glm::vec3(0.75, 0.75, 0.75)
 #define WHITE       glm::vec3(1.0,1.0,1.0)
 
+
+
+
 struct MouseState
 {
     bool m_leftButtonDown;
@@ -317,10 +320,9 @@ namespace utl
 	/// utl_json.cpp
 	mValue readJsonFileToMap(char* file);
 	Value readJsonFileToVector(char* file);
-
 	const mValue& findValue(const mObject& obj, const string& name);
-
 	glm::vec3 findVec3(const mObject& obj, const string& name);
+
 };
 
 template<typename T>

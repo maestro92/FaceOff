@@ -1926,6 +1926,7 @@ void FaceOff::forwardRender()
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_rm.m_backGroundLayerFBO.FBO);
+	Model::enableVertexAttribArrays();
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -2262,6 +2263,7 @@ void FaceOff::forwardRender()
 
 
 	// renderGUI();
+	Model::disableVertexAttribArrays();
 }
 
 
@@ -2345,22 +2347,6 @@ int main(int argc, char *argv[])
 	return EXIT_SUCCESS;
 }
 
-
-/// Function CallBacks
-void FaceOff::startCB()
-{
-
-}
-
-void FaceOff::resetGameBoardCB()
-{
-
-}
-
-void FaceOff::GOLModelListBoxCB()
-{
-
-}
 
 
 void FaceOff::initGUI()

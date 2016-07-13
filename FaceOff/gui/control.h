@@ -81,6 +81,7 @@ class Control
 		void setHeight(int h);
 
 		void setText(string text);
+		void setTexture(Renderer* r);
 
         void setTextLayout(bool setLineBreakFlag, int xLayoutFlag, int yLayoutFlag);
         void setRectTextLayout(LineBreakInfo& lineBreakInfo, float& startingX, float& startingY,
@@ -126,6 +127,8 @@ class Control
 
 		RECT_BG_TYPE m_rectBgType;
 
+		Renderer* m_renderer;
+
         glm::vec3 m_rectColor;
 
         vector<LineBreakInfo> m_lineBreakInfos;
@@ -139,9 +142,12 @@ class Control
         static int m_screenWidth;
         static int m_screenHeight;
         static QuadModel m_quadModel;
+
+		/*
         static Renderer r_coloredRectRenderer;
         static Renderer r_texturedRectRenderer;
         static Renderer r_listBoxHighlightRenderer;
+		*/
 };
 
 

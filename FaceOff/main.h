@@ -217,6 +217,25 @@ throw gun animation
 
 */
 
+
+
+
+
+
+/*
+https://github.com/id-Software/DOOM-3
+
+https://github.com/id-Software
+
+http://fabiensanglard.net/
+
+http://fabiensanglard.net/doom3/index.php
+*/
+
+
+
+
+
 class FaceOff
 {
 	// private:

@@ -174,12 +174,12 @@ bool Slider::update1(MouseState & state, unsigned int& groupFlag)
     return false;
 }
 
-
+/*
 void Slider::render(Pipeline& p,
                     Renderer* r,
                     int RenderPassID)
 {
-    /*
+
     Control::render(m_pipeline, Renderer, RENDER_PASS1, m_rect, p_model);
 
     int offset_x = (int)((*m_current - m_minValue) / (m_maxValue - m_minValue) * (m_rect.w - tickSize) + m_rect.x);
@@ -227,9 +227,9 @@ void Slider::render(Pipeline& p,
 
     // offset_y = m_rect.y + m_rect.h - Control::m_textEngine.fontSize - 2;
     Control::m_textEngine.render(m_pipeline, offset_x, offset_y, 15, s.c_str());
-    */
-}
 
+}
+*/
 
 void Slider::render()
 {

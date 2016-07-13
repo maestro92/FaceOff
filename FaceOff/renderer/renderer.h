@@ -312,11 +312,12 @@ enum DATA_PAIR_TYPE
 
 
 
+
 class Renderer
 {
 	public:
 
-
+		static unordered_map<string, DATA_PAIR_TYPE> m_stringToDPTypeEnum;
 
 		Renderer();
 		virtual ~Renderer();
@@ -362,8 +363,11 @@ class Renderer
 		void printDataPairs();
 
 
-
-
+		static void initRendererWrapper(const Array arr, Renderer* r, string name, string path);
+		static void initRendererWrapper(const Array arr, Renderer* r, string name);
+		static Object findRendererObject(const Array arr, string rName);
+		static void initRenderer(const Object obj, Renderer* r, string path);
+		static void initRenderer(const Object obj, Renderer* r);
 
 	public:
 		MatricesUniLoc m_matricesUniLocs;

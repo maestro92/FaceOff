@@ -68,6 +68,11 @@ class Model
 		void setTextures(vector<string> textureFiles);
 		void setMeshRandTextureIdx();
 		virtual void render();
+		virtual void renderSingle();
+
+		static void enableVertexAttribArrays();
+		static void disableVertexAttribArrays();
+
 
         void clear();
         GLuint m_modelGeometry;
