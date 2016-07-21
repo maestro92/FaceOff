@@ -131,6 +131,7 @@ class WorldObject
 
 		void update(); 
 
+		void addParentNode(KDTreeNode* node);
 		/*
 		void removeSelfFromNodes()
 		{
@@ -142,6 +143,7 @@ class WorldObject
 		}
 		*/
 		vector<KDTreeNode*> m_parentNodes;
+		queue<int> m_emptyIndexPool;
 };
 
 inline void WorldObject::setScale(float s)

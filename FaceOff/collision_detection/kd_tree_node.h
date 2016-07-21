@@ -5,6 +5,7 @@
 class WorldObject;
 #include "world_object.h"
 
+#include <queue>
 #include "utility.h"
 #include "world_object.h"
 #include "cube_model.h"
@@ -31,8 +32,9 @@ struct KDTreeNode
 	int m_splitDirection;
 	float m_splitValue;
 
-	// vector<WorldObject*> m_objects;
-	unordered_map<int, WorldObject*> m_objects2;
+	vector<WorldObject*> m_objects;
+	queue<int> m_emptyIndexPool;
+	// unordered_map<int, WorldObject*> m_objects2;
 	AABB m_aabb;
 
 	CubeWireFrameModel* m_wireFrameModel;
@@ -80,20 +82,66 @@ struct KDTreeNode
 
 	void addObject(WorldObject* object)
 	{
-		m_objects2[object->m_instanceId] = object;
-		object->m_parentNodes.push_back(this);
+//		m_objects2[object->m_instanceId] = object;
+
+		if (!m_emptyIndexPool.empty())
+		{
+			int index = m_emptyIndexPool.front();
+			m_emptyIndexPool.pop();
+			m_objects[index] = object;
+		}
+		else
+		{
+			m_objects.push_back(object);
+		}
+
+		object->addParentNode(this);
+//		object->m_parentNodes.push_back(this);
 	}
 
 	void setObjects(vector<WorldObject*> & objects)
 	{
+		m_objects.clear();
+		while (!m_emptyIndexPool.empty())
+		{
+			m_emptyIndexPool.pop();
+		}
+
 		for (int i = 0; i < objects.size(); i++)
 		{
 			int id = objects[i]->m_instanceId;
-			m_objects2[id] = objects[i];
-			objects[i]->m_parentNodes.push_back(this);
+//			m_objects2[id] = objects[i];
+//			objects[i]->m_parentNodes.push_back(this);
+
+			m_objects.push_back(objects[i]);
+			objects[i]->addParentNode(this);
 		}
 	}
 		
+
+
+	void removeObject(WorldObject* object)
+	{
+		int index = 0;
+	//	utl::debug("m_objects size is", m_objects.size());
+		for (int i = 0; i < m_objects.size(); i++)
+		{
+			WorldObject* obj = m_objects[i];
+
+			if (obj == NULL)
+				continue;
+
+			if (obj->m_instanceId == object->m_instanceId)
+			{
+				index = i;
+				m_objects[i] = NULL;
+				break;
+			}
+		}
+
+		m_emptyIndexPool.push(index);
+	}
+
 
 	void setChildrenToNULL()
 	{

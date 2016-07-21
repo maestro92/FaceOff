@@ -42,7 +42,7 @@ void RendererManager::init(int width, int height)
 		r_smokeEffectRender.setData(R_SMOKE_EFFECT_RENDER::u_zFar, utl::Z_FAR);
 	r_smokeEffectRender.disableShader();
 
-
+	/*
 	r_fullVertexColor.printDataPairs();
 	r_fullColor.printDataPairs();
 	r_fullTexture.printDataPairs();
@@ -50,11 +50,11 @@ void RendererManager::init(int width, int height)
 
 	r_smokeEffectUpdate.printDataPairs();
 	r_smokeEffectRender.printDataPairs();
+	*/
 
 	m_backGroundLayerFBO = utl::createFrameBufferObject(width, height);
 	m_particleLayerFBO = utl::createFrameBufferObject(width, height);
 }
-
 
 void RendererManager::initSceneRendererStaticLightsData(LightManager lightManager)
 {

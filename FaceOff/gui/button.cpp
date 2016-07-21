@@ -111,25 +111,36 @@ void Button::customRender()
 
 void Button::render()
 {
-#if 0
-    Control::r_coloredRectRenderer.enableShader();
-
+#if 1
+    Control::r_coloredRect.enableShader();
+	/*
     if(m_isInside && !m_down)
         Control::r_coloredRectRenderer.setData(RENDER_PASS1, "u_color", m_highlightColor);
     else if (m_down)
         Control::r_coloredRectRenderer.setData(RENDER_PASS1, "u_color", m_pressedColor);
     else
         Control::r_coloredRectRenderer.setData(RENDER_PASS1, "u_color", m_rectColor);
+		*/
+	if(m_isInside && !m_down)
+		Control::r_coloredRect.setData(R_COLORED_RECT::u_color, m_highlightColor);
+	else if (m_down)
+		Control::r_coloredRect.setData(R_COLORED_RECT::u_color, m_pressedColor);
+	else
+		Control::r_coloredRect.setData(R_COLORED_RECT::u_color, m_rectColor);
 
-    updatePipeline(&Control::r_coloredRectRenderer);
+	updatePipeline(&Control::r_coloredRect);
     m_quadModel.render();
 
 
 
 
  //   Control::m_textEngine.render(m_text, m_textStartingXs[0], m_textStartingYs[0], m_font.size, m_font.color);
-    Control::m_textEngine.render(m_text, m_textStartingXs[0], m_textStartingYs[0], m_font.size, m_font.color, m_lineBreakInfos[0].lineBreaks);
-    Control::r_coloredRectRenderer.disableShader();
+	if (hasText())
+	{
+		Control::m_textEngine.render(m_text, m_textStartingXs[0], m_textStartingYs[0], m_font.size, m_font.color, m_lineBreakInfos[0].lineBreaks);
+	}
+
+	Control::r_coloredRect.disableShader();
 #endif
 
  //   cout << "offset_x " << offset_x << endl;

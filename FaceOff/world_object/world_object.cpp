@@ -197,6 +197,21 @@ void WorldObject::update()
 
 }
 
+
+void WorldObject::addParentNode(KDTreeNode* node)
+{
+	if (!m_emptyIndexPool.empty())
+	{
+		int index = m_emptyIndexPool.front();
+		m_emptyIndexPool.pop();
+		m_parentNodes[index] = node;
+	}
+	else
+	{
+		m_parentNodes.push_back(node);
+	}
+}
+
 /*
 void WorldObject::removeSelfFromNodes()
 {

@@ -80,9 +80,10 @@ class KDTree
 		static bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
 		static bool testCollision(WorldObject* a, WorldObject* b);
 
-		void copyObjects(KDTreeNode* & node, vector<WorldObject*> & objects);
+		// void copyObjects(KDTreeNode* & node, vector<WorldObject*> & objects);
 
 		void print();
+		void print(KDTreeNode* node);
 };
 
 

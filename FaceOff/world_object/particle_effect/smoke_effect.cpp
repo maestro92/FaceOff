@@ -128,7 +128,7 @@ bool SmokeEffect::initRandomTexture(int size)
 	return true;
 }
 
-
+/*
 void SmokeEffect::update(Pipeline& p, Renderer* r)
 {
 	//   m_randomTexture.Bind(RANDOM_TEXTURE_UNIT);
@@ -217,9 +217,102 @@ void SmokeEffect::render(Pipeline& p, Renderer* r)
 
 	m_currVB = m_currTFB;
 	m_currTFB = (m_currTFB + 1) & 0x1;
+}
+*/
 
+void SmokeEffect::update(Pipeline& p, Renderer* r)
+{
+	//   m_randomTexture.Bind(RANDOM_TEXTURE_UNIT);
+
+
+
+	float scale = 0.001;
+	m_particleRotation += scale;
+	if (m_particleRotation > 360.0)
+	{
+		m_particleRotation -= 360.0;
+	}
+
+
+	p.pushMatrix();
+
+	r->setUniLocs(p);
+
+	// We have another draw call later on that does that.
+	// Calling glEnable() with the GL_RASTERIZER_DISCARD flag
+	// tells the pipeline to discard all primitives before
+	// they reach the rasterizer (but after the optional transform feedback stage).
+	glEnable(GL_RASTERIZER_DISCARD);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[m_currVB]);
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_transformFeedback[m_currTFB]);
+
+	/*
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
+	*/
+
+	glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(SmokeParticle), 0);								// type
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SmokeParticle), (const GLvoid*)4);				// position
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(SmokeParticle), (const GLvoid*)16);				// velocity
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(SmokeParticle), (const GLvoid*)28);				// lifetime
+
+	glBeginTransformFeedback(GL_POINTS);
+
+	// first drawing function, since we know we're drawing one point
+	if (m_isFirst)
+	{
+		glDrawArrays(GL_POINTS, 0, m_startingParticleCount);
+		m_isFirst = false;
+	}
+	else
+	{
+		glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currVB]);
+		// glDrawArrays(GL_POINTS, 0, MAX_PARTICLES);
+	}
+
+	glEndTransformFeedback();
+	/*
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
+	*/
+
+	glDisable(GL_RASTERIZER_DISCARD);
+
+	p.popMatrix();
 }
 
+void SmokeEffect::render(Pipeline& p, Renderer* r)
+{
+	p.pushMatrix();
+
+	p.translate(m_position);
+	p.addMatrix(m_rotation);
+	p.scale(m_scale);
+
+
+	r->setUniLocs(p);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[m_currTFB]);
+
+//	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SmokeParticle), (const GLvoid*)4);  // position
+
+	glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currTFB]);
+	// glDrawArrays(GL_POINTS, 0, MAX_PARTICLES);
+//	glDisableVertexAttribArray(0);
+
+	p.popMatrix();
+
+	m_currVB = m_currTFB;
+	m_currTFB = (m_currTFB + 1) & 0x1;
+
+}
 
 
 ParticleEffectType SmokeEffect::getParticleEffectType()

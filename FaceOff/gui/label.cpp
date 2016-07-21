@@ -33,28 +33,33 @@ void Label::render(Renderer* r)
 
 void Label::render()
 {
-	/*
+	Renderer* r;
 	if (m_rectBgType == COLORED)
 	{
+		r = &Control::r_coloredRect;
+
 		r->enableShader();
-			r->setData(RENDER_PASS1, "u_color", m_rectColor);
+			r->setData(R_COLORED_RECT::u_color, m_rectColor);
 			updatePipeline(r);
 			m_quadModel.render();
 		r->disableShader();
-
-		Control::m_textEngine.render(m_text, m_textStartingXs[0], m_textStartingYs[0], m_font.size, m_font.color, m_lineBreakInfos[0].lineBreaks);
 	}
 	else
 	{
+
+		r = &Control::r_texturedRect;
+		
 		r->enableShader();
-			r->setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, m_rectTexture);
+			r->setData(R_TEXTURED_RECT::u_texture, 0, GL_TEXTURE_2D, m_rectTexture);
 			updatePipeline(r);
 			m_quadModel.render();
 		r->disableShader();
+	}
 
+	if (hasText())
+	{
 		Control::m_textEngine.render(m_text, m_textStartingXs[0], m_textStartingYs[0], m_font.size, m_font.color, m_lineBreakInfos[0].lineBreaks);
 	}
-	*/
 }
 
 

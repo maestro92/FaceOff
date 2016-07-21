@@ -7,6 +7,7 @@
 #include "quad_model.h"
 #include "text_engine.h"
 #include "rect.h"
+#include "gui_renderer_constants.h"
 
 #define NO_SDL_GLEXT
 #include <GL/glew.h>
@@ -115,10 +116,16 @@ class Control
 
 
         void emptyOnClick();
-        static void init(string font, int size, int screenWidth, int screenHeight);
+		bool hasText();
+		
+		static void init(string font, int size, int screenWidth, int screenHeight);
 
         static TextEngine m_textEngine;
-    protected:
+		static Renderer r_coloredRect;
+		static Renderer r_texturedRect;
+		static Renderer r_listBoxItemHighlight;
+
+	protected:
         bool m_isInside;
         int m_id;
         string m_text;
@@ -143,11 +150,8 @@ class Control
         static int m_screenHeight;
         static QuadModel m_quadModel;
 
-		/*
-        static Renderer r_coloredRectRenderer;
-        static Renderer r_texturedRectRenderer;
-        static Renderer r_listBoxHighlightRenderer;
-		*/
+		
+
 };
 
 

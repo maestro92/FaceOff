@@ -490,7 +490,7 @@ void Renderer::initRenderer(const Object obj, Renderer* r, string path)
 
 	int size = dataObj.size();
 
-	utl::debug("size", size);
+	// utl::debug("size", size);
 
 	r->setShader(s);
 

@@ -31,6 +31,18 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	Renderer::initRendererWrapper(vArray, &r_coloredRect, "r_coloredRect", path);
 	Renderer::initRendererWrapper(vArray, &r_texturedRect, "r_texturedRect", path);
 	Renderer::initRendererWrapper(vArray, &r_listBoxItemHighlight, "r_listBoxItemHighlight", path);
+
+	Control::r_coloredRect = r_coloredRect;
+	Control::r_texturedRect = r_texturedRect;
+	Control::r_listBoxItemHighlight = r_listBoxItemHighlight;
+
+	r_texture.printDataPairs();
+	Control::r_coloredRect.printDataPairs();
+	Control::r_texturedRect.printDataPairs();
+	Control::r_listBoxItemHighlight.printDataPairs();
+
+
+	utl::debug("GUI manager initing");
 }
 
 
@@ -102,7 +114,7 @@ void GUIManager::updateAndRender(MouseState mouseState)
     {
         Control* control = m_GUIComponents[i];
         control->update(mouseState);
-	//	control->render();
+		control->render();
     }
 }
 

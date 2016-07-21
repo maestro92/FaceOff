@@ -3,15 +3,15 @@
 TextEngine Control::m_textEngine;
 Pipeline Control::m_pipeline;
 QuadModel Control::m_quadModel;// = QuadModel(1,1);
-/*
-Renderer Control::r_coloredRectRenderer;
-Renderer Control::r_texturedRectRenderer;
-Renderer Control::r_listBoxHighlightRenderer;
-*/
+
+Renderer Control::r_coloredRect;
+Renderer Control::r_texturedRect;
+Renderer Control::r_listBoxItemHighlight;
+
 int Control::m_screenWidth;
 int Control::m_screenHeight;
 
-Control::Control() : Control("Martin :)", 0,0,1,1, BLUE)
+Control::Control() : Control("", 0,0,1,1, BLUE)
 {}
 
 Control::Control(string text, int x, int y, int width, int height, glm::vec3 color)
@@ -310,6 +310,12 @@ void Control::updatePipeline(Renderer* r, Rect rect)
 void Control::emptyOnClick()
 {
     utl::debug("In " + m_text + " the empty OnClick Func");
+}
+
+
+bool Control::hasText()
+{
+	return (m_text != "");
 }
 
 
