@@ -34,6 +34,8 @@ void ContactData::resolveVelocity()
 	// Find the velocity in the direction of the contact
 	float separatingVelocity = calculateSeparatingVelocity();
 
+	// utl::debug("separatingVelocity", separatingVelocity);
+
 	// Check whether it needs to be resolved
 	if (separatingVelocity > 0)
 	{

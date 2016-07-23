@@ -9,20 +9,17 @@ right click on the project and choose "properties"
 
 Configuration Properties -> C/C++ -> General
 Additional Include Directories:
-./;world_object\weapon;libraries\RakNet;glm;gui;gui\custom_gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\terrain;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include;libraries\json_spirit;C:\Users\Martin\Desktop\boost_1_55_0;C:\Program Files %28x86%29\OpenAL 1.1 SDK\include
-
+./;libraries\RakNet;glm;gui;gui\custom_gui;camera;model;model\builtin_model;renderer;utility;network;collision_detection;world_object;world_object\weapon;world_object\terrain;world_object\particle_effect;libraries\assimp\include;libraries\freetype;libraries\freetype\freetype;libraries\glew\include;libraries\SDL\include;libraries\SDL_image\include;libraries\json_spirit;C:\Users\Martin\Desktop\boost_1_55_0;C:\Program Files %28x86%29\OpenAL 1.1 SDK\include
 
 
 Configuration Properties -> Linker -> General
 Additional Library Directories
-libraries\SDL\lib\x86;libraries\SDL_image\lib\x86;libraries\assimp\lib;libraries\freetype\lib;$(LibraryPath)
-
+libraries\glew\lib;libraries\freetype\lib;libraries\assimp\lib;libraries\SDL\lib;libraries\SDL_image\lib\x86;C:\Program Files %28x86%29\OpenAL 1.1 SDK\libs\Win32;%(AdditionalLibraryDirectories)
 
 
 Configuration Properties -> Linker -> Input
 Additional Dependencies:	
-opengl32.lib;glu32.lib;glew32.lib;SDL.lib;SDLmain.lib;SDL_image.lib;ws2_32.lib;freetype.lib;assimp.lib
-
+opengl32.lib;glu32.lib;glew32.lib;SDL.lib;SDLmain.lib;SDL_image.lib;ws2_32.lib;freetype.lib;assimp.lib;OpenAL32.lib
 
 
 - if you see the following error 
@@ -66,9 +63,30 @@ Curiously recurring template pattern for the Weapon Class
 I Needed a static variable for each derived class
 
 
-- What's the difference between calling detach() and not calling detach()
+-	What's the difference between calling detach() and not calling detach()
 
 http://stackoverflow.com/questions/22803600/when-should-i-use-stdthreaddetach
 
 
-- difference between std::tread and boost threads?
+-	difference between std::tread and boost threads?
+
+
+
+
+
+
+
+-	difference between namespace-functions vs static methods on a class
+
+essentially, when I was making the utility functions, my first approach is just to have a class full of static functions. Then later on, I switched to namespace
+
+short answer:
+By default, use namespaced functions.
+Classes are to build objects, not to replace namespaces.
+
+long answer:
+http://stackoverflow.com/questions/1434937/namespace-functions-versus-static-methods-on-a-class
+
+
+
+

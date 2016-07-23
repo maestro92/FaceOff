@@ -6,7 +6,7 @@
 #include "model.h"
 #include <string>
 #include "cube_wireframe_model.h"
-#include "bounding_volume.h"
+#include "collision_detection_geometry.h"
 
 /*
 struct KDTreeNode;
@@ -61,14 +61,14 @@ class WorldObject
 
 		virtual WorldObjectType getObjectType();
 		DynamicType getDynamicType();
-		BVEnum getBoundingVolumeType();
+		GMEnum getGeometryType();
 
-		BVEnum m_BVType;
+
 
 		AABB m_aabb;
 		
 
-		BoundingVolume* m_boundingVolume;
+		CDGeometry* m_geometry;
 
 
 		glm::vec3 m_position;
@@ -144,6 +144,9 @@ class WorldObject
 		*/
 		vector<KDTreeNode*> m_parentNodes;
 		queue<int> m_emptyIndexPool;
+
+	protected:
+		GMEnum m_geometryType;
 };
 
 inline void WorldObject::setScale(float s)

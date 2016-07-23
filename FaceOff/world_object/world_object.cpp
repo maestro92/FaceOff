@@ -19,7 +19,7 @@ WorldObject::WorldObject()
 	isHitCounter = 0;
 
 	m_dynamicType = STATIC;
-	m_BVType = BV_AABB;
+	m_geometryType = GM_AABB;
 
 
 
@@ -56,9 +56,9 @@ DynamicType WorldObject::getDynamicType()
 }
 
 
-BVEnum WorldObject::getBoundingVolumeType()
+GMEnum WorldObject::getGeometryType()
 {
-	return m_BVType;
+	return m_geometryType;
 }
 
 /*

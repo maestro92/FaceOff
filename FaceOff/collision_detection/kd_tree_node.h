@@ -9,7 +9,7 @@ class WorldObject;
 #include "utility.h"
 #include "world_object.h"
 #include "cube_model.h"
-#include "bounding_volume.h"
+#include "collision_detection_geometry.h"
 
 #include <unordered_map>
 using namespace std;

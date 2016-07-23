@@ -17,7 +17,7 @@
 #include <assimp/Importer.hpp>      // C++ importer interface
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "bounding_volume.h"
+#include "collision_detection_geometry.h"
 #include "texture.h"
 
 using namespace std;

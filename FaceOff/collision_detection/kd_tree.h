@@ -9,7 +9,7 @@
 #include "collision_detection.h"
 // #include "player.h"
 using namespace std;
-#include "bounding_volume.h"
+#include "collision_detection_geometry.h"
 
 /*
 enum NODE_OBJ_RELATION
@@ -76,8 +76,8 @@ class KDTree
 
 
 	//	static bool testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb);
-		static bool testAABBAABB(AABB a, AABB b);
-		static bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
+	//	static bool testAABBAABB(AABB a, AABB b);
+	//	static bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
 
 		// void copyObjects(KDTreeNode* & node, vector<WorldObject*> & objects);
 

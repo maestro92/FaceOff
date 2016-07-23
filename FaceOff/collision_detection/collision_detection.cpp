@@ -1,13 +1,6 @@
 #include "collision_detection.h"
-/*
-void CollisionDetection::closestPtPointAABB(glm::vec3 p, AABB b, glm::vec3& q);
-float CollisionDetection::sqDistPointAABB(glm::vec3 p, AABB b);
-int CollisionDetection::testSphereAABB(Sphere& s, AABB& b, glm::vec3& q);
-int CollisionDetection::testSphereAABB(Sphere& s, AABB& b, ContactData& contact);
-*/
 
-
-// collision detection
+// Real Time Collision Detection P.130
 void CollisionDetection::closestPtPointAABB(glm::vec3 p, AABB b, glm::vec3& q)
 {
 	for (int i = 0; i < 3; i++)
@@ -19,6 +12,7 @@ void CollisionDetection::closestPtPointAABB(glm::vec3 p, AABB b, glm::vec3& q)
 	}
 }
 
+// Real Time Collision Detection P.131
 float CollisionDetection::sqDistPointAABB(glm::vec3 p, AABB b)
 {
 	float sqDist = 0.0f;
@@ -45,6 +39,7 @@ bool CollisionDetection::testSphereAABB(Sphere& s, AABB& b, glm::vec3& q)
 	return (dist <= s.radius * s.radius);
 }
 
+// Real Time Collision Detection P.165
 bool CollisionDetection::testSphereAABB(Sphere& s, AABB& b, ContactData& contact)
 {
 	// find point q on AABB closest to sphere center
@@ -60,6 +55,41 @@ bool CollisionDetection::testSphereAABB(Sphere& s, AABB& b, ContactData& contact
 
 	contact.point = q;
 	contact.normal = s.center - q;
+	contact.normal = glm::normalize(contact.normal);
+	contact.penetrationDepth = s.radius - glm::length(v);
+
+	return true;
+}
+
+
+
+// Real Time Collision Detection P.165
+// instead of having an accurate contact normal, we change the normal only to have entirely Y component, or X or Z component
+// this is mainly for cases where a Player (sphere model) makes contact with a corner of AABB cube
+// so when the falls down, from the AABB, it will have a contact with the corner, hence giving a horizontal component 
+
+bool CollisionDetection::testSphereAABBHackVersion(Sphere& s, AABB& b, ContactData& contact)
+{
+	// find point q on AABB closest to sphere center
+	glm::vec3 q = glm::vec3(0.0);
+	closestPtPointAABB(s.center, b, q);
+
+	// Sphere and AABB intersect if (squared) distance from sphere
+	// center to point q is less than (squared) sphere radius
+	glm::vec3 v = q - s.center;
+	float dist = glm::dot(v, v);
+	if (dist > s.radius * s.radius)
+		return false;
+
+	contact.point = q;
+	contact.normal = s.center - q;
+
+	if (contact.normal.y > 0.0f)
+	{
+		contact.normal.x = 0.0f;
+		contact.normal.z = 0.0f;
+	}
+		
 	contact.normal = glm::normalize(contact.normal);
 	contact.penetrationDepth = s.radius - glm::length(v);
 
@@ -143,6 +173,20 @@ bool CollisionDetection::testAABBAABB(AABB a, AABB b)
 
 
 
+bool CollisionDetection::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
+{
+	if (aMax.x < bMin.x || aMin.x > bMax.x)
+		return false;
+
+	if (aMax.y < bMin.y || aMin.y > bMax.y)
+		return false;
+
+	if (aMax.z < bMin.z || aMin.z > bMax.z)
+		return false;
+
+	return true;
+}
+
 
 
 
@@ -171,22 +215,9 @@ bool CollisionDetection::testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb)
 			float t1 = (aabb.min[i] - p[i]) * ood;
 			float t2 = (aabb.max[i] - p[i]) * ood;
 
-			/*
-			tMin = max(tMin, min(t1, t2));
-			tMax = min(tMax, max(t1, t2));
-			*/
-
 			if (t1 > t2)
 				swap(t1, t2);
 
-			/*
-			if (t1 > tMin)
-				tMin = t1;
-
-			if (t2 > tMax)
-				tMax = t2;
-			*/
-			
 			tMin = max(tMin, t1);
 			tMax = min(tMax, t2);
 
@@ -195,7 +226,7 @@ bool CollisionDetection::testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb)
 			
 		}
 	}
-//	return tMax >= tMin;
+
 	return true;
 }
 

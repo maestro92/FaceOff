@@ -187,6 +187,12 @@ namespace utl
 	const int SCREEN_WIDTH = 800;
 	const int SCREEN_HEIGHT = 600;
 
+
+	const float MATH_EPISON = 0.000001f;
+	const float GRAVITY_CONSTANT = 0.01f;
+	const glm::vec3 BIASED_HALF_GRAVITY = glm::vec3(0.0f, -9.81f, 0.0f) * GRAVITY_CONSTANT * 0.5f;
+
+
 	const float DEGREE_TO_RADIAN = 0.0174;    /// pi/180
 	const float RADIAN_TO_DEGREE = 57.32;     /// 180/pi
 

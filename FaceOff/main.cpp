@@ -1268,7 +1268,7 @@ void FaceOff::start()
 								hitPointMark->setScale(1.0, 1.0, 1.0);
 								hitPointMark->setModel(m_mm.m_cube);
 								hitPointMark->m_name = "hitMark";
-								m_hitPointMarks.push_back(hitPointMark);
+//								m_hitPointMarks.push_back(hitPointMark);
 
 
 
@@ -1369,10 +1369,15 @@ void FaceOff::start()
 
 
 
-
+			
 				case SDLK_SPACE:
-					if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
-						m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 20.0, 0.0);
+			//		if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
+			//		utl::debug(">>>> Just Jumped");
+			//		utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
+
+			//		if (m_players[m_defaultPlayerID]->isNotJumping())
+			//			m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 150.0, 0.0) * utl::GRAVITY_CONSTANT;
+					
 					break;
 
 				case SDLK_z:
@@ -1632,14 +1637,33 @@ void FaceOff::forwardRender()
 		//	m_players[m_defaultPlayerID]->update(m_pipeline);
 		//	m_players[m_defaultPlayerID]->updateCD(m_pipeline, &m_objectKDtree);
 
-		m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.0001f * 0.5f;
+	//	utl::debug("***** Before Position is", m_players[m_defaultPlayerID]->m_velocity);
+	//	utl::debug("utl::BIASED_HALF_GRAVITY ", utl::BIASED_HALF_GRAVITY);
+		m_players[m_defaultPlayerID]->m_velocity += utl::BIASED_HALF_GRAVITY;
 		m_players[m_defaultPlayerID]->m_camera->m_target += m_players[m_defaultPlayerID]->m_velocity;
+
+
+
+		Uint8* state = SDL_GetKeyState(NULL);
+
+		if (state[SDLK_SPACE])
+		{
+			//		if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
+		//	utl::debug(">>>> Just Jumped");
+		//	utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
+
+			if (m_players[m_defaultPlayerID]->isNotJumping())
+				m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 150.0, 0.0) * utl::GRAVITY_CONSTANT;
+		}
+
+
+
 
 
 		//		m_players[m_defaultPlayerID]->m_camera->m_target.y -= (9.82 * 0.03);
 		m_players[m_defaultPlayerID]->control();
 
-		// utl::debug("Position is", m_players[m_defaultPlayerID]->m_position);
+	//	utl::debugLn("After velocity is", m_players[m_defaultPlayerID]->m_velocity);
 
 
 		vector<WorldObject*> neighbors;
@@ -1658,9 +1682,23 @@ void FaceOff::forwardRender()
 
 			ContactData contactData;
 
-			if (CollisionDetection::testSphereAABB(m_players[m_defaultPlayerID]->m_boundingSphere,
-				neighbors[i]->m_aabb,
-				contactData))
+			bool collideFlag = false;
+
+			if (neighbors[i]->getDynamicType() == STATIC && neighbors[i]->getGeometryType() == GM_AABB)
+			{
+				collideFlag = CollisionDetection::testSphereAABBHackVersion(m_players[m_defaultPlayerID]->m_boundingSphere,
+					neighbors[i]->m_aabb,
+					contactData);
+			}
+			else
+			{
+				collideFlag = CollisionDetection::testSphereAABB(m_players[m_defaultPlayerID]->m_boundingSphere,
+					neighbors[i]->m_aabb,
+					contactData);
+			}
+
+
+			if (collideFlag)
 			{
 				neighbors[i]->isCollided = true;
 
@@ -1680,11 +1718,25 @@ void FaceOff::forwardRender()
 				contactData.pair[0] = m_players[m_defaultPlayerID];
 				contactData.pair[1] = NULL;
 
-
+				contactData.restitution = 0.0;
 
 				contactData.resolveVelocity();
 				contactData.resolveInterpenetration();
 
+
+				/*
+//				if (neighbors[i]->m_name == "woodenBox -60" && m_players[m_defaultPlayerID]->m_velocity.x != 0.0)
+//				if (neighbors[i]->m_name == "SE Pillar" && m_players[m_defaultPlayerID]->m_velocity.x != 0.0)
+				if (neighbors[i]->m_name == "woodenBox -60")
+			//	if (neighbors[i]->m_name == "woodenBox -60" && m_players[m_defaultPlayerID]->m_velocity.x != 0.0)
+				{
+					utl::debug("	neighbors", neighbors[i]->m_name);
+					utl::debug("	contactData normal", contactData.normal);
+					utl::debug("	contactData point", contactData.point);
+
+					utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
+				}
+				*/
 			}
 		}
 
@@ -1692,7 +1744,7 @@ void FaceOff::forwardRender()
 		m_players[m_defaultPlayerID]->updateGameStats();
 
 
-
+	//	utl::debugLn("Final velocity is", m_players[m_defaultPlayerID]->m_velocity);
 
 		//	utl::debug("player pos is ", m_players[m_defaultPlayerID]->m_position);
 		//	utl::debug("player vel is ", m_players[m_defaultPlayerID]->m_velocity);
@@ -2154,14 +2206,14 @@ void FaceOff::forwardRender()
 		}
 	}
 
-
+	/*
 	// rendering hitPointMarks
 	for (int i = 0; i < m_hitPointMarks.size(); i++)
 	{
 		p_renderer->setData(R_FULL_COLOR::u_color, RED);
 		m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
 	}
-
+	*/
 
 	p_renderer->disableShader();
 

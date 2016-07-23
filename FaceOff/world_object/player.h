@@ -95,6 +95,7 @@ class Player : public WorldObject
 		void updateBulletTransform();
 		void adjustWeaponAndBulletPosition();
 
+		bool isNotJumping();
 
 		void renderGroup(Pipeline& p, Renderer* r);
 

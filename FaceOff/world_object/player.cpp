@@ -68,7 +68,7 @@ Player::Player(int id)
 	m_healthBarGUI = NULL;
 
 	m_dynamicType = DYNAMIC;
-	m_BVType = BV_SPHERE;
+	m_geometryType = GM_SPHERE;
 }
 
 Player::~Player()
@@ -124,6 +124,13 @@ void Player::control()
 
 }
 
+
+
+// this obviously doesn't work with a slanted falling incline
+bool Player::isNotJumping()
+{
+	return abs(m_velocity.y - utl::BIASED_HALF_GRAVITY.y) <= utl::MATH_EPISON;
+}
 
 
 void Player::updateGameStats()

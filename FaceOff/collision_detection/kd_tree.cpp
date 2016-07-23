@@ -145,10 +145,10 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	for (int i = 0; i < objects.size(); i++)
 	{
 		WorldObject* obj = objects[i];
-		if (testAABBAABB(lx, ln, obj->m_aabb.max, obj->m_aabb.min))
+		if (CollisionDetection::testAABBAABB(lx, ln, obj->m_aabb.max, obj->m_aabb.min))
 			leftObjects.push_back(obj);
 
-		if (testAABBAABB(rx, rn, obj->m_aabb.max, obj->m_aabb.min))
+		if (CollisionDetection::testAABBAABB(rx, rn, obj->m_aabb.max, obj->m_aabb.min))
 			rightObjects.push_back(obj);
 	}
 	
@@ -238,10 +238,10 @@ void KDTree::insert(KDTreeNode* node, WorldObject* object)
 	}
 
 
-	if (testAABBAABB(node->m_child[0]->m_aabb, object->m_aabb))
+	if (CollisionDetection::testAABBAABB(node->m_child[0]->m_aabb, object->m_aabb))
 		insert(node->m_child[0], object);
 
-	if (testAABBAABB(node->m_child[1]->m_aabb, object->m_aabb))
+	if (CollisionDetection::testAABBAABB(node->m_child[1]->m_aabb, object->m_aabb))
 		insert(node->m_child[1], object);
 
 //	if (testAABBAABB(node->m_left->m_aabb, object->m_aabb))
@@ -473,7 +473,6 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 	if (node->isLeaf())
 	{
-
 		for (int i = 0; i < node->m_objects.size(); i++)
 		{
 			WorldObject* obj = node->m_objects[i];
@@ -487,46 +486,20 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 			if (obj->m_instanceId == player->m_instanceId)
 				continue;
 
-			/*
-			if (CollisionDetection::testRayAABB(lineStart, lineDir, obj->m_aabb))
-			{
-				utl::debug("THIS NEEDS TO BE FIXED!!!! Wrong distance metric");
-				obj->alreadyFireTested = true;
-
-				float sqDist = glm::length2(player->m_position - obj->m_position);
-				if (sqDist < hitObjectSqDist)
-				{
-					utl::debug("lineStart", lineStart);
-					utl::debug("lineDir", lineDir);
-					hitObjectSqDist = sqDist;
-					hitObject = obj;
-				}
-
-				hitPoint = tempHitPoint;
-			}
-			*/
-
-
 			glm::vec3 tempHitPoint;
 
 			if (CollisionDetection::testRayAABB(lineStart, lineDir, obj->m_aabb, tempHitPoint))
 			{
-				utl::debug("THIS NEEDS TO BE FIXED!!!! Wrong distance metric");
 				obj->alreadyFireTested = true;
 
 				float sqDist = glm::length2(player->m_position - tempHitPoint);
 				if (sqDist < hitObjectSqDist)
 				{
-					utl::debug("lineStart", lineStart);
-					utl::debug("lineDir", lineDir);
 					hitObjectSqDist = sqDist;
 					hitObject = obj;
 					hitPoint = tempHitPoint;
 				}
-
-				
 			}
-
 		}
 
 		/*
@@ -589,99 +562,7 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 }
 
 
-/*
-void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & hitObject, float& hitObjectSqDist)
-{
-	if (node == NULL)
-		return;
 
-	if (node->isLeaf())
-	{
-		for (auto it = node->m_objects2.begin(); it != node->m_objects2.end(); it++)
-		{
-			if (it->second->m_instanceId == player->m_instanceId)
-				continue;
-
-			if (KDTree::testRayAABB(lineStart, lineDir, (it->second)->m_aabb))
-			{
-				float sqDist = glm::length2(lineStart - (it->second)->m_position);
-				utl::debug("THIS NEEDS TO BE FIXED!!!! Wrong distance metric");
-
-				if (sqDist < hitObjectSqDist)
-				{
-					utl::debug("lineStart", lineStart);
-					utl::debug("lineDir", lineDir);
-					hitObjectSqDist = sqDist;
-					hitObject = (it->second);
-				}
-			}
-		}
-
-		return;
-	}
-
-
-	int dim = node->m_splitDirection;
-	int val = node->m_splitValue;
-
-	int first = lineStart[dim] > node->m_splitValue;
-
-	if (lineDir[dim] == 0.0f)
-	{
-		if (first == 0)
-			visitNodes(node->m_left, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
-		else
-			visitNodes(node->m_right, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
-	}
-	else
-	{
-		float t = (node->m_splitValue - lineStart[dim]) / lineDir[dim];
-
-		if (0.0f <= t && t < tmax)
-		{
-			if (first == 0)
-			{
-				visitNodes(node->m_left, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
-				if (hitObject != NULL)
-					return;
-
-				visitNodes(node->m_right, player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist);
-			}
-			else
-			{
-				visitNodes(node->m_right, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
-				if (hitObject != NULL)
-					return;
-
-				visitNodes(node->m_left, player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist);
-			}
-		}
-		else
-		{
-			if (first == 0)
-				visitNodes(node->m_left, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
-			else
-				visitNodes(node->m_right, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
-		}
-	}
-}
-*/
-
-
-
-
-
-
-
-
-
-
-#if 0
-void KDTree::visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
-{
-	visitOverlappedNodes(m_head, player, volNearPt, objects);
-}
-#endif
 
 // Real Time Collision Detection page 321
 void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects)
@@ -730,14 +611,14 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 	volNearPt[dir] = val;
 
 
-	if (testObject->getBoundingVolumeType() == BV_SPHERE)
+	if (testObject->getGeometryType() == GM_SPHERE)
 	{
 		if (glm::length2(volNearPt - testObject->m_position) < (testObject->m_scale.x * testObject->m_scale.x))
 		{
 			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects);
 		}
 	}
-	else if (testObject->getBoundingVolumeType() == BV_AABB)
+	else if (testObject->getGeometryType() == GM_AABB)
 	{
 		if (CollisionDetection::testAABBAABB(testObject->m_aabb, node->m_child[first ^ 1]->m_aabb))
 		{
@@ -748,58 +629,6 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 	volNearPt[dir] = oldValue;
 }
 
-
-
-
-
-
-
-
-
-/*
-void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* player, glm::vec3& volNearPt, vector<WorldObject*>& objects)
-{
-	if (node == NULL)
-		return;
-
-	int dir = node->m_splitDirection;
-	int val = node->m_splitValue;
-
-	// visiting current node
-	if (node->isLeaf())
-	{
-		for (auto it = node->m_objects2.begin(); it != node->m_objects2.end(); it++)
-		{
-			if (it->second->m_instanceId == player->m_instanceId)
-				continue;
-			objects.push_back(it->second);
-		}
-		return;
-	}
-
-	int first = player->m_position[dir] > val;
-
-
-	KDTreeNode* next = (first == 0) ? node->m_left : node->m_right;
-	visitOverlappedNodes(next, player, volNearPt, objects);
-
-
-	float oldValue = volNearPt[dir];
-	volNearPt[dir] = val;
-
-	if (glm::length2(volNearPt - player->m_position) < (player->m_scale.x * player->m_scale.x))
-	{
-		first = first ^ 1;
-		next = (first == 0) ? node->m_left : node->m_right;
-		visitOverlappedNodes(next, player, volNearPt, objects);
-
-	}
-
-
-	volNearPt[dir] = oldValue;
-
-}
-*/
 
 
 
@@ -897,34 +726,6 @@ void KDTree::renderNode(Pipeline& p, Renderer* r, KDTreeNode* root)
 
 
 /*
-bool KDTree::testSegmentAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin)
-{
-	return true;
-}
-
-bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
-{
-	if (aMax.x <= bMin.x || aMin.x >= bMax.x)
-		return false;
-
-	if (aMax.y <= bMin.y || aMin.y >= bMax.y)
-		return false;
-
-	if (aMax.z <= bMin.z || aMin.z >= bMax.z)
-		return false;
-
-	return true;
-}
-
-bool KDTree::testCollision(WorldObject* a, WorldObject* b)
-{
-	if (!KDTree::testAABBAABB(a->m_maxP, a->m_minP, b->m_maxP, b->m_minP))
-		return false;
-	return true;
-}
-
-*/
-
 bool KDTree::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
 {
 	if (aMax.x < bMin.x || aMin.x > bMax.x)
@@ -952,7 +753,7 @@ bool KDTree::testAABBAABB(AABB a, AABB b)
 
 	return true;
 }
-
+*/
 
 
 void KDTree::print()
@@ -973,75 +774,3 @@ void KDTree::print(KDTreeNode* node)
 	print(node->m_child[0]);
 	print(node->m_child[1]);
 }
-
-/*
-KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP, glm::vec3 minP, int depth)
-{
-utl::debug("depth", depth);
-
-KDTreeNode* root = new KDTreeNode(maxP, minP);
-
-if (objects.size() < 2 || depth == 5)
-{
-root->createWireFrameModel();
-return root;
-}
-
-glm::vec3 lx, rx;	lx = rx = maxP;
-glm::vec3 ln, rn;	ln = rn = minP;
-
-glm::vec3 diff = maxP - minP;
-float maxDiff = max(diff.x, max(diff.y, diff.z));
-
-
-// Splits are chosen along the single dimension with the greatest spread of points,
-// with the sets partitioned by the median value of all points along that dimension
-
-if (maxDiff == diff.x)
-{
-	root->m_splitDirection = SPLIT_AT_X_AXIS;
-	float splitValue = minP.x + (maxP.x - minP.x) / 2.0;
-	root->m_splitValue = splitValue;
-	lx.x = splitValue;
-	rn.x = splitValue;
-}
-else if (maxDiff == diff.y)
-{
-	root->m_splitDirection = SPLIT_AT_Y_AXIS;
-	float splitValue = minP.y + (maxP.y - minP.y) / 2.0;
-	root->m_splitValue = splitValue;
-	lx.y = splitValue;
-	rn.y = splitValue;
-}
-else
-{
-	root->m_splitDirection = SPLIT_AT_Z_AXIS;
-	float splitValue = minP.z + (maxP.z - minP.z) / 2.0;
-	root->m_splitValue = splitValue;
-	lx.z = splitValue;
-	rn.z = splitValue;
-}
-
-root->createWireFrameModel();
-
-
-vector<WorldObject*> leftObjects, rightObjects;
-
-for (int i = 0; i < objects.size(); i++)
-{
-	if (testAABBAABB(lx, ln, objects[i]->m_maxP, objects[i]->m_minP))
-		leftObjects.push_back(objects[i]);
-
-	if (testAABBAABB(rx, rn, objects[i]->m_maxP, objects[i]->m_minP))
-		rightObjects.push_back(objects[i]);
-}
-
-
-root->m_left = recursiveBuild(leftObjects, lx, ln, depth + 1);
-root->m_right = recursiveBuild(rightObjects, rx, rn, depth + 1);
-
-
-return root;
-}
-
-*/

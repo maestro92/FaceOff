@@ -18,7 +18,7 @@ SmokeEffect::SmokeEffect()
 
 	m_startingParticleCount = MAX_PARTICLES;
 
-	m_boundingVolume = new Sphere();
+	m_geometry = new Sphere();
 	m_particleRotation = 0;
 }
 

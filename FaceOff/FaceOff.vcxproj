@@ -458,7 +458,7 @@
     <ClInclude Include="model\model_manager.h" />
     <ClInclude Include="model\texture.h" />
     <ClInclude Include="model\vertex_data.h" />
-    <ClInclude Include="collision_detection\bounding_volume.h" />
+    <ClInclude Include="collision_detection\collision_detection_geometry.h" />
     <ClInclude Include="renderer\renderer_constants.h" />
     <ClInclude Include="world_object\particle_effect\fire_work_effect.h" />
     <ClInclude Include="world_object\particle_effect\smoke_effect.h" />

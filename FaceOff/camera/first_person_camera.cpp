@@ -92,6 +92,8 @@ void FirstPersonCamera::controlCD()
 
 		else if (state[SDLK_d])
 			updatePosXZ(270);
+	
+
 	}
 	// utl::debug("m_pitch", m_pitch);
 

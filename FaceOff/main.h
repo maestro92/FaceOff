@@ -344,7 +344,7 @@ class FaceOff
 		vector<FireWorkEffect*> m_fireWorkEffects;
 		vector<SmokeEffect*> m_smokeEffects;
 
-		vector<WorldObject*> m_hitPointMarks;
+		// vector<WorldObject*> m_hitPointMarks;
 		// vector<FireWorkEffect*> m_fireWorkEffects;
 
 		FaceOff();
