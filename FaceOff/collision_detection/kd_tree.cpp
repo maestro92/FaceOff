@@ -460,8 +460,13 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 
 
 
+
+// ray interescting kd tree
 // Real Time Collision Detection page 323
-void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & hitObject, float& hitObjectSqDist)
+
+// ray interesecting an AABB
+// Real Time Collision Detection page 179 - 181
+void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint)
 {
 	if (node == NULL)
 		return;
@@ -482,13 +487,13 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 			if (obj->m_instanceId == player->m_instanceId)
 				continue;
 
-			if (KDTree::testRayAABB(lineStart, lineDir, obj->m_aabb))
+			/*
+			if (CollisionDetection::testRayAABB(lineStart, lineDir, obj->m_aabb))
 			{
-				float sqDist = glm::length2(player->m_position - obj->m_position);
 				utl::debug("THIS NEEDS TO BE FIXED!!!! Wrong distance metric");
-
 				obj->alreadyFireTested = true;
 
+				float sqDist = glm::length2(player->m_position - obj->m_position);
 				if (sqDist < hitObjectSqDist)
 				{
 					utl::debug("lineStart", lineStart);
@@ -496,7 +501,32 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 					hitObjectSqDist = sqDist;
 					hitObject = obj;
 				}
+
+				hitPoint = tempHitPoint;
 			}
+			*/
+
+
+			glm::vec3 tempHitPoint;
+
+			if (CollisionDetection::testRayAABB(lineStart, lineDir, obj->m_aabb, tempHitPoint))
+			{
+				utl::debug("THIS NEEDS TO BE FIXED!!!! Wrong distance metric");
+				obj->alreadyFireTested = true;
+
+				float sqDist = glm::length2(player->m_position - tempHitPoint);
+				if (sqDist < hitObjectSqDist)
+				{
+					utl::debug("lineStart", lineStart);
+					utl::debug("lineDir", lineDir);
+					hitObjectSqDist = sqDist;
+					hitObject = obj;
+					hitPoint = tempHitPoint;
+				}
+
+				
+			}
+
 		}
 
 		/*
@@ -537,7 +567,7 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 	if (lineDir[dim] == 0.0f)
 	{
-		visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
+		visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint);
 	}
 	else
 	{
@@ -545,15 +575,15 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 		if (0.0f <= t && t < tmax)
 		{
-			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
+			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint);
 		//	if (hitObject != NULL)
 			//	return;
 
-			visitNodes(node->m_child[first ^ 1], player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist);
+			visitNodes(node->m_child[first ^ 1], player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist, hitPoint);
 		}
 		else
 		{
-			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist);
+			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint);
 		}
 	}
 }
@@ -653,6 +683,7 @@ void KDTree::visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<W
 }
 #endif
 
+// Real Time Collision Detection page 321
 void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects)
 {
 	if (node == NULL)
@@ -865,55 +896,6 @@ void KDTree::renderNode(Pipeline& p, Renderer* r, KDTreeNode* root)
 }
 
 
-
-// https://tavianator.com/fast-branchless-raybounding-box-intersections/
-// P.181
-bool KDTree::testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb)
-{
-	float tMin = -FLT_MIN;
-	float tMax = FLT_MAX;
-	float EPSION = 0.00001;
-
-	for (int i = 0; i < 3; i++)
-	{
-
-		// divide by zero case, so it's handled separately
-		if (abs(d[i]) < EPSION)
-		{
-			if (p[i] < aabb.min[i] || p[i] > aabb.max[i])
-				return false;
-		}
-		else
-		{
-			float ood = 1.0f / d[i];
-			float t1 = (aabb.min[i] - p[i]) * ood;
-			float t2 = (aabb.max[i] - p[i]) * ood;
-
-			tMin = max(tMin, min(t1, t2));
-			tMax = min(tMax, max(t1, t2));
-
-			/*
-			if (t1 > t2)
-			swap(t1, t2);
-
-			if (t1 > tMin)
-			tMin = t1;
-
-			if (t2 > tMax)
-			tMax = t2;
-
-			if (tMin > tMax)
-			return false;
-			*/
-		}
-	}
-	return tMax >= tMin;
-}
-
-
-
-
-
 /*
 bool KDTree::testSegmentAABB(glm::vec3 p, glm::vec3 d, glm::vec3 aMax, glm::vec3 aMin)
 {
@@ -968,13 +950,6 @@ bool KDTree::testAABBAABB(AABB a, AABB b)
 	if (a.max.z < b.min.z || a.min.z > b.max.z)
 		return false;
 
-	return true;
-}
-
-bool KDTree::testCollision(WorldObject* a, WorldObject* b)
-{
-	if (!KDTree::testAABBAABB(a->m_aabb, b->m_aabb))
-		return false;
 	return true;
 }
 

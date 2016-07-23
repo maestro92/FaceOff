@@ -28,15 +28,18 @@ class CollisionDetection
 		// collision detection
 		static void closestPtPointAABB(glm::vec3 p, AABB b, glm::vec3& q);
 		static float sqDistPointAABB(glm::vec3 p, AABB b);
-		static int testSphereAABB(Sphere& s, AABB& b, glm::vec3& q);
-		static int testSphereAABB(Sphere& s, AABB& b, ContactData& contact);
+		static bool testSphereAABB(Sphere& s, AABB& b, glm::vec3& q);
+		static bool testSphereAABB(Sphere& s, AABB& b, ContactData& contact);
 
-		static int testAABBAABB(AABB& a, AABB& b, ContactData& contact);
+//		static int testAABBAABB(AABB& a, AABB& b, ContactData& contact);
+		static bool testAABBAABB(AABB& a, AABB& b, ContactData& contact);
+		static bool testAABBAABB(AABB a, AABB b);
 		static bool textAABBAABBAxis(AABB& a, AABB& b, ContactData& contact, glm::vec3 axis, int direction, glm::vec3 & mtvAxis, float & mtvDistance);
 
-		static bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
-		static bool testAABBAABB(AABB a, AABB b);
 
+//		static int testRayAABB(glm::vec3 p, glm::vec3 d, AABB& a, float )
+		static bool testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb);
+		static bool testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb, glm::vec3& q);
 };
 
 

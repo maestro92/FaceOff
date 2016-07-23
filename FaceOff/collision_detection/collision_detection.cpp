@@ -33,7 +33,7 @@ float CollisionDetection::sqDistPointAABB(glm::vec3 p, AABB b)
 	return sqDist;
 }
 
-int CollisionDetection::testSphereAABB(Sphere& s, AABB& b, glm::vec3& q)
+bool CollisionDetection::testSphereAABB(Sphere& s, AABB& b, glm::vec3& q)
 {
 	// find point q on AABB closest to sphere center
 	closestPtPointAABB(s.center, b, q);
@@ -42,10 +42,10 @@ int CollisionDetection::testSphereAABB(Sphere& s, AABB& b, glm::vec3& q)
 	// center to point q is less than (squared) sphere radius
 	glm::vec3 v = q - s.center;
 	float dist = glm::dot(v, v);
-	return dist <= s.radius * s.radius;
+	return (dist <= s.radius * s.radius);
 }
 
-int CollisionDetection::testSphereAABB(Sphere& s, AABB& b, ContactData& contact)
+bool CollisionDetection::testSphereAABB(Sphere& s, AABB& b, ContactData& contact)
 {
 	// find point q on AABB closest to sphere center
 	glm::vec3 q = glm::vec3(0.0);
@@ -56,20 +56,20 @@ int CollisionDetection::testSphereAABB(Sphere& s, AABB& b, ContactData& contact)
 	glm::vec3 v = q - s.center;
 	float dist = glm::dot(v, v);
 	if (dist > s.radius * s.radius)
-		return 0;
+		return false;
 
 	contact.point = q;
 	contact.normal = s.center - q;
 	contact.normal = glm::normalize(contact.normal);
 	contact.penetrationDepth = s.radius - glm::length(v);
 
-	return 1;
+	return true;
 }
 
 
 // http://gamedev.stackexchange.com/questions/32807/collision-resolve-sphere-aabb-and-aabb-aabb
 // http://gamedev.stackexchange.com/questions/32545/what-is-the-mtv-minimum-translation-vector-in-sat-seperation-of-axis
-int CollisionDetection::testAABBAABB(AABB& a, AABB& b, ContactData& contact)
+bool CollisionDetection::testAABBAABB(AABB& a, AABB& b, ContactData& contact)
 {
 	// minimum translation vector
 	// the vector which objects can move away each other
@@ -80,25 +80,28 @@ int CollisionDetection::testAABBAABB(AABB& a, AABB& b, ContactData& contact)
 
 	if (!textAABBAABBAxis(a, b, contact, X_UNIT_AXIS, X_AXIS_DIRECTION, mtvAxis, mtvDistance))
 	{
-		return 0;
+		return false;
 	}
 
 	if (!textAABBAABBAxis(a, b, contact, Y_UNIT_AXIS, Y_AXIS_DIRECTION, mtvAxis, mtvDistance))
 	{
-		return 0;
+		return false;
 	}
 
 	if (!textAABBAABBAxis(a, b, contact, Z_UNIT_AXIS, Z_AXIS_DIRECTION, mtvAxis, mtvDistance))
 	{
-		return 0;
+		return false;
 	}
 	
 	contact.normal = glm::normalize(mtvAxis);
 	contact.penetrationDepth = (float) sqrt(mtvDistance) * 1.001f;
 
-	return 1;
+	return true;
 }
 
+// used in testAABBAABB
+// testing AABB and AABB examines intersecting in each axis
+// which is what this function does
 bool CollisionDetection::textAABBAABBAxis(AABB& a, AABB& b, ContactData& contact, glm::vec3 axis, int direction, glm::vec3 & mtvAxis, float & mtvDistance)
 {
 	float d0 = b.max[direction] - a.min[direction];
@@ -123,19 +126,6 @@ bool CollisionDetection::textAABBAABBAxis(AABB& a, AABB& b, ContactData& contact
 	return true;
 }
 
-bool CollisionDetection::testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin)
-{
-	if (aMax.x < bMin.x || aMin.x > bMax.x)
-		return false;
-
-	if (aMax.y < bMin.y || aMin.y > bMax.y)
-		return false;
-
-	if (aMax.z < bMin.z || aMin.z > bMax.z)
-		return false;
-
-	return true;
-}
 
 bool CollisionDetection::testAABBAABB(AABB a, AABB b)
 {
@@ -150,3 +140,99 @@ bool CollisionDetection::testAABBAABB(AABB a, AABB b)
 
 	return true;
 }
+
+
+
+
+
+
+// https://tavianator.com/fast-branchless-raybounding-box-intersections/
+// also take a look at Real Time Collision Detection P.181 (there's a error in that code, see the link below for correction)
+// http://realtimecollisiondetection.net/books/rtcd/errata/
+
+bool CollisionDetection::testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb)
+{
+	float tMin = -FLT_MIN;
+	float tMax = FLT_MAX;
+	float EPSION = 0.00001;
+
+	for (int i = 0; i < 3; i++)
+	{
+
+		// divide by zero case, so it's handled separately
+		if (abs(d[i]) < EPSION)
+		{
+			if (p[i] < aabb.min[i] || p[i] > aabb.max[i])
+				return false;
+		}
+		else
+		{
+			float ood = 1.0f / d[i];
+			float t1 = (aabb.min[i] - p[i]) * ood;
+			float t2 = (aabb.max[i] - p[i]) * ood;
+
+			/*
+			tMin = max(tMin, min(t1, t2));
+			tMax = min(tMax, max(t1, t2));
+			*/
+
+			if (t1 > t2)
+				swap(t1, t2);
+
+			/*
+			if (t1 > tMin)
+				tMin = t1;
+
+			if (t2 > tMax)
+				tMax = t2;
+			*/
+			
+			tMin = max(tMin, t1);
+			tMax = min(tMax, t2);
+
+			if (tMin > tMax)
+				return false;
+			
+		}
+	}
+//	return tMax >= tMin;
+	return true;
+}
+
+bool CollisionDetection::testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb, glm::vec3& q)
+{
+	float tMin = -FLT_MIN;
+	float tMax = FLT_MAX;
+	float EPSION = 0.00001;
+
+	for (int i = 0; i < 3; i++)
+	{
+		// divide by zero case, so it's handled separately
+		if (abs(d[i]) < EPSION)
+		{
+			if (p[i] < aabb.min[i] || p[i] > aabb.max[i])
+				return false;
+		}
+		else
+		{
+			float ood = 1.0f / d[i];
+			float t1 = (aabb.min[i] - p[i]) * ood;
+			float t2 = (aabb.max[i] - p[i]) * ood;
+
+			if (t1 > t2)
+				swap(t1, t2);
+
+			tMin = max(tMin, t1);
+			tMax = min(tMax, t2);
+
+			if (tMin > tMax)
+				return false;
+
+		}
+	}
+
+	q = p + d * tMin;
+	return true;
+}
+
+

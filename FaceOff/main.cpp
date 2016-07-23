@@ -1252,7 +1252,8 @@ void FaceOff::start()
 							// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
 
 							float hitObjectSqDist = FLT_MAX;
-							m_objectKDtree.visitNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist);
+							glm::vec3 hitPoint;
+							m_objectKDtree.visitNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint);
 
 							//	utl::debug("player pos", lineStart);
 							//	utl::debug("target z", lineDir);
@@ -1261,6 +1262,16 @@ void FaceOff::start()
 							{
 								utl::debug("name", hitObject->m_name);
 								hitObject->isHit = true;
+								
+								WorldObject* hitPointMark = new WorldObject();
+								hitPointMark->setPosition(hitPoint);
+								hitPointMark->setScale(1.0, 1.0, 1.0);
+								hitPointMark->setModel(m_mm.m_cube);
+								hitPointMark->m_name = "hitMark";
+								m_hitPointMarks.push_back(hitPointMark);
+
+
+
 							}
 							else
 								utl::debug("hitObject is NULL");
@@ -1711,7 +1722,7 @@ void FaceOff::forwardRender()
 
 			for (int j = 0; j < p->m_parentNodes.size(); j++)
 			{
-				KDTreeNode* kNode = p->m_parentNodes[j]; 
+				KDTreeNode* kNode = p->m_parentNodes[j];
 
 				if (kNode == NULL)
 					continue;
@@ -1778,7 +1789,7 @@ void FaceOff::forwardRender()
 	}
 
 #if 1
-	for (int i = 0; i<m_objects.size(); i++)
+	for (int i = 0; i < m_objects.size(); i++)
 	{
 		WorldObject* object = m_objects[i];
 
@@ -1916,7 +1927,7 @@ void FaceOff::forwardRender()
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_rm.m_backGroundLayerFBO.FBO);
-//	Model::enableVertexAttribArrays();
+	//	Model::enableVertexAttribArrays();
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -2062,9 +2073,9 @@ void FaceOff::forwardRender()
 
 	p_renderer = &m_rm.r_fullColor;
 	p_renderer->enableShader();
-		// p_renderer->setData("u_color", GREEN);
-		p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
-	
+	// p_renderer->setData("u_color", GREEN);
+	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+
 
 	// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
 	if (!containedFlag)
@@ -2106,7 +2117,7 @@ void FaceOff::forwardRender()
 	}
 
 
-
+	// rendering players
 	for (int i = 0; i < m_players.size(); i++)
 	{
 
@@ -2141,6 +2152,14 @@ void FaceOff::forwardRender()
 			p->renderGroup(m_pipeline, p_renderer);
 			p->isTested = false;
 		}
+	}
+
+
+	// rendering hitPointMarks
+	for (int i = 0; i < m_hitPointMarks.size(); i++)
+	{
+		p_renderer->setData(R_FULL_COLOR::u_color, RED);
+		m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
 	}
 
 
