@@ -39,4 +39,13 @@ namespace R_LIST_BOX_ITEM_HIGHLIGHT
 	};
 }
 
+namespace R_SNIPER_SCOPE_VIEW
+{
+	enum E
+	{
+		u_sniperScopeViewTexture = 0,
+		u_sceneTexture
+	};
+}
+
 #endif

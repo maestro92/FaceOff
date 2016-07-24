@@ -90,3 +90,7 @@ http://stackoverflow.com/questions/1434937/namespace-functions-versus-static-met
 
 
 
+-	creating zoom
+
+https://www.opengl.org/archives/resources/faq/technical/viewing.htm
+

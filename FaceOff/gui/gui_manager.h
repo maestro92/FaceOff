@@ -28,12 +28,17 @@ class GUIManager
 		void renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height);
 		void renderTexture(GLuint textureId, GLuint fboTarget, Rect rect);
 
+		void renderSnipeScopeView(GLuint sceneTextureId);
 		/*
 		void renderTextureSingle(GLuint textureId, int x, int y, int width, int height);
 		void renderTextureSingle(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height);
 		void renderTextureSingle(GLuint textureId, GLuint fboTarget, Rect rect);
 		*/
 
+
+		void setHorAimIndex(int index);
+		void setVerAimIndex(int index);
+		void setSniperZoomMode(bool b);
 
 		void initRenderer(const Array arr, Renderer* r, string name);
 		Object findRendererObject(const Array arr, string name);
@@ -47,6 +52,9 @@ class GUIManager
 		Renderer r_coloredRect;
 		Renderer r_texturedRect;
 		Renderer r_listBoxItemHighlight;
+		Renderer r_sniperScopeView;
+
+		GLuint m_sniperScopeViewTextureId;
 
         void updateAndRender(MouseState mouseState);
         void renderGUIComponents();
@@ -56,6 +64,10 @@ class GUIManager
         int m_GUIComponentsID;
         int m_GUIComponentsFlags;
         vector<Control*> m_GUIComponents;
+
+		bool m_sniperZoomMode;
+		int m_horAimIndex;
+		int m_verAimIndex;
 
         QuadModel m_textureQuad;
         Pipeline m_GUIPipeline;

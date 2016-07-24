@@ -16,6 +16,7 @@ void GUIManager::init(int screenWidth, int screenHeight)
     m_GUIPipeline.setMatrixMode(MODEL_MATRIX);
     m_GUIPipeline.loadIdentity();
 
+	m_sniperZoomMode = false;
 
     m_textureQuad = QuadModel(1,1);
 
@@ -36,11 +37,23 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	Control::r_texturedRect = r_texturedRect;
 	Control::r_listBoxItemHighlight = r_listBoxItemHighlight;
 
+
+
+	Renderer::initRendererWrapper(vArray, &r_sniperScopeView, "r_sniperScopeView", path);
+
+	m_sniperScopeViewTextureId = utl::loadTexture("Assets/sniper_view.png");
+	/*
+	r_sniperScopeView.enableShader();
+		r_sniperScopeView.setData(R_SNIPER_SCOPE_VIEW::u_sniperScopeViewTexture, 0, GL_TEXTURE_2D, m_sniperScopeViewTextureId);
+	r_sniperScopeView.disableShader();
+	*/
+
+
 	r_texture.printDataPairs();
 	Control::r_coloredRect.printDataPairs();
 	Control::r_texturedRect.printDataPairs();
 	Control::r_listBoxItemHighlight.printDataPairs();
-
+	r_sniperScopeView.printDataPairs();
 
 	utl::debug("GUI manager initing");
 }
@@ -60,6 +73,24 @@ void GUIManager::setupRenderToScreen(int x, int y, int width, int height)
 	glViewport(x, y, width, height);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
+}
+
+
+
+void GUIManager::renderSnipeScopeView(GLuint sceneTextureId)
+{
+	r_sniperScopeView.enableShader();
+	r_sniperScopeView.setData(R_SNIPER_SCOPE_VIEW::u_sniperScopeViewTexture, 0, GL_TEXTURE_2D, m_sniperScopeViewTextureId);
+	r_sniperScopeView.setData(R_SNIPER_SCOPE_VIEW::u_sceneTexture, 1, GL_TEXTURE_2D, sceneTextureId);
+
+	m_GUIPipeline.pushMatrix();
+		m_GUIPipeline.translate(0, 0, 0);
+		m_GUIPipeline.scale(m_screenWidth, m_screenHeight, 1.0);
+
+		r_sniperScopeView.setUniLocs(m_GUIPipeline);
+		m_textureQuad.render();
+		m_GUIPipeline.popMatrix();
+	r_sniperScopeView.disableShader();
 }
 
 void GUIManager::renderTextureFullScreen(GLuint textureId)
@@ -112,14 +143,33 @@ void GUIManager::updateAndRender(MouseState mouseState)
 {
     for(int i=0; i<m_GUIComponents.size(); i++)
     {
-        Control* control = m_GUIComponents[i];
-        control->update(mouseState);
+		if (m_sniperZoomMode && (i == m_horAimIndex || i == m_verAimIndex))
+		{
+			continue;
+		}
+
+		Control* control = m_GUIComponents[i];
+		control->update(mouseState);
 		control->render();
-    }
+	
+	}
 }
 
 
+void GUIManager::setSniperZoomMode(bool b)
+{
+	m_sniperZoomMode = b;
+}
 
+void GUIManager::setHorAimIndex(int index)
+{
+	m_horAimIndex = index;
+}
+
+void GUIManager::setVerAimIndex(int index)
+{
+	m_verAimIndex = index;
+}
 
 
 /*

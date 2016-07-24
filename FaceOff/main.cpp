@@ -87,9 +87,10 @@ void FaceOff::init()
 	//Initialize clear color
 	glClearColor(0.0f, 0.5f, 0.0f, 1.0f);
 
+	m_zoomFactor = 1.0f;
 	m_pipeline.setMatrixMode(PROJECTION_MATRIX);
 	m_pipeline.loadIdentity();
-	m_pipeline.perspective(45, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+	m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
 
 	Model::enableVertexAttribArrays();
 
@@ -1291,6 +1292,20 @@ void FaceOff::start()
 					cout << "clicking right" << endl;
 					SDL_GetMouseState(&tmpx, &tmpy);
 					m_mouseState.m_rightButtonDown = true;
+					
+					m_zoomedIn = !m_zoomedIn;
+					m_gui.setSniperZoomMode(m_zoomedIn);
+
+					if (m_zoomedIn)
+					{
+						m_zoomFactor = 0.2f;
+						m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+					}
+					else
+					{
+						m_zoomFactor = 1.0f;
+						m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+					}
 					break;
 				}
 				break;
@@ -1637,8 +1652,8 @@ void FaceOff::forwardRender()
 		//	m_players[m_defaultPlayerID]->update(m_pipeline);
 		//	m_players[m_defaultPlayerID]->updateCD(m_pipeline, &m_objectKDtree);
 
-	//	utl::debug("***** Before Position is", m_players[m_defaultPlayerID]->m_velocity);
-	//	utl::debug("utl::BIASED_HALF_GRAVITY ", utl::BIASED_HALF_GRAVITY);
+		//	utl::debug("***** Before Position is", m_players[m_defaultPlayerID]->m_velocity);
+		//	utl::debug("utl::BIASED_HALF_GRAVITY ", utl::BIASED_HALF_GRAVITY);
 		m_players[m_defaultPlayerID]->m_velocity += utl::BIASED_HALF_GRAVITY;
 		m_players[m_defaultPlayerID]->m_camera->m_target += m_players[m_defaultPlayerID]->m_velocity;
 
@@ -1649,11 +1664,11 @@ void FaceOff::forwardRender()
 		if (state[SDLK_SPACE])
 		{
 			//		if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
-		//	utl::debug(">>>> Just Jumped");
-		//	utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
+			//	utl::debug(">>>> Just Jumped");
+			//	utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
 
 			if (m_players[m_defaultPlayerID]->isNotJumping())
-				m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 150.0, 0.0) * utl::GRAVITY_CONSTANT;
+				m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 175.0, 0.0) * utl::GRAVITY_CONSTANT;
 		}
 
 
@@ -1663,7 +1678,7 @@ void FaceOff::forwardRender()
 		//		m_players[m_defaultPlayerID]->m_camera->m_target.y -= (9.82 * 0.03);
 		m_players[m_defaultPlayerID]->control();
 
-	//	utl::debugLn("After velocity is", m_players[m_defaultPlayerID]->m_velocity);
+		//	utl::debugLn("After velocity is", m_players[m_defaultPlayerID]->m_velocity);
 
 
 		vector<WorldObject*> neighbors;
@@ -1727,16 +1742,16 @@ void FaceOff::forwardRender()
 				/*
 //				if (neighbors[i]->m_name == "woodenBox -60" && m_players[m_defaultPlayerID]->m_velocity.x != 0.0)
 //				if (neighbors[i]->m_name == "SE Pillar" && m_players[m_defaultPlayerID]->m_velocity.x != 0.0)
-				if (neighbors[i]->m_name == "woodenBox -60")
-			//	if (neighbors[i]->m_name == "woodenBox -60" && m_players[m_defaultPlayerID]->m_velocity.x != 0.0)
-				{
-					utl::debug("	neighbors", neighbors[i]->m_name);
-					utl::debug("	contactData normal", contactData.normal);
-					utl::debug("	contactData point", contactData.point);
+if (neighbors[i]->m_name == "woodenBox -60")
+//	if (neighbors[i]->m_name == "woodenBox -60" && m_players[m_defaultPlayerID]->m_velocity.x != 0.0)
+{
+utl::debug("	neighbors", neighbors[i]->m_name);
+utl::debug("	contactData normal", contactData.normal);
+utl::debug("	contactData point", contactData.point);
 
-					utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
-				}
-				*/
+utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
+}
+*/
 			}
 		}
 
@@ -1744,7 +1759,7 @@ void FaceOff::forwardRender()
 		m_players[m_defaultPlayerID]->updateGameStats();
 
 
-	//	utl::debugLn("Final velocity is", m_players[m_defaultPlayerID]->m_velocity);
+		//	utl::debugLn("Final velocity is", m_players[m_defaultPlayerID]->m_velocity);
 
 		//	utl::debug("player pos is ", m_players[m_defaultPlayerID]->m_position);
 		//	utl::debug("player vel is ", m_players[m_defaultPlayerID]->m_velocity);
@@ -2210,8 +2225,8 @@ void FaceOff::forwardRender()
 	// rendering hitPointMarks
 	for (int i = 0; i < m_hitPointMarks.size(); i++)
 	{
-		p_renderer->setData(R_FULL_COLOR::u_color, RED);
-		m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
+	p_renderer->setData(R_FULL_COLOR::u_color, RED);
+	m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
 	}
 	*/
 
@@ -2225,52 +2240,51 @@ void FaceOff::forwardRender()
 	/*
 	if (m_fireWorkEffects.size() > 0)
 	{
-		p_renderer = &m_rm.r_fireWorkEffectUpdate;
-		p_renderer->enableShader();
-		for (int i = 0; i < m_fireWorkEffects.size(); i++)
-		{
-			FireWorkEffect* effect = m_fireWorkEffects[i];
-			effect->m_time += deltaTimeMillis;
+	p_renderer = &m_rm.r_fireWorkEffectUpdate;
+	p_renderer->enableShader();
+	for (int i = 0; i < m_fireWorkEffects.size(); i++)
+	{
+	FireWorkEffect* effect = m_fireWorkEffects[i];
+	effect->m_time += deltaTimeMillis;
 
-			p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, effect->m_randomTextureId);
-			p_renderer->setData("u_time", (float)effect->m_time);
-			p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
+	p_renderer->setData("u_randomTexture", 3, GL_TEXTURE_1D, effect->m_randomTextureId);
+	p_renderer->setData("u_time", (float)effect->m_time);
+	p_renderer->setData("u_deltaTimeMillis", (float)deltaTimeMillis);
 
-			effect->update(m_pipeline, p_renderer);
-		}
-		p_renderer->disableShader();
+	effect->update(m_pipeline, p_renderer);
+	}
+	p_renderer->disableShader();
 
 
-		p_renderer = &m_rm.r_fireWorkEffectRender;
-		p_renderer->enableShader();
-		for (int i = 0; i < m_fireWorkEffects.size(); i++)
-		{
-			FireWorkEffect* effect = m_fireWorkEffects[i];
+	p_renderer = &m_rm.r_fireWorkEffectRender;
+	p_renderer->enableShader();
+	for (int i = 0; i < m_fireWorkEffects.size(); i++)
+	{
+	FireWorkEffect* effect = m_fireWorkEffects[i];
 
-			p_renderer->setData("u_centerPosition", effect->getPosition());
-			p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
-			effect->render(m_pipeline, p_renderer);
-		}
-		p_renderer->disableShader();
+	p_renderer->setData("u_centerPosition", effect->getPosition());
+	p_renderer->setData("u_texture", 0, GL_TEXTURE_2D, effect->m_textureId);
+	effect->render(m_pipeline, p_renderer);
+	}
+	p_renderer->disableShader();
 	}
 	*/
 
 
 
+	if (!m_zoomedIn)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, RENDER_TO_SCREEN);
+	}
 
-
-
-
-
-	glBindFramebuffer(GL_FRAMEBUFFER, RENDER_TO_SCREEN);
 	m_gui.initGUIRenderingSetup();
-	m_gui.renderTextureFullScreen(m_rm.m_backGroundLayerFBO.colorTexture);
-	//	m_gui.renderTextureFullScreen(tempTexture);
+	if (!m_zoomedIn)
+	{
+		m_gui.renderTextureFullScreen(m_rm.m_backGroundLayerFBO.colorTexture);
+	}
 
-// #if 1
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
 //	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	
 
@@ -2309,16 +2323,13 @@ void FaceOff::forwardRender()
 		p_renderer->disableShader();
 	}
 	
-	
-	
-	
-
-
-// #endif
-
-	
-
 	glDisable(GL_BLEND);
+
+	if (m_zoomedIn)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, RENDER_TO_SCREEN);
+		m_gui.renderSnipeScopeView(m_rm.m_backGroundLayerFBO.colorTexture);
+	}
 
 //	Model::enableVertexAttribArrays();
 	m_gui.updateAndRender(m_mouseState);
@@ -2439,7 +2450,7 @@ void FaceOff::initGUI()
 
 	utl::debug("aimX", aimX);
 	utl::debug("aimY", aimY);
-	Control* horiAim = new Label("", aimX, aimY, aimWidth + 2, 2, GREEN);
+	Control* horiAim = new Label("", aimX, aimY-1, aimWidth, 2, GREEN);
 
 	aimX = utl::SCREEN_WIDTH / 2;
 	aimY = utl::SCREEN_HEIGHT / 2 - aimHeight / 2;
@@ -2447,13 +2458,17 @@ void FaceOff::initGUI()
 	utl::debug("aimX", aimX);
 	utl::debug("aimY", aimY);
 
-	Control* vertAim = new Label("", aimX, aimY, 2, aimHeight + 1, GREEN);
+	Control* vertAim = new Label("", aimX-1, aimY, 2, aimHeight, GREEN);
 
 	m_gui.addGUIComponent(HPBar);
 	m_gui.addGUIComponent(armorBar);
 	m_gui.addGUIComponent(ammoBar);
 	m_gui.addGUIComponent(horiAim);
+	m_gui.setHorAimIndex(3);
+
 	m_gui.addGUIComponent(vertAim);
+	m_gui.setVerAimIndex(4);
+
 }
 
 

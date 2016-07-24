@@ -41,5 +41,16 @@
 			"u_y1":		"DP_FLOAT",
 			"u_y2":		"DP_FLOAT"
 		}
+	},
+
+	{
+		"r": 			"r_sniperScopeView",
+		"vs":			"sniper_scope_view.vs",
+		"fs":			"sniper_scope_view.fs",
+		"data":
+		{
+			"u_sniperScopeViewTexture":	"DP_INT",
+			"u_sceneTexture":			"DP_INT"
+		}
 	}
 ]

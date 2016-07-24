@@ -317,7 +317,8 @@ class FaceOff
 
 		KDTree m_objectKDtree;
 
-
+		bool m_zoomedIn;
+		float m_zoomFactor;
 	public:
 
 		Player p;
