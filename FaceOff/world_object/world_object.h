@@ -121,7 +121,8 @@ class WorldObject
 		void renderStaticWireFrameGroup(Pipeline& p, Renderer* r);
 		void renderWireFrameGroup(Pipeline& p, Renderer* r);
 
-	
+
+
 		void updateAABB();
 		void setAABBByPosition(float x, float y, float z);
 		void setAABBByPosition(glm::vec3 pos);

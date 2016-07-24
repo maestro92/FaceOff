@@ -59,6 +59,7 @@ class GUIManager
         void updateAndRender(MouseState mouseState);
         void renderGUIComponents();
         void addGUIComponent(Control* control);
+		int getNumGUIComponent();
 
     private:
         int m_GUIComponentsID;

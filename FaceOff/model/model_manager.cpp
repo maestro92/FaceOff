@@ -22,9 +22,21 @@ void ModelManager::init()
 	textures.clear();  textures.push_back("Assets/tree.png");
 	m_tree = new ImportedModel("Assets/tree.obj", textures);
 
+	/*
+	textures.clear();  textures.push_back("Assets/Images/chess.png");
+	m_cube = new ImportedModel("Assets/models/unit_cube.obj", textures);
+	m_cube->setMeshRandTextureIdx();
+	*/
 
-	m_cube = new ImportedModel("Assets/models/unit_cube.obj");
 
+
+
+	textures.clear();  textures.push_back("Assets/Images/chess.png");
+	m_ground = new ImportedModel("Assets/models/quad.obj", textures);
+
+
+	m_woodenBox = new ImportedModel("Assets/models/wooden box/WoodenBoxOpen02.obj");
+	
 
 	m_healthBar = new QuadModel(1, 1);
 
@@ -34,7 +46,7 @@ void ModelManager::init()
 
 
 	initWeaponsData();
-
+	m_cube = new ImportedModel("Assets/models/unit_cube1.obj");
 }
 
 

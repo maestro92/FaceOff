@@ -17,6 +17,8 @@
 #include "network_manager.h"
 
 
+#define RENDER_DEBUG_FLAG 0
+
 
 #define MAX_CLIENTS 10
 #define SERVER_PORT 60000
@@ -121,13 +123,12 @@ void FaceOff::initModels()
 
 	tempTexture = utl::loadTexture("Assets/Images/chess.png");
 
-	m_groundModel.load("Assets/models/quad.obj");
+	// m_groundModel.load("Assets/models/quad.obj");
 	//	m_groundModel.load("Assets/models/ground.obj");
-	textures.clear();  textures.push_back("Assets/Images/chess.png"); //textures.push_back("Assets/tree.png"); // textures.push_back("Assets/Images/chess.png");
-	m_groundModel.setTextures(textures);
-	m_groundModel.setMeshRandTextureIdx();
+	// textures.clear();  textures.push_back("Assets/Images/chess.png"); //textures.push_back("Assets/tree.png"); // textures.push_back("Assets/Images/chess.png");
+	// m_groundModel.setTextures(textures);
+	// m_groundModel.setMeshRandTextureIdx();
 
-	m_gunModel.load("./Assets/models/weapons/Ak_47/Ak-47.obj");
 
 	m_bulletModel.load("./Assets/models/cylinder_base.obj");
 
@@ -201,7 +202,7 @@ void FaceOff::initObjects()
 	WorldObject* o_temp = new WorldObject();
 	o_temp->setScale(xbound, zbound, 1.0);
 	o_temp->setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
-	o_temp->setModel(&m_groundModel);
+	o_temp->setModel(m_mm.m_ground);
 	o_temp->updateAABB();
 	o_temp->m_name = "ground";
 	m_objects.push_back(o_temp);
@@ -221,6 +222,8 @@ void FaceOff::initObjects()
 	o_temp = new WorldObject();
 	o_temp->m_name = "north wall";
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
+	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
+
 	o_temp->setPosition(0, ybound / 2, -zbound - wallWidth);
 	o_temp->setModel(m_mm.m_cube);
 	o_temp->updateAABB();
@@ -282,7 +285,7 @@ void FaceOff::initObjects()
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-		o_temp->setModel(&m_woodenBox);
+		o_temp->setModel(m_mm.m_woodenBox);
 		o_temp->updateAABB();
 		m_objects.push_back(o_temp);
 	}
@@ -299,7 +302,7 @@ void FaceOff::initObjects()
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-		o_temp->setModel(&m_woodenBox);
+		o_temp->setModel(m_mm.m_woodenBox);
 		o_temp->updateAABB();
 		m_objects.push_back(o_temp);
 	}
@@ -328,7 +331,7 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, -halfPosZMag);
-	o_temp->setModel(&m_woodenBox);
+	o_temp->setModel(m_mm.m_woodenBox);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 
@@ -338,7 +341,7 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, -halfPosZMag);
-	o_temp->setModel(&m_woodenBox);
+	o_temp->setModel(m_mm.m_woodenBox);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 	utl::debug("id is", o_temp->m_instanceId);
@@ -349,7 +352,7 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, halfPosZMag);
-	o_temp->setModel(&m_woodenBox);
+	o_temp->setModel(m_mm.m_woodenBox);
 	o_temp->updateAABB();
 	m_objects.push_back(o_temp);
 	utl::debug("id is", o_temp->m_instanceId);
@@ -360,7 +363,7 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
-	o_temp->setModel(&m_woodenBox);
+	o_temp->setModel(m_mm.m_woodenBox);
 	o_temp->updateAABB();
 
 	m_objects.push_back(o_temp);
@@ -593,9 +596,7 @@ void FaceOff::initObjects()
 	smEffect->init();
 	m_smokeEffects.push_back(smEffect);
 	
-
-	utl::debug("Printing Tree");
-	m_objectKDtree.print();
+//	m_objectKDtree.print();
 }
 
 
@@ -1239,44 +1240,45 @@ void FaceOff::start()
 						{
 							m_players[m_defaultPlayerID]->fireWeapon();
 
-
-
-							WorldObject* hitObject = NULL;
-
-							glm::vec3 lineStart = m_players[m_defaultPlayerID]->getFirePosition();
-							glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
-
-
-							utl::debug("lineStart", lineStart);
-							utl::debug("lineDir", lineDir);
-
-							// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
-
-							float hitObjectSqDist = FLT_MAX;
-							glm::vec3 hitPoint;
-							m_objectKDtree.visitNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint);
-
-							//	utl::debug("player pos", lineStart);
-							//	utl::debug("target z", lineDir);
-
-							if (hitObject != NULL)
+							if (m_players[m_defaultPlayerID]->isUsingLongRangedWeapon())
 							{
-								utl::debug("name", hitObject->m_name);
-								hitObject->isHit = true;
-								
-								WorldObject* hitPointMark = new WorldObject();
-								hitPointMark->setPosition(hitPoint);
-								hitPointMark->setScale(1.0, 1.0, 1.0);
-								hitPointMark->setModel(m_mm.m_cube);
-								hitPointMark->m_name = "hitMark";
-//								m_hitPointMarks.push_back(hitPointMark);
+
+								WorldObject* hitObject = NULL;
+
+								glm::vec3 lineStart = m_players[m_defaultPlayerID]->getFirePosition();
+								glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
 
 
+								utl::debug("lineStart", lineStart);
+								utl::debug("lineDir", lineDir);
+
+								// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
+
+								float hitObjectSqDist = FLT_MAX;
+								glm::vec3 hitPoint;
+								m_objectKDtree.visitNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint);
+
+								//	utl::debug("player pos", lineStart);
+								//	utl::debug("target z", lineDir);
+
+								if (hitObject != NULL)
+								{
+									utl::debug("name", hitObject->m_name);
+									hitObject->isHit = true;
+
+									WorldObject* hitPointMark = new WorldObject();
+									hitPointMark->setPosition(hitPoint);
+									hitPointMark->setScale(1.0, 1.0, 1.0);
+									hitPointMark->setModel(m_mm.m_cube);
+									hitPointMark->m_name = "hitMark";
+									//								m_hitPointMarks.push_back(hitPointMark);
+								}
+								else
+									utl::debug("hitObject is NULL");
+								// VisitNodes
 
 							}
-							else
-								utl::debug("hitObject is NULL");
-							// VisitNodes
+
 						}
 
 						m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
@@ -1639,7 +1641,6 @@ void FaceOff::forwardRender()
 
 	m_pipeline.setMatrixMode(VIEW_MATRIX);
 	m_pipeline.loadIdentity();
-
 	/*
 	if (m_isServer)
 	{
@@ -2003,7 +2004,7 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 	o_skybox.render(m_pipeline, &m_rm.r_skybox);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-
+#if RENDER_DEBUG_FLAG
 	p_renderer = &m_rm.r_fullTexture;
 	p_renderer->enableShader();
 	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
@@ -2023,23 +2024,6 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 		}
 		else
 		{
-			/*
-			for (int i = 0; i < m_players.size(); i++)
-			{
-			if (i != m_defaultPlayerID && m_players[i] != NULL)
-			{
-			//		m_players[i]->render(m_pipeline);
-			//		m_players[i]->renderWeapon(m_pipeline);
-			m_players[i]->renderModel(m_pipeline, p_renderer);
-			}
-			else
-			{
-			//		m_players[i]->renderWeapon(m_pipeline);
-			m_players[i]->render(m_pipeline, p_renderer);
-			}
-			}
-			*/
-			//	m_players[0]->render(m_pipeline, p_renderer, m_mm);
 			m_players[m_defaultPlayerID]->renderGroup(m_pipeline, p_renderer);
 		}
 
@@ -2140,13 +2124,170 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 
 	p_renderer = &m_rm.r_fullColor;
 	p_renderer->enableShader();
-	// p_renderer->setData("u_color", GREEN);
 	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 
 
-	// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
-	if (!containedFlag)
-		m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
+		// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
+		if (!containedFlag)
+			m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
+
+
+		for (int i = 0; i < m_objects.size(); i++)
+		{
+			WorldObject* object = m_objects[i];
+
+			if (object == NULL)
+				continue;
+
+
+			object->alreadyFireTested = false;
+
+			if (object->getObjectType() == WEAPON)
+			{
+				continue;
+			}
+
+			if (object->isHit)
+			{
+				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+				object->renderGroup(m_pipeline, p_renderer);
+
+			}
+			else if (object->isCollided)
+			{
+				p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
+				object->renderGroup(m_pipeline, p_renderer);
+				object->isCollided = false;
+			}
+			else if (object->isTested)
+			{
+				p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
+				object->renderGroup(m_pipeline, p_renderer);
+				object->isTested = false;
+			}
+
+
+
+
+
+		}
+
+
+		// rendering players
+		for (int i = 0; i < m_players.size(); i++)
+		{
+
+			Player* p = m_players[i];
+
+			p->alreadyFireTested = false;
+			if (i == m_defaultPlayerID)
+			{
+				continue;
+			}
+
+
+			if (p->isHit)
+			{
+				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+				p->renderGroup(m_pipeline, p_renderer);
+
+			}
+			else if (p->isCollided)
+			{
+				p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
+				p->renderGroup(m_pipeline, p_renderer);
+				p->isCollided = false;
+			}
+			else if (p->isTested)
+			{
+				p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
+				p->renderGroup(m_pipeline, p_renderer);
+				p->isTested = false;
+			}
+		}
+
+		/*
+		// rendering hitPointMarks
+		for (int i = 0; i < m_hitPointMarks.size(); i++)
+		{
+		p_renderer->setData(R_FULL_COLOR::u_color, RED);
+		m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
+		}
+		*/
+
+	p_renderer->disableShader();
+
+#else
+	p_renderer = &m_rm.r_fullTexture;
+	p_renderer->enableShader();
+	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
+
+	{
+		// render the players
+		if (m_isServer)
+		{
+			for (int i = 0; i < m_players.size(); i++)
+			{
+				if (i != m_defaultPlayerID && m_players[i] != NULL)
+				{
+					cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
+					//				m_players[i]->render(m_pipeline);
+				}
+			}
+		}
+		else
+		{
+			m_players[m_defaultPlayerID]->renderGroup(m_pipeline, p_renderer);
+		}
+
+
+
+
+		for (int i = 0; i < m_objects.size(); i++)
+		{
+			WorldObject* object = m_objects[i];
+
+			if (object == NULL)
+				continue;
+
+			if (object->getObjectType() == WEAPON)
+			{
+				if (((Weapon*)object)->hasOwner == true)
+					continue;
+			}
+
+
+			if (object->isHit != true)
+			{
+				object->renderGroup(m_pipeline, p_renderer);
+			}
+
+		}
+
+
+
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			if (i == m_defaultPlayerID)
+				continue;
+
+			Player* player = m_players[i];
+			if (player->isHit != true)
+			{
+				m_players[i]->renderGroup(m_pipeline, p_renderer);
+			}
+		}
+
+
+	}
+	p_renderer->disableShader();
+
+
+	// Rendering wireframes
+	p_renderer = &m_rm.r_fullVertexColor;
+	p_renderer->enableShader();
+
+	o_worldAxis.renderGroup(m_pipeline, p_renderer);
 
 
 	for (int i = 0; i < m_objects.size(); i++)
@@ -2155,6 +2296,58 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 
 		if (object == NULL)
 			continue;
+
+
+		if (object->getObjectType() == WEAPON)
+		{
+			if (((Weapon*)object)->hasOwner == true)
+				continue;
+		}
+
+		object->renderWireFrameGroup(m_pipeline, p_renderer);
+	}
+
+
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		if (i == m_defaultPlayerID)
+			continue;
+
+		Player* player = m_players[i];
+
+		player->renderWireFrameGroup(m_pipeline, p_renderer);
+
+	}
+
+	if (containedFlag)
+	{
+		m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
+	}
+	else
+	{
+		//	if (hitNode != NULL)
+		//		m_objectKDtree.renderNode(m_pipeline, p_renderer, hitNode);
+	}
+	p_renderer->disableShader();
+
+
+
+
+
+	p_renderer = &m_rm.r_fullColor;
+	p_renderer->enableShader();
+	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+
+	if (!containedFlag)
+		m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
+
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+
+		if (object == NULL)
+			continue;
+
 
 		object->alreadyFireTested = false;
 
@@ -2167,19 +2360,6 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 		{
 			p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 			object->renderGroup(m_pipeline, p_renderer);
-
-		}
-		else if (object->isCollided)
-		{
-			p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
-			object->renderGroup(m_pipeline, p_renderer);
-			object->isCollided = false;
-		}
-		else if (object->isTested)
-		{
-			p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
-			object->renderGroup(m_pipeline, p_renderer);
-			object->isTested = false;
 		}
 	}
 
@@ -2193,32 +2373,16 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 		p->alreadyFireTested = false;
 		if (i == m_defaultPlayerID)
 		{
-
 			continue;
 		}
 
-		//utl::debug("hit", p->isHit);
-		//utl::debug("collided", p->isCollided);
-		//utl::debug("tested", p->isTested);
 
 		if (p->isHit)
 		{
 			p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 			p->renderGroup(m_pipeline, p_renderer);
+		}
 
-		}
-		else if (p->isCollided)
-		{
-			p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
-			p->renderGroup(m_pipeline, p_renderer);
-			p->isCollided = false;
-		}
-		else if (p->isTested)
-		{
-			p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
-			p->renderGroup(m_pipeline, p_renderer);
-			p->isTested = false;
-		}
 	}
 
 	/*
@@ -2231,6 +2395,9 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 	*/
 
 	p_renderer->disableShader();
+
+#endif
+
 
 
 	long long timeNowMillis = getCurrentTimeMillis();
@@ -2464,10 +2631,10 @@ void FaceOff::initGUI()
 	m_gui.addGUIComponent(armorBar);
 	m_gui.addGUIComponent(ammoBar);
 	m_gui.addGUIComponent(horiAim);
-	m_gui.setHorAimIndex(3);
+	m_gui.setHorAimIndex(m_gui.getNumGUIComponent()-1);
 
 	m_gui.addGUIComponent(vertAim);
-	m_gui.setVerAimIndex(4);
+	m_gui.setVerAimIndex(m_gui.getNumGUIComponent()-1);
 
 }
 

@@ -271,9 +271,7 @@ class FaceOff
 
 		// models
 		Model*          p_model;
-		ImportedModel   m_groundModel;
 		XYZAxisModel    m_xyzModel;
-		ImportedModel   m_gunModel;
 		ImportedModel	m_bulletModel;
 
 		ImportedModel	m_lowPolyTree;

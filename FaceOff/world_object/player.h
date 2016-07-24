@@ -120,6 +120,7 @@ class Player : public WorldObject
 		WorldObjectType getObjectType();
 
 		bool inGrenadeGatherMode();
+		bool isUsingLongRangedWeapon();
 
 	private:
 		int m_maxHP;

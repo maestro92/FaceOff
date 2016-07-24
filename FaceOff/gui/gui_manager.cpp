@@ -48,12 +48,13 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	r_sniperScopeView.disableShader();
 	*/
 
-
+	/*
 	r_texture.printDataPairs();
 	Control::r_coloredRect.printDataPairs();
 	Control::r_texturedRect.printDataPairs();
 	Control::r_listBoxItemHighlight.printDataPairs();
 	r_sniperScopeView.printDataPairs();
+	*/
 
 	utl::debug("GUI manager initing");
 }
@@ -136,6 +137,12 @@ void GUIManager::addGUIComponent(Control* control)
 {
 	control->setID(m_GUIComponentsID);
 	m_GUIComponents.push_back(control);
+}
+
+
+int GUIManager::getNumGUIComponent()
+{
+	return m_GUIComponents.size();
 }
 
 

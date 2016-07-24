@@ -359,40 +359,18 @@ void Player::update(glm::vec3 wPos, float pitch, float yaw)
 }
 
 
-
-
-
-
-/*
-
-void Player::render(Pipeline& p, RendererManager& rm, ModelManager& mm)
+bool Player::isUsingLongRangedWeapon()
 {
-	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
-	{
+	if (m_curWeapon == NULL)
+		return false;
 
-	}
-	else
-	{
+	int curWeaponEnum = m_curWeapon->getWeaponSlot();
 
-
-	}
+	return curWeaponEnum == MAIN || curWeaponEnum == PISTOL;
 }
-*/
-
-/*
-void Player::renderModel(Pipeline& p, Renderer* r)
-{
-//	renderGroup(p, r, m_model);
-}
-*/
 
 
-/*
-void Player::renderWeapon(Pipeline& p)
-{
-//	m_weapons[m_curWeaponIndex]->render(p, &RendererManager::r_fullTexture);
-}
-*/
+
 
 
 

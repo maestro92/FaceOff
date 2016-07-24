@@ -56,6 +56,11 @@ class ModelManager
 		Model* m_xyzAxis;
 		Model* m_tree;
 		Model* m_cube;
+		Model* m_ground;
+		Model* m_woodenBox;
+
+
+
 
 	//	const mValue& findValue(const mObject& obj, const string& name);
 	//	glm::vec3 findVec3(const mObject& obj, const string& name);
