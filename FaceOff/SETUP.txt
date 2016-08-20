@@ -22,6 +22,13 @@ Additional Dependencies:
 opengl32.lib;glu32.lib;glew32.lib;SDL.lib;SDLmain.lib;SDL_image.lib;ws2_32.lib;freetype.lib;assimp.lib;OpenAL32.lib
 
 
+- if you need boost, the link is below
+http://www.boost.org/users/history/version_1_55_0.html
+
+- if you need to download OpenAL
+https://www.openal.org/downloads/
+
+
 - if you see the following error 
 "
 error C4996: 'gets': This function or variable may be unsafe. Consider using gets_s instead. 

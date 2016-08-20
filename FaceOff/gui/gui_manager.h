@@ -7,7 +7,6 @@
 #include "Slider.h"
 #include "list_box.h"
 #include "button.h"
-#include "gol_model.h"
 #include "control.h"
 #include "renderer.h"
 

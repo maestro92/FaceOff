@@ -4,11 +4,14 @@
 void utl::initGLEW()
 {
     // initialize Glew
+
+	utl::debug("initGLEW");
     GLenum err = glewInit();
     if (GLEW_OK != err)
     {
       cout << "Error: %s\n" << glewGetErrorString(err) << endl;
     }
+	utl::debug("finishing GLEW");
 }
 
 
@@ -52,7 +55,7 @@ GLuint utl::loadTexture(string filename, bool mipmapFlag)
 
 GLuint utl::loadTexture(string filename, GLuint filteringParam, GLuint edgeParam, bool mipmapFlag)
 {
-    cout << "Loading Texture " << filename << endl;
+    // cout << "Loading Texture " << filename << endl;
 
     SDL_Surface* img2 = loadSDLImage(filename);
 

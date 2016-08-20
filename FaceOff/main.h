@@ -20,8 +20,6 @@ struct KDTreeNode;
 
 #include <GL/glew.h>
 
-
-#include "gol_model_manager.h"
 #include "cube_wireframe_model.h"
 
 #include "utility.h"
@@ -81,6 +79,11 @@ struct KDTreeNode;
 
 #include "terrain/terrain.h"
 #include "terrain/multitexture_terrain.h"
+
+
+#include <al.h>
+#include <alc.h>
+
 using namespace std;
 /*
 
@@ -311,7 +314,6 @@ class FaceOff
 		GLuint tempTexture;
 
 		GUIManager m_gui;
-		GOLModelManager m_GOLModelManager;
 
 		KDTree m_objectKDtree;
 
@@ -355,8 +357,18 @@ class FaceOff
 		void initModels();
 		void initRenderers();
 		void initGUI();
-		void initNetwork();
-		void initLobby();
+		void initAudio();
+		
+		int endWithError(char* msg, int error = 0);
+
+
+		void initNetworkLobby();
+		void startNetworkThread();
+
+		void clientNetworkThread();
+		void serverNetworkThread();
+
+
 
 		void start();
 		void update();
@@ -373,9 +385,6 @@ class FaceOff
 
 
 		thread m_networkThread;
-
-		void clientNetworkThread();
-		void serverNetworkThread();
 
 		long long getCurrentTimeMillis();
 };

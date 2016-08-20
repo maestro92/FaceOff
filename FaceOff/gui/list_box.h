@@ -2,7 +2,6 @@
 #define LIST_BOX_H
 
 #include <vector>
-#include <gol_model.h>
 #include "Rect.h"
 #include "Control.h"
 

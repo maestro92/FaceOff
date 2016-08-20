@@ -17,6 +17,10 @@ mValue utl::readJsonFileToMap(char* filename)
 		cout << "	line " << errorPosition.line_ << endl;
 		cout << "	column " << errorPosition.column_ << endl;
 		cout << "	" << errorPosition.reason_ << endl;
+		while (true)
+		{
+
+		}
 		exit(1);
 	}
 	return content;
@@ -38,6 +42,10 @@ Value utl::readJsonFileToVector(char* filename)
 		cout << "	line " << errorPosition.line_ << endl;
 		cout << "	column " << errorPosition.column_ << endl;
 		cout << "	" << errorPosition.reason_ << endl;
+		while (true)
+		{
+
+		}
 		exit(1);
 	}
 	return content;
@@ -53,6 +61,10 @@ const mValue& utl::findValue(const mObject& obj, const string& name)
 		cout << "error findingValue " << name << endl;
 		//		assert(it != obj.end());
 		//		assert(it->first == name);
+		while (true)
+		{
+
+		}
 		exit(1);
 	}
 

@@ -1,6 +1,8 @@
 #include "main.h"
 
-#define NETWORK_FLAG 0
+#define NETWORK_FLAG 1
+#define SERVER_RENDER_FLAG 0
+
 
 #define SERVER_NETWORK_THREAD 0
 #define CLIENT_NETWORK_THREAD 0
@@ -20,11 +22,16 @@
 #define RENDER_DEBUG_FLAG 0
 
 
+
+
+
 #define MAX_CLIENTS 10
 #define SERVER_PORT 60000
 
 bool incrFlag = true;
 
+// the server simluates the game in descirete time steps called ticks
+const float SERVER_SIMLUATION_TIME_STEP = 0.015;
 /*
 RakNet Ogre tutorial
 http://classes.cs.kent.edu/gpg/trac/wiki/cmarshall
@@ -61,7 +68,7 @@ static float runningTime = 0.0f;
 
 FaceOff::FaceOff()
 {
-
+	m_isServer = false;
 }
 
 FaceOff::~FaceOff()
@@ -81,8 +88,8 @@ void FaceOff::init()
 	initModels();
 	initObjects();
 	initRenderers();
-	initGUI();
-
+	initGUI();       
+	// initAudio();
 
 
 	m_defaultPlayerID = 0;
@@ -414,18 +421,12 @@ void FaceOff::initObjects()
 
 	o_temp = new Weapon(m_mm.getWeaponData(MP5));
 	o_temp->m_name = "MP5";
-
-	//	o_temp->setPosition(-3 * formationGap, 5, -140);
-	//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(-3 * formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 
 
 	o_temp = new Weapon(m_mm.getWeaponData(MG42));
 	o_temp->m_name = "MG42";
-
-	//	o_temp->setPosition(-2 * formationGap, 5, -140);
-	//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(-2 * formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 
@@ -433,30 +434,18 @@ void FaceOff::initObjects()
 	// init weapons for the map
 	o_temp = new Weapon(m_mm.getWeaponData(AK_47));
 	o_temp->m_name = "AK 47";
-
-	//	o_temp->setPosition(-formationGap, 5, -140);
-	//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(-formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 
 
-
-
-
 	o_temp = new Weapon(m_mm.getWeaponData(M16));
 	o_temp->m_name = "M16";
-
-	//	o_temp->setPosition(formationGap, 5, -140);
-	//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 
 
 	o_temp = new Weapon(m_mm.getWeaponData(KATANA));
 	o_temp->m_name = "katana";
-
-	//	o_temp->setPosition(2 * formationGap, 5, -140);
-	//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(2 * formationGap, 5, -140);
 	m_objects.push_back(o_temp);
 
@@ -464,18 +453,8 @@ void FaceOff::initObjects()
 
 	o_temp = new Weapon(m_mm.getWeaponData(PISTOL_SHOTGUN));
 	o_temp->m_name = "shotgun";
-
-	//	o_temp->setPosition(3 * formationGap, 5, -140);
-	//	o_temp->updateAABB();
 	o_temp->setAABBByPosition(3 * formationGap, 5, -140);
 	m_objects.push_back(o_temp);
-
-
-
-
-
-
-
 
 
 
@@ -485,9 +464,6 @@ void FaceOff::initObjects()
 
 	for (int i = 0; i < m_objects.size(); i++)
 	{
-		//	utl::debug("name", m_objects[i]->m_name);
-		//	utl::debug("obj type", m_objects[i]->getObjectType());
-
 		WorldObject* obj = m_objects[i];
 
 		if (obj->getObjectType() == WEAPON && ((Weapon*)(obj))->hasOwner == true)
@@ -614,8 +590,272 @@ void FaceOff::initRenderers()
 
 
 
-void FaceOff::initNetwork()
+#if 0
+void FaceOff::initNetworkThread()
 {
+
+	if (m_isServer)
+	{
+		peer = RakNet::RakPeerInterface::GetInstance();
+
+		RakNet::SocketDescriptor sd(SERVER_PORT, 0);
+		peer->Startup(MAX_CLIENTS, &sd, 1);
+
+		printf("Starting the server.\n");
+		// We need to let the server accept incoming connections from the clients
+		// Sets how many incoming connections are allowed. 
+		peer->SetMaximumIncomingConnections(MAX_CLIENTS);
+	}
+	else
+	{
+		connected = false;
+		peer = RakNet::RakPeerInterface::GetInstance();
+
+		RakNet::SocketDescriptor sd;
+		peer->Startup(1, &sd, 1);
+
+		char str[512];
+
+		printf("Enter server IP or hit enter for 127.0.0.1\n");
+		gets(str);
+		if (str[0] == 0)
+			strcpy(str, "127.0.0.1");
+
+		printf("Starting the client.\n");
+		peer->Connect(str, SERVER_PORT, 0, 0);
+	}
+
+
+		int mx, my;
+		SDL_GetMouseState(&mx, &my);
+
+		m_mouseState.m_pos = glm::vec2(mx, utl::SCREEN_HEIGHT - my);
+
+		/*
+		for (int i = 0; i < m_players.size(); i++)
+		{
+		if (i != m_defaultPlayerID && m_players[i] != NULL)
+		m_players[i]->updateModel();
+
+		}
+		*/
+
+
+
+#if	SERVER_NETWORK_THREAD != 1
+		if (m_isServer)
+		{
+
+			// iterate over each message received
+			for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+			{
+				// we first initalized bitStream with the packet->data
+				RakNet::BitStream bsIn(packet->data, packet->length, false);
+
+				// we ignore the first part of each message (due to RakNet convention)
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+				cout << endl << "New Packet from:" << packet->guid.g << endl;
+
+
+				// Handle message here 
+				switch (packet->data[0])
+				{
+				case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+					printf("Another client has disconnected.\n");
+					break;
+				case ID_REMOTE_CONNECTION_LOST:
+					printf("Another client has lost the connection.\n");
+					break;
+				case ID_REMOTE_NEW_INCOMING_CONNECTION:
+					printf("Another client has connected.\n");
+					break;
+				case ID_NEW_INCOMING_CONNECTION:
+					printf("A connection is incoming.\n");
+					break;
+				case ID_DISCONNECTION_NOTIFICATION:
+					printf("A client has disconnected.\n");
+					break;
+				case ID_CONNECTION_LOST:
+					printf("A client lost the connection.\n");
+					break;
+
+				case PLAYER_UPDATE:
+					// received new position from client       
+				{
+					int player_id = 0;
+					glm::vec3 pos, wPos;
+					float camPitch, camYaw;
+
+					bsIn.Read(player_id);
+					bsIn.ReadVector(pos.x, pos.y, pos.z);
+					bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+					bsIn.Read(camPitch);
+					bsIn.Read(camYaw);
+
+
+					printf("Player %d sent new position ", player_id);			utl::debug("", pos);
+					printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
+					printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
+					printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
+
+
+					m_players[player_id]->setPosition(pos);
+					m_players[player_id]->update(wPos, camPitch, camYaw);
+
+
+
+
+					cout << "sending new position value to each client" << endl;
+
+
+					bsOut.Reset();
+					bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+					bsOut.Write(player_id);
+					bsOut.WriteVector(pos.x, pos.y, pos.z);
+					bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
+					bsOut.Write(camPitch);
+					bsOut.Write(camYaw);
+
+
+					for (int i = 0; i < m_players.size(); i++)
+					{
+						if (player_id != i)
+						{
+							cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
+							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+						}
+						else
+							cout << "	Not Sending to own client: " << player_id << endl;
+					}
+					break;
+				}
+
+
+				default:
+					printf("Message with identifier %i has arrived.\n", packet->data[0]);
+					break;
+				}
+				bsOut.Reset();
+			}
+		}
+#endif
+
+#if CLIENT_NETWORK_THREAD != 1
+		if (!m_isServer)
+		{
+
+			//		utl::debug("m_nextGameTick", m_nextGameTick);
+			//		utl::debug("curTick", curTick);
+
+			//	m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES;
+
+			//	if (m_nextGameTick > SDL_GetTicks())
+			if (m_nextGameTick > DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES)
+			{
+				cout << "sending each server my location" << endl;
+				bsOut.Reset();
+				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+				bsOut.Write(m_defaultPlayerID);
+
+
+				utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_position);
+				utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->getCurWeapon()->m_position);
+				bsOut.Write(m_players[m_defaultPlayerID]->getCameraPitch());
+				bsOut.Write(m_players[m_defaultPlayerID]->getCameraYaw());
+
+
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
+
+				m_nextGameTick = 0;
+			}
+			m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES / 10;
+
+
+			for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+			{
+				cout << "here" << endl;
+
+				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+				switch (packet->data[0])
+				{
+				case NEW_CLIENT:
+					cout << "NEW_CLIENT message " << endl;
+					break;
+
+				case ID_CONNECTION_REQUEST_ACCEPTED:
+					break;
+
+				case PLAYER_UPDATE:
+				{
+					// report the server's new counter value
+
+					cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
+
+					int other_player_id = 0;
+					int player_id = 0;
+					glm::vec3 pos, wPos;
+					float camPitch, camYaw;
+
+					bsIn.Read(other_player_id);
+					bsIn.ReadVector(pos.x, pos.y, pos.z);
+					bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+					bsIn.Read(camPitch);
+					bsIn.Read(camYaw);
+
+					utl::debug("other_player_id", other_player_id);
+
+					m_players[other_player_id]->setPosition(pos);
+					m_players[other_player_id]->update(wPos, camPitch, camYaw);
+					break;
+				}
+
+
+				case YOUR_TURN:
+					printf("My Turn. Sending message.\n");
+					bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					break;
+				default:
+					printf("Message with identifier %i has arrived.\n", packet->data[0]);
+					break;
+				}
+			}
+
+		}
+#endif
+}
+#endif
+
+void FaceOff::initNetworkLobby()
+{
+	bool invalidInput = true;
+	while (invalidInput)
+	{
+		char str[512];
+		printf("(C)lient or (S)erver?\n");
+		gets(str);
+
+		if ((str[0] == 's') || (str[0] == 'S'))
+		{
+			m_isServer = true;
+			invalidInput = false;
+		}
+		else if (str[0] == 'c' || str[0] == 'C')
+		{
+			m_isServer = false;
+			invalidInput = false;
+		}
+		else
+		{
+			printf("InvalidInput!");
+		}
+	}
+
+
+
 	if (m_isServer)
 	{
 		peer = RakNet::RakPeerInterface::GetInstance();
@@ -650,14 +890,6 @@ void FaceOff::initNetwork()
 
 
 
-}
-
-
-
-
-
-void FaceOff::initLobby()
-{
 	// we're waiting in the lobby
 	bool waitingInLobby = true;
 
@@ -675,14 +907,14 @@ void FaceOff::initLobby()
 			{
 				switch (event.type)
 				{
-				case SDL_KEYDOWN:
-					switch (event.key.keysym.sym)
-					{
-					case SDLK_a:
-						utl::debug("pressed A, ending waitingInLobby");
-						waitingInLobby = false;
-						break;
-					}
+					case SDL_KEYDOWN:
+						switch (event.key.keysym.sym)
+						{
+							case SDLK_a:
+								utl::debug("pressed A, ending waitingInLobby");
+								waitingInLobby = false;
+								break;
+						}
 				}
 			}
 
@@ -724,100 +956,100 @@ void FaceOff::initLobby()
 
 				case ID_NEW_INCOMING_CONNECTION:
 				{
-												   printf("A connection is incoming.\n");
+					printf("A connection is incoming.\n");
 
-												   int new_player_id = m_players.size();
-												   float new_spawn_x = new_player_id * 30;
-												   float new_spawn_y = 5;
-												   float new_spawn_z = new_player_id * 30;
-
-
-												   utl::debug("new_player_id", new_player_id);
-												   utl::debug("new_spawn_x", new_spawn_x);
-												   utl::debug("new_spawn_y", new_spawn_y);
-												   utl::debug("new_spawn_z", new_spawn_z);
+					int newPlayerId = m_players.size();
+					float newSpawnX = newPlayerId * 30;
+					float newSpawnY = 5;
+					float newSpawnZ = newPlayerId * 30;
 
 
-												   if (m_players.size() > 0)
-												   {
-													   // send new client notification to existing clients
-													   cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
-													   bsOut.Reset();
-													   bsOut.Write((RakNet::MessageID)NEW_CLIENT);
-													   bsOut.Write(new_player_id);
-													   bsOut.Write(new_spawn_x);
-													   bsOut.Write(new_spawn_y);
-													   bsOut.Write(new_spawn_z);
-													   for (int i = 0; i < m_players.size(); i++)
-													   {
-														   if (i == m_defaultPlayerID)
-															   continue;
-
-														   cout << " To: " << i << " - " << m_players[i]->m_guid.g << endl;
-														   peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-													   }
+					utl::debug("new_player_id", newPlayerId);
+					utl::debug("new_spawn_x", newSpawnX);
+					utl::debug("new_spawn_y", newSpawnY);
+					utl::debug("new_spawn_z", newSpawnZ);
 
 
-													   bsOut.Reset();
+					if (m_players.size() > 0)
+					{
+						// send new client notification to existing clients
+						cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
+						bsOut.Reset();
+						bsOut.Write((RakNet::MessageID)NEW_CLIENT);
+						bsOut.Write(newPlayerId);
+						bsOut.Write(newSpawnX);
+						bsOut.Write(newSpawnY);
+						bsOut.Write(newSpawnZ);
+						for (int i = 0; i < m_players.size(); i++)
+						{
+							if (i == m_defaultPlayerID)
+								continue;
+
+							cout << " To: " << i << " - " << m_players[i]->m_guid.g << endl;
+							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+						}
+
+						bsOut.Reset();
 
 
-													   utl::debug("m_players size", m_players.size());
-
-													   cout << "Sending each client's position to new client" << endl;
-
-													   for (int i = 0; i < m_players.size(); i++)
-													   {
-														   cout << "sending for " << i << endl;
-														   bsOut.Reset();
-														   bsOut.Write((RakNet::MessageID)NEW_CLIENT);
-														   bsOut.Write(i);
-
-														   bsOut.Write(m_players[i]->m_position.x);
-														   bsOut.Write(m_players[i]->m_position.y);
-														   bsOut.Write(m_players[i]->m_position.z);
-
-														   peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-													   }
-												   }
-												   else
-												   {
-													   cout << "No clients yet, didn't send spawn pos to existing " << "nor each existing pos to new " << endl;
-												   }
+						utl::debug("m_players size", m_players.size());
 
 
+						cout << "Sending each client's position to new client" << endl;
+						// Sending each client's position to new client
+						for (int i = 0; i < m_players.size(); i++)
+						{
+							cout << "sending for " << i << endl;
+							bsOut.Reset();
+							bsOut.Write((RakNet::MessageID)NEW_CLIENT);
+							bsOut.Write(i);
 
-												   // Add Player
-												   m_players.push_back(new Player(new_player_id));
-												   m_players[new_player_id]->m_guid = packet->guid;
-												   m_players[new_player_id]->setPosition(new_spawn_x, new_spawn_y, new_spawn_z);
+							bsOut.Write(m_players[i]->m_position.x);
+							bsOut.Write(m_players[i]->m_position.y);
+							bsOut.Write(m_players[i]->m_position.z);
 
-												   // Use a BitStream to write a custom user message
-												   // Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
-
-												   // write a WELCOME message and include the clients index + 1
-												   bsOut.Reset();
-												   bsOut.Write((RakNet::MessageID)SPAWN_POSITION);
-												   bsOut.Write(new_player_id);
-												   bsOut.Write(new_spawn_x);
-												   bsOut.Write(new_spawn_y);
-												   bsOut.Write(new_spawn_z);
-
-												   // send the message back to the same address the current packet came from (the new client)
-												   peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-
-												   // reset the BitStream
-												   bsOut.Reset();
+							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+						}
+					}
+					else
+					{
+						cout << "No clients yet, didn't send spawn pos to existing " << "nor each existing pos to new " << endl;
+					}
 
 
-												   cout << "Player List" << endl;
-												   for (int i = 0; i < m_players.size(); i++)
-												   {
-													   cout << i << " - " << m_players[i]->m_id << " position " << m_players[i]->m_position.x << " "
-														   << m_players[i]->m_position.y << " "
-														   << m_players[i]->m_position.z << endl;
-												   }
 
-												   break;
+					// Add Player
+					m_players.push_back(new Player(newPlayerId));
+					m_players[newPlayerId]->m_guid = packet->guid;
+					m_players[newPlayerId]->setPosition(newSpawnX, newSpawnY, newSpawnZ);
+
+					// Use a BitStream to write a custom user message
+					// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
+
+					// write a WELCOME message and include the clients index + 1
+					bsOut.Reset();
+					bsOut.Write((RakNet::MessageID)SPAWN_POSITION);
+					bsOut.Write(newPlayerId);
+					bsOut.Write(newSpawnX);
+					bsOut.Write(newSpawnY);
+					bsOut.Write(newSpawnZ);
+
+					// send the message back to the same address the current packet came from (the new client)
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
+					// reset the BitStream
+					bsOut.Reset();
+
+
+					cout << "Player List" << endl;
+					for (int i = 0; i < m_players.size(); i++)
+					{
+						cout << i << " - " << m_players[i]->m_id << " position " << m_players[i]->m_position.x << " "
+							<< m_players[i]->m_position.y << " "
+							<< m_players[i]->m_position.z << endl;
+					}
+
+					break;
 				}
 
 
@@ -853,68 +1085,68 @@ void FaceOff::initLobby()
 
 				switch (packet->data[0])
 				{
-				case SPAWN_POSITION:
-				{
-									   int my_player_id = 0;
-									   float x, y, z;
+					case SPAWN_POSITION:
+					{
+						int my_player_id = 0;
+						float x, y, z;
 
-									   bsIn.Read(my_player_id);
-									   bsIn.Read(x);
-									   bsIn.Read(y);
-									   bsIn.Read(z);
-									   printf("Server said I'm client number %d at %f, %f, %f\n", my_player_id, x, y, z);
+						bsIn.Read(my_player_id);
+						bsIn.Read(x);
+						bsIn.Read(y);
+						bsIn.Read(z);
+						printf("Server said I'm client number %d at %f, %f, %f\n", my_player_id, x, y, z);
 
-									   m_defaultPlayerID = my_player_id;
+						m_defaultPlayerID = my_player_id;
 
-									   if (my_player_id + 1 >= m_players.size())
-									   {
-										   m_players.resize(my_player_id + 1);
-									   }
+						if (my_player_id + 1 >= m_players.size())
+						{
+							m_players.resize(my_player_id + 1);
+						}
 
-									   m_players[my_player_id] = new Player(my_player_id);
-									   m_players[my_player_id]->setPosition(x, y, z);
-									   server_address = packet->systemAddress;
+						m_players[my_player_id] = new Player(my_player_id);
+						m_players[my_player_id]->setPosition(x, y, z);
+						server_address = packet->systemAddress;
 
-									   break;
-				}
+						break;
+					}
 
 
 				case NEW_CLIENT:
 				{
-								   int other_player_id = 0;
-								   float x, y, z;
+					int other_player_id = 0;
+					float x, y, z;
 
-								   bsIn.Read(other_player_id);
-								   bsIn.Read(x);
-								   bsIn.Read(y);
-								   bsIn.Read(z);
-								   printf("Received new client info for %d: %f, %f, %f", other_player_id, x, y, z);
+					bsIn.Read(other_player_id);
+					bsIn.Read(x);
+					bsIn.Read(y);
+					bsIn.Read(z);
+					printf("Received new client info for %d: %f, %f, %f", other_player_id, x, y, z);
 
-								   if (other_player_id + 1 >= m_players.size())
-								   {
-									   m_players.resize(other_player_id + 1);
-								   }
+					if (other_player_id + 1 >= m_players.size())
+					{
+						m_players.resize(other_player_id + 1);
+					}
 
-								   m_players[other_player_id] = new Player(other_player_id);
-								   m_players[other_player_id]->setPosition(x, y, z);
+					m_players[other_player_id] = new Player(other_player_id);
+					m_players[other_player_id]->setPosition(x, y, z);
 
 
-								   cout << "Player List" << endl;
-								   for (int i = 0; i < m_players.size(); i++)
-								   {
+					cout << "Player List" << endl;
+					for (int i = 0; i < m_players.size(); i++)
+					{
 
-									   if (m_players[i] == NULL)
-									   {
-										   cout << "player " << i << " is null" << endl;
-									   }
-									   else
-									   {
-										   cout << i << " - " << m_players[i]->m_id << " position " << m_players[i]->m_position.x << " "
-											   << m_players[i]->m_position.y << " "
-											   << m_players[i]->m_position.z << endl;
-									   }
-								   }
-								   break;
+						if (m_players[i] == NULL)
+						{
+							cout << "player " << i << " is null" << endl;
+						}
+						else
+						{
+							cout << i << " - " << m_players[i]->m_id << " position " << m_players[i]->m_position.x << " "
+								<< m_players[i]->m_position.y << " "
+								<< m_players[i]->m_position.z << endl;
+						}
+					}
+					break;
 				}
 
 				case LOBBY_WAIT_END:
@@ -1157,34 +1389,24 @@ void FaceOff::clientNetworkThread()
 	}
 }
 
+
+
+
+
+
 void FaceOff::start()
 {
-
 	cout << "Start" << endl;
 	Uint32 startTime = SDL_GetTicks();
 	m_nextGameTick = 0;
 
-#if SERVER_NETWORK_THREAD == 1
-	if (m_isServer)
-	{
-		m_networkThread = thread(&FaceOff::serverNetworkThread, this);
-	}
-#endif	
-
-#if CLIENT_NETWORK_THREAD == 1
-	if (!m_isServer)
-	{
-		m_networkThread = thread(&FaceOff::clientNetworkThread, this);
-	}
+#if NETWORK_FLAG == 1
+	startNetworkThread();
 #endif
-
 
 	while (isRunning)
 	{
 		startTime = SDL_GetTicks();
-
-
-
 
 		while (SDL_PollEvent(&event))
 		{
@@ -1413,6 +1635,19 @@ void FaceOff::start()
 	}
 }
 
+
+
+void FaceOff::startNetworkThread()
+{
+	if (m_isServer)
+	{
+		m_networkThread = thread(&FaceOff::serverNetworkThread, this);
+	}
+	else
+	{
+		m_networkThread = thread(&FaceOff::clientNetworkThread, this);
+	}
+}
 
 
 void FaceOff::update()
@@ -2522,67 +2757,210 @@ long long FaceOff::getCurrentTimeMillis()
 
 int main(int argc, char *argv[])
 {
+	utl::debug("Game Starting"); 
 	utl::initSDL(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, pDisplaySurface);
 	utl::initGLEW();
-
+	utl::debug("before Martin ctr");
 	FaceOff Martin;
-
-	string name = "";
-	printf("Enter Your Name?\n");
-	getline(cin, name);
-	utl::debug("Your Name:", name);
-
+	utl::debug("after Martin ctr");
 
 #if NETWORK_FLAG == 1
-	char str[512];
-	printf("(C) or (S)erver?\n");
-	gets(str);
-	if ((str[0] == 's') || (str[0] == 'S'))
-	{
-		Martin.m_isServer = true;
-	}
-	else
-	{
-		Martin.m_isServer = false;
-	}
-
-	Martin.initNetwork();
-	Martin.initLobby();
-#else
-
-	if (Martin.m_players.size() == 0)
-	{/*
-	 Martin.m_defaultPlayerID = 0;
-	 Martin.m_players.push_back(new Player(Martin.m_defaultPlayerID));
-
-
-	 // enemies
-	 Player* p1 = new Player(1);
-	 p1->setPosition(p1->m_id * 10, 5, p1->m_id * 10);
-	 Martin.m_players.push_back(p1);
-
-	 Player* p2 = new Player(2);
-	 p1->setPosition(p1->m_id * 10, 5, p1->m_id * 10);
-	 Martin.m_players.push_back(p2);
-	 */
-	}
-
+	Martin.initNetworkLobby();
 #endif
+
 	Martin.init();
 	Martin.start();
-
-
-	if (Martin.m_isServer && SERVER_NETWORK_THREAD == 1)
-		Martin.m_networkThread.join();
-
-	if (!Martin.m_isServer && CLIENT_NETWORK_THREAD == 1)
-		Martin.m_networkThread.join();
 
 
 	utl::exitSDL(pDisplaySurface);
 	//normal termination
 	cout << "Terminating normally." << endl;
 	return EXIT_SUCCESS;
+}
+
+
+int FaceOff::endWithError(char* msg, int error)
+{
+	//Display error message in console
+	cout << msg << "\n";
+	system("PAUSE");
+	return error;
+}
+
+
+// http://kcat.strangesoft.net/mpstream.c
+void FaceOff::initAudio()
+{
+	FILE* fp = NULL;
+	fp = fopen("Assets/audio/sound1.wav", "rb");
+
+
+	char type[4];
+	DWORD size, chunkSize;
+	short formatType, channels;
+	DWORD sampleRate, avgBytesPerSec;
+	short bytesPerSample, bitsPerSample;
+	DWORD dataSize;
+
+	//Check that the WAVE file is OK
+	fread(type, sizeof(char), 4, fp);                                              //Reads the first bytes in the file
+	if (type[0] != 'R' || type[1] != 'I' || type[2] != 'F' || type[3] != 'F')            //Should be "RIFF"
+	{
+		endWithError("No RIFF");                                            //Not RIFF
+		exit(1);
+	}
+
+	fread(&size, sizeof(DWORD), 1, fp);                                           //Continue to read the file
+	fread(type, sizeof(char), 4, fp);                                             //Continue to read the file
+	if (type[0] != 'W' || type[1] != 'A' || type[2] != 'V' || type[3] != 'E')           //This part should be "WAVE"
+	{
+		endWithError("not WAVE");                                            //Not WAVE
+		exit(1);
+	}
+		
+	fread(type, sizeof(char), 4, fp);                                              //Continue to read the file
+	if (type[0] != 'f' || type[1] != 'm' || type[2] != 't' || type[3] != ' ')           //This part should be "fmt "
+	{
+		endWithError("not fmt ");                                            //Not fmt                                     //Not RIFF
+		exit(1);
+	}
+
+	//Now we know that the file is a acceptable WAVE file
+	//Info about the WAVE data is now read and stored
+	fread(&chunkSize, sizeof(DWORD), 1, fp);
+	fread(&formatType, sizeof(short), 1, fp);
+	fread(&channels, sizeof(short), 1, fp);
+	fread(&sampleRate, sizeof(DWORD), 1, fp);
+	fread(&avgBytesPerSec, sizeof(DWORD), 1, fp);
+	fread(&bytesPerSample, sizeof(short), 1, fp);
+	fread(&bitsPerSample, sizeof(short), 1, fp);
+
+
+	fread(type, sizeof(char), 4, fp);
+	if (type[0] != 'd' || type[1] != 'a' || type[2] != 't' || type[3] != 'a')           //This part should be "data"
+	{
+		endWithError("Missing DATA");                                        //not data
+		exit(1);
+	}
+
+		
+	fread(&dataSize, sizeof(DWORD), 1, fp);                                        //The size of the sound data is read
+
+	//Display the info about the WAVE file
+	cout << "Chunk Size: " << chunkSize << "\n";
+	cout << "Format Type: " << formatType << "\n";
+	cout << "Channels: " << channels << "\n";
+	cout << "Sample Rate: " << sampleRate << "\n";
+	cout << "Average Bytes Per Second: " << avgBytesPerSec << "\n";
+	cout << "Bytes Per Sample: " << bytesPerSample << "\n";
+	cout << "Bits Per Sample: " << bitsPerSample << "\n";
+	cout << "Data Size: " << dataSize << "\n";
+
+	unsigned char* buf = new unsigned char[dataSize];                            //Allocate memory for the sound data
+	cout << fread(buf, sizeof(BYTE), dataSize, fp) << " bytes loaded\n";           //Read the sound data and display the 
+	//number of bytes loaded.
+	//Should be the same as the Data Size if OK
+
+	//Now OpenAL needs to be initialized 
+	ALCdevice *device;                                                          //Create an OpenAL Device
+	ALCcontext *context;                                                        //And an OpenAL Context
+	device = alcOpenDevice(NULL);                                               //Open the device
+	if (!device)
+	{
+		endWithError("no sound device");                         //Error during device oening
+		exit(1);
+	}
+
+	context = alcCreateContext(device, NULL);                                   //Give the device a context
+	alcMakeContextCurrent(context);                                             //Make the context the current
+	if (!context)
+	{
+		endWithError("no sound context");                       //Error during context handeling
+		exit(1);
+	}
+		
+	ALuint source;                                                              //Is the name of source (where the sound come from)
+	ALuint buffer;                                                           //Stores the sound data
+	ALuint frequency = sampleRate;;                                               //The Sample Rate of the WAVE file
+	ALenum format = 0;                                                            //The audio format (bits per sample, number of channels)
+
+	alGenBuffers(1, &buffer);                                                    //Generate one OpenAL Buffer and link to "buffer"
+	alGenSources(1, &source);                                                   //Generate one OpenAL Source and link to "source"
+	if (alGetError() != AL_NO_ERROR)
+	{
+		endWithError("Error GenSource");     //Error during buffer/source generation
+		exit(1);
+	}
+	
+
+	//Figure out the format of the WAVE file
+	if (bitsPerSample == 8)
+	{
+		if (channels == 1)
+			format = AL_FORMAT_MONO8;
+		else if (channels == 2)
+			format = AL_FORMAT_STEREO8;
+	}
+	else if (bitsPerSample == 16)
+	{
+		if (channels == 1)
+			format = AL_FORMAT_MONO16;
+		else if (channels == 2)
+			format = AL_FORMAT_STEREO16;
+	}
+
+	if (!format)
+	{
+		endWithError("Wrong BitPerSample");                      //Not valid format
+		exit(1);
+	}
+		
+	alBufferData(buffer, format, buf, dataSize, frequency);                    //Store the sound data in the OpenAL Buffer
+	if (alGetError() != AL_NO_ERROR)
+	{
+		endWithError("Error loading ALBuffer");                              //Error during buffer loading
+		exit(1); 
+	}
+		
+	//Sound setting variables
+	ALfloat SourcePos[] = { 0.0, 0.0, 0.0 };                                    //Position of the source sound
+	ALfloat SourceVel[] = { 0.0, 0.0, 0.0 };                                    //Velocity of the source sound
+	ALfloat ListenerPos[] = { 0.0, 0.0, 0.0 };                                  //Position of the listener
+	ALfloat ListenerVel[] = { 0.0, 0.0, 0.0 };                                  //Velocity of the listener
+	ALfloat ListenerOri[] = { 0.0, 0.0, -1.0, 0.0, 1.0, 0.0 };                 //Orientation of the listener
+	//First direction vector, then vector pointing up) 
+	//Listener                                                                               
+	alListenerfv(AL_POSITION, ListenerPos);                                  //Set position of the listener
+	alListenerfv(AL_VELOCITY, ListenerVel);                                  //Set velocity of the listener
+	alListenerfv(AL_ORIENTATION, ListenerOri);                                  //Set orientation of the listener
+
+	//Source
+	alSourcei(source, AL_BUFFER, buffer);                                 //Link the buffer to the source
+	alSourcef(source, AL_PITCH, 1.0f);                                 //Set the pitch of the source
+	alSourcef(source, AL_GAIN, 1.0f);                                 //Set the gain of the source
+	alSourcefv(source, AL_POSITION, SourcePos);                                 //Set the position of the source
+	alSourcefv(source, AL_VELOCITY, SourceVel);                                 //Set the velocity of the source
+	alSourcei(source, AL_LOOPING, AL_FALSE);                                 //Set if source is looping sound
+
+	//PLAY 
+	alSourcePlay(source);                                                       //Play the sound buffer linked to the source
+	if (alGetError() != AL_NO_ERROR)
+	{
+		endWithError("Error playing sound"); //Error when playing sound
+		exit(1);
+	}
+
+	// system("PAUSE");                                                            //Pause to let the sound play
+
+	//Clean-up
+	fclose(fp);                                                                 //Close the WAVE file
+	delete[] buf;                                                               //Delete the sound data buffer
+	alDeleteSources(1, &source);                                                //Delete the OpenAL Source
+	alDeleteBuffers(1, &buffer);                                                 //Delete the OpenAL Buffer
+	alcMakeContextCurrent(NULL);                                                //Make no context current
+	alcDestroyContext(context);                                                 //Destroy the OpenAL Context
+	alcCloseDevice(device);                                                     //Close the OpenAL Device
+
 }
 
 

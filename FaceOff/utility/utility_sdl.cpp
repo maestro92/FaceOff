@@ -31,7 +31,7 @@ SDL_Surface* utl::loadRawImage(string filename)
     if(!in.is_open())
     {
 #if DEBUG_FLAG == 1
-        std::cout << filename << " not found" << std::endl;
+		cout << "ERROR: " << filename << " not found" << std::endl;
 #endif
 		return NULL;
     }
@@ -43,7 +43,7 @@ SDL_Surface* utl::loadRawImage(string filename)
     if(img == NULL)
     {
 #if DEBUG_FLAG == 1
-        cout << filename << " Load image failed" << endl;
+		cout << "ERROR: " << filename << " Load image failed" << endl;
 #endif
 		return NULL;
     }
@@ -74,7 +74,7 @@ SDL_Surface* utl::loadSDLImage(string filename)
     SDL_Surface* img2 = SDL_ConvertSurface(img, &pixel_format ,SDL_SWSURFACE);
     if(img2 == NULL)
     {
-        cout << "img not converted to SDL img " << filename << endl;
+        cout << "ERROR: " << filename << " img not converted to SDL img " << filename << endl;
         return NULL;
     }
 
