@@ -39,6 +39,7 @@ struct Move
 };
 */
 
+/*
 struct NetworkPlayerInput
 {
 	bool left;
@@ -48,7 +49,7 @@ struct NetworkPlayerInput
 	bool jump;
 	bool weaponFired;
 };
-
+*/
 
 /*
 struct NetworkPlayerState

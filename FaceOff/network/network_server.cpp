@@ -25,6 +25,7 @@ void NetworkServer::init()
 
 void NetworkServer::run()
 {
+/*
 	// BitStreams are used to hold and read content of messges contained in packets
 	RakNet::BitStream bsOut;
 
@@ -124,7 +125,7 @@ void NetworkServer::run()
 					// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 
 					// write a WELCOME message and include the clients index + 1
-					bsOut.Write((RakNet::MessageID)SPAWN_POSITION);
+					bsOut.Write((RakNet::MessageID)SPAWN_INFORMATION);
 					bsOut.Write(client_id);
 					bsOut.Write(20);
 					bsOut.Write(20);
@@ -188,4 +189,5 @@ void NetworkServer::run()
 	}
 
 	RakNet::RakPeerInterface::DestroyInstance(peer);
+	*/
 }

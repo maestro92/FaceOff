@@ -1,6 +1,6 @@
 #include "network_client.h"
 
-
+/*
 NetworkClient::NetworkClient()
 {
 	connected = false;
@@ -78,3 +78,4 @@ void NetworkClient::run()
 
 
 }
+*/

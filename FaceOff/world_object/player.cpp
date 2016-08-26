@@ -76,6 +76,13 @@ Player::~Player()
 
 }
 
+
+int Player::getId()
+{
+	return m_id;
+}
+
+
 void Player::setId(int id)
 {
 	m_id = id;
@@ -694,7 +701,53 @@ glm::vec3 Player::getFirePosition()
 }
 
 
+/*
+bsOut.Reset();
+bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+bsOut.Write(player_id);
+bsOut.WriteVector(pos.x, pos.y, pos.z);
+bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
+bsOut.Write(camPitch);
+bsOut.Write(camYaw);
+*/
 
+// bsOut.Write((RakNet::MessageID)SPAWN_INFORMATION);
+
+void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
+{
+	bs.Write(msgId);
+	bs.Write(m_id);
+	bs.WriteVector(m_position.x, m_position.y, m_position.z);
+	bs.Write(getCameraPitch());
+	bs.Write(getCameraYaw());
+
+	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
+	{
+		if (m_weapons[i] != NULL)
+		{
+			bs.Write(m_weapons[i]->getWeaponName());
+		}
+		else
+		{
+			bs.Write(0);
+		}
+	}
+}
+
+void Player::setFromBitStream(RakNet::BitStream& bs)
+{
+	bs.Read(m_id);
+	bs.ReadVector(m_position.x, m_position.y, m_position.z);
+
+	int pitch = 0;
+	int yaw = 0;
+
+	bs.Read(pitch);
+	bs.Read(yaw);
+
+
+
+}
 
 /*
 

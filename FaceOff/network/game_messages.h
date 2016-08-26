@@ -1,3 +1,4 @@
+/*
 #ifndef GAME_MESSAGES_H_
 #define GAME_MESSAGES_H_
 
@@ -10,7 +11,7 @@
 
 enum GameMessages
 {
-	SPAWN_POSITION = ID_USER_PACKET_ENUM + 1,
+	SPAWN_INFORMATION = ID_USER_PACKET_ENUM + 1,
 	PLAYER_UPDATE = ID_USER_PACKET_ENUM + 2,
 	YOUR_TURN = ID_USER_PACKET_ENUM + 3,
 	NEW_CLIENT = ID_USER_PACKET_ENUM + 4,
@@ -18,3 +19,4 @@ enum GameMessages
 };
 
 #endif
+*/

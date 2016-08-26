@@ -44,7 +44,7 @@ class Player : public WorldObject
 		Player(int id);
 		~Player();
 
-		int m_id;
+
 		string name;
 		RakNet::RakNetGUID m_guid;
 
@@ -105,6 +105,8 @@ class Player : public WorldObject
 		void reloadWeapon();
 		Weapon* getCurWeapon();
 
+		int getId();
+
 		bool hasWeaponAtSlot(WeaponSlotEnum slot);
 
 		void fireWeapon();
@@ -122,7 +124,12 @@ class Player : public WorldObject
 		bool inGrenadeGatherMode();
 		bool isUsingLongRangedWeapon();
 
+		void toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs);
+		void setFromBitStream(RakNet::BitStream& bs);
+
 	private:
+		int m_id;
+
 		int m_maxHP;
 		int m_curHP;
 

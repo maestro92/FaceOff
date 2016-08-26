@@ -61,6 +61,7 @@ struct KDTreeNode;
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <mutex>
 
 #include "RakPeerInterface.h"
 #include <RakNetTypes.h>
@@ -267,7 +268,7 @@ class FaceOff
 
 		bool isRunning;
 
-		FirstPersonCamera m_firstPersonCamera;
+		FirstPersonCamera m_serverCamera;
 
 		// lights
 		LightManager m_lightManager;
@@ -345,6 +346,13 @@ class FaceOff
 		vector<FireWorkEffect*> m_fireWorkEffects;
 		vector<SmokeEffect*> m_smokeEffects;
 
+		
+		vector<vector<Move>> m_playerInputQueue;
+
+		vector<Move> m_clientInputBuffer;
+		mutex m_clientInputMutex;
+
+
 		// vector<WorldObject*> m_hitPointMarks;
 		// vector<FireWorkEffect*> m_fireWorkEffects;
 
@@ -373,16 +381,16 @@ class FaceOff
 		void start();
 		void update();
 
-		void forwardRender();
-		void renderScene();
+		void serverUpdate();
+		void clientUpdate();
+		void render();
+
+
 
 		void renderGUI();
 
 		void startCB();
 		void resetGameBoardCB();
-		void GOLModelListBoxCB();
-
-
 
 		thread m_networkThread;
 

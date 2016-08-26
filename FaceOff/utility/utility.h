@@ -38,8 +38,6 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
-
-
 #include "json_spirit.h"
 #include "json_spirit_reader_template.h"
 #include "json_spirit_writer_template.h"
@@ -178,6 +176,49 @@ class LinkedList
 
 
 };
+
+
+
+
+
+
+// http://gafferongames.com/game-physics/networked-physics/
+enum NetworkGameMessageEnum
+{
+	SPAWN_INFORMATION = ID_USER_PACKET_ENUM + 1,
+	PLAYER_UPDATE = ID_USER_PACKET_ENUM + 2,
+	YOUR_TURN = ID_USER_PACKET_ENUM + 3,
+	NEW_CLIENT = ID_USER_PACKET_ENUM + 4,
+	LOBBY_WAIT_END = ID_USER_PACKET_ENUM + 5,
+	CLIENT_INPUT = ID_USER_PACKET_ENUM + 6
+};
+
+
+struct Input
+{
+	bool left;
+	bool right;
+	bool forward;
+	bool back;
+	bool jump;
+	bool weaponFired;
+};
+
+struct State
+{
+	glm::vec3 position;
+	glm::vec3 velocity;
+};
+
+
+struct Move
+{
+	double time;
+	Input input;
+	State state;
+};
+
+
 
 
 namespace utl
