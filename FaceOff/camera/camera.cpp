@@ -20,21 +20,17 @@ Camera::~Camera()
 
 }
 
-void Camera::control(Pipeline& p)
+void Camera::control()
 {
 
 }
 
+/*
 void Camera::control(Pipeline& p, Terrain* terrain)
 {
 
 }
-
-
-void Camera::controlCD()
-{
-
-}
+*/
 
 /*
 void Camera::computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot)

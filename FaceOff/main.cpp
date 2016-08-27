@@ -79,6 +79,7 @@ FaceOff::FaceOff()
 
 FaceOff::~FaceOff()
 {
+	m_networkThread.join();
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 }
 
@@ -175,6 +176,7 @@ void FaceOff::initObjects()
 	{
 		m_serverCamera = FirstPersonCamera();
 		m_serverCamera.setEyePoint(glm::vec3(-59.362, 94.037, 153.189));
+		m_serverCamera.setFreeMode(true);
 	}
 
 	float scale = 100.0;
@@ -716,8 +718,6 @@ void FaceOff::initNetworkLobby()
 					{
 						// send new client notification to existing clients
 						cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
-						
-						bsOut.Reset();
 						m_players[newPlayerId]->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
 
 						for (int i = 0; i < m_players.size(); i++)
@@ -729,43 +729,21 @@ void FaceOff::initNetworkLobby()
 							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
 						}
 						
-						/*
-						bsOut.Reset();
-						bsOut.Write((RakNet::MessageID)NEW_CLIENT);
-						bsOut.Write(newPlayerId);
-						bsOut.Write(newSpawnX);
-						bsOut.Write(newSpawnY);
-						bsOut.Write(newSpawnZ);
-						for (int i = 0; i < m_players.size(); i++)
-						{
-							if (i == m_defaultPlayerID)
-								continue;
-
-							cout << " To: " << i << " - " << m_players[i]->m_guid.g << endl;
-							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-						}
-						*/
+	
 
 
 
+						// Sending each client's position to new client
 						utl::debug("m_players size", m_players.size());
 						cout << "Sending each client's position to new client" << endl;
-						// Sending each client's position to new client
+
 						for (int i = 0; i < m_players.size(); i++)
 						{
+							if (i == newPlayerId)
+								continue;
+
 							cout << "sending for " << i << endl;
-							bsOut.Reset();
 							m_players[i]->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
-							
-							/*
-							bsOut.Write((RakNet::MessageID)NEW_CLIENT);
-							bsOut.Write(i);
-
-							bsOut.Write(m_players[i]->m_position.x);
-							bsOut.Write(m_players[i]->m_position.y);
-							bsOut.Write(m_players[i]->m_position.z);
-							*/
-
 							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 						}
 					}
@@ -780,15 +758,10 @@ void FaceOff::initNetworkLobby()
 					// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 
 					// write a WELCOME message and include the clients index + 1
-					bsOut.Reset();
 					m_players[newPlayerId]->toBitStream((RakNet::MessageID)SPAWN_INFORMATION, bsOut);
 
 					// send the message back to the same address the current packet came from (the new client)
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-
-					// reset the BitStream
-					bsOut.Reset();
-
 
 					cout << "Player List" << endl;
 					for (int i = 0; i < m_players.size(); i++)
@@ -981,12 +954,12 @@ while running
 
 void FaceOff::serverNetworkThread()
 {
-
 	Uint32 lastSnapShotSendTime = 0;
 	Uint32 curTime = 0;
 
 	while (isRunning)
 	{
+		
 		// iterate over each message received
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
@@ -1002,99 +975,90 @@ void FaceOff::serverNetworkThread()
 			// Handle message here 
 			switch (packet->data[0])
 			{
-			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-				printf("Another client has disconnected.\n");
-				break;
-			case ID_REMOTE_CONNECTION_LOST:
-				printf("Another client has lost the connection.\n");
-				break;
-			case ID_REMOTE_NEW_INCOMING_CONNECTION:
-				printf("Another client has connected.\n");
-				break;
-			case ID_NEW_INCOMING_CONNECTION:
-				printf("A connection is incoming.\n");
-				break;
-			case ID_DISCONNECTION_NOTIFICATION:
-				printf("A client has disconnected.\n");
-				break;
-			case ID_CONNECTION_LOST:
-				printf("A client lost the connection.\n");
-				break;
+				case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+					printf("Another client has disconnected.\n");
+					break;
+				case ID_REMOTE_CONNECTION_LOST:
+					printf("Another client has lost the connection.\n");
+					break;
+				case ID_REMOTE_NEW_INCOMING_CONNECTION:
+					printf("Another client has connected.\n");
+					break;
+				case ID_NEW_INCOMING_CONNECTION:
+					printf("A connection is incoming.\n");
+					break;
+				case ID_DISCONNECTION_NOTIFICATION:
+					printf("A client has disconnected.\n");
+					break;
+				case ID_CONNECTION_LOST:
+					printf("A client lost the connection.\n");
+					break;
 
-			case PLAYER_UPDATE:
-			{
-				// received new position from client    
-				int player_id = 0;
-				glm::vec3 pos, wPos;
-				float camPitch, camYaw;
-
-				bsIn.Read(player_id);
-				bsIn.ReadVector(pos.x, pos.y, pos.z);
-				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-				bsIn.Read(camPitch);
-				bsIn.Read(camYaw);
-
-
-				printf("Player %d sent new position ", player_id);			utl::debug("", pos);
-				printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
-				printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
-				printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
-
-
-				m_players[player_id]->setPosition(pos);
-				m_players[player_id]->update(wPos, camPitch, camYaw);
-
-				cout << "sending new position value to each client" << endl;
-
-
-				bsOut.Reset();
-				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-				bsOut.Write(player_id);
-				bsOut.WriteVector(pos.x, pos.y, pos.z);
-				bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
-				bsOut.Write(camPitch);
-				bsOut.Write(camYaw);
-
-				for (int i = 0; i < m_players.size(); i++)
+				case CLIENT_INPUT:
 				{
-					if (player_id != i)
-					{
-						cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
-						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-					}
-					else
-						cout << "	Not Sending to own client: " << player_id << endl;
+					utl::debug("incoming client input");
+
+					Move clientMove(bsIn);
+					m_clientInputMutex.lock();
+
+						m_clientInputQueue.push(clientMove);
+
+					m_clientInputMutex.unlock();
+					break;
 				}
-				break;
-			}
 
-			case CLIENT_INPUT:
-				utl::debug("incoming client input");
+				case PLAYER_UPDATE:
+				{
+					// received new position from client    
+					int player_id = 0;
+
+
+					// m_players[player_id]->setPosition(pos);
+					// m_players[player_id]->update(wPos, camPitch, camYaw);
+
+					m_players[player_id]->setFromBitStream(bsIn);
+
+					printf("Player %d sent new position ", player_id);			utl::debug("", m_players[player_id]->getPosition());
+					printf("Player %d sent new weapon position ", player_id);	
+					printf("Player %d sent new pitch ", player_id);				utl::debug("", m_players[player_id]->getCameraPitch());
+					printf("Player %d sent new yaw ", player_id);				utl::debug("", m_players[player_id]->getCameraYaw());
 				
-				m_clientInputMutex.lock();
-
-				Move clientMove;
-
-				m_clientInputBuffer.push_back(clientMove);
-
-				m_clientInputMutex.unlock();
-				break;
 
 
-			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				break;
+					// sending new position value to each client
+					cout << "sending new position value to each client" << endl;
+					m_players[player_id]->toBitStream((RakNet::MessageID)PLAYER_UPDATE, bsOut);
+
+					for (int i = 0; i < m_players.size(); i++)
+					{
+						if (player_id != i)
+						{
+							cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
+							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+						}
+						else
+							cout << "	Not Sending to own client: " << player_id << endl;
+					}
+					break;
+				}
+
+
+
+				default:
+				{
+					printf("Message with identifier %i has arrived.\n", packet->data[0]);
+					break;
+				}
+
 			}
-			bsOut.Reset();
 		}
-
-
+		
+		
 		curTime = SDL_GetTicks();
 
 		if (curTime - lastSnapShotSendTime > SERVER_SNAPSHOT_TIME_STEP)
 		{
-			utl::debug("curTime is " + curTime);
-			utl::debug("Sending snapshot to shits");
+			utl::debug("	>>>> Sending snapshot to shits at time", (int)curTime);
 
 			lastSnapShotSendTime = curTime;
 		}
@@ -1208,249 +1172,7 @@ void FaceOff::start()
 	m_nextGameTick = 0;
 
 #if NETWORK_FLAG == 1
-	startNetworkThread();
-#endif
-
-	while (isRunning)
-	{
-		startTime = SDL_GetTicks();
-
-		while (SDL_PollEvent(&event))
-		{
-			int tmpx, tmpy;
-			switch (event.type)
-			{
-			case SDL_QUIT:
-				isRunning = false;
-				break;
-
-			case SDL_MOUSEBUTTONUP:
-				switch (event.button.button)
-				{
-				case SDL_BUTTON_LEFT:
-					cout << "clicking Up left" << endl;
-					m_mouseState.m_leftButtonDown = false;
-					SDL_GetMouseState(&tmpx, &tmpy);
-
-					if (m_players[m_defaultPlayerID]->inGrenadeGatherMode())
-					{
-						utl::debug("here in Grenade gather mode");
-						Weapon* grenade = m_players[m_defaultPlayerID]->throwGrenade();
-
-					}
-
-					hitNode = NULL;
-
-					break;
-
-				case SDL_BUTTON_RIGHT:
-					cout << "clicking Up right" << endl;
-					m_mouseState.m_rightButtonDown = false;
-					SDL_GetMouseState(&tmpx, &tmpy);
-					break;
-				}
-				break;
-
-			case SDL_MOUSEBUTTONDOWN:
-
-				switch (event.button.button)
-				{
-					int tmpx, tmpy;
-				case SDL_BUTTON_LEFT:
-					cout << "clicking left" << endl;
-					SDL_GetMouseState(&tmpx, &tmpy);
-					m_mouseState.m_leftButtonDown = true;
-
-					if (m_isServer)
-						m_serverCamera.setMouseIn(true);
-					else
-					{
-						if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
-						{
-						
-							
-							
-							
-							
-							m_players[m_defaultPlayerID]->fireWeapon();
-
-							if (m_players[m_defaultPlayerID]->isUsingLongRangedWeapon())
-							{
-
-								WorldObject* hitObject = NULL;
-
-								glm::vec3 lineStart = m_players[m_defaultPlayerID]->getFirePosition();
-								glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
-
-
-								utl::debug("lineStart", lineStart);
-								utl::debug("lineDir", lineDir);
-
-								// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
-
-								float hitObjectSqDist = FLT_MAX;
-								glm::vec3 hitPoint;
-								m_objectKDtree.visitNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint);
-
-								//	utl::debug("player pos", lineStart);
-								//	utl::debug("target z", lineDir);
-
-								if (hitObject != NULL)
-								{
-									utl::debug("name", hitObject->m_name);
-									hitObject->isHit = true;
-
-									WorldObject* hitPointMark = new WorldObject();
-									hitPointMark->setPosition(hitPoint);
-									hitPointMark->setScale(1.0, 1.0, 1.0);
-									hitPointMark->setModel(m_mm.m_cube);
-									hitPointMark->m_name = "hitMark";
-									//								m_hitPointMarks.push_back(hitPointMark);
-								}
-								else
-									utl::debug("hitObject is NULL");
-								// VisitNodes
-
-							}
-
-						}
-
-						m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
-
-					}
-
-
-
-					break;
-
-
-				case SDL_BUTTON_RIGHT:
-					cout << "clicking right" << endl;
-					SDL_GetMouseState(&tmpx, &tmpy);
-					m_mouseState.m_rightButtonDown = true;
-					
-					m_zoomedIn = !m_zoomedIn;
-					m_gui.setSniperZoomMode(m_zoomedIn);
-
-					if (m_zoomedIn)
-					{
-						m_zoomFactor = 0.2f;
-						m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
-					}
-					else
-					{
-						m_zoomFactor = 1.0f;
-						m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
-					}
-					break;
-				}
-				break;
-
-			case SDL_KEYUP:
-				switch (event.key.keysym.sym)
-				{
-				}
-				break;
-
-			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym)
-				{
-				case SDLK_ESCAPE:
-					isRunning = false;
-					break;
-
-				case SDLK_0:
-					containedFlag = !containedFlag;
-					break;
-
-
-					// main gun
-				case SDLK_1:
-					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MAIN);
-					break;
-
-					// pistol
-				case SDLK_2:
-					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PISTOL);
-					break;
-
-					// MELEE
-				case SDLK_3:
-					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MELEE);
-					break;
-
-					// GRENADES
-				case SDLK_4:
-					m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
-					break;
-
-
-				case SDLK_8:
-				{
-
-
-				}
-
-					break;
-
-
-
-				case SDLK_9:
-					//	if (m_players[m_defaultPlayerID]->has
-					break;
-
-
-				case SDLK_r:
-				{
-							   utl::debug("Reloading Weapon");
-							   m_players[m_defaultPlayerID]->reloadWeapon();
-				}
-					break;
-
-				case SDLK_g:
-				{
-							   utl::debug("Dropping Weapon");
-							   Weapon* droppedWeapon = m_players[m_defaultPlayerID]->dropWeapon();
-							   if (droppedWeapon != NULL)
-							   {
-								   m_objectKDtree.insert(droppedWeapon);
-							   }
-				}
-					break;
-
-
-
-			
-				case SDLK_SPACE:
-			//		if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
-			//		utl::debug(">>>> Just Jumped");
-			//		utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
-
-			//		if (m_players[m_defaultPlayerID]->isNotJumping())
-			//			m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 150.0, 0.0) * utl::GRAVITY_CONSTANT;
-					
-					break;
-
-				case SDLK_z:
-					if (m_isServer)
-						m_serverCamera.setMouseIn(false);
-					else
-						m_players[m_defaultPlayerID]->m_camera->setMouseIn(false);
-					break;
-				}
-				break;
-			}
-		}
-		update();
-		render();
-		SDL_GL_SwapBuffers();
-	}
-}
-
-
-
-void FaceOff::startNetworkThread()
-{
+	
 	if (m_isServer)
 	{
 		m_networkThread = thread(&FaceOff::serverNetworkThread, this);
@@ -1459,6 +1181,303 @@ void FaceOff::startNetworkThread()
 	{
 		m_networkThread = thread(&FaceOff::clientNetworkThread, this);
 	}
+	
+#endif
+
+	while (isRunning)
+	{
+		startTime = SDL_GetTicks();
+
+		if (m_isServer)
+		{
+			serverHandleDeviceEvents();
+		}
+		else
+		{
+			clientHandleDeviceEvents();
+		}
+
+		update();
+		render();
+		SDL_GL_SwapBuffers();
+	}
+}
+
+
+void FaceOff::serverHandleDeviceEvents()
+{
+
+	while (SDL_PollEvent(&event))
+	{
+		int tmpx, tmpy;
+		switch (event.type)
+		{
+			case SDL_QUIT:
+				isRunning = false;
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+
+				switch (event.button.button)
+				{
+					int tmpx, tmpy;
+					case SDL_BUTTON_LEFT:
+					{
+						cout << "clicking left" << endl;
+						SDL_GetMouseState(&tmpx, &tmpy);
+						m_mouseState.m_leftButtonDown = true;
+						m_serverCamera.setMouseIn(true);
+						break;
+					}
+				}
+				break;
+
+
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym)
+				{
+					case SDLK_ESCAPE:
+						isRunning = false;
+						break;
+
+					case SDLK_0:
+						containedFlag = !containedFlag;
+						break;
+
+
+					case SDLK_z:
+						if (m_isServer)
+							m_serverCamera.setMouseIn(false);
+						break;
+				}
+				break;
+		}
+	}
+
+}
+
+
+
+void FaceOff::clientHandleDeviceEvents()
+{
+	while (SDL_PollEvent(&event))
+	{
+		int tmpx, tmpy;
+		switch (event.type)
+		{
+		case SDL_QUIT:
+			isRunning = false;
+			break;
+
+		case SDL_MOUSEBUTTONUP:
+			switch (event.button.button)
+			{
+			case SDL_BUTTON_LEFT:
+				cout << "clicking Up left" << endl;
+				m_mouseState.m_leftButtonDown = false;
+				SDL_GetMouseState(&tmpx, &tmpy);
+
+				if (m_players[m_defaultPlayerID]->inGrenadeGatherMode())
+				{
+					utl::debug("here in Grenade gather mode");
+					Weapon* grenade = m_players[m_defaultPlayerID]->throwGrenade();
+				}
+
+				hitNode = NULL;
+
+				break;
+
+			case SDL_BUTTON_RIGHT:
+				cout << "clicking Up right" << endl;
+				m_mouseState.m_rightButtonDown = false;
+				SDL_GetMouseState(&tmpx, &tmpy);
+				break;
+			}
+			break;
+
+		case SDL_MOUSEBUTTONDOWN:
+
+			switch (event.button.button)
+			{
+				int tmpx, tmpy;
+			case SDL_BUTTON_LEFT:
+				cout << "clicking left" << endl;
+				SDL_GetMouseState(&tmpx, &tmpy);
+				m_mouseState.m_leftButtonDown = true;
+
+				if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
+				{
+
+					m_players[m_defaultPlayerID]->fireWeapon();
+
+					if (m_players[m_defaultPlayerID]->isUsingLongRangedWeapon())
+					{
+
+						WorldObject* hitObject = NULL;
+
+						glm::vec3 lineStart = m_players[m_defaultPlayerID]->getFirePosition();
+						glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
+
+
+						utl::debug("lineStart", lineStart);
+						utl::debug("lineDir", lineDir);
+
+						// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
+
+						float hitObjectSqDist = FLT_MAX;
+						glm::vec3 hitPoint;
+						m_objectKDtree.visitNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint);
+
+						//	utl::debug("player pos", lineStart);
+						//	utl::debug("target z", lineDir);
+
+						if (hitObject != NULL)
+						{
+							utl::debug("name", hitObject->m_name);
+							hitObject->isHit = true;
+
+							WorldObject* hitPointMark = new WorldObject();
+							hitPointMark->setPosition(hitPoint);
+							hitPointMark->setScale(1.0, 1.0, 1.0);
+							hitPointMark->setModel(m_mm.m_cube);
+							hitPointMark->m_name = "hitMark";
+							//								m_hitPointMarks.push_back(hitPointMark);
+						}
+						else
+							utl::debug("hitObject is NULL");
+						// VisitNodes
+
+					}
+
+				}
+
+				m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
+
+				
+
+
+
+				break;
+
+
+			case SDL_BUTTON_RIGHT:
+				cout << "clicking right" << endl;
+				SDL_GetMouseState(&tmpx, &tmpy);
+				m_mouseState.m_rightButtonDown = true;
+
+				m_zoomedIn = !m_zoomedIn;
+				m_gui.setSniperZoomMode(m_zoomedIn);
+
+				if (m_zoomedIn)
+				{
+					m_zoomFactor = 0.2f;
+					m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+				}
+				else
+				{
+					m_zoomFactor = 1.0f;
+					m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+				}
+				break;
+			}
+			break;
+
+		case SDL_KEYUP:
+			switch (event.key.keysym.sym)
+			{
+			}
+			break;
+
+		case SDL_KEYDOWN:
+			switch (event.key.keysym.sym)
+			{
+			case SDLK_ESCAPE:
+				isRunning = false;
+				break;
+
+			case SDLK_0:
+				containedFlag = !containedFlag;
+				break;
+
+
+				// main gun
+			case SDLK_1:
+				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MAIN);
+				break;
+
+				// pistol
+			case SDLK_2:
+				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PISTOL);
+				break;
+
+				// MELEE
+			case SDLK_3:
+				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MELEE);
+				break;
+
+				// GRENADES
+			case SDLK_4:
+				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
+				break;
+
+
+			case SDLK_8:
+			{
+
+
+			}
+
+			break;
+
+
+
+			case SDLK_9:
+				//	if (m_players[m_defaultPlayerID]->has
+				break;
+
+
+			case SDLK_r:
+			{
+				utl::debug("Reloading Weapon");
+				m_players[m_defaultPlayerID]->reloadWeapon();
+			}
+			break;
+
+			case SDLK_g:
+			{
+				utl::debug("Dropping Weapon");
+				Weapon* droppedWeapon = m_players[m_defaultPlayerID]->dropWeapon();
+				if (droppedWeapon != NULL)
+				{
+					m_objectKDtree.insert(droppedWeapon);
+				}
+			}
+			break;
+
+
+
+
+			case SDLK_SPACE:
+				//		if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
+				//		utl::debug(">>>> Just Jumped");
+				//		utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
+
+				//		if (m_players[m_defaultPlayerID]->isNotJumping())
+				//			m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 150.0, 0.0) * utl::GRAVITY_CONSTANT;
+
+				break;
+
+			case SDLK_z:
+				if (m_isServer)
+					m_serverCamera.setMouseIn(false);
+				else
+					m_players[m_defaultPlayerID]->m_camera->setMouseIn(false);
+				break;
+			}
+			break;
+		}
+	}
+
 }
 
 
@@ -1675,7 +1694,18 @@ void FaceOff::update()
 
 void FaceOff::serverUpdate()
 {
+	// process client inputs
+	int queueSize = m_clientInputQueue.size();
 
+	for (int i = 0; i < queueSize; i++)
+	{
+		m_clientInputMutex.lock();
+			Move temp = m_clientInputQueue.front();
+			m_clientInputQueue.pop();
+		m_clientInputMutex.unlock();
+
+		utl::debug("playerId " + temp.playerId);
+	}
 }
 
 
@@ -1692,8 +1722,10 @@ void FaceOff::render()
 	
 	if (m_isServer)
 	{
-		m_serverCamera.control(m_pipeline);
-		o_skybox.setPosition(-m_serverCamera.getEyePoint());
+		m_serverCamera.control();
+		m_serverCamera.updateViewMatrix(m_pipeline);
+		o_skybox.setPosition(m_serverCamera.getEyePoint());
+		serverUpdate();
 	}
 	else
 	{
@@ -2755,53 +2787,55 @@ void FaceOff::initAudio()
 
 void FaceOff::initGUI()
 {
+
 	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	Control::init("", 25, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+	if (!m_isServer)
+	{
+		int xOffset = 55;
+		int yOffset = 570;
 
-	int xOffset = 55;
-	int yOffset = 570;
+		int BAR_WIDTH = 60;
+		int BAR_HEIGHT = 10;
 
-	int BAR_WIDTH = 60;
-	int BAR_HEIGHT = 10;
+		Control* HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GREEN, "icon_hp.png");
+		m_players[m_defaultPlayerID]->m_healthBarGUI = (Bar*)HPBar;
 
-	Control* HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GREEN, "icon_hp.png");
-	m_players[m_defaultPlayerID]->m_healthBarGUI = (Bar*)HPBar;
+		xOffset = 175;
+		Control* armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_armor.png");
+		m_players[m_defaultPlayerID]->m_armorBarGUI = (Bar*)armorBar;
 
-	xOffset = 175;
-	Control* armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_armor.png");
-	m_players[m_defaultPlayerID]->m_armorBarGUI = (Bar*)armorBar;
+		xOffset = 700;
+		Control* ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
+		m_players[m_defaultPlayerID]->m_ammoBarGUI = (Bar*)ammoBar;
 
-	xOffset = 700;
-	Control* ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
-	m_players[m_defaultPlayerID]->m_ammoBarGUI = (Bar*)ammoBar;
+		int aimWidth = 20;
+		int aimHeight = 20;
 
-	int aimWidth = 20;
-	int aimHeight = 20;
+		int aimX = utl::SCREEN_WIDTH / 2 - aimWidth / 2;
+		int aimY = utl::SCREEN_HEIGHT / 2;
 
-	int aimX = utl::SCREEN_WIDTH / 2 - aimWidth / 2;
-	int aimY = utl::SCREEN_HEIGHT / 2;
+		utl::debug("aimX", aimX);
+		utl::debug("aimY", aimY);
+		Control* horiAim = new Label("", aimX, aimY - 1, aimWidth, 2, GREEN);
 
-	utl::debug("aimX", aimX);
-	utl::debug("aimY", aimY);
-	Control* horiAim = new Label("", aimX, aimY-1, aimWidth, 2, GREEN);
+		aimX = utl::SCREEN_WIDTH / 2;
+		aimY = utl::SCREEN_HEIGHT / 2 - aimHeight / 2;
 
-	aimX = utl::SCREEN_WIDTH / 2;
-	aimY = utl::SCREEN_HEIGHT / 2 - aimHeight / 2;
+		utl::debug("aimX", aimX);
+		utl::debug("aimY", aimY);
 
-	utl::debug("aimX", aimX);
-	utl::debug("aimY", aimY);
+		Control* vertAim = new Label("", aimX - 1, aimY, 2, aimHeight, GREEN);
 
-	Control* vertAim = new Label("", aimX-1, aimY, 2, aimHeight, GREEN);
+		m_gui.addGUIComponent(HPBar);
+		m_gui.addGUIComponent(armorBar);
+		m_gui.addGUIComponent(ammoBar);
+		m_gui.addGUIComponent(horiAim);
+		m_gui.setHorAimIndex(m_gui.getNumGUIComponent() - 1);
 
-	m_gui.addGUIComponent(HPBar);
-	m_gui.addGUIComponent(armorBar);
-	m_gui.addGUIComponent(ammoBar);
-	m_gui.addGUIComponent(horiAim);
-	m_gui.setHorAimIndex(m_gui.getNumGUIComponent()-1);
-
-	m_gui.addGUIComponent(vertAim);
-	m_gui.setVerAimIndex(m_gui.getNumGUIComponent()-1);
-
+		m_gui.addGUIComponent(vertAim);
+		m_gui.setVerAimIndex(m_gui.getNumGUIComponent() - 1);
+	}
 }
 
 

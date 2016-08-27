@@ -186,11 +186,12 @@ class LinkedList
 enum NetworkGameMessageEnum
 {
 	SPAWN_INFORMATION = ID_USER_PACKET_ENUM + 1,
-	PLAYER_UPDATE = ID_USER_PACKET_ENUM + 2,
-	YOUR_TURN = ID_USER_PACKET_ENUM + 3,
-	NEW_CLIENT = ID_USER_PACKET_ENUM + 4,
-	LOBBY_WAIT_END = ID_USER_PACKET_ENUM + 5,
-	CLIENT_INPUT = ID_USER_PACKET_ENUM + 6
+	NEW_CLIENT = ID_USER_PACKET_ENUM + 2,
+	LOBBY_WAIT_END = ID_USER_PACKET_ENUM + 3,
+
+	CLIENT_INPUT = ID_USER_PACKET_ENUM + 4,
+	SNAPSHOT_FROM_SERVER = ID_USER_PACKET_ENUM + 5,
+	PLAYER_UPDATE = ID_USER_PACKET_ENUM + 6,
 };
 
 
@@ -214,8 +215,19 @@ struct State
 struct Move
 {
 	double time;
+	int playerId;
 	Input input;
 	State state;
+
+	Move()
+	{
+
+	}
+
+	Move(RakNet::BitStream& bs)
+	{
+
+	}
 };
 
 

@@ -23,7 +23,7 @@ FirstPersonCamera::FirstPersonCamera()
 
 	m_eye = m_target + m_eyeOffset; 
 
-
+	m_freeMode = false;
 	/*
 	m_pitch = atan((eye_p.y - target_p.y) / glm::length(hori));
 	m_pitch *= utl::RADIAN_TO_DEGREE;
@@ -61,7 +61,7 @@ void FirstPersonCamera::updatePosY(float dir)
 
 
 
-void FirstPersonCamera::controlCD()
+void FirstPersonCamera::control()
 {
 	if (m_mouseIn)
 	{
@@ -78,21 +78,30 @@ void FirstPersonCamera::controlCD()
 		if (state[SDLK_w])
 		{
 			updatePosXZ(0.0);
-	//		updatePosY(0.0);
+			if (m_freeMode)
+			{
+				updatePosY(0.0);
+			}
 		}
 
 		else if (state[SDLK_s])
 		{
 			updatePosXZ(180.0);
-	//		updatePosY(180.0);
+			if (m_freeMode)
+			{
+				updatePosY(180.0);
+			}
 		}
 
 		if (state[SDLK_a])
+		{
 			updatePosXZ(90.0);
+		}
 
 		else if (state[SDLK_d])
+		{
 			updatePosXZ(270);
-	
+		}
 
 	}
 	// utl::debug("m_pitch", m_pitch);
@@ -102,15 +111,19 @@ void FirstPersonCamera::controlCD()
 }
 
 
+void FirstPersonCamera::setFreeMode(bool b)
+{
+	m_freeMode = b;
+}
 
 
 void FirstPersonCamera::updateViewMatrix(Pipeline& p)
 {
-	m_eye = m_target + m_eyeOffset;
-
-	
-
 	p.setMatrixMode(VIEW_MATRIX);
+	p.loadIdentity();
+
+
+	m_eye = m_target + m_eyeOffset;
 
 
 	

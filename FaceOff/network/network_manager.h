@@ -29,15 +29,6 @@ using namespace std;
 
 
 
-/*
-enum GameMessages
-{
-	SPAWN_POSITION = ID_USER_PACKET_ENUM + 1,
-	PLAYER_UPDATE = ID_USER_PACKET_ENUM + 2,
-	YOUR_TURN = ID_USER_PACKET_ENUM + 3,
-	NEW_CLIENT = ID_USER_PACKET_ENUM + 4,
-};
-*/
 
 
 // http://classes.cs.kent.edu/gpg/trac/browser/EnginesS11/cmarshal/RakNet_POC
@@ -271,11 +262,6 @@ void client()
 			case PLAYER_UPDATE:
 				// report the server's new counter value
 				std::cout << "Server said we are now at " << int_message << std::endl;
-				break;
-			case YOUR_TURN:
-				printf("My Turn. Sending message.\n");
-				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				break;
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);

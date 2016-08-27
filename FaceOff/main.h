@@ -347,9 +347,7 @@ class FaceOff
 		vector<SmokeEffect*> m_smokeEffects;
 
 		
-		vector<vector<Move>> m_playerInputQueue;
-
-		vector<Move> m_clientInputBuffer;
+		queue<Move> m_clientInputQueue;
 		mutex m_clientInputMutex;
 
 
@@ -369,6 +367,9 @@ class FaceOff
 		
 		int endWithError(char* msg, int error = 0);
 
+		void handleDeviceEvents();
+		void serverHandleDeviceEvents();
+		void clientHandleDeviceEvents();
 
 		void initNetworkLobby();
 		void startNetworkThread();

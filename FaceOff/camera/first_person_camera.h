@@ -11,22 +11,26 @@ class FirstPersonCamera : public Camera
         FirstPersonCamera();
         ~FirstPersonCamera();
 
-		void controlCD();
+		void control();
+		void setFreeMode(bool b);
+		void updateViewMatrix(Pipeline& p);
 
-    private:
+private:
 
         int m_screenMidX;
         int m_screenMidY;
+
+		bool m_freeMode;
 
         void restrain();
         void updatePosXZ(float dir);
         void updatePosY(float dir);
 
-
+		/*
 		void updatePipeline(Pipeline& p);
 		void updatePipelineTranslation(Pipeline& p);
 		void updatePipelineRotation(Pipeline& p);
-		void updateViewMatrix(Pipeline& p);
+		*/
 		
 		glm::vec3 getFirePosition();
 		

@@ -77,7 +77,7 @@ void ThirdPersonCamera::lookAt(glm::vec3& eye, glm::vec3& target, glm::vec3& up)
 
 
 
-void ThirdPersonCamera::controlCD()
+void ThirdPersonCamera::control()
 {
 	float pitchChange = 0.0f;
 	float yawChange = 0.0f;
@@ -165,6 +165,10 @@ void ThirdPersonCamera::updateEyePos()
 
 void ThirdPersonCamera::updateViewMatrix(Pipeline& p)
 {
+	p.setMatrixMode(VIEW_MATRIX);
+	p.loadIdentity();
+
+
     updateEyePos();
 
     glm::vec3 up = glm::vec3(0.0f,1.0f,0.0f);

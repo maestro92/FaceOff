@@ -100,7 +100,7 @@ void Player::setPosition(float x, float y, float z)
 	setPosition(glm::vec3(x, y, z));
 }
 
-
+/*
 void Player::update(Pipeline& p)
 {
 	p.setMatrixMode(VIEW_MATRIX);
@@ -120,15 +120,12 @@ void Player::update(Pipeline& p)
 	// updateBulletTransform();
 	// adjustWeaponAndBulletPosition();
 }
-
+*/
 
 void Player::control()
 {
-	m_camera->controlCD();
+	m_camera->control();
 	m_position = m_camera->getTargetPoint();
-
-
-
 }
 
 
@@ -188,8 +185,6 @@ void Player::updateGameStats()
 
 void Player::updateCamera(Pipeline& p)
 {
-	p.setMatrixMode(VIEW_MATRIX);
-	p.loadIdentity();
 
 	m_camera->m_target = m_position;
 	m_boundingSphere.center = m_position;
@@ -307,7 +302,7 @@ void Player::updateBulletTransform()
 }
 
 
-
+/*
 void Player::update(Pipeline& p, Terrain* terrain)
 {
 	p.setMatrixMode(VIEW_MATRIX);
@@ -319,7 +314,7 @@ void Player::update(Pipeline& p, Terrain* terrain)
 	updateWeaponTransform();
 	updateBulletTransform();
 }
-
+*/
 
 void Player::updateModel()
 {
@@ -715,6 +710,7 @@ bsOut.Write(camYaw);
 
 void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
 {
+	bs.Reset();
 	bs.Write(msgId);
 	bs.Write(m_id);
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);

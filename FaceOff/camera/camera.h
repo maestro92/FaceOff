@@ -19,10 +19,11 @@ class Camera
     public:
         inline glm::vec3 getEyePoint();
 		inline glm::vec3 getTargetPoint();
-		virtual void control(Pipeline& p);
-		virtual void control(Pipeline& p, Terrain* terrain);
+		
+		// virtual void control(Pipeline& p);
+		// virtual void control(Pipeline& p, Terrain* terrain);
+		virtual void control();
 
-		virtual void controlCD();
 		// virtual void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
 
 		virtual void updateViewMatrix(Pipeline& p);
