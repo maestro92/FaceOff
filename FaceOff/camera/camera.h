@@ -22,11 +22,11 @@ class Camera
 		
 		// virtual void control(Pipeline& p);
 		// virtual void control(Pipeline& p, Terrain* terrain);
-		virtual void control();
+		virtual void control() = 0;
 
 		// virtual void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
 
-		virtual void updateViewMatrix(Pipeline& p);
+		virtual void updateViewMatrix(Pipeline& p) = 0;
 
 		void setMouseIn(bool b);
 		bool getMouseIn();
@@ -41,6 +41,11 @@ class Camera
 
 		glm::mat4 getViewMatrix();
 		glm::mat4 getModelMatrix();
+
+
+		bool hasMoved();
+		Move getMoveState();
+
 
 		virtual CameraType getCameraType() = 0;
 
@@ -61,6 +66,9 @@ class Camera
 		glm::vec3 m_target;
         glm::vec3 m_eye;
 		glm::vec3 m_eyeOffset;
+
+		bool m_moved;
+		Move m_moveState;
 
         /// expressed in degrees
         float m_pitch;

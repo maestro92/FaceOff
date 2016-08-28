@@ -26,16 +26,9 @@ private:
         void updatePosXZ(float dir);
         void updatePosY(float dir);
 
-		/*
-		void updatePipeline(Pipeline& p);
-		void updatePipelineTranslation(Pipeline& p);
-		void updatePipelineRotation(Pipeline& p);
-		*/
 		
 		glm::vec3 getFirePosition();
 		
 		virtual CameraType getCameraType();
-
-    //    bool m_mouseIn;
 };
 #endif

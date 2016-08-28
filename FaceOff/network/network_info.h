@@ -12,7 +12,7 @@
 
 // How often the server sends position updates to the client
 // static const int DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES = 250;
-static const int DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES = 1000;
+// static const int DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES = 1000;
 
 
 

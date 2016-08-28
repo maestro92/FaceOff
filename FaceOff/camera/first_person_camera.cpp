@@ -7,7 +7,6 @@ const float CAMERA_FORWARD_SPEED = 0.3;
 
 FirstPersonCamera::FirstPersonCamera()
 {
-
 	m_xAxis = glm::vec3(1.0f, 0.0f, 0.0f);
 	m_yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 	m_zAxis = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -65,6 +64,10 @@ void FirstPersonCamera::control()
 {
 	if (m_mouseIn)
 	{
+		m_moveState.input.reset();
+		m_moved = false;
+
+
 		int tmpx, tmpy;
 		SDL_GetMouseState(&tmpx, &tmpy);
 
@@ -82,6 +85,9 @@ void FirstPersonCamera::control()
 			{
 				updatePosY(0.0);
 			}
+
+			m_moveState.input.forward = true;
+			m_moved = true;
 		}
 
 		else if (state[SDLK_s])
@@ -91,16 +97,25 @@ void FirstPersonCamera::control()
 			{
 				updatePosY(180.0);
 			}
+
+			m_moveState.input.back = true;
+			m_moved = true;
 		}
 
 		if (state[SDLK_a])
 		{
 			updatePosXZ(90.0);
+	
+			m_moveState.input.left = true;
+			m_moved = true;
 		}
 
 		else if (state[SDLK_d])
 		{
 			updatePosXZ(270);
+
+			m_moveState.input.right = true;
+			m_moved = true;
 		}
 
 	}

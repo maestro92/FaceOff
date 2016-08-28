@@ -346,9 +346,17 @@ class FaceOff
 		vector<FireWorkEffect*> m_fireWorkEffects;
 		vector<SmokeEffect*> m_smokeEffects;
 
+		// used for both server or client
+		// the queue that server handles input from the client
 		
-		queue<Move> m_clientInputQueue;
-		mutex m_clientInputMutex;
+		// server uses this to receive client inputs in the network thread
+
+		// client uses this to collect inputs in each frame
+
+		MoveQueue m_inputQueue;
+
+		// queue<Move> m_clientInputQueue;
+		// mutex m_clientInputMutex;
 
 
 		// vector<WorldObject*> m_hitPointMarks;
@@ -371,6 +379,7 @@ class FaceOff
 		void serverHandleDeviceEvents();
 		void clientHandleDeviceEvents();
 
+		void initNetworkServerClient();
 		void initNetworkLobby();
 		void startNetworkThread();
 
@@ -386,6 +395,10 @@ class FaceOff
 		void clientUpdate();
 		void render();
 
+
+
+		void playerInputQueueToBitStream(RakNet::BitStream& bs);
+		void moveToBitStream(Move move, RakNet::BitStream& bs);
 
 
 		void renderGUI();

@@ -203,12 +203,60 @@ struct Input
 	bool back;
 	bool jump;
 	bool weaponFired;
+
+	void toBitStream(RakNet::BitStream& bs)
+	{
+		bs.Write(left);
+		bs.Write(right);
+		bs.Write(forward);
+		bs.Write(back);
+		bs.Write(jump);
+		bs.Write(weaponFired);
+	}
+
+	void setFromBitStream(RakNet::BitStream& bs)
+	{
+		bs.Read(left);
+		bs.Read(right);
+		bs.Read(forward);
+		bs.Read(back);
+		bs.Read(jump);
+		bs.Read(weaponFired);
+	}
+
+	void reset()
+	{
+		left = false;
+		right = false;
+		forward = false;
+		back = false;
+		jump = false;
+		weaponFired = false;
+	}
 };
 
 struct State
 {
 	glm::vec3 position;
 	glm::vec3 velocity;
+
+	void toBitStream(RakNet::BitStream& bs)
+	{
+		bs.WriteVector(position.x, position.y, position.z);
+		bs.WriteVector(velocity.x, velocity.y, velocity.z);
+	}
+
+	void setFromBitStream(RakNet::BitStream& bs)
+	{
+		bs.ReadVector(position.x, position.y, position.z);
+		bs.ReadVector(velocity.x, velocity.y, velocity.z);
+	}
+
+	void reset()
+	{
+		position = glm::vec3(0.0, 0.0, 0.0);
+		velocity = glm::vec3(0.0, 0.0, 0.0);
+	}
 };
 
 
@@ -221,16 +269,101 @@ struct Move
 
 	Move()
 	{
-
+		reset();
 	}
 
 	Move(RakNet::BitStream& bs)
 	{
+		setFromBitStream(bs);
+	}
 
+	void toBitStream(RakNet::BitStream& bs)
+	{
+		bs.Write(time);
+		bs.Write(playerId);
+		input.toBitStream(bs);
+		state.toBitStream(bs);
+	}
+
+	void setFromBitStream(RakNet::BitStream& bs)
+	{
+		bs.Read(time);
+		bs.Read(playerId);
+		input.setFromBitStream(bs);
+		state.setFromBitStream(bs);
+	}
+
+	void reset()
+	{
+		input.reset();
+		state.reset();
 	}
 };
 
+struct MoveQueue
+{
+	queue<Move> buffer;
 
+	MoveQueue()
+	{
+
+	}
+
+	void toBitStream(RakNet::BitStream& bs)
+	{
+		int size = buffer.size();
+
+		bs.Reset();
+		bs.Write((RakNet::MessageID)CLIENT_INPUT);
+
+		bs.Write(size);
+
+		for (int i = 0; i < size; i++)
+		{
+			Move move = buffer.front();
+			buffer.pop();
+
+			move.toBitStream(bs);
+		}
+	}
+
+	void setFromBitStream(RakNet::BitStream& bs)
+	{
+		int size = 0;
+
+		RakNet::MessageID msgId;
+
+		bs.Read(msgId);
+		bs.Read(size);
+
+		for (int i = 0; i < size; i++)
+		{
+			Move move(bs);
+			buffer.push(move);
+		}
+	}
+
+	Move front()
+	{
+		return buffer.front();
+	}
+
+	void push(Move move)
+	{
+		buffer.push(move);
+	}
+
+	void pop()
+	{
+		buffer.pop();
+	}
+
+	int size()
+	{
+		return buffer.size();
+	}
+
+};
 
 
 namespace utl

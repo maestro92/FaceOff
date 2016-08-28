@@ -29,6 +29,7 @@ Player::Player(int id)
 	m_model->setMeshRandTextureIdx();
 
 
+
 	// m_renderer = &RendererManager::r_fullColor;
 	setModel(m_model);
 
@@ -128,6 +129,16 @@ void Player::control()
 	m_position = m_camera->getTargetPoint();
 }
 
+
+bool Player::hasMoved()
+{
+	return m_camera->hasMoved();
+}
+
+Move Player::getMoveState()
+{
+	return m_camera->getMoveState();
+}
 
 
 // this obviously doesn't work with a slanted falling incline
@@ -587,8 +598,7 @@ bool Player::inGrenadeGatherMode()
 
 Weapon* Player::getCurWeapon()
 {
-//	return m_weapons[m_curWeaponIndex];
-	return NULL;
+	return m_curWeapon;
 } 
 
 
@@ -605,10 +615,7 @@ float Player::getCameraYaw()
 
 void Player::renderGroup(Pipeline& p, Renderer* r)
 {
-	if (m_camera->getCameraType() == THIRD_PERSON_CAMERA)
-	{
-		WorldObject::renderGroup(p, r);
-	}
+	WorldObject::renderGroup(p, r);
 
 	// render the weapon
 	if (m_curWeapon != NULL)
@@ -622,6 +629,7 @@ void Player::renderGroup(Pipeline& p, Renderer* r)
 		m_curWeapon->renderGroup(p, r);
 	}
 }
+
 
 void Player::adjustWeaponAndBulletPosition()
 {
@@ -708,6 +716,35 @@ bsOut.Write(camYaw);
 
 // bsOut.Write((RakNet::MessageID)SPAWN_INFORMATION);
 
+/*
+void Player::spawnFromBitStream(RakNet::BitStream& bs)
+{
+	int pitch = 0;
+	int yaw = 0;
+
+	// the message id is already ignored
+	bs.Read(m_id);
+	bs.ReadVector(m_position.x, m_position.y, m_position.z);
+	bs.Read(pitch);
+	bs.Read(yaw);
+
+	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
+	{
+		int weaponEnum = 0;
+		bs.Read(weaponEnum);
+		if (weaponEnum != -1)
+		{
+			utl::debug("weaponEnum is ", weaponEnum);
+		}
+		else
+		{
+			utl::debug("weaponEnum is None");
+		}
+	}
+}
+*/
+
+
 void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
 {
 	bs.Reset();
@@ -722,16 +759,20 @@ void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
 		if (m_weapons[i] != NULL)
 		{
 			bs.Write(m_weapons[i]->getWeaponName());
+			utl::debug("weaponEnum is ", m_weapons[i]->getWeaponName());
 		}
 		else
 		{
-			bs.Write(0);
+			bs.Write(-1);
+			utl::debug("weaponEnum is None");
 		}
 	}
 }
 
+// only used for spawning
 void Player::setFromBitStream(RakNet::BitStream& bs)
 {
+	// the message id is already ignored
 	bs.Read(m_id);
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
 
@@ -740,10 +781,30 @@ void Player::setFromBitStream(RakNet::BitStream& bs)
 
 	bs.Read(pitch);
 	bs.Read(yaw);
-
-
-
+	/*
+	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
+	{
+		int weaponEnum = 0;
+		bs.Read(weaponEnum);
+		if (weaponEnum != -1)
+		{
+			utl::debug("weaponEnum is ", weaponEnum);
+		}
+		else
+		{
+			utl::debug("weaponEnum is None");
+		}
+	}
+	*/
 }
+
+
+
+vector<Weapon*>Player::getWeapons()
+{
+	return m_weapons;
+}
+
 
 /*
 

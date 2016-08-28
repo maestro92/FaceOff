@@ -105,6 +105,8 @@ class Player : public WorldObject
 		void reloadWeapon();
 		Weapon* getCurWeapon();
 
+		vector<Weapon*> getWeapons();
+
 		int getId();
 
 		bool hasWeaponAtSlot(WeaponSlotEnum slot);
@@ -124,8 +126,14 @@ class Player : public WorldObject
 		bool inGrenadeGatherMode();
 		bool isUsingLongRangedWeapon();
 
+		// used for spawn
+	//	void spawnFromBitStream(RakNet::BitStream& bs);
+
 		void toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs);
 		void setFromBitStream(RakNet::BitStream& bs);
+
+		bool hasMoved();
+		Move getMoveState();
 
 	private:
 		int m_id;
@@ -138,6 +146,7 @@ class Player : public WorldObject
 
 		vector<Weapon*> m_weapons;
 		Weapon* m_curWeapon;
+
 
 		bool m_grenadeGatherMode = false;
 };
