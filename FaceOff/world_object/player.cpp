@@ -53,18 +53,6 @@ Player::Player(int id)
 	m_curCollidedWeapon = NULL;
 
 	m_grenadeGatherMode = false;
-	/*
-	// this value is obtained visually
-	if (m_camera->getCameraType() == FIRST_PERSON_CAMERA)
-		m_weaponPositionOffsets.resize(NUM_WEAPON_TYPE, glm::vec3(0.35, -0.64, 1.26));
-	else
-		m_weaponPositionOffsets.resize(NUM_WEAPON_TYPE, glm::vec3(2.11, -2.49, 5.2));
-	
-	m_bulletStartPositionOffsets.resize(NUM_WEAPON_TYPE);
-	m_bulletStartPositionOffsetScale.resize(NUM_WEAPON_TYPE, glm::vec3(-0.052, 0.474, 0.952));
-	*/
-
-//	addWeapon(new AssultRifle("Ak-47"));
 
 	m_healthBarGUI = NULL;
 
@@ -101,27 +89,6 @@ void Player::setPosition(float x, float y, float z)
 	setPosition(glm::vec3(x, y, z));
 }
 
-/*
-void Player::update(Pipeline& p)
-{
-	p.setMatrixMode(VIEW_MATRIX);
-	p.loadIdentity();
-
-	m_camera->control(p);
-
-	// first person camera: eye = target
-	// third person camera: eye != target
-
-	m_position = m_camera->getTargetPoint();
-
-	updateAABB();
-
-	updateWeaponTransform();
-
-	// updateBulletTransform();
-	// adjustWeaponAndBulletPosition();
-}
-*/
 
 void Player::control()
 {
@@ -137,7 +104,9 @@ bool Player::hasMoved()
 
 Move Player::getMoveState()
 {
-	return m_camera->getMoveState();
+	Move move = (m_camera->getMoveState());
+	move.playerId = m_id;
+	return move;
 }
 
 
@@ -196,7 +165,6 @@ void Player::updateGameStats()
 
 void Player::updateCamera(Pipeline& p)
 {
-
 	m_camera->m_target = m_position;
 	m_boundingSphere.center = m_position;
 	// ((ThirdPersonCamera*)m_camera)->updateViewMatrix(p);
@@ -775,12 +743,10 @@ void Player::setFromBitStream(RakNet::BitStream& bs)
 	// the message id is already ignored
 	bs.Read(m_id);
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
+	bs.Read(m_camera->m_pitch);
+	bs.Read(m_camera->m_yaw);
 
-	int pitch = 0;
-	int yaw = 0;
 
-	bs.Read(pitch);
-	bs.Read(yaw);
 	/*
 	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
 	{
@@ -803,6 +769,14 @@ void Player::setFromBitStream(RakNet::BitStream& bs)
 vector<Weapon*>Player::getWeapons()
 {
 	return m_weapons;
+}
+
+
+// only used for spawning
+void Player::processInput(Move move)
+{
+	m_camera->processInput(move);
+	m_position = m_camera->getTargetPoint();
 }
 
 

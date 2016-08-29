@@ -61,43 +61,6 @@ GMEnum WorldObject::getGeometryType()
 	return m_geometryType;
 }
 
-/*
-
-void WorldObject::renderSingle(Pipeline& m_pipeline, Renderer* renderer, Model* model)
-{
-    renderSingle(m_pipeline, renderer, RENDER_PASS1, model);
-}
-
-void WorldObject::renderSingle(Pipeline& m_pipeline, Renderer* renderer, int pass, Model* model)
-{
-    renderer->enableShader(pass);
-    m_pipeline.pushMatrix();
-        m_pipeline.translate(m_position);
-        m_pipeline.addMatrix(m_rotation);
-		m_pipeline.scale(m_scale);
-		renderer->setUniLocs(m_pipeline, pass);
-        model->render();
-    m_pipeline.popMatrix();
-    renderer->disableShader(pass);
-}
-
-void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer, Model* model)
-{
-    renderGroup(m_pipeline, renderer, RENDER_PASS1, model);
-}
-
-void WorldObject::renderGroup(Pipeline& m_pipeline, Renderer* renderer, int pass, Model* model)
-{
-    m_pipeline.pushMatrix();
-        m_pipeline.translate(m_position);
-        m_pipeline.addMatrix(m_rotation);
-		m_pipeline.scale(m_scale);
-		renderer->setUniLocs(m_pipeline);
-        model->render();
-    m_pipeline.popMatrix();
-}
-
-*/
 
 void WorldObject::renderStaticWireFrameGroup(Pipeline& p, Renderer* r)
 {
@@ -212,31 +175,3 @@ void WorldObject::addParentNode(KDTreeNode* node)
 	}
 }
 
-/*
-void WorldObject::removeSelfFromNodes()
-{
-	for (int i = 0; i < m_parentNodes.size(); i++)
-	{
-		KDTreeNode* kNode = m_parentNodes[i];
-		(kNode->m_objects2).erase(m_instanceId);
-	}
-}
-*/
-
-/*
-CubeWireFrameModel WorldObject::createWireFrameModel()
-{
-	
-	m_maxX = m_model->m_maxX * m_scale.x + m_position.x;
-	m_minX = m_model->m_minX * m_scale.x + m_position.x;
-
-	m_maxY = m_model->m_maxY * m_scale.y + m_position.y;
-	m_minY = m_model->m_minY * m_scale.y + m_position.y;
-	
-	m_maxZ = m_model->m_maxZ * m_scale.z + m_position.z;
-	m_minZ = m_model->m_minZ * m_scale.z + m_position.z;
-	
-	CubeWireFrameModel model(m_maxX, m_minX, m_maxY, m_minY, m_maxZ, m_minZ);
-	return model;
-}
-*/

@@ -396,11 +396,6 @@ class FaceOff
 		void render();
 
 
-
-		void playerInputQueueToBitStream(RakNet::BitStream& bs);
-		void moveToBitStream(Move move, RakNet::BitStream& bs);
-
-
 		void renderGUI();
 
 		void startCB();

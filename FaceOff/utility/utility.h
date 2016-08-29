@@ -233,29 +233,76 @@ struct Input
 		jump = false;
 		weaponFired = false;
 	}
+
+	void print()
+	{
+		if (left)
+			cout << "left: true" << endl;
+		else
+			cout << "left: false" << endl;
+
+		if (right)
+			cout << "right: true" << endl;
+		else
+			cout << "right: false" << endl;
+
+		if (forward)
+			cout << "forward: true" << endl;
+		else
+			cout << "forward: false" << endl;
+
+		if (back)
+			cout << "back: true" << endl;
+		else
+			cout << "back: false" << endl;
+
+		if (jump)
+			cout << "jump: true" << endl;
+		else
+			cout << "jump: false" << endl;
+
+		if (weaponFired)
+			cout << "weaponFired: true" << endl;
+		else
+			cout << "weaponFired: false" << endl;
+	}
 };
 
 struct State
 {
+	float pitch;
+	float yaw;
+
 	glm::vec3 position;
 	glm::vec3 velocity;
 
 	void toBitStream(RakNet::BitStream& bs)
 	{
+		bs.Write(pitch);
+		bs.Write(yaw);
 		bs.WriteVector(position.x, position.y, position.z);
 		bs.WriteVector(velocity.x, velocity.y, velocity.z);
 	}
 
 	void setFromBitStream(RakNet::BitStream& bs)
 	{
+		bs.Read(pitch);
+		bs.Read(yaw);
 		bs.ReadVector(position.x, position.y, position.z);
 		bs.ReadVector(velocity.x, velocity.y, velocity.z);
 	}
 
 	void reset()
 	{
+		pitch = 0.0;
+		yaw = 0.0;
 		position = glm::vec3(0.0, 0.0, 0.0);
 		velocity = glm::vec3(0.0, 0.0, 0.0);
+	}
+
+	void print()
+	{
+		cout << "State position: " << position.x << " " << position.y << " " << position.z << ", velocity: " << velocity.x << " " << velocity.y << " " << velocity.z << endl;
 	}
 };
 
@@ -298,6 +345,13 @@ struct Move
 		input.reset();
 		state.reset();
 	}
+
+	void print()
+	{
+		cout << "playerId" << endl;
+		input.print();
+		state.print();
+	}
 };
 
 struct MoveQueue
@@ -313,17 +367,21 @@ struct MoveQueue
 	{
 		int size = buffer.size();
 
-		bs.Reset();
-		bs.Write((RakNet::MessageID)CLIENT_INPUT);
-
-		bs.Write(size);
-
-		for (int i = 0; i < size; i++)
+		if (size > 0)
 		{
-			Move move = buffer.front();
-			buffer.pop();
+			bs.Reset();
+			bs.Write((RakNet::MessageID)CLIENT_INPUT);
 
-			move.toBitStream(bs);
+			bs.Write(size);
+			cout << "client has " << size << " size " << endl;
+
+			for (int i = 0; i < size; i++)
+			{
+				Move move = buffer.front();
+				buffer.pop();
+
+				move.toBitStream(bs);
+			}
 		}
 	}
 
@@ -331,9 +389,10 @@ struct MoveQueue
 	{
 		int size = 0;
 
-		RakNet::MessageID msgId;
+	// no need for message id
+	//	RakNet::MessageID msgId;
+	//	bs.Read(msgId);
 
-		bs.Read(msgId);
 		bs.Read(size);
 
 		for (int i = 0; i < size; i++)
@@ -363,6 +422,10 @@ struct MoveQueue
 		return buffer.size();
 	}
 
+	bool empty()
+	{
+		return buffer.size() == 0;
+	}
 };
 
 

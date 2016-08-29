@@ -132,6 +132,8 @@ class Player : public WorldObject
 		void toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs);
 		void setFromBitStream(RakNet::BitStream& bs);
 
+		void processInput(Move move);
+
 		bool hasMoved();
 		Move getMoveState();
 

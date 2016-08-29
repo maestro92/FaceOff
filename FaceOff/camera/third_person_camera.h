@@ -35,6 +35,7 @@ class ThirdPersonCamera : public Camera
 		void updateEyePos();
 		void updateViewMatrix(Pipeline& p);
 
+		void processInput(Input input);
 
         void increaseOffsetDistance();
         void decreaseOffsetDistance();

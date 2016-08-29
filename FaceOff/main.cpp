@@ -1021,9 +1021,6 @@ void FaceOff::serverNetworkThread()
 			// we ignore the first part of each message (due to RakNet convention)
 			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
-			cout << endl << "New Packet from:" << packet->guid.g << endl;
-
-
 			// Handle message here 
 			switch (packet->data[0])
 			{
@@ -1048,8 +1045,26 @@ void FaceOff::serverNetworkThread()
 
 				case CLIENT_INPUT:
 				{
-					utl::debug("incoming client input");
-			//		m_inputQueue.setFromBitStream(bsIn);
+//					utl::debug(">>>>>> incoming client input");
+					m_inputQueue.setFromBitStream(bsIn);
+
+					/*
+					utl::debug("m_inputQueue size ", m_inputQueue.size());
+					
+					if (!m_inputQueue.empty())
+					{
+						int size = m_inputQueue.buffer.size();
+						for (int i = 0; i < size; i++)
+						{
+							Move move = m_inputQueue.front();
+							m_inputQueue.pop();
+							move.print();
+						}
+
+						cout << endl << endl;
+					}
+					*/
+
 					break;
 				}
 
@@ -1107,6 +1122,8 @@ void FaceOff::serverNetworkThread()
 	}
 }
 
+
+
 /*
 The client creates user commands from sampling input devices with the same tick rate that the server is running 
 with. 
@@ -1153,10 +1170,6 @@ void FaceOff::clientNetworkThread()
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
 			}
-
-
-
-
 		}
 
 		// sending server my inputs
@@ -1164,69 +1177,18 @@ void FaceOff::clientNetworkThread()
 
 		if (curTime - lastSnapShotSendTime > CLIENT_INPUT_SENT_TIME_STEP)
 		{
-			cout << "sending server my inputs" << endl;
-			m_inputQueue.toBitStream(bsOut);
-			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
-
+			if (!m_inputQueue.empty())
+			{
+				cout << "sending server my inputs" << endl;
+				m_inputQueue.toBitStream(bsOut);
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
+			}
+		
 			lastSnapShotSendTime = curTime;
 		}
 	}
 #endif
 }
-
-
-/*
-void FaceOff::playerInputQueueToBitStream(RakNet::BitStream& bs)
-{
-	int size = m_playerInputQueue.size();
-
-	bsOut.Reset();
-	bsOut.Write((RakNet::MessageID)CLIENT_INPUT);
-	bsOut.Write(m_defaultPlayerID);
-
-	// number of moves
-	bsOut.Write(size);
-
-	for (int i = 0; i < size; i++)
-	{
-		Move move = m_playerInputQueue.front();
-		m_playerInputQueue.pop();
-
-		move.toBitStream(bsOut);
-	}
-}
-
-
-void FaceOff::playerInputQueueSetFromBitStream(RakNet::BitStream& bs)
-{
-	bsOut.Reset();
-	bsOut.Write((RakNet::MessageID)CLIENT_INPUT);
-	bsOut.Write(m_defaultPlayerID);
-
-	// number of moves
-	bsOut.Write(size);
-
-	for (int i = 0; i < size; i++)
-	{
-		m_playerInputMutex.lock();
-		Move move = m_playerInputQueue.front();
-		m_playerInputQueue.pop();
-		m_playerInputMutex.unlock();
-
-		move.toBitStream(bsOut);
-	}
-
-	bs.Read(m_id);
-	bs.ReadVector(m_position.x, m_position.y, m_position.z);
-
-	int pitch = 0;
-	int yaw = 0;
-
-	bs.Read(pitch);
-	bs.Read(yaw);
-
-}
-*/
 
 
 
@@ -1288,7 +1250,6 @@ void FaceOff::serverHandleDeviceEvents()
 					int tmpx, tmpy;
 					case SDL_BUTTON_LEFT:
 					{
-						cout << "clicking left" << endl;
 						SDL_GetMouseState(&tmpx, &tmpy);
 						m_mouseState.m_leftButtonDown = true;
 						m_serverCamera.setMouseIn(true);
@@ -1338,7 +1299,6 @@ void FaceOff::clientHandleDeviceEvents()
 			switch (event.button.button)
 			{
 			case SDL_BUTTON_LEFT:
-				cout << "clicking Up left" << endl;
 				m_mouseState.m_leftButtonDown = false;
 				SDL_GetMouseState(&tmpx, &tmpy);
 
@@ -1353,7 +1313,6 @@ void FaceOff::clientHandleDeviceEvents()
 				break;
 
 			case SDL_BUTTON_RIGHT:
-				cout << "clicking Up right" << endl;
 				m_mouseState.m_rightButtonDown = false;
 				SDL_GetMouseState(&tmpx, &tmpy);
 				break;
@@ -1366,7 +1325,6 @@ void FaceOff::clientHandleDeviceEvents()
 			{
 				int tmpx, tmpy;
 			case SDL_BUTTON_LEFT:
-				cout << "clicking left" << endl;
 				SDL_GetMouseState(&tmpx, &tmpy);
 				m_mouseState.m_leftButtonDown = true;
 
@@ -1743,7 +1701,7 @@ void FaceOff::update()
 				break;
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				break;
+				break
 			}
 		}
 
@@ -1758,12 +1716,25 @@ void FaceOff::update()
 void FaceOff::serverUpdate()
 {
 	// process client inputs
+	
+	if (m_inputQueue.size() > 0)
+	{
+		utl::debug("inputQueue size is", m_inputQueue.size());
+	}
+
+	
 	for (int i = 0; i < m_inputQueue.size(); i++)
 	{
-		Move temp = m_inputQueue.front();
+		Move move = m_inputQueue.front();
 		m_inputQueue.pop();
-	}
+		move.print();
+
+		int playerId = move.playerId;
+		
+		m_players[playerId]->processInput(move);
+	}	
 }
+
 
 
 void FaceOff::clientUpdate()
@@ -1958,13 +1929,8 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 			{
 				utl::debug("Exploding");
 
-				ParticleEffect* effect = wObject->explode();
-
-
-
-
+				ParticleEffect* effect = wObject->explode(); 
 				m_smokeEffects.push_back((SmokeEffect*)effect);
-
 
 				delete wObject;
 				wObject = NULL;
@@ -2341,26 +2307,6 @@ utl::debugLn("	player velocity is", m_players[m_defaultPlayerID]->m_velocity);
 	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 
 	{
-		
-		/*
-		if (m_isServer)
-		{
-			for (int i = 0; i < m_players.size(); i++)
-			{
-				if (i != m_defaultPlayerID && m_players[i] != NULL)
-				{
-					cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
-					//				m_players[i]->render(m_pipeline);
-				}
-			}
-		}
-		else
-		{
-			m_players[m_defaultPlayerID]->renderGroup(m_pipeline, p_renderer);
-		}
-		*/
-
-
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* object = m_objects[i];

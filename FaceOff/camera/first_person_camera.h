@@ -15,6 +15,7 @@ class FirstPersonCamera : public Camera
 		void setFreeMode(bool b);
 		void updateViewMatrix(Pipeline& p);
 
+		void processInput(Move move);
 private:
 
         int m_screenMidX;

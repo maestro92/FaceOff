@@ -28,10 +28,15 @@ class Camera
 
 		virtual void updateViewMatrix(Pipeline& p) = 0;
 
+		virtual void processInput(Move move) = 0;
+
 		void setMouseIn(bool b);
 		bool getMouseIn();
 
 		void setEyePoint(glm::vec3 eye);
+
+		void setPitch(float pitch);
+		void setYaw(float yaw);
 
 		// First POV:	both direction will be the same
 		// Third POV:	TargetDirection: aim direction of the player
@@ -45,6 +50,7 @@ class Camera
 
 		bool hasMoved();
 		Move getMoveState();
+		
 
 
 		virtual CameraType getCameraType() = 0;
@@ -113,6 +119,15 @@ inline bool Camera::getMouseIn()
 }
 
 
+inline void Camera::setPitch(float pitch)
+{
+	m_pitch = pitch;
+}
+
+inline void Camera::setYaw(float yaw)
+{
+	m_yaw = yaw;
+}
 
 
 #endif

@@ -133,6 +133,11 @@ void ThirdPersonCamera::control()
 }
 
 
+void ThirdPersonCamera::processInput(Input input)
+{
+
+}
+
 void ThirdPersonCamera::updateTarget()
 {
 	m_targetXAxis = m_xAxis;
