@@ -393,6 +393,15 @@ class FaceOff
 
 		void serverUpdate();
 		void clientUpdate();
+
+		void serverSimulation();
+		void clientSimulation();
+
+		void updateObjectPhysics(WorldObject* object);
+
+		bool testCollisionDetection(WorldObject* a, WorldObject* b, ContactData& contactData);
+		bool testCollisionDetectionPlayerVersion(WorldObject* a, WorldObject* b, ContactData& contactData);
+
 		void render();
 
 

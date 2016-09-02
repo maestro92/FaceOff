@@ -1,7 +1,5 @@
 #include "world_object.h"
 
-Model* WorldObject::DEFAULT_MODEL;
-
 WorldObject::WorldObject()
 {
 	m_instanceId = utl::createUniqueObjectID();
@@ -14,15 +12,16 @@ WorldObject::WorldObject()
 	m_mass = 1.0;
 	m_invMass = 1.0 / m_mass;
 	
-	m_model = DEFAULT_MODEL;
+	m_model = NULL;
+
+	m_geometryType = CD_NONE;
+	m_aabb = NULL;
+	m_sphere = NULL;
+
 	isTested = isCollided = isHit = alreadyFireTested = false;
 	isHitCounter = 0;
 
 	m_dynamicType = STATIC;
-	m_geometryType = GM_AABB;
-
-
-
 }
 
 
@@ -55,12 +54,29 @@ DynamicType WorldObject::getDynamicType()
 	return m_dynamicType;
 }
 
-
-GMEnum WorldObject::getGeometryType()
+void WorldObject::setCollisionDetectionGeometry(CDEnum type)
 {
-	return m_geometryType;
-}
+	if (m_model == NULL)
+	{
+		utl::debug("Error setCollisionDetectionGemoetry has no Model");
+		while (1)
+		{}
+	}
 
+	m_geometryType = type;
+
+	if (type == CD_AABB)
+	{
+		m_aabb = new AABB();
+	}
+
+	else if (type == CD_SPHERE)
+	{
+		m_sphere = new Sphere();
+	}
+
+	updateCollisionDetectionGeometry();
+}
 
 void WorldObject::renderStaticWireFrameGroup(Pipeline& p, Renderer* r)
 {
@@ -80,63 +96,6 @@ void WorldObject::renderWireFrameGroup(Pipeline& p, Renderer* r)
 		r->setUniLocs(p);
 		m_wireFrameModel->render();
 	p.popMatrix();
-}
-
-
-void WorldObject::updateAABB()
-{
-
-	/*
-	The following Two are equivalent
-	glm::mat4 M = m_rotation * glm::scale(m_scale);
-	M = glm::transpose(M);
-	*/
-	glm::mat4 M = glm::scale(m_scale) * m_rotation;
-
-
-	for (int i = 0; i < 3; i++)
-	{
-//		m_minP[i] = m_maxP[i] = m_position[i];
-
-		m_aabb.min[i] = m_aabb.max[i] = m_position[i];
-
-		for (int j = 0; j < 3; j++)
-		{
-			float e = M[i][j] * m_model->m_aabb.min[j];
-			float f = M[i][j] * m_model->m_aabb.max[j];
-
-
-			if (e < f)
-			{
-				//m_minP[i] += e;
-				//m_maxP[i] += f;
-				m_aabb.min[i] += e;
-				m_aabb.max[i] += f;
-			}
-			else
-			{
-				m_aabb.min[i] += f;
-				m_aabb.max[i] += e;
-				//m_minP[i] += f;
-				//m_maxP[i] += e;
-			}
-		}
-	}
-
-}
-
-
-void WorldObject::setAABBByPosition(float x, float y, float z)
-{
-	setPosition(x, y, z);
-	updateAABB();
-}
-
-
-void WorldObject::setAABBByPosition(glm::vec3 pos)
-{
-	setPosition(pos);
-	updateAABB();
 }
 
 
@@ -175,3 +134,113 @@ void WorldObject::addParentNode(KDTreeNode* node)
 	}
 }
 
+void WorldObject::updateCollisionDetectionGeometry()
+{
+	if (m_geometryType == CD_AABB)
+	{
+		// The following Two are equivalent
+		// glm::mat4 M = m_rotation * glm::scale(m_scale);
+		// M = glm::transpose(M);
+
+		glm::mat4 M = glm::scale(m_scale) * m_rotation;
+
+		for (int i = 0; i < 3; i++)
+		{
+			m_aabb->min[i] = m_aabb->max[i] = m_position[i];
+
+			for (int j = 0; j < 3; j++)
+			{
+				float e = M[i][j] * m_model->m_aabb.min[j];
+				float f = M[i][j] * m_model->m_aabb.max[j];
+
+				if (e < f)
+				{
+					m_aabb->min[i] += e;
+					m_aabb->max[i] += f;
+				}
+				else
+				{
+					m_aabb->min[i] += f;
+					m_aabb->max[i] += e;
+				}
+			}
+		}
+	}
+	else if (m_geometryType == CD_SPHERE)
+	{
+		m_sphere->center = m_position;
+		m_sphere->radius = m_scale.x;
+	}
+}
+
+/*
+void WorldObject::updateAABB()
+{
+	
+	// The following Two are equivalent
+	// glm::mat4 M = m_rotation * glm::scale(m_scale);
+	// M = glm::transpose(M);
+	
+	glm::mat4 M = glm::scale(m_scale) * m_rotation;
+
+	for (int i = 0; i < 3; i++)
+	{
+		m_aabb.min[i] = m_aabb.max[i] = m_position[i];
+
+		for (int j = 0; j < 3; j++)
+		{
+			float e = M[i][j] * m_model->m_aabb.min[j];
+			float f = M[i][j] * m_model->m_aabb.max[j];
+
+
+			if (e < f)
+			{
+				m_aabb.min[i] += e;
+				m_aabb.max[i] += f;
+			}
+			else
+			{
+				m_aabb.min[i] += f;
+				m_aabb.max[i] += e;
+			}
+		}
+	}
+}
+*/
+
+
+/*
+void WorldObject::setAABBByPosition(float x, float y, float z)
+{
+	setPosition(x, y, z);
+	updateAABB();
+}
+
+
+void WorldObject::setAABBByPosition(glm::vec3 pos)
+{
+	setPosition(pos);
+	updateAABB();
+}
+*/
+
+/*
+void WorldObject::updateCollisionDetectionGeometryByPosition(float x, float y, float z)
+{
+	setPosition(x, y, z);
+	if (m_geometry != NULL)
+	{
+		m_geometry->setPosition(x, y, z);
+	}
+}
+
+
+void WorldObject::updateCollisionDetectionGeometryByPosition(glm::vec3 pos)
+{
+	setPosition(pos);
+	if (m_geometry != NULL)
+	{
+		m_geometry->setPosition(pos);
+	}
+}
+*/

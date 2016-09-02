@@ -31,7 +31,7 @@ bool ImportedModel::load(string filename)
 		m_aabb.min = glm::vec3(INT_MAX);
 		m_aabb.max = glm::vec3(INT_MIN);
 
-		cout << "Loading " << filename << endl;
+	//	cout << "Loading " << filename << endl;
 		ret = initFromAiScene(scene, filename);
 	}
 	else
@@ -55,7 +55,7 @@ bool ImportedModel::load(string filename, vector<string> textureFiles)
 		m_aabb.min = glm::vec3(INT_MAX);
 		m_aabb.max = glm::vec3(INT_MIN);
 
-		cout << "Loading " << filename << endl;
+//		cout << "Loading " << filename << endl;
 		ret = initFromAiScene(scene, filename);
 
 	}
@@ -85,8 +85,9 @@ bool ImportedModel::initFromAiScene(const aiScene* scene, const string& filename
         initMesh(i, mesh, scene);
     }
 
-    utl::debug("m_meshes size", m_meshes.size());
-    utl::debug("m_textures size", m_textures.size());
+  //  utl::debug("m_meshes size", m_meshes.size());
+   // utl::debug("m_textures size", m_textures.size());
+
 	/*
 	for(int i=0; i<m_meshes.size(); i++)
     {

@@ -21,6 +21,7 @@ Player::Player(int id)
 	setId(id);
 //
 	m_camera = new FirstPersonCamera();
+//	((FirstPersonCamera*)m_camera)->setFreeMode(true);
 //	m_camera = new ThirdPersonCamera();
 
 
@@ -39,9 +40,6 @@ Player::Player(int id)
 
 	m_camera->m_target = m_position;
 
-	m_boundingSphere.center = m_position;
-	m_boundingSphere.radius = m_scale.x;
-
 	m_maxHP = 100;
 	m_curHP = 100;
 
@@ -57,7 +55,6 @@ Player::Player(int id)
 	m_healthBarGUI = NULL;
 
 	m_dynamicType = DYNAMIC;
-	m_geometryType = GM_SPHERE;
 }
 
 Player::~Player()
@@ -166,13 +163,14 @@ void Player::updateGameStats()
 void Player::updateCamera(Pipeline& p)
 {
 	m_camera->m_target = m_position;
-	m_boundingSphere.center = m_position;
+
 	// ((ThirdPersonCamera*)m_camera)->updateViewMatrix(p);
 	
 	// adjustWeaponAndBulletPosition();
 
 	m_camera->updateViewMatrix(p);
-	updateAABB();
+//	updateAABB();
+	updateCollisionDetectionGeometry();
 	updateWeaponTransform();
 }
 
@@ -325,20 +323,6 @@ void Player::update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis)
 
 
 
-void Player::update(glm::vec3 wPos, float pitch, float yaw)
-{
-	/*
-	m_weapons[m_curWeaponIndex]->setPosition(wPos);
-	m_weapons[m_curWeaponIndex]->setScale(0.01);
-
-	glm::mat4 rot = glm::rotate(m_camera->m_yaw, 0.0f, 1.0f, 0.0f);
-	rot *= glm::rotate(m_camera->m_pitch, 1.0f, 0.0f, 0.0f);
-	rot *= glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
-
-	m_weapons[m_curWeaponIndex]->setRotation(rot);
-*/
-}
-
 
 bool Player::isUsingLongRangedWeapon()
 {
@@ -461,7 +445,10 @@ Weapon* Player::throwGrenade()
 //	utl::debug("fire pos is", this->getFirePosition());
 
 
-	grenade->setAABBByPosition(this->getFirePosition());
+	// grenade->setAABBByPosition(this->getFirePosition());
+	grenade->setPosition(this->getFirePosition());
+	grenade->updateCollisionDetectionGeometry();
+
 
 	glm::vec3 dir = -this->m_camera->m_zAxis;
 	dir = 2.0f * dir;
@@ -504,7 +491,8 @@ Weapon* Player::dropWeapon()
 
 //	drop->setPosition(pos);
 //	drop->updateAABB();
-	drop->setAABBByPosition(pos);
+	drop->setPosition(pos);
+	drop->updateCollisionDetectionGeometry();
 
 	int slot = m_curWeapon->getWeaponSlot();
 	m_weapons[slot] = NULL;

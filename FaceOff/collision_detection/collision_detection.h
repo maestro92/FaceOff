@@ -28,17 +28,25 @@ namespace CollisionDetection
 	// collision detection
 	void closestPtPointAABB(glm::vec3 p, AABB b, glm::vec3& q);
 	float sqDistPointAABB(glm::vec3 p, AABB b);
-	bool testSphereAABB(Sphere& s, AABB& b, glm::vec3& q);
-	bool testSphereAABB(Sphere& s, AABB& b, ContactData& contact);
-	bool testSphereAABBHackVersion(Sphere& s, AABB& b, ContactData& contact);
 
-	bool testAABBAABB(AABB& a, AABB& b, ContactData& contact);
-	bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
+	bool testSphereSphere(Sphere s, Sphere b);
+	bool testSphereSphere(Sphere s, Sphere b, ContactData& contact);
+
+	bool testSphereAABB(Sphere s, AABB b);
+	bool testSphereAABB(Sphere s, AABB b, ContactData& contact);
+	bool testSphereAABBPlayerVersion(Sphere s, AABB b, ContactData& contact);
+
 	bool testAABBAABB(AABB a, AABB b);
-	bool textAABBAABBAxis(AABB& a, AABB& b, ContactData& contact, glm::vec3 axis, int direction, glm::vec3 & mtvAxis, float & mtvDistance);
+	bool testAABBAABB(AABB a, AABB b, ContactData& contact);
+	bool textAABBAABBAxis(AABB a, AABB b, ContactData& contact, glm::vec3 axis, int direction, glm::vec3 & mtvAxis, float & mtvDistance);
 
 	bool testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb);
 	bool testRayAABB(glm::vec3 p, glm::vec3 d, AABB aabb, glm::vec3& q);
+	bool testRaySphere(glm::vec3 p, glm::vec3 d, Sphere s);
+	bool testRaySphere(glm::vec3 p, glm::vec3 d, Sphere s, glm::vec3& q);
+
+	// bool testSphereAABB(Sphere s, AABB b, glm::vec3& q);
+	// bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
 };
 
 

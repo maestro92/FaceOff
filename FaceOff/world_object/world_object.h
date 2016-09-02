@@ -57,33 +57,32 @@ class WorldObject
 
 		int isHitCounter;
 
-		DynamicType m_dynamicType;
-
-		virtual WorldObjectType getObjectType();
-		DynamicType getDynamicType();
-		GMEnum getGeometryType();
-
-
-
-		AABB m_aabb;
-		
-
-		CDGeometry* m_geometry;
-
 
 		glm::vec3 m_position;
-        glm::vec3 m_velocity;
-        glm::vec3 m_scale;
-        glm::mat4 m_rotation;
-		glm::mat4 m_modelRotation;
+		glm::vec3 m_velocity;
+		glm::vec3 m_scale;
+		glm::mat4 m_rotation;
 		glm::mat4 m_modelMatrix;
-
-		float m_longestExtentFromCenter;
 
 		float m_mass;
 		float m_invMass;
 
+		// CollisionDetectionGeometry* m_geometry;
+		
+		// collision geometry, we use component based
+		CDEnum m_geometryType;
+		AABB* m_aabb;
+		Sphere* m_sphere;
+		
 		Model* m_model;
+
+		DynamicType m_dynamicType;
+
+		virtual WorldObjectType getObjectType();
+		DynamicType getDynamicType();
+		CDEnum getGeometryType();
+
+		
 
         inline void setScale(float s);
         inline void setScale(glm::vec3 scale);
@@ -112,21 +111,35 @@ class WorldObject
 		virtual void renderSingle(Pipeline& p, Renderer* r);
 		virtual void renderGroup(Pipeline& p, Renderer* r);
 
-
-		static Model* DEFAULT_MODEL;
-
 		CubeWireFrameModel* m_wireFrameModel;
 		CubeWireFrameModel* m_staticWireFrameModel;
 
 		void renderStaticWireFrameGroup(Pipeline& p, Renderer* r);
 		void renderWireFrameGroup(Pipeline& p, Renderer* r);
 
+		void setCollisionDetectionGeometry(CDEnum type);
+		void updateCollisionDetectionGeometry();
 
+		/*
+		// AABB or Sphere or others
+		void updateCollisionDetectionGeometry();
+		void updateCollisionDetectionGeometryByPosition(float x, float y, float z);
+		void updateCollisionDetectionGeometryByPosition(glm::vec3 pos);
+		*/
 
+		/*
 		void updateAABB();
 		void setAABBByPosition(float x, float y, float z);
 		void setAABBByPosition(glm::vec3 pos);
 
+		void updateSphere();
+		void setSphereByPosition(float x, float y, float z);
+		void setSphereyPosition(glm::vec3 pos);
+		
+		void updateAABB();
+		void setAABBByPosition(float x, float y, float z);
+		void setAABBByPosition(glm::vec3 pos);
+		*/
 
 		virtual void updateGameInfo();
 
@@ -146,24 +159,9 @@ class WorldObject
 		vector<KDTreeNode*> m_parentNodes;
 		queue<int> m_emptyIndexPool;
 
-	protected:
-		GMEnum m_geometryType;
 };
 
-inline void WorldObject::setScale(float s)
-{
-    m_scale = glm::vec3(s, s, s);
-}
 
-inline void WorldObject::setScale(glm::vec3 scale)
-{
-    m_scale = scale;
-}
-
-inline void WorldObject::setScale(float x, float y, float z)
-{
-    m_scale = glm::vec3(x, y, z);
-}
 
 inline void WorldObject::setPosition(glm::vec3 pos)
 {
@@ -175,14 +173,19 @@ inline void WorldObject::setPosition(float x, float y, float z)
     m_position = glm::vec3(x, y, z);
 }
 
-inline void WorldObject::setVelocity(glm::vec3 vel)
+inline void WorldObject::setScale(float s)
 {
-    m_velocity = vel;
+	m_scale = glm::vec3(s, s, s);
 }
 
-inline void WorldObject::setVelocity(float x, float y, float z)
+inline void WorldObject::setScale(glm::vec3 scale)
 {
-    m_velocity = glm::vec3(x, y, z);
+	m_scale = scale;
+}
+
+inline void WorldObject::setScale(float x, float y, float z)
+{
+	m_scale = glm::vec3(x, y, z);
 }
 
 inline void WorldObject::setRotation(glm::mat4 rot)
@@ -192,6 +195,16 @@ inline void WorldObject::setRotation(glm::mat4 rot)
                       rot[2][0], rot[2][1], rot[2][2], 0.0,
                       0.0,       0.0,       0.0,       1.0};
     m_rotation = glm::make_mat4(temp);
+}
+
+inline void WorldObject::setVelocity(glm::vec3 vel)
+{
+	m_velocity = vel;
+}
+
+inline void WorldObject::setVelocity(float x, float y, float z)
+{
+	m_velocity = glm::vec3(x, y, z);
 }
 
 
@@ -242,5 +255,9 @@ inline float WorldObject::getInvMass()
 	return m_invMass;
 }
 
+inline CDEnum WorldObject::getGeometryType()
+{
+	return m_geometryType;
+}
 
 #endif

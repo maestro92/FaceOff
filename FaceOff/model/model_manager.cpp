@@ -18,6 +18,11 @@ void ModelManager::init()
 	m_player = new ImportedModel("./Assets/models/sphere/sphere.obj", textures);
 	m_player->setMeshRandTextureIdx();
 
+	/*
+	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
+	m_model = new ImportedModel("./Assets/models/sphere/sphere.obj", textures);
+	m_model->setMeshRandTextureIdx();
+	*/
 
 	textures.clear();  textures.push_back("Assets/tree.png");
 	m_tree = new ImportedModel("Assets/tree.obj", textures);

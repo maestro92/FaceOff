@@ -4,19 +4,16 @@
 #include "utility/utility.h"
 
 
-enum GMEnum
-{
-	GM_AABB = 0,
-	GM_SPHERE
-};
 
 // Collision Detection Geometry
-struct CDGeometry
+enum CDEnum
 {
-	virtual GMEnum getType() = 0;
+	CD_NONE = 0,
+	CD_AABB,
+	CD_SPHERE
 };
 
-struct AABB : public CDGeometry
+struct AABB
 {
 	glm::vec3 max;
 	glm::vec3 min;
@@ -32,22 +29,12 @@ struct AABB : public CDGeometry
 		max = a;
 		min = b;
 	}
-
-	GMEnum getType()
-	{
-		return GM_AABB;
-	}
 };
 
-struct Sphere : public CDGeometry
+struct Sphere
 {
 	glm::vec3 center;
 	float radius;
-
-	GMEnum getType()
-	{
-		return GM_SPHERE;
-	}
 };
 
 #endif

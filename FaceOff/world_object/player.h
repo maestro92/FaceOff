@@ -49,7 +49,6 @@ class Player : public WorldObject
 		RakNet::RakNetGUID m_guid;
 
         Camera* m_camera;
-		Model* m_model;
 
 		static glm::vec3 firstPOVWeaponOffset;
 		static glm::vec3 thirdPOVWeaponOffset;
@@ -58,8 +57,6 @@ class Player : public WorldObject
 
 		Renderer* r_gun;
 		
-		Sphere m_boundingSphere;
-
 		void setId(int id);
 
 		void setPosition(glm::vec3 position);

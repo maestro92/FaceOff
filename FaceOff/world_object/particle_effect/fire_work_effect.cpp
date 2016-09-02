@@ -15,7 +15,7 @@ FireWorkEffect::FireWorkEffect()
 	m_textureId = NULL;
 	m_time = 0;
 
-	m_geometry = new Sphere();
+//	m_geometry = new Sphere();
 }
 
 FireWorkEffect::~FireWorkEffect()

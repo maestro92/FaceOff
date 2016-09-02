@@ -9,7 +9,9 @@
 #include "collision_detection.h"
 // #include "player.h"
 using namespace std;
+#include <unordered_set>
 #include "collision_detection_geometry.h"
+
 
 /*
 enum NODE_OBJ_RELATION
@@ -55,7 +57,8 @@ class KDTree
 		// void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object);
 		// void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, int depth, KDTreeNode*& hitNode);
 		void visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint);
-
+		void visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, 
+						WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, unordered_set<int>& objectsAlreadyTested);
 
 		// void visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt);
 		// void visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);

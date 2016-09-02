@@ -25,8 +25,6 @@ enum SPLIT_DIRECTION
 
 struct KDTreeNode
 {
-	// KDTreeNode* m_left, *m_right;
-
 	// 0 = left,	1 = right
 	KDTreeNode* m_child[2];
 	int m_splitDirection;
@@ -34,7 +32,7 @@ struct KDTreeNode
 
 	vector<WorldObject*> m_objects;
 	queue<int> m_emptyIndexPool;
-	// unordered_map<int, WorldObject*> m_objects2;
+
 	AABB m_aabb;
 
 	CubeWireFrameModel* m_wireFrameModel;
@@ -82,8 +80,6 @@ struct KDTreeNode
 
 	void addObject(WorldObject* object)
 	{
-//		m_objects2[object->m_instanceId] = object;
-
 		if (!m_emptyIndexPool.empty())
 		{
 			int index = m_emptyIndexPool.front();
@@ -96,7 +92,6 @@ struct KDTreeNode
 		}
 
 		object->addParentNode(this);
-//		object->m_parentNodes.push_back(this);
 	}
 
 	void setObjects(vector<WorldObject*> & objects)
@@ -110,8 +105,6 @@ struct KDTreeNode
 		for (int i = 0; i < objects.size(); i++)
 		{
 			int id = objects[i]->m_instanceId;
-//			m_objects2[id] = objects[i];
-//			objects[i]->m_parentNodes.push_back(this);
 
 			m_objects.push_back(objects[i]);
 			objects[i]->addParentNode(this);
@@ -119,11 +112,12 @@ struct KDTreeNode
 	}
 		
 
-
+	// first remove object from m_objects by setting it to null
+	// then push that index to the m_emptyIndexPool
+	// so next time when we insert something, we'll insert it at that index
 	void removeObject(WorldObject* object)
 	{
 		int index = 0;
-	//	utl::debug("m_objects size is", m_objects.size());
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* obj = m_objects[i];
@@ -142,7 +136,6 @@ struct KDTreeNode
 		m_emptyIndexPool.push(index);
 	}
 
-
 	void setChildrenToNULL()
 	{
 		m_child[0] = NULL;
@@ -153,9 +146,6 @@ struct KDTreeNode
 	{
 		return m_child[0] == NULL && m_child[1] == NULL;
 	}
-
-
-
 };
 
 

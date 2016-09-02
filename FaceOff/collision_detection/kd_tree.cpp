@@ -63,8 +63,17 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	}
 	*/
 
+	/*
+	utl::debug("depth", depth);
+	for (int i = 0; i < objects.size(); i++)
+	{
+		utl::debug("obj name", objects[i]->m_name);
+	}
+	*/
+	
+
 //	if (objects.size() < 3 || depth == 6)
-	if (objects.size() < 5)
+	if (objects.size() < 3)
 	{
 		vector <glm::vec3> colors = { RED, GREEN, BLUE };
 
@@ -83,7 +92,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		root->id = count;
 		count++;
 		
-
+		utl::debug("depth", depth);
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
 			utl::debug("obj name", root->m_objects[i]->m_name);
@@ -142,14 +151,38 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 
 	vector<WorldObject*> leftObjects, rightObjects;
 
+	AABB leftAABB(lx, ln);
+	AABB rightAABB(rx, rn);
+
 	for (int i = 0; i < objects.size(); i++)
 	{
 		WorldObject* obj = objects[i];
-		if (CollisionDetection::testAABBAABB(lx, ln, obj->m_aabb.max, obj->m_aabb.min))
+
+		if (obj->getGeometryType() == CD_AABB)
+		{
+			if (CollisionDetection::testAABBAABB(*(obj->m_aabb), leftAABB))
+				leftObjects.push_back(obj);
+
+			if (CollisionDetection::testAABBAABB(*(obj->m_aabb), rightAABB))
+				rightObjects.push_back(obj);
+		}
+
+		else if (obj->getGeometryType() == CD_SPHERE)
+		{
+			if (CollisionDetection::testSphereAABB(*(obj->m_sphere), leftAABB))
+				leftObjects.push_back(obj);
+
+			if (CollisionDetection::testSphereAABB(*(obj->m_sphere), rightAABB))
+				rightObjects.push_back(obj);
+		}
+
+		/*
+		if (CollisionDetection::testAABBAABB(leftAABB, obj->m_aabb->max, obj->m_aabb->min))
 			leftObjects.push_back(obj);
 
-		if (CollisionDetection::testAABBAABB(rx, rn, obj->m_aabb.max, obj->m_aabb.min))
+		if (CollisionDetection::testAABBAABB(rightAABB, obj->m_aabb->max, obj->m_aabb->min))
 			rightObjects.push_back(obj);
+		*/
 	}
 	
 	if (leftObjects.size() == objects.size() ||
@@ -169,6 +202,12 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	//	utl::debug("max", root->m_aabb.max);
 	//	utl::debug("min", root->m_aabb.min);
 		
+		utl::debug("depth", depth);
+		for (int i = 0; i < root->m_objects.size(); i++)
+		{
+			utl::debug("obj name", root->m_objects[i]->m_name);
+		}
+
 		
 		root->id = count;
 
@@ -237,18 +276,31 @@ void KDTree::insert(KDTreeNode* node, WorldObject* object)
 		return;
 	}
 
-
+	/*
 	if (CollisionDetection::testAABBAABB(node->m_child[0]->m_aabb, object->m_aabb))
 		insert(node->m_child[0], object);
 
 	if (CollisionDetection::testAABBAABB(node->m_child[1]->m_aabb, object->m_aabb))
 		insert(node->m_child[1], object);
+	*/
 
-//	if (testAABBAABB(node->m_left->m_aabb, object->m_aabb))
-//		insert(node->m_left, object);
-	
-//	if (testAABBAABB(node->m_right->m_aabb, object->m_aabb))
-//		insert(node->m_right, object);
+	if (object->getGeometryType() == CD_AABB)
+	{
+		if (CollisionDetection::testAABBAABB(*(object->m_aabb), node->m_child[0]->m_aabb))
+			insert(node->m_child[0], object);
+
+		if (CollisionDetection::testAABBAABB(*(object->m_aabb), node->m_child[1]->m_aabb))
+			insert(node->m_child[1], object);
+	}
+
+	else if (object->getGeometryType() == CD_SPHERE)
+	{
+		if (CollisionDetection::testSphereAABB(*(object->m_sphere), node->m_child[0]->m_aabb))
+			insert(node->m_child[0], object);
+
+		if (CollisionDetection::testSphereAABB(*(object->m_sphere), node->m_child[1]->m_aabb))
+			insert(node->m_child[1], object);
+	}
 }
 
 
@@ -488,7 +540,24 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 			glm::vec3 tempHitPoint;
 
-			if (CollisionDetection::testRayAABB(lineStart, lineDir, obj->m_aabb, tempHitPoint))
+//			if (CollisionDetection::testRayAABB(lineStart, lineDir, obj->m_geometry, tempHitPoint))
+//			if (CollisionDetection::testRayCollisionDetection(lineStart, lineDir, obj->m_geometry, tempHitPoint))
+
+			bool hit = false;
+		
+
+			if (obj->getGeometryType() == CD_AABB)
+			{
+				hit = CollisionDetection::testRayAABB(lineStart, lineDir, *(obj->m_aabb), tempHitPoint);
+			}
+			else if (obj->getGeometryType() == CD_SPHERE)
+			{
+				utl::debug("here in sphere");
+				cout << "obj name is" << obj->m_name << endl;
+				hit = CollisionDetection::testRaySphere(lineStart, lineDir, *(obj->m_sphere), tempHitPoint);
+			}
+
+			if (hit)
 			{
 				obj->alreadyFireTested = true;
 
@@ -562,6 +631,95 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 }
 
 
+void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, unordered_set<int>& objectsAlreadyTested)
+{
+	if (node == NULL)
+		return;
+
+	if (node->isLeaf())
+	{
+		for (int i = 0; i < node->m_objects.size(); i++)
+		{
+			WorldObject* obj = node->m_objects[i];
+
+			if (obj == NULL)
+				continue;
+
+			if (obj->alreadyFireTested)
+				continue;
+
+			if (obj->m_instanceId == player->m_instanceId)
+				continue;
+
+			glm::vec3 tempHitPoint;
+
+			bool hit = false;
+
+			
+			if (objectsAlreadyTested.find(obj->m_instanceId) != objectsAlreadyTested.end())
+				continue;
+			else
+				objectsAlreadyTested.insert(obj->m_instanceId);
+
+			if (obj->getGeometryType() == CD_AABB)
+			{
+				hit = CollisionDetection::testRayAABB(lineStart, lineDir, *(obj->m_aabb), tempHitPoint);
+			}
+			else if (obj->getGeometryType() == CD_SPHERE)
+			{
+				cout << "obj name is" << obj->m_name << endl;
+				hit = CollisionDetection::testRaySphere(lineStart, lineDir, *(obj->m_sphere), tempHitPoint);
+				if (hit == true)
+					cout << "true" << endl;				
+				else
+					cout << "false" << endl;
+			}
+
+			if (hit)
+			{
+				obj->alreadyFireTested = true;
+
+				float sqDist = glm::length2(player->m_position - tempHitPoint);
+				if (sqDist < hitObjectSqDist)
+				{
+					hitObjectSqDist = sqDist;
+					hitObject = obj;
+					hitPoint = tempHitPoint;
+				}
+			}
+		}
+
+		return;
+	}
+
+
+	int dim = node->m_splitDirection;
+	int val = node->m_splitValue;
+
+	int first = lineStart[dim] > node->m_splitValue;
+
+	if (lineDir[dim] == 0.0f)
+	{
+		visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+	}
+	else
+	{
+		float t = (node->m_splitValue - lineStart[dim]) / lineDir[dim];
+
+		if (0.0f <= t && t < tmax)
+		{
+			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+			//	if (hitObject != NULL)
+			//	return;
+
+			visitNodes(node->m_child[first ^ 1], player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+		}
+		else
+		{
+			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+		}
+	}
+}
 
 
 // Real Time Collision Detection page 321
@@ -611,21 +769,22 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 	volNearPt[dir] = val;
 
 
-	if (testObject->getGeometryType() == GM_SPHERE)
+
+	if (testObject->getGeometryType() == CD_AABB)
 	{
-		if (glm::length2(volNearPt - testObject->m_position) < (testObject->m_scale.x * testObject->m_scale.x))
-		{
-			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects);
-		}
-	}
-	else if (testObject->getGeometryType() == GM_AABB)
-	{
-		if (CollisionDetection::testAABBAABB(testObject->m_aabb, node->m_child[first ^ 1]->m_aabb))
+		if (CollisionDetection::testAABBAABB(*(testObject->m_aabb), node->m_child[first ^ 1]->m_aabb))
 		{
 			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects);
 		}
 	}
 
+	else if (testObject->getGeometryType() == CD_SPHERE)
+	{
+		if (glm::length2(volNearPt - testObject->m_sphere->center) < (testObject->m_sphere->radius * testObject->m_sphere->radius))
+		{
+			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects);
+		}
+	}
 	volNearPt[dir] = oldValue;
 }
 
@@ -768,7 +927,15 @@ void KDTree::print(KDTreeNode* node)
 
 	if (node->isLeaf())
 	{
-		cout << "	node has " << node->m_objects.size() << " of objects" << endl << endl;
+		cout << "	node has " << node->m_objects.size() << " of objects" << endl;
+
+		for (int i = 0; i < node->m_objects.size(); i++)
+		{
+			utl::debug("obj name", node->m_objects[i]->m_name);
+		}
+
+		cout << endl << endl << endl;
+
 	}
 
 	print(node->m_child[0]);
