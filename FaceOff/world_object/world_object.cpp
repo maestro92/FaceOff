@@ -21,9 +21,29 @@ WorldObject::WorldObject()
 	isTested = isCollided = isHit = alreadyFireTested = false;
 	isHitCounter = 0;
 
+	m_materialEnergyRestitution = 0.0f;
+	m_halfMaterialEnergyRestitution = 0.0f;
+
+	m_materialSurfaceFriction = 0.0f;
+	m_halfMaterialSurfaceFriction = 0.0f;
+
 	m_dynamicType = STATIC;
 }
 
+
+WorldObject::~WorldObject()
+{
+	
+	if (m_aabb != NULL)
+	{
+		delete m_aabb;
+	}
+
+	else if (m_sphere != NULL)
+	{
+		delete m_sphere;
+	}
+}
 
 void WorldObject::renderSingle(Pipeline& p, Renderer* r)
 {

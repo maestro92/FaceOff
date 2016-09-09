@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <iomanip>
 
+#include <unordered_set>
 
 #include "RakPeerInterface.h"
 #include <RakNetTypes.h>
@@ -461,7 +462,7 @@ namespace utl
 	float barycentricInterpolation(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec2 coord);
 
 
-	int createUniqueObjectID();
+	uint32_t createUniqueObjectID();
 
 
 	/// utl_SDL.cpp

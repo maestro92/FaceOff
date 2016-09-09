@@ -521,6 +521,8 @@ void FaceOff::initObjects()
 	knife->m_name = "player knife";
 
 	Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	grenade->setMass(0.4);
+	grenade->setMaterialEnergyRestitution(0.3);
 	grenade->setCollisionDetectionGeometry(CD_AABB);
 	grenade->m_name = "player grenade";
 
@@ -529,6 +531,7 @@ void FaceOff::initObjects()
 	Player* p = new Player(m_defaultPlayerID);
 	p->m_name = "player 0";
 	p->setModel(m_mm.m_player);
+	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 	m_players.push_back(p);
 
@@ -540,6 +543,7 @@ void FaceOff::initObjects()
 	p->m_name = "player 1";
 	p->setPosition(0, 5, 25);
 	p->setModel(m_mm.m_player);
+	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 	m_players.push_back(p);
 
@@ -547,6 +551,7 @@ void FaceOff::initObjects()
 	p->m_name = "player 2";
 	p->setPosition(0, 5, -40);
 	p->setModel(m_mm.m_player);
+	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 	m_players.push_back(p);
 
@@ -1909,12 +1914,358 @@ void FaceOff::clientSimulation()
 }
 
 
-
-
-void FaceOff::updateObjectPhysics(WorldObject* object)
+void FaceOff::simulatePhysics()
 {
+	unordered_set<int> objectsAlreadyTested;
 
+	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
+	// then deallocating memory
+	collisionDetectionTestPairs.clear();
+	// CollisionDetectionTestPairs collisionDetectionTestPairs;
+
+
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		Player* p = m_players[i];
+
+		if (p == NULL)
+		{
+			continue;
+		}
+
+		p->m_velocity += utl::BIASED_HALF_GRAVITY;
+		
+		if (i == m_defaultPlayerID)
+		{
+			p->m_camera->m_target += p->m_velocity;
+
+			Uint8* state = SDL_GetKeyState(NULL);
+
+			if (state[SDLK_SPACE])
+			{
+				if (p->isNotJumping())
+					p->m_velocity += glm::vec3(0.0, 175.0, 0.0) * utl::GRAVITY_CONSTANT;
+			}
+
+			p->control();
+
+#if NETWORK_FLAG == 1
+			if (m_players[m_defaultPlayerID]->hasMoved())
+			{
+				m_inputQueue.push(m_players[m_defaultPlayerID]->getMoveState());
+			}
+#endif		
+			p->updateGameStats();
+		}
+
+#if NETWORK_FLAG == 0 
+		else if (i == 1)
+		{
+			float tempDist = 100;
+
+			if (incrFlag)
+				p->m_position.z += 0.05;
+			else
+				p->m_position.z -= 0.05;
+
+			if (p->m_position.z > tempDist)
+				incrFlag = false;
+			if (p->m_position.z < 20)
+				incrFlag = true;
+		}
+
+		else if (i == 2)
+		{
+			float tempDist = 15;
+
+			if (incrFlag2)
+				p->m_position.x += 0.05;
+			else
+				p->m_position.x -= 0.05;
+
+
+			if (p->m_position.x > tempDist)
+				incrFlag2 = false;
+			if (p->m_position.x < -tempDist)
+				incrFlag2 = true;
+		}
+#endif
+
+		p->updateCollisionDetectionGeometry();
+		p->updateGameInfo();
+
+
+		vector<WorldObject*> neighbors;
+		glm::vec3 volNearPoint(p->m_position);
+		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, p, volNearPoint, neighbors);
+
+
+		// collision between static object and dynamic object
+		// Game Physics Engine Development P.109 - 119
+
+	//	utl::debug("object is ", p->m_name);
+
+		for (int j = 0; j < neighbors.size(); j++)
+		{
+			WorldObject* neighbor = neighbors[j];
+			
+			// this is for debugging, will render it with "tested color"
+			neighbor->isTested = true;
+
+			// ground was getting inserted twice. We dont want that!
+			
+			/*
+			if (objectsAlreadyTested.find(neighbors[j]->m_instanceId) != objectsAlreadyTested.end())
+				continue;
+			else
+				objectsAlreadyTested.insert(neighbors[j]->m_instanceId);
+			*/
+
+
+	//		utl::debug("	neighbor is ", neighbor->m_name);
+
+
+			if (neighbor->getObjectType() == PROJECTILE)
+			{
+				continue;
+			}
+
+
+			if (collisionDetectionTestPairs.alreadyTested(p->m_instanceId, neighbor->m_instanceId))
+				continue;
+			else
+				collisionDetectionTestPairs.addPairs(p->m_instanceId, neighbor->m_instanceId);
+			
+
+			/*
+			if (neighbor->getObjectType() == WEAPON)
+			{
+				Weapon* wNeighbor = (Weapon*)neighbor;
+
+				if (wNeighbor->ignorePhysicsWhenThrowned(p->getId()))
+				{
+					continue;
+				}
+			}
+			*/
+
+			ContactData contactData;
+			bool collideFlag = testCollisionDetection(p, neighbor, contactData);
+
+			if (collideFlag)
+			{
+				// this is for debugging, will render it with "collided color"
+				neighbor->isCollided = true;
+		
+				if (neighbor->getDynamicType() == STATIC)
+				{
+					contactData.pair[0] = p;
+					contactData.pair[1] = NULL;
+				}
+				else
+				{
+					contactData.pair[0] = p;
+					contactData.pair[1] = neighbor;
+				}
+
+				contactData.resolveVelocity();
+				contactData.resolveInterpenetration();
+				neighbor->updateCollisionDetectionGeometry();
+			}
+		}
+
+		p->updateCollisionDetectionGeometry();
+		m_objectKDtree.reInsert(p);
+
+		/*
+		// first: remove the player from player's kdtree parent nodes
+		for (int j = 0; j < p->m_parentNodes.size(); j++)
+		{
+			KDTreeNode* kNode = p->m_parentNodes[j];
+
+			if (kNode == NULL)
+				continue;
+
+			kNode->removeObject(p);
+		}
+
+
+		// then: we clear player's stored parentNodes
+		while (!p->m_emptyIndexPool.empty())
+		{
+			p->m_emptyIndexPool.pop();
+		}
+
+		for (int j = 0; j < p->m_parentNodes.size(); j++)
+		{
+			p->m_parentNodes[j] = NULL;
+			p->m_emptyIndexPool.push(j);
+		}
+
+		// last: we re-insert the player back into the kdtree
+		m_objectKDtree.insert(p);
+		*/
+
+	}
+
+
+
+
+
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+
+		if (object == NULL)
+			continue;
+
+		object->updateGameInfo();
+
+		if (object->getDynamicType() == STATIC)
+		{
+			continue;
+		}
+
+		
+		if (object->getObjectType() == WEAPON)
+		{
+			Weapon* wObject = (Weapon*)object;
+
+			if (wObject->hasOwner == true || wObject->getWeaponSlot() != PROJECTILE)
+			{
+				continue;
+			}
+
+			
+			if (wObject->getWeaponSlot() == PROJECTILE && wObject->shouldExplode())
+			{
+				utl::debug("Exploding");
+
+				ParticleEffect* effect = wObject->explode();
+				m_smokeEffects.push_back((SmokeEffect*)effect);
+				
+				removeObjectByIndex(i);
+				/*
+				for (int j = 0; j < object->m_parentNodes.size(); j++)
+				{
+					KDTreeNode* kNode = object->m_parentNodes[j];
+					if (kNode == NULL)
+						continue;
+					kNode->removeObject(object);
+				}
+
+				m_emptyBucketPool.push(i);
+
+				delete m_objects[i];
+				m_objects[i] = NULL;
+				*/
+
+
+				continue;
+			}
+		}
+		
+
+
+#if 1
+		object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
+		object->m_position += object->m_velocity;
+		// object->m_velocity += utl::BIASED_HALF_GRAVITY;
+		// object->m_position += object->m_velocity;
+		object->updateCollisionDetectionGeometry();
+
+		vector<WorldObject*> neighbors;
+		glm::vec3 volNearPoint(object->getPosition());
+		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, object, volNearPoint, neighbors);
+
+		// unordered_set<int> objectsAlreadyTested;
+
+	//	utl::debug("object is ", object->m_name);
+
+		for (int j = 0; j < neighbors.size(); j++)
+		{
+			WorldObject* neighbor = neighbors[j];
+
+			/*
+			if (neighbor->getObjectType() == WEAPON)
+			{
+				continue;
+			}
+			*/
+			
+	//		utl::debug("	neighbor is ", neighbor->m_name);
+
+			if (object->getObjectType() == WEAPON && neighbor->getObjectType() == PLAYER)
+			{
+				continue;
+			}
+
+
+			// ground was getting inserted twice. We dont want that!
+			/*
+			if (objectsAlreadyTested.find(neighbor->m_instanceId) != objectsAlreadyTested.end())
+				continue;
+			else
+				objectsAlreadyTested.insert(neighbor->m_instanceId);
+				*/
+			
+			if (collisionDetectionTestPairs.alreadyTested(object->m_instanceId, neighbor->m_instanceId))
+				continue;
+			else
+				collisionDetectionTestPairs.addPairs(object->m_instanceId, neighbor->m_instanceId);
+			
+
+			ContactData contactData;
+			if (testCollisionDetection(object, neighbor, contactData))
+			{
+				if (neighbor->getDynamicType() == STATIC)
+				{
+					contactData.pair[0] = object;
+					contactData.pair[1] = NULL;
+				}
+				else
+				{
+					contactData.pair[0] = object;
+					contactData.pair[1] = neighbor;
+				}
+
+				contactData.resolveVelocity();
+				contactData.resolveInterpenetration();
+				neighbor->updateCollisionDetectionGeometry();
+			}
+		}
+
+		object->updateCollisionDetectionGeometry();
+		
+		m_objectKDtree.reInsert(object);
+		/*
+		for (int j = 0; j < object->m_parentNodes.size(); j++)
+		{
+			KDTreeNode* kNode = object->m_parentNodes[j];
+			if (kNode == NULL)
+				continue;
+			kNode->removeObject(object);
+		}
+
+
+		
+		// removing, we pop empty our queue, and set everything in vector to NULL
+		while (!object->m_emptyIndexPool.empty())
+		{
+			object->m_emptyIndexPool.pop();
+		}
+		for (int j = 0; j < object->m_parentNodes.size(); j++)
+		{
+			object->m_parentNodes[j] = NULL;
+			object->m_emptyIndexPool.push(j);
+		}
+
+		m_objectKDtree.insert(object);
+		*/
+#endif
+	}
 }
+
 
 
 void FaceOff::render()
@@ -1932,6 +2283,10 @@ void FaceOff::render()
 
 	//	serverSimulation();
 	}
+
+	simulatePhysics();
+
+#if 0
 	else
 	{
 		m_players[m_defaultPlayerID]->m_velocity += utl::BIASED_HALF_GRAVITY;
@@ -1974,36 +2329,6 @@ void FaceOff::render()
 			ContactData contactData;
 
 			bool collideFlag = testCollisionDetectionPlayerVersion(m_players[m_defaultPlayerID], neighbors[i], contactData);
-			/*
-			Sphere cd0 = *(m_players[m_defaultPlayerID]->m_sphere);
-			AABB cd1 = *(neighbors[i]->m_aabb);
-			utl::debug("i", i);
-			if (neighbors[i] == NULL)
-			{
-				utl::debug("neighbor is null");
-			}
-			
-
-			if (m_players[m_defaultPlayerID]->getGeometryType() == CD_AABB)
-			{
-				collideFlag = CollisionDetection::testAABBAABB(*(m_players[m_defaultPlayerID]->m_aabb), *(neighbors[i]->m_aabb), contactData);
-			}
-			else if (m_players[m_defaultPlayerID]->getGeometryType() == CD_SPHERE)
-			{
-				if (neighbors[i]->getDynamicType() == STATIC && neighbors[i]->getGeometryType() == CD_AABB)
-				{
-					collideFlag = CollisionDetection::testSphereAABBPlayerVersion(*(m_players[m_defaultPlayerID]->m_sphere), *(neighbors[i]->m_aabb), contactData);
-				}
-				else if (neighbors[i]->getGeometryType() == CD_AABB)
-				{
-					collideFlag = CollisionDetection::testSphereAABB(*(m_players[m_defaultPlayerID]->m_sphere), *(neighbors[i]->m_aabb), contactData);
-				}
-				else if (neighbors[i]->getGeometryType() == CD_SPHERE)
-				{
-					collideFlag = CollisionDetection::testSphereSphere(*(m_players[m_defaultPlayerID]->m_sphere), *(neighbors[i]->m_sphere), contactData);
-				}
-			}
-			*/
 
 			if (collideFlag)
 			{
@@ -2109,11 +2434,6 @@ void FaceOff::render()
 			m_objectKDtree.insert(p);
 		}
 
-
-		// collision detection
-		m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
-
-		o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
 	}
 
 
@@ -2199,11 +2519,6 @@ void FaceOff::render()
 			}
 
 
-			/*
-			if (CollisionDetection::testAABBAABB(object->m_aabb,
-				neighbor->m_aabb,
-				contactData))
-			*/
 			if (testCollisionDetection(object, neighbor, contactData))
 			{
 				// ground was getting inserted twice. We dont want that!
@@ -2223,13 +2538,13 @@ void FaceOff::render()
 
 				contactData.resolveVelocity1();
 				contactData.resolveInterpenetration();
+				neighbor->updateCollisionDetectionGeometry();
 			}
 		}
 
-//		object->updateAABB();
+		object->updateCollisionDetectionGeometry();
+		
 
-		utl::debug("object name", object->m_name);
-		utl::debug("object parent size", object->m_parentNodes.size());
 
 		for (int j = 0; j < object->m_parentNodes.size(); j++)
 		{
@@ -2255,11 +2570,22 @@ void FaceOff::render()
 		m_objectKDtree.insert(object);
 	}
 
+
+
+
+	// collision detection
+	m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
+
+	o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
+
 #endif
 
+#endif
 
+	// collision detection
+	m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
 
-
+	o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
 
 
 
@@ -2797,7 +3123,7 @@ bool FaceOff::testCollisionDetection(WorldObject* a, WorldObject* b, ContactData
 		{
 			return CollisionDetection::testAABBAABB(*(a->m_aabb), *(b->m_aabb), contactData);
 		}
-		else if (a->getGeometryType() == CD_SPHERE)
+		else if (b->getGeometryType() == CD_SPHERE)
 		{
 			return CollisionDetection::testSphereAABB(*(b->m_sphere), *(a->m_aabb), contactData);
 		}
@@ -2809,7 +3135,7 @@ bool FaceOff::testCollisionDetection(WorldObject* a, WorldObject* b, ContactData
 		{
 			return CollisionDetection::testSphereAABB(*(a->m_sphere), *(b->m_aabb), contactData);
 		}
-		else if (a->getGeometryType() == CD_SPHERE)
+		else if (b->getGeometryType() == CD_SPHERE)
 		{
 			return CollisionDetection::testSphereSphere(*(a->m_sphere), *(b->m_sphere), contactData);
 		}
@@ -2819,6 +3145,24 @@ bool FaceOff::testCollisionDetection(WorldObject* a, WorldObject* b, ContactData
 }
 
 
+void FaceOff::removeObjectByIndex(int i)
+{
+	WorldObject* object = m_objects[i];
+	for (int j = 0; j < object->m_parentNodes.size(); j++)
+	{
+		KDTreeNode* kNode = object->m_parentNodes[j];
+		if (kNode == NULL)
+			continue;
+		kNode->remove(object);
+	}
+
+	m_emptyBucketPool.push(i);
+
+	delete m_objects[i];
+	m_objects[i] = NULL;
+}
+
+/*
 bool FaceOff::testCollisionDetectionPlayerVersion(WorldObject* a, WorldObject* b, ContactData& contactData)
 {
 	if (a->getGeometryType() == CD_AABB)
@@ -2837,7 +3181,8 @@ bool FaceOff::testCollisionDetectionPlayerVersion(WorldObject* a, WorldObject* b
 	{
 		if (b->getDynamicType() == STATIC && b->getGeometryType() == CD_AABB)
 		{
-			return CollisionDetection::testSphereAABBPlayerVersion(*(a->m_sphere), *(b->m_aabb), contactData);
+//			return CollisionDetection::testSphereAABBPlayerVersion(*(a->m_sphere), *(b->m_aabb), contactData);
+			return CollisionDetection::testSphereAABB(*(a->m_sphere), *(b->m_aabb), contactData);
 		}
 		else if (b->getGeometryType() == CD_AABB)
 		{
@@ -2851,7 +3196,7 @@ bool FaceOff::testCollisionDetectionPlayerVersion(WorldObject* a, WorldObject* b
 
 	return false;
 }
-
+*/
 
 
 
@@ -3136,9 +3481,12 @@ void FaceOff::renderGUI()
 
 }
 
+/*
+void FaceOff::removeObject(WorldObject* object)
+{
 
-
-
+}
+*/
 
 
 

@@ -340,8 +340,9 @@ class FaceOff
 		RakNet::BitStream bsOut;
 
 
+		void removeObjectByIndex(int i);
 		vector<WorldObject*> m_objects;
-		queue<WorldObject*> m_emptyBucketPool;
+		queue<int> m_emptyBucketPool;
 
 		vector<FireWorkEffect*> m_fireWorkEffects;
 		vector<SmokeEffect*> m_smokeEffects;
@@ -361,6 +362,8 @@ class FaceOff
 
 		// vector<WorldObject*> m_hitPointMarks;
 		// vector<FireWorkEffect*> m_fireWorkEffects;
+
+		CollisionDetectionTestPairs collisionDetectionTestPairs;
 
 		FaceOff();
 		~FaceOff();
@@ -397,10 +400,9 @@ class FaceOff
 		void serverSimulation();
 		void clientSimulation();
 
-		void updateObjectPhysics(WorldObject* object);
-
+		void simulatePhysics();
 		bool testCollisionDetection(WorldObject* a, WorldObject* b, ContactData& contactData);
-		bool testCollisionDetectionPlayerVersion(WorldObject* a, WorldObject* b, ContactData& contactData);
+//		bool testCollisionDetectionPlayerVersion(WorldObject* a, WorldObject* b, ContactData& contactData);
 
 		void render();
 
@@ -413,6 +415,7 @@ class FaceOff
 		thread m_networkThread;
 
 		long long getCurrentTimeMillis();
+
 };
 
 #endif

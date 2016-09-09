@@ -8,8 +8,8 @@ ContactData::ContactData()
 	normal = glm::vec3(1.0);
 	penetrationDepth = 1.0;
 //	restitution = 0.8;
-	restitution = 0.3;
-	friction = 0.3;
+	restitution = 0;
+	friction = 0;
 }
 
 
@@ -28,14 +28,13 @@ float ContactData::calculateSeparatingVelocity()
 }
 
 
+// Game Physics Engine Development
 // P.110
 void ContactData::resolveVelocity()
 {
 	// Find the velocity in the direction of the contact
 	float separatingVelocity = calculateSeparatingVelocity();
-
-	// utl::debug("separatingVelocity", separatingVelocity);
-
+	
 	// Check whether it needs to be resolved
 	if (separatingVelocity > 0)
 	{
@@ -43,6 +42,16 @@ void ContactData::resolveVelocity()
 		return;
 	}
 
+
+	restitution = pair[0]->getHalfMaterialEnergyRestitution();
+	friction = pair[0]->getHalfMaterialSurfaceFriction();
+
+	if (pair[1])
+	{
+		restitution += pair[1]->getHalfMaterialEnergyRestitution();
+		friction += pair[1]->getHalfMaterialSurfaceFriction();
+	}
+	
 	// calculate the new separating velocity
 	float newSeparatingVelocity = -separatingVelocity * restitution;
 
@@ -75,6 +84,16 @@ void ContactData::resolveVelocity()
 	glm::vec3 impVel = impulsePerIMass * pair[0]->getInvMass();
 	glm::vec3 totVel = p0Vel + impVel;
 
+	
+	totVel.x *= friction;
+	totVel.z *= friction;
+
+	if (abs(totVel.x) < VEL_THRESHOLD)
+		totVel.x = 0;
+	if (abs(totVel.z) < VEL_THRESHOLD)
+		totVel.z = 0;
+	
+
 	pair[0]->setVelocity(totVel);
 	
 	if (pair[1])
@@ -83,7 +102,7 @@ void ContactData::resolveVelocity()
 
 
 
-
+#if 0
 void ContactData::resolveVelocity1()
 {
 	// Find the velocity in the direction of the contact
@@ -143,28 +162,28 @@ void ContactData::resolveVelocity1()
 	if (pair[1])
 		pair[1]->setVelocity(pair[1]->getVelocity() + impulsePerIMass * -pair[1]->getInvMass());
 }
-
+#endif
 
 void ContactData::resolveInterpenetration()
 {
 	if (penetrationDepth <= 0)
 		return;
 	
-	float totalMass = pair[0]->m_mass;
+	float totalMass = pair[0]->getMass(); 
 	if (pair[1])
-		totalMass += pair[1]->m_mass;;
+		totalMass += pair[1]->getMass();
 
 	glm::vec3 movePerInvMass = normal * (penetrationDepth / totalMass);
 
 	// Apply the penetration resolution.
 	glm::vec3 temp = pair[0]->getPosition() + 
-					 pair[0]->m_mass * movePerInvMass;
+					 pair[0]->getMass() * movePerInvMass;
 	pair[0]->setPosition(temp);
 
 	if (pair[1])
 	{
 		temp =	pair[1]->getPosition() +
-				pair[1]->m_mass * movePerInvMass;
+				pair[1]->getMass() * movePerInvMass;
 
 		pair[1]->setPosition(temp);
 	}

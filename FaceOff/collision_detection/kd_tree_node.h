@@ -115,7 +115,7 @@ struct KDTreeNode
 	// first remove object from m_objects by setting it to null
 	// then push that index to the m_emptyIndexPool
 	// so next time when we insert something, we'll insert it at that index
-	void removeObject(WorldObject* object)
+	void remove(WorldObject* object)
 	{
 		int index = 0;
 		for (int i = 0; i < m_objects.size(); i++)

@@ -11,7 +11,11 @@ Weapon::Weapon()
 
 	m_explodeDelayStartTime = 0;
 	m_explodeDelayTime = 2000;
+	m_ignorePhysicsAfterThrownTime = 200;
+
+	m_explodeDelayMode = false;
 	m_readyToExplode = false;
+	m_grenadePlayerOwnerId = -1;
 }
 
 Weapon::Weapon(WeaponData data)
@@ -23,13 +27,17 @@ Weapon::Weapon(WeaponData data)
 
 	m_explodeDelayStartTime = 0;
 	m_explodeDelayTime = 2000;
+	m_ignorePhysicsAfterThrownTime = 200;
+
+	m_explodeDelayMode = false;
 	m_readyToExplode = false;
+	m_grenadePlayerOwnerId = -1;
 }
 
 
 Weapon::~Weapon()
 {
-
+	delete m_wireFrameModel;
 }
 
 
@@ -93,8 +101,6 @@ void Weapon::updateGameInfo()
 		{
 			m_readyToExplode = true;
 		}
-
-		
 	}
 }
 
@@ -149,3 +155,31 @@ ParticleEffect* Weapon::explode()
 	return effect;
 }
 
+void Weapon::setGrenadePlayerOwnerId(int id)
+{
+	m_grenadePlayerOwnerId = id;
+}
+
+
+bool Weapon::ignorePhysicsWhenThrowned(int playerId)
+{
+	return (playerId != m_grenadePlayerOwnerId);
+	/*
+	if (playerId != m_grenadePlayerOwnerId)
+	{
+		return false;
+	}
+
+	if (m_explodeDelayMode)
+	{
+		long long curDelay = utl::getCurrentTimeMillis() - m_explodeDelayStartTime;
+
+		if ((int)curDelay < (int)m_ignorePhysicsAfterThrownTime && (playerId == m_grenadePlayerOwnerId))
+		{
+			return true;
+		}
+	}
+	return false;
+	*/
+
+}

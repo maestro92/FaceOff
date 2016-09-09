@@ -455,6 +455,7 @@ Weapon* Player::throwGrenade()
 	grenade->setVelocity(dir);
 
 	grenade->startExplodeDelayTimer();
+	grenade->setGrenadePlayerOwnerId(m_id);
 
 	utl::debug("ThrowGrenade pos is", this->getFirePosition());
 	utl::debug("ThrowGrenade dir is", dir);

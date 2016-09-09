@@ -23,6 +23,8 @@ using namespace std;
 
 const float VEL_THRESHOLD = 0.0005;
 
+
+
 struct ContactData
 {
 	vector<WorldObject*> pair;
@@ -42,6 +44,49 @@ struct ContactData
 	void resolveInterpenetration();
 };
 
+
+struct CollisionDetectionTestPairs
+{
+	unordered_set<uint64_t> pairs;
+	
+	uint64_t getHash(uint32_t id0, uint32_t id1)
+	{
+		uint64_t h0, h1;
+
+		if (id0 < id1)
+		{
+			h0 = id0;
+			h0 = (h0 << 32);
+			h1 = id1;
+		}
+		else
+		{
+			h0 = id1;
+			h0 = (h0 << 32);
+			h1 = id0;
+		}
+
+		return h0 | h1;
+	}
+
+	void addPairs(uint32_t id0, uint32_t id1)
+	{
+		uint64_t hash = getHash(id0, id1);
+		// cout << id0 << " " << id1 << " " << hash << endl;
+		pairs.insert(hash);
+	}
+
+	bool alreadyTested(uint32_t id0, uint32_t id1)
+	{
+		uint64_t hash = getHash(id0, id1);
+		return (pairs.find(hash) != pairs.end());
+	}
+
+	void clear()
+	{
+		pairs.clear();
+	}
+};
 
 
 #endif

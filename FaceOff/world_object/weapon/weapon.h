@@ -60,8 +60,8 @@ class Weapon : public WorldObject
 		WorldObjectType getObjectType();
 
 
-
-
+		void setGrenadePlayerOwnerId(int id);
+		int getGrenadePlayerOwnerId();
 
 		ParticleEffect* explode();
 
@@ -73,17 +73,20 @@ class Weapon : public WorldObject
 		WeaponNameEnum getWeaponName();
 
 		bool shouldExplode();
-		
+		bool ignorePhysicsWhenThrowned(int playerId);
+
 	private:
 		long long m_explodeDelayStartTime;
 		long long m_explodeDelayTime;
+
+		long long m_ignorePhysicsAfterThrownTime;
 
 		bool m_explodeDelayMode;
 		bool m_readyToExplode;
 
 		float m_angle;
 
-
+		int m_grenadePlayerOwnerId;
 
 		WeaponSlotEnum m_slotEnum;
 		WeaponNameEnum m_nameEnum;

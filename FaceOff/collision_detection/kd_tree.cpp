@@ -253,6 +253,36 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 }
 
 
+void KDTree::reInsert(WorldObject* object)
+{
+	// first: remove the player from player's kdtree parent nodes
+	for (int i = 0; i < object->m_parentNodes.size(); i++)
+	{
+		KDTreeNode* kNode = object->m_parentNodes[i];
+
+		if (kNode == NULL)
+			continue;
+
+		kNode->remove(object);
+	}
+
+
+	// then: we clear player's stored parentNodes
+	while (!object->m_emptyIndexPool.empty())
+	{
+		object->m_emptyIndexPool.pop();
+	}
+
+	for (int i = 0; i < object->m_parentNodes.size(); i++)
+	{
+		object->m_parentNodes[i] = NULL;
+		object->m_emptyIndexPool.push(i);
+	}
+
+	// last: we re-insert the player back into the kdtree
+	insert(m_head, object);
+}
+
 void KDTree::insert(WorldObject* object)
 {
 	insert(m_head, object);
@@ -302,6 +332,8 @@ void KDTree::insert(KDTreeNode* node, WorldObject* object)
 			insert(node->m_child[1], object);
 	}
 }
+
+
 
 
 /*

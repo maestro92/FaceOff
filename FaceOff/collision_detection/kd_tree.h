@@ -49,8 +49,12 @@ class KDTree
 		KDTreeNode* recursiveBuild(vector<WorldObject*> objects,
 									glm::vec3 maxP, glm::vec3 minP, int depth, int& count);
 
+
+		void reInsert(WorldObject* object);
 		void insert(WorldObject* object);
 		void insert(KDTreeNode* node, WorldObject* object);
+		void remove(WorldObject* object);
+
 
 		void computeSplitInfo(vector<WorldObject*> objects, int direction, float& variance, float& median);
 

@@ -28,10 +28,10 @@ void utl::checkGLError()
 }
 
 
-int utl::createUniqueObjectID()
+uint32_t utl::createUniqueObjectID()
 {
-	static int counter = 1000;
+	static uint32_t counter = 50;
 	counter++;
-	int temp = counter;
+	uint32_t temp = counter;
 	return temp;
 }

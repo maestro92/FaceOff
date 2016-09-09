@@ -45,8 +45,9 @@ class WorldObject
 {
     public:
         WorldObject();
+		~WorldObject();
 		string m_name;
-		int m_instanceId;
+		uint32_t m_instanceId;
 
 		bool isTested;
 		bool isCollided;
@@ -64,8 +65,7 @@ class WorldObject
 		glm::mat4 m_rotation;
 		glm::mat4 m_modelMatrix;
 
-		float m_mass;
-		float m_invMass;
+
 
 		// CollisionDetectionGeometry* m_geometry;
 		
@@ -82,7 +82,8 @@ class WorldObject
 		DynamicType getDynamicType();
 		CDEnum getGeometryType();
 
-		
+
+
 
         inline void setScale(float s);
         inline void setScale(glm::vec3 scale);
@@ -103,6 +104,7 @@ class WorldObject
 		inline glm::vec3 getScale();
 		inline glm::mat4 getRotation();
 
+		inline void setMass(float mass);
 		inline float getMass();
 		inline float getInvMass();
 
@@ -119,6 +121,15 @@ class WorldObject
 
 		void setCollisionDetectionGeometry(CDEnum type);
 		void updateCollisionDetectionGeometry();
+
+		inline void setMaterialEnergyRestitution(float res);
+		inline float getMaterialEnergyRestitution();
+		inline float getHalfMaterialEnergyRestitution();
+		
+		inline void setMaterialSurfaceFriction(float friction);
+		inline float getMaterialSurfaceFriction();
+		inline float getHalfMaterialSurfaceFriction();
+		
 
 		/*
 		// AABB or Sphere or others
@@ -159,7 +170,19 @@ class WorldObject
 		vector<KDTreeNode*> m_parentNodes;
 		queue<int> m_emptyIndexPool;
 
+	private:
+
+		float m_mass;
+		float m_invMass;
+
+		float m_materialEnergyRestitution;
+		float m_halfMaterialEnergyRestitution;
+
+		float m_materialSurfaceFriction;
+		float m_halfMaterialSurfaceFriction;
 };
+
+
 
 
 
@@ -245,6 +268,12 @@ inline void WorldObject::updateModelMatrix()
 }
 
 
+inline void WorldObject::setMass(float mass)
+{
+	m_mass = mass;
+	m_invMass = 1 / mass;
+}
+
 inline float WorldObject::getMass()
 {
 	return m_mass;
@@ -259,5 +288,40 @@ inline CDEnum WorldObject::getGeometryType()
 {
 	return m_geometryType;
 }
+
+inline void WorldObject::setMaterialEnergyRestitution(float res)
+{
+	m_materialEnergyRestitution = res;
+	m_halfMaterialEnergyRestitution = res / 2;
+}
+
+inline float WorldObject::getMaterialEnergyRestitution()
+{
+	return m_materialEnergyRestitution;
+}
+
+inline float WorldObject::getHalfMaterialEnergyRestitution()
+{
+	return m_halfMaterialEnergyRestitution;
+}
+
+inline void WorldObject::setMaterialSurfaceFriction(float friction)
+{
+	m_materialSurfaceFriction = friction;
+	m_halfMaterialSurfaceFriction = friction / 2;
+}
+
+inline float WorldObject::getMaterialSurfaceFriction()
+{
+	return m_materialSurfaceFriction;
+}
+
+inline float WorldObject::getHalfMaterialSurfaceFriction()
+{
+	return m_halfMaterialSurfaceFriction;
+}
+
+
+
 
 #endif
