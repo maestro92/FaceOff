@@ -21,7 +21,7 @@ using namespace std;
 	- angular velocity
 */
 
-const float VEL_THRESHOLD = 0.0005;
+const float VEL_THRESHOLD = 0.00005;
 
 
 
@@ -29,7 +29,13 @@ struct ContactData
 {
 	vector<WorldObject*> pair;
 	glm::vec3 point;
-	glm::vec3 normal;
+
+	// contact normal is in the direction where pair[0] has to separate from pair[1]
+	// see functions in collision_detection
+	glm::vec3 normal;	
+
+	// penetrationDepth is always positive or greater than zero
+	// we use the direction of normal to control the direction
 	float penetrationDepth;
 	float restitution;
 	float friction;
@@ -40,7 +46,6 @@ struct ContactData
 
 	void resolve();
 	void resolveVelocity();
-	void resolveVelocity1();
 	void resolveInterpenetration();
 };
 

@@ -340,7 +340,7 @@ class FaceOff
 		RakNet::BitStream bsOut;
 
 
-		void removeObjectByIndex(int i);
+		void destroyWorldObjectByIndex(int i);
 		vector<WorldObject*> m_objects;
 		queue<int> m_emptyBucketPool;
 

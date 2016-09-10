@@ -55,11 +55,10 @@ bool CollisionDetection::testSphereSphere(Sphere a, Sphere b, ContactData& conta
 	if (distSquared > radiusSumSquared)
 		return false;
 
-
-	contact.normal = a.center - b.center;
-	contact.point = a.center - contact.normal;
+	contact.point = b.center + d * 0.5f;
+	contact.normal = d;
 	contact.normal = glm::normalize(contact.normal);
-	contact.penetrationDepth = sqrt(distSquared) - sqrt(radiusSumSquared);
+	contact.penetrationDepth = (a.radius + b.radius) - sqrt(distSquared);
 
 	return true;
 }
@@ -74,7 +73,7 @@ bool CollisionDetection::testSphereAABB(Sphere s, AABB b)
 
 	// Sphere and AABB intersect if (squared) distance from sphere
 	// center to point q is less than (squared) sphere radius
-	glm::vec3 v = q - s.center;
+	glm::vec3 v = s.center - q;
 	float dist = glm::dot(v, v);
 	return (dist <= s.radius * s.radius);
 }
@@ -89,13 +88,13 @@ bool CollisionDetection::testSphereAABB(Sphere s, AABB b, ContactData& contact)
 
 	// Sphere and AABB intersect if (squared) distance from sphere
 	// center to point q is less than (squared) sphere radius
-	glm::vec3 v = q - s.center;
+	glm::vec3 v = s.center - q;
 	float dist = glm::dot(v, v);
 	if (dist > s.radius * s.radius)
 		return false;
 
 	contact.point = q;
-	contact.normal = s.center - q;
+	contact.normal = v;
 	contact.normal = glm::normalize(contact.normal);
 	contact.penetrationDepth = s.radius - glm::length(v);
 
@@ -103,38 +102,6 @@ bool CollisionDetection::testSphereAABB(Sphere s, AABB b, ContactData& contact)
 }
 
 
-
-// Real Time Collision Detection P.165
-// instead of having an accurate contact normal, we change the normal only to have entirely Y component, or X or Z component
-// this is mainly for cases where a Player (sphere model) makes contact with a corner of AABB cube
-// so when the falls down, from the AABB, it will have a contact with the corner, hence giving a horizontal component 
-bool CollisionDetection::testSphereAABBPlayerVersion(Sphere s, AABB b, ContactData& contact)
-{
-	// find point q on AABB closest to sphere center
-	glm::vec3 q = glm::vec3(0.0);
-	closestPtPointAABB(s.center, b, q);
-
-	// Sphere and AABB intersect if (squared) distance from sphere
-	// center to point q is less than (squared) sphere radius
-	glm::vec3 v = q - s.center;
-	float dist = glm::dot(v, v);
-	if (dist > s.radius * s.radius)
-		return false;
-
-	contact.point = q;
-	contact.normal = s.center - q;
-
-	if (contact.normal.y > 0.0f)
-	{
-		contact.normal.x = 0.0f;
-		contact.normal.z = 0.0f;
-	}
-
-	contact.normal = glm::normalize(contact.normal);
-	contact.penetrationDepth = s.radius - glm::length(v);
-
-	return true;
-}
 
 
 
@@ -145,26 +112,39 @@ bool CollisionDetection::testAABBAABB(AABB a, AABB b, ContactData& contact)
 	// minimum translation vector
 	// the vector which objects can move away each other
 	// most of the time, this is the normal upon first contact
-	glm::vec3 mtvAxis;
-	float mtvDistance = FLT_MAX; 
+	glm::vec3 mtvAxis;				// Axis along which to travel with the minimum distance
+	float mtvDistance = FLT_MAX;	// Set current minimum distance (max float value so next value is always less)
 
+	// [Axes of potential separation]
+	// • Each shape must be projected on these axes to test for intersection:
+	//          
+	// (1, 0, 0)                    A0 (= B0) [X Axis]
+	// (0, 1, 0)                    A1 (= B1) [Y Axis]
+	// (0, 0, 1)                    A1 (= B2) [Z Axis]
 
+	// [X Axis]
 	if (!textAABBAABBAxis(a, b, contact, X_UNIT_AXIS, X_AXIS_DIRECTION, mtvAxis, mtvDistance))
 	{
 		return false;
 	}
 
+	// [Y Axis]
 	if (!textAABBAABBAxis(a, b, contact, Y_UNIT_AXIS, Y_AXIS_DIRECTION, mtvAxis, mtvDistance))
 	{
 		return false;
 	}
 
+	// [Z Axis]
 	if (!textAABBAABBAxis(a, b, contact, Z_UNIT_AXIS, Z_AXIS_DIRECTION, mtvAxis, mtvDistance))
 	{
 		return false;
 	}
 	
+	// Calculate Minimum Translation Vector (MTV) [normal * penetration]
 	contact.normal = glm::normalize(mtvAxis);
+
+	// Multiply the penetration depth by itself plus a small increment
+	// When the penetration is resolved using the MTV, it will no longer intersect
 	contact.penetrationDepth = (float) sqrt(mtvDistance) * 1.001f;
 
 	return true;
@@ -175,20 +155,34 @@ bool CollisionDetection::testAABBAABB(AABB a, AABB b, ContactData& contact)
 // which is what this function does
 bool CollisionDetection::textAABBAABBAxis(AABB a, AABB b, ContactData& contact, glm::vec3 axis, int direction, glm::vec3 & mtvAxis, float & mtvDistance)
 {
+	// [Separating Axis Theorem]
+	// • Two convex shapes only overlap if they overlap on all axes of separation
+	// • In order to create accurate responses we need to find the collision vector (Minimum Translation Vector)   
+	// • Find if the two boxes intersect along a single axis 
+	// • Compute the intersection interval for that axis
+	// • Keep the smallest intersection/penetration value
+
+	// Calculate the two possible overlap ranges
+	// Either we overlap on the left or the right sides
 	float d0 = b.max[direction] - a.min[direction];
 	float d1 = a.max[direction] - b.min[direction];
 
+	// Intervals do not overlap, so no intersection
 	if (d0 <= 0.0f || d1 <= 0.0f)
 	{
 		return false;
 	}
 
+	// Find out if we overlap on the 'right' or 'left' of the object.
 	float overlap = (d0 < d1) ? d0 : -d1;
 
+	// The mtd vector for that axis
 	glm::vec3 sep = axis * overlap;
 
+	// The mtd vector length squared
 	float sepLenSquared = glm::dot(sep, sep);
 
+	// If that vector is smaller than our computed Minimum Translation Distance use that vector as our current MTV distance
 	if (sepLenSquared < mtvDistance)
 	{
 		mtvDistance = sepLenSquared;
@@ -364,19 +358,36 @@ bool CollisionDetection::testRaySphere(glm::vec3 p, glm::vec3 d, Sphere s, glm::
 }
 
 
-
 /*
-bool CollisionDetection::testSphereAABB(Sphere s, AABB b, glm::vec3& q)
+// Real Time Collision Detection P.165
+// instead of having an accurate contact normal, we change the normal only to have entirely Y component, or X or Z component
+// this is mainly for cases where a Player (sphere model) makes contact with a corner of AABB cube
+// so when the falls down, from the AABB, it will have a contact with the corner, hence giving a horizontal component 
+bool CollisionDetection::testSphereAABBPlayerVersion(Sphere s, AABB b, ContactData& contact)
 {
 	// find point q on AABB closest to sphere center
+	glm::vec3 q = glm::vec3(0.0);
 	closestPtPointAABB(s.center, b, q);
 
 	// Sphere and AABB intersect if (squared) distance from sphere
 	// center to point q is less than (squared) sphere radius
-	glm::vec3 v = q - s.center;
+	glm::vec3 v = s.center - q;
 	float dist = glm::dot(v, v);
-	return (dist <= s.radius * s.radius);
+	if (dist > s.radius * s.radius)
+		return false;
+
+	contact.point = q;
+	contact.normal = s.center - q;
+
+	if (contact.normal.y > 0.0f)
+	{
+		contact.normal.x = 0.0f;
+		contact.normal.z = 0.0f;
+	}
+
+	contact.normal = glm::normalize(contact.normal);
+	contact.penetrationDepth = s.radius - glm::length(v);
+
+	return true;
 }
 */
-
-

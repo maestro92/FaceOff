@@ -60,8 +60,8 @@ class Weapon : public WorldObject
 		WorldObjectType getObjectType();
 
 
-		void setGrenadePlayerOwnerId(int id);
-		int getGrenadePlayerOwnerId();
+		void setGrenadeThrowerId(int id);
+		int getGrenadeThrowerId();
 
 		ParticleEffect* explode();
 
@@ -69,11 +69,14 @@ class Weapon : public WorldObject
 		void startExplodeDelayTimer();
 
 
-		WeaponSlotEnum getWeaponSlot();
-		WeaponNameEnum getWeaponName();
+		virtual WeaponSlotEnum getWeaponSlot();
+		virtual WeaponNameEnum getWeaponName();
+
 
 		bool shouldExplode();
-		bool ignorePhysicsWhenThrowned(int playerId);
+
+		virtual bool ignorePhysics(WorldObject* obj);
+
 
 	private:
 		long long m_explodeDelayStartTime;
@@ -86,7 +89,7 @@ class Weapon : public WorldObject
 
 		float m_angle;
 
-		int m_grenadePlayerOwnerId;
+		int m_grenadeThrowerInstanceId;
 
 		WeaponSlotEnum m_slotEnum;
 		WeaponNameEnum m_nameEnum;

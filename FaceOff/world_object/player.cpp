@@ -455,7 +455,7 @@ Weapon* Player::throwGrenade()
 	grenade->setVelocity(dir);
 
 	grenade->startExplodeDelayTimer();
-	grenade->setGrenadePlayerOwnerId(m_id);
+	grenade->setGrenadeThrowerId(m_instanceId);
 
 	utl::debug("ThrowGrenade pos is", this->getFirePosition());
 	utl::debug("ThrowGrenade dir is", dir);
@@ -660,6 +660,14 @@ glm::vec3 Player::getFirePosition()
 	return m_camera->getFirePosition();
 }
 
+bool Player::ignorePhysics(WorldObject* obj)
+{
+	if (obj->getWeaponSlot() == PROJECTILE)
+	{
+		return (obj->ignorePhysics(this));
+	}
+	return false;
+}
 
 /*
 bsOut.Reset();

@@ -12,7 +12,8 @@ enum WeaponSlotEnum
 	PISTOL, 
 	MELEE,
 	PROJECTILE,
-	NUM_WEAPON_SLOTS
+	NUM_WEAPON_SLOTS,
+	WEAPON_SLOT_NULL
 };
 
 /*
@@ -63,7 +64,8 @@ enum WeaponNameEnum
 	// gernades
 	FLASH_BANG,
 	SMOKE_GRENADE,
-	FRAG_GRENADE
+	FRAG_GRENADE,
+	WEAPON_NAME_NULL
 };
 
 

@@ -2,6 +2,7 @@
 #define	WORLD_OBJECT_H_
 #pragma warning(disable: 4996)
 #include "utility.h"
+#include "weapon_enum.h"
 #include "renderer.h"
 #include "model.h"
 #include <string>
@@ -84,7 +85,7 @@ class WorldObject
 
 
 
-
+		inline uint32_t getInstanceId();
         inline void setScale(float s);
         inline void setScale(glm::vec3 scale);
         inline void setScale(float x, float y, float z);
@@ -157,16 +158,13 @@ class WorldObject
 		void update(); 
 
 		void addParentNode(KDTreeNode* node);
-		/*
-		void removeSelfFromNodes()
-		{
-			for (int i = 0; i < m_parentNodes.size(); i++)
-			{
-				KDTreeNode* kNode = m_parentNodes[i];
-				(kNode->m_objects2).erase(m_instanceId);
-			}
-		}
-		*/
+		
+		// check if we ignore physics testing with the object with the instanceId
+		virtual bool ignorePhysics(WorldObject* obj);
+		
+		virtual WeaponSlotEnum getWeaponSlot();
+		virtual WeaponNameEnum getWeaponName();
+
 		vector<KDTreeNode*> m_parentNodes;
 		queue<int> m_emptyIndexPool;
 
@@ -184,7 +182,10 @@ class WorldObject
 
 
 
-
+inline uint32_t WorldObject::getInstanceId()
+{
+	return m_instanceId;
+}
 
 inline void WorldObject::setPosition(glm::vec3 pos)
 {
@@ -307,8 +308,8 @@ inline float WorldObject::getHalfMaterialEnergyRestitution()
 
 inline void WorldObject::setMaterialSurfaceFriction(float friction)
 {
-	m_materialSurfaceFriction = friction;
-	m_halfMaterialSurfaceFriction = friction / 2;
+	m_materialSurfaceFriction = 1-friction;
+	m_halfMaterialSurfaceFriction = m_materialSurfaceFriction / 2;
 }
 
 inline float WorldObject::getMaterialSurfaceFriction()

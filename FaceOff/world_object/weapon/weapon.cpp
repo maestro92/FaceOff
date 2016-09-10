@@ -15,7 +15,7 @@ Weapon::Weapon()
 
 	m_explodeDelayMode = false;
 	m_readyToExplode = false;
-	m_grenadePlayerOwnerId = -1;
+	m_grenadeThrowerInstanceId = -1;
 }
 
 Weapon::Weapon(WeaponData data)
@@ -31,7 +31,7 @@ Weapon::Weapon(WeaponData data)
 
 	m_explodeDelayMode = false;
 	m_readyToExplode = false;
-	m_grenadePlayerOwnerId = -1;
+	m_grenadeThrowerInstanceId = -1;
 }
 
 
@@ -89,8 +89,8 @@ void Weapon::updateGameInfo()
 	{
 		long long curDelay = utl::getCurrentTimeMillis() - m_explodeDelayStartTime;
 		
-		cout << "curDelay" << " " << curDelay << endl;
-		cout << "m_explodeDelayTime" << " " << m_explodeDelayTime << endl;
+	//	cout << "curDelay" << " " << curDelay << endl;
+	//	cout << "m_explodeDelayTime" << " " << m_explodeDelayTime << endl;
 
 		/*
 		utl::debug("curDelay", curDelay);
@@ -155,17 +155,24 @@ ParticleEffect* Weapon::explode()
 	return effect;
 }
 
-void Weapon::setGrenadePlayerOwnerId(int id)
+void Weapon::setGrenadeThrowerId(int id)
 {
-	m_grenadePlayerOwnerId = id;
+	m_grenadeThrowerInstanceId = id;
+}
+
+int Weapon::getGrenadeThrowerId()
+{
+	return m_grenadeThrowerInstanceId;
 }
 
 
-bool Weapon::ignorePhysicsWhenThrowned(int playerId)
+
+
+bool Weapon::ignorePhysics(WorldObject* obj)
 {
-	return (playerId != m_grenadePlayerOwnerId);
-	/*
-	if (playerId != m_grenadePlayerOwnerId)
+	int id = obj->getInstanceId();
+
+	if (id != m_grenadeThrowerInstanceId)
 	{
 		return false;
 	}
@@ -174,12 +181,11 @@ bool Weapon::ignorePhysicsWhenThrowned(int playerId)
 	{
 		long long curDelay = utl::getCurrentTimeMillis() - m_explodeDelayStartTime;
 
-		if ((int)curDelay < (int)m_ignorePhysicsAfterThrownTime && (playerId == m_grenadePlayerOwnerId))
+		if ((int)curDelay < (int)m_ignorePhysicsAfterThrownTime)
 		{
 			return true;
 		}
 	}
 	return false;
-	*/
-
 }
+

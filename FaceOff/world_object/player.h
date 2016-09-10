@@ -134,6 +134,8 @@ class Player : public WorldObject
 		bool hasMoved();
 		Move getMoveState();
 
+		virtual bool ignorePhysics(WorldObject* obj);
+
 	private:
 		int m_id;
 

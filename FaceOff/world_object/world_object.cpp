@@ -21,11 +21,8 @@ WorldObject::WorldObject()
 	isTested = isCollided = isHit = alreadyFireTested = false;
 	isHitCounter = 0;
 
-	m_materialEnergyRestitution = 0.0f;
-	m_halfMaterialEnergyRestitution = 0.0f;
-
-	m_materialSurfaceFriction = 0.0f;
-	m_halfMaterialSurfaceFriction = 0.0f;
+	setMaterialEnergyRestitution(0.0f);
+	setMaterialSurfaceFriction(1);
 
 	m_dynamicType = STATIC;
 }
@@ -193,6 +190,21 @@ void WorldObject::updateCollisionDetectionGeometry()
 	}
 }
 
+
+bool WorldObject::ignorePhysics(WorldObject* obj)
+{
+	return false;
+}
+
+WeaponSlotEnum WorldObject::getWeaponSlot()
+{
+	return WEAPON_SLOT_NULL;
+}
+
+WeaponNameEnum WorldObject::getWeaponName()
+{
+	return WEAPON_NAME_NULL;
+}
 /*
 void WorldObject::updateAABB()
 {

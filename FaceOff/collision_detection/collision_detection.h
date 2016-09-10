@@ -34,7 +34,6 @@ namespace CollisionDetection
 
 	bool testSphereAABB(Sphere s, AABB b);
 	bool testSphereAABB(Sphere s, AABB b, ContactData& contact);
-	bool testSphereAABBPlayerVersion(Sphere s, AABB b, ContactData& contact);
 
 	bool testAABBAABB(AABB a, AABB b);
 	bool testAABBAABB(AABB a, AABB b, ContactData& contact);
@@ -47,6 +46,7 @@ namespace CollisionDetection
 
 	// bool testSphereAABB(Sphere s, AABB b, glm::vec3& q);
 	// bool testAABBAABB(glm::vec3 aMax, glm::vec3 aMin, glm::vec3 bMax, glm::vec3 bMin);
+	// bool testSphereAABBPlayerVersion(Sphere s, AABB b, ContactData& contact);
 };
 
 

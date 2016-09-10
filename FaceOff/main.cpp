@@ -522,7 +522,8 @@ void FaceOff::initObjects()
 
 	Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
 	grenade->setMass(0.4);
-	grenade->setMaterialEnergyRestitution(0.3);
+	grenade->setMaterialEnergyRestitution(0.6);
+	grenade->setMaterialSurfaceFriction(0.3);
 	grenade->setCollisionDetectionGeometry(CD_AABB);
 	grenade->m_name = "player grenade";
 
@@ -1538,8 +1539,8 @@ void FaceOff::update()
 	/*
 	for (int i = 0; i < m_players.size(); i++)
 	{
-	if (i != m_defaultPlayerID && m_players[i] != NULL)
-	m_players[i]->updateModel();
+		if (i != m_defaultPlayerID && m_players[i] != NULL)
+		m_players[i]->updateModel();
 
 	}
 	*/
@@ -1769,143 +1770,7 @@ void FaceOff::clientUpdate()
 
 void FaceOff::serverSimulation()
 {
-#if 0
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
 
-		if (object == NULL)
-			continue;
-
-		object->updateGameInfo();
-
-
-		if (object->getObjectType() == WEAPON)
-		{
-			Weapon* wObject = (Weapon*)object;
-			if (wObject->getWeaponSlot() == PROJECTILE && wObject->shouldExplode())
-			{
-				utl::debug("Exploding");
-
-				ParticleEffect* effect = wObject->explode();
-				m_smokeEffects.push_back((SmokeEffect*)effect);
-
-				delete wObject;
-				wObject = NULL;
-				m_objects[i] = NULL;
-			}
-		}
-
-	}
-
-
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-
-		if (object == NULL)
-			continue;
-
-		if (object->getDynamicType() == STATIC)
-		{
-			continue;
-		}
-
-		if (object->getObjectType() == WEAPON)
-		{
-			Weapon* wObject = (Weapon*)object;
-
-			if (wObject->hasOwner == true || wObject->getWeaponSlot() != PROJECTILE)
-			{
-				continue;
-			}
-		}
-
-
-		object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
-		object->m_position += object->m_velocity;
-		// object->m_velocity += utl::BIASED_HALF_GRAVITY;
-		// object->m_position += object->m_velocity;
-		object->updateAABB();
-
-
-		vector<WorldObject*> neighbors;
-		glm::vec3 volNearPoint(object->m_position);
-		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, object, volNearPoint, neighbors);
-
-		unordered_set<int> objectsAlreadyTested;
-
-		for (int i = 0; i < neighbors.size(); i++)
-		{
-			ContactData contactData;
-			WorldObject* neighbor = neighbors[i];
-
-			if (neighbor->getObjectType() == PLAYER)
-			{
-				continue;
-			}
-
-
-			if (CollisionDetection::testAABBAABB(object->m_aabb,
-				neighbor->m_aabb,
-				contactData))
-			{
-
-				// ground was getting inserted twice. We dont want that!
-				if (objectsAlreadyTested.find(neighbor->m_instanceId) != objectsAlreadyTested.end())
-					continue;
-				else
-					objectsAlreadyTested.insert(neighbor->m_instanceId);
-
-
-				if (neighbor->getObjectType() == WEAPON)
-				{
-					continue;
-				}
-
-				contactData.pair[0] = object;
-				contactData.pair[1] = NULL;
-
-				contactData.resolveVelocity1();
-				contactData.resolveInterpenetration();
-			}
-		}
-
-		object->updateAABB();
-
-		utl::debug("object name", object->m_name);
-		utl::debug("object parent size", object->m_parentNodes.size());
-
-		for (int j = 0; j < object->m_parentNodes.size(); j++)
-		{
-			KDTreeNode* kNode = object->m_parentNodes[j];
-			if (kNode == NULL)
-				continue;
-			kNode->removeObject(object);
-		}
-
-
-
-		// removing, we pop empty our queue, and set everything in vector to NULL
-		while (!object->m_emptyIndexPool.empty())
-		{
-			object->m_emptyIndexPool.pop();
-		}
-		for (int j = 0; j < object->m_parentNodes.size(); j++)
-		{
-			object->m_parentNodes[j] = NULL;
-			object->m_emptyIndexPool.push(j);
-		}
-
-		m_objectKDtree.insert(object);
-	}
-
-
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		m_players[i]->updateGameInfo();
-	}
-#endif
 }
 
 void FaceOff::clientSimulation()
@@ -1922,7 +1787,6 @@ void FaceOff::simulatePhysics()
 	// then deallocating memory
 	collisionDetectionTestPairs.clear();
 	// CollisionDetectionTestPairs collisionDetectionTestPairs;
-
 
 	for (int i = 0; i < m_players.size(); i++)
 	{
@@ -1972,6 +1836,8 @@ void FaceOff::simulatePhysics()
 				incrFlag = false;
 			if (p->m_position.z < 20)
 				incrFlag = true;
+
+			p->m_position += p->m_velocity;
 		}
 
 		else if (i == 2)
@@ -1988,6 +1854,8 @@ void FaceOff::simulatePhysics()
 				incrFlag2 = false;
 			if (p->m_position.x < -tempDist)
 				incrFlag2 = true;
+
+			p->m_position += p->m_velocity;
 		}
 #endif
 
@@ -2002,52 +1870,26 @@ void FaceOff::simulatePhysics()
 
 		// collision between static object and dynamic object
 		// Game Physics Engine Development P.109 - 119
-
-	//	utl::debug("object is ", p->m_name);
-
 		for (int j = 0; j < neighbors.size(); j++)
 		{
 			WorldObject* neighbor = neighbors[j];
 			
 			// this is for debugging, will render it with "tested color"
-			neighbor->isTested = true;
-
-			// ground was getting inserted twice. We dont want that!
-			
-			/*
-			if (objectsAlreadyTested.find(neighbors[j]->m_instanceId) != objectsAlreadyTested.end())
-				continue;
-			else
-				objectsAlreadyTested.insert(neighbors[j]->m_instanceId);
-			*/
-
-
-	//		utl::debug("	neighbor is ", neighbor->m_name);
-
-
-			if (neighbor->getObjectType() == PROJECTILE)
+			if (i == m_defaultPlayerID)
 			{
-				continue;
+				neighbor->isTested = true;
 			}
-
 
 			if (collisionDetectionTestPairs.alreadyTested(p->m_instanceId, neighbor->m_instanceId))
 				continue;
 			else
 				collisionDetectionTestPairs.addPairs(p->m_instanceId, neighbor->m_instanceId);
 			
-
-			/*
-			if (neighbor->getObjectType() == WEAPON)
+			if (p->ignorePhysics(neighbor))
 			{
-				Weapon* wNeighbor = (Weapon*)neighbor;
-
-				if (wNeighbor->ignorePhysicsWhenThrowned(p->getId()))
-				{
-					continue;
-				}
+				continue;
 			}
-			*/
+
 
 			ContactData contactData;
 			bool collideFlag = testCollisionDetection(p, neighbor, contactData);
@@ -2055,8 +1897,11 @@ void FaceOff::simulatePhysics()
 			if (collideFlag)
 			{
 				// this is for debugging, will render it with "collided color"
-				neighbor->isCollided = true;
-		
+				if (i == m_defaultPlayerID)
+				{
+					neighbor->isCollided = true;
+				}
+
 				if (neighbor->getDynamicType() == STATIC)
 				{
 					contactData.pair[0] = p;
@@ -2076,36 +1921,6 @@ void FaceOff::simulatePhysics()
 
 		p->updateCollisionDetectionGeometry();
 		m_objectKDtree.reInsert(p);
-
-		/*
-		// first: remove the player from player's kdtree parent nodes
-		for (int j = 0; j < p->m_parentNodes.size(); j++)
-		{
-			KDTreeNode* kNode = p->m_parentNodes[j];
-
-			if (kNode == NULL)
-				continue;
-
-			kNode->removeObject(p);
-		}
-
-
-		// then: we clear player's stored parentNodes
-		while (!p->m_emptyIndexPool.empty())
-		{
-			p->m_emptyIndexPool.pop();
-		}
-
-		for (int j = 0; j < p->m_parentNodes.size(); j++)
-		{
-			p->m_parentNodes[j] = NULL;
-			p->m_emptyIndexPool.push(j);
-		}
-
-		// last: we re-insert the player back into the kdtree
-		m_objectKDtree.insert(p);
-		*/
-
 	}
 
 
@@ -2144,30 +1959,14 @@ void FaceOff::simulatePhysics()
 				ParticleEffect* effect = wObject->explode();
 				m_smokeEffects.push_back((SmokeEffect*)effect);
 				
-				removeObjectByIndex(i);
-				/*
-				for (int j = 0; j < object->m_parentNodes.size(); j++)
-				{
-					KDTreeNode* kNode = object->m_parentNodes[j];
-					if (kNode == NULL)
-						continue;
-					kNode->removeObject(object);
-				}
-
-				m_emptyBucketPool.push(i);
-
-				delete m_objects[i];
-				m_objects[i] = NULL;
-				*/
-
-
+				destroyWorldObjectByIndex(i);
 				continue;
 			}
 		}
 		
 
 
-#if 1
+
 		object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
 		object->m_position += object->m_velocity;
 		// object->m_velocity += utl::BIASED_HALF_GRAVITY;
@@ -2178,42 +1977,21 @@ void FaceOff::simulatePhysics()
 		glm::vec3 volNearPoint(object->getPosition());
 		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, object, volNearPoint, neighbors);
 
-		// unordered_set<int> objectsAlreadyTested;
-
-	//	utl::debug("object is ", object->m_name);
 
 		for (int j = 0; j < neighbors.size(); j++)
 		{
 			WorldObject* neighbor = neighbors[j];
 
-			/*
-			if (neighbor->getObjectType() == WEAPON)
-			{
-				continue;
-			}
-			*/
-			
-	//		utl::debug("	neighbor is ", neighbor->m_name);
-
-			if (object->getObjectType() == WEAPON && neighbor->getObjectType() == PLAYER)
-			{
-				continue;
-			}
-
-
-			// ground was getting inserted twice. We dont want that!
-			/*
-			if (objectsAlreadyTested.find(neighbor->m_instanceId) != objectsAlreadyTested.end())
-				continue;
-			else
-				objectsAlreadyTested.insert(neighbor->m_instanceId);
-				*/
-			
 			if (collisionDetectionTestPairs.alreadyTested(object->m_instanceId, neighbor->m_instanceId))
 				continue;
 			else
 				collisionDetectionTestPairs.addPairs(object->m_instanceId, neighbor->m_instanceId);
 			
+			if (object->ignorePhysics(neighbor))
+			{
+				continue;
+			}
+
 
 			ContactData contactData;
 			if (testCollisionDetection(object, neighbor, contactData))
@@ -2238,31 +2016,7 @@ void FaceOff::simulatePhysics()
 		object->updateCollisionDetectionGeometry();
 		
 		m_objectKDtree.reInsert(object);
-		/*
-		for (int j = 0; j < object->m_parentNodes.size(); j++)
-		{
-			KDTreeNode* kNode = object->m_parentNodes[j];
-			if (kNode == NULL)
-				continue;
-			kNode->removeObject(object);
-		}
 
-
-		
-		// removing, we pop empty our queue, and set everything in vector to NULL
-		while (!object->m_emptyIndexPool.empty())
-		{
-			object->m_emptyIndexPool.pop();
-		}
-		for (int j = 0; j < object->m_parentNodes.size(); j++)
-		{
-			object->m_parentNodes[j] = NULL;
-			object->m_emptyIndexPool.push(j);
-		}
-
-		m_objectKDtree.insert(object);
-		*/
-#endif
 	}
 }
 
@@ -2273,7 +2027,10 @@ void FaceOff::render()
 	m_pipeline.setMatrixMode(VIEW_MATRIX);
 	m_pipeline.loadIdentity();
 
-	
+
+	simulatePhysics();
+
+
 	if (m_isServer)
 	{
 		m_serverCamera.control();
@@ -2281,313 +2038,15 @@ void FaceOff::render()
 		o_skybox.setPosition(m_serverCamera.getEyePoint());
 		serverUpdate();
 
-	//	serverSimulation();
+		//	serverSimulation();
 	}
-
-	simulatePhysics();
-
-#if 0
 	else
 	{
-		m_players[m_defaultPlayerID]->m_velocity += utl::BIASED_HALF_GRAVITY;
-		m_players[m_defaultPlayerID]->m_camera->m_target += m_players[m_defaultPlayerID]->m_velocity;
+		// collision detection
+		m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
 
-		Uint8* state = SDL_GetKeyState(NULL);
-
-		if (state[SDLK_SPACE])
-		{
-			if (m_players[m_defaultPlayerID]->isNotJumping())
-				m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 175.0, 0.0) * utl::GRAVITY_CONSTANT;
-		}
-
-		m_players[m_defaultPlayerID]->control();
-
-#if NETWORK_FLAG == 1
-		if (m_players[m_defaultPlayerID]->hasMoved())
-		{
-			m_inputQueue.push(m_players[m_defaultPlayerID]->getMoveState());
-		}
-#endif		
-
-		m_players[m_defaultPlayerID]->updateCollisionDetectionGeometry();
-
-
-#if 1
-		vector<WorldObject*> neighbors;
-		glm::vec3 volNearPoint(m_players[m_defaultPlayerID]->m_position);
-		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], volNearPoint, neighbors);
-
-
-		// collision between static object and dynamic object
-		// Game Physics Engine Development P.109 - 119
-		unordered_set<int> objectsAlreadyTested;
-
-		for (int i = 0; i < neighbors.size(); i++)
-		{
-			neighbors[i]->isTested = true;
-
-			ContactData contactData;
-
-			bool collideFlag = testCollisionDetectionPlayerVersion(m_players[m_defaultPlayerID], neighbors[i], contactData);
-
-			if (collideFlag)
-			{
-				neighbors[i]->isCollided = true;
-
-				// ground was getting inserted twice. We dont want that!
-				if (objectsAlreadyTested.find(neighbors[i]->m_instanceId) != objectsAlreadyTested.end())
-					continue;
-				else
-					objectsAlreadyTested.insert(neighbors[i]->m_instanceId);
-
-				contactData.pair[0] = m_players[m_defaultPlayerID];
-				contactData.pair[1] = NULL;
-
-				contactData.restitution = 0.0;
-
-				contactData.resolveVelocity();
-				contactData.resolveInterpenetration();
-			}
-		}
-#endif
-
-		m_players[m_defaultPlayerID]->updateGameStats();
-
-
-
-#if NETWORK_FLAG == 0 
-		int tempId = 1;
-		float tempDist = 100;
-
-		if (incrFlag)
-			m_players[tempId]->m_position.z += 0.05;
-		else
-			m_players[tempId]->m_position.z -= 0.05;
-
-
-		if (m_players[tempId]->m_position.z > tempDist)
-			incrFlag = false;
-		if (m_players[tempId]->m_position.z < 20)
-			incrFlag = true;
-
-		m_players[tempId]->setPosition(m_players[tempId]->m_position);
-		m_players[tempId]->updateCollisionDetectionGeometry();
-
-
-		tempId = 2;
-		tempDist = 15;
-
-		if (incrFlag2)
-			m_players[tempId]->m_position.x += 0.05;
-		else
-			m_players[tempId]->m_position.x -= 0.05;
-
-
-		if (m_players[tempId]->m_position.x > tempDist)
-			incrFlag2 = false;
-		if (m_players[tempId]->m_position.x < -tempDist)
-			incrFlag2 = true;
-
-		m_players[tempId]->setPosition(m_players[tempId]->m_position);
-		m_players[tempId]->updateCollisionDetectionGeometry();
-#endif
-
-
-		for (int i = 0; i < m_players.size(); i++)
-		{
-			m_players[i]->updateGameInfo();
-		}
-
-
-
-		// update each player's place in the kdTree
-		for (int i = 0; i < m_players.size(); i++)
-		{
-			Player* p = m_players[i];
-
-
-			// first: remove the player from player's kdtree parent nodes
-			for (int j = 0; j < p->m_parentNodes.size(); j++)
-			{
-				KDTreeNode* kNode = p->m_parentNodes[j];
-
-				if (kNode == NULL)
-					continue;
-
-				kNode->removeObject(p);
-			}
-
-
-			// then: we clear player's stored parentNodes
-			while (!p->m_emptyIndexPool.empty())
-			{
-				p->m_emptyIndexPool.pop();
-			}
-
-			for (int j = 0; j < p->m_parentNodes.size(); j++)
-			{
-				p->m_parentNodes[j] = NULL;
-				p->m_emptyIndexPool.push(j);
-			}
-
-			// last: we re-insert the player back into the kdtree
-			m_objectKDtree.insert(p);
-		}
-
+		o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
 	}
-
-
-
-
-
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-
-		if (object == NULL)
-			continue;
-
-		object->updateGameInfo();
-
-
-		if (object->getObjectType() == WEAPON)
-		{
-			Weapon* wObject = (Weapon*)object;
-			if (wObject->getWeaponSlot() == PROJECTILE && wObject->shouldExplode())
-			{
-				utl::debug("Exploding");
-
-				ParticleEffect* effect = wObject->explode(); 
-				m_smokeEffects.push_back((SmokeEffect*)effect);
-
-				delete wObject;
-				wObject = NULL;
-				m_objects[i] = NULL;
-			}
-		}
-
-	}
-
-
-
-
-#if 1
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-
-		if (object == NULL)
-			continue;
-
-		if (object->getDynamicType() == STATIC)
-		{
-			continue;
-		}
-
-		if (object->getObjectType() == WEAPON)
-		{
-			Weapon* wObject = (Weapon*)object;
-
-			if (wObject->hasOwner == true || wObject->getWeaponSlot() != PROJECTILE)
-			{
-				continue;
-			}
-		}
-
-
-		object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
-		object->m_position += object->m_velocity;
-		// object->m_velocity += utl::BIASED_HALF_GRAVITY;
-		// object->m_position += object->m_velocity;
-		object->setPosition(object->m_position);
-		object->updateCollisionDetectionGeometry();
-
-		vector<WorldObject*> neighbors;
-		glm::vec3 volNearPoint(object->m_position);
-		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, object, volNearPoint, neighbors);
-
-		unordered_set<int> objectsAlreadyTested;
-
-		for (int i = 0; i < neighbors.size(); i++)
-		{
-			ContactData contactData;
-			WorldObject* neighbor = neighbors[i];
-
-			if (neighbor->getObjectType() == PLAYER)
-			{
-				continue;
-			}
-
-
-			if (testCollisionDetection(object, neighbor, contactData))
-			{
-				// ground was getting inserted twice. We dont want that!
-				if (objectsAlreadyTested.find(neighbor->m_instanceId) != objectsAlreadyTested.end())
-					continue;
-				else
-					objectsAlreadyTested.insert(neighbor->m_instanceId);
-
-
-				if (neighbor->getObjectType() == WEAPON)
-				{
-					continue;
-				}
-
-				contactData.pair[0] = object;
-				contactData.pair[1] = NULL;
-
-				contactData.resolveVelocity1();
-				contactData.resolveInterpenetration();
-				neighbor->updateCollisionDetectionGeometry();
-			}
-		}
-
-		object->updateCollisionDetectionGeometry();
-		
-
-
-		for (int j = 0; j < object->m_parentNodes.size(); j++)
-		{
-			KDTreeNode* kNode = object->m_parentNodes[j];
-			if (kNode == NULL)
-				continue;
-			kNode->removeObject(object);
-		}
-
-
-		
-		// removing, we pop empty our queue, and set everything in vector to NULL
-		while (!object->m_emptyIndexPool.empty())
-		{
-			object->m_emptyIndexPool.pop();
-		}
-		for (int j = 0; j < object->m_parentNodes.size(); j++)
-		{
-			object->m_parentNodes[j] = NULL;
-			object->m_emptyIndexPool.push(j);
-		}
-
-		m_objectKDtree.insert(object);
-	}
-
-
-
-
-	// collision detection
-	m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
-
-	o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
-
-#endif
-
-#endif
-
-	// collision detection
-	m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
-
-	o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
-
-
 
 
 
@@ -2617,23 +2076,10 @@ void FaceOff::render()
 
 	{
 		// render the players
-		if (m_isServer)
-		{
-			for (int i = 0; i < m_players.size(); i++)
-			{
-				if (i != m_defaultPlayerID && m_players[i] != NULL)
-				{
-					cout << "Player " << i << " at position " << m_players[i]->m_position.x << " " << m_players[i]->m_position.y << " " << m_players[i]->m_position.z << endl;
-					//				m_players[i]->render(m_pipeline);
-				}
-			}
-		}
-		else
+		if (!m_isServer)
 		{
 			m_players[m_defaultPlayerID]->renderGroup(m_pipeline, p_renderer);
 		}
-
-
 
 
 		for (int i = 0; i < m_objects.size(); i++)
@@ -2816,8 +2262,8 @@ void FaceOff::render()
 		// rendering hitPointMarks
 		for (int i = 0; i < m_hitPointMarks.size(); i++)
 		{
-		p_renderer->setData(R_FULL_COLOR::u_color, RED);
-		m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
+			p_renderer->setData(R_FULL_COLOR::u_color, RED);
+			m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
 		}
 		*/
 
@@ -2984,8 +2430,8 @@ void FaceOff::render()
 	// rendering hitPointMarks
 	for (int i = 0; i < m_hitPointMarks.size(); i++)
 	{
-	p_renderer->setData(R_FULL_COLOR::u_color, RED);
-	m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
+		p_renderer->setData(R_FULL_COLOR::u_color, RED);
+		m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
 	}
 	*/
 
@@ -3145,7 +2591,7 @@ bool FaceOff::testCollisionDetection(WorldObject* a, WorldObject* b, ContactData
 }
 
 
-void FaceOff::removeObjectByIndex(int i)
+void FaceOff::destroyWorldObjectByIndex(int i)
 {
 	WorldObject* object = m_objects[i];
 	for (int j = 0; j < object->m_parentNodes.size(); j++)
