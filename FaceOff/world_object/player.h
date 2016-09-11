@@ -48,6 +48,8 @@ class Player : public WorldObject
 		string name;
 		RakNet::RakNetGUID m_guid;
 
+		
+
         Camera* m_camera;
 
 		static glm::vec3 firstPOVWeaponOffset;
@@ -63,7 +65,7 @@ class Player : public WorldObject
 		void setPosition(float x, float y, float z);
 
 
-		
+		void setDefaultPlayerFlag(bool b);
 		
 //		vector<WorldObject*> m_weapons;
 //		int m_curWeaponIndex;
@@ -94,11 +96,12 @@ class Player : public WorldObject
 
 		bool isNotJumping();
 
-		void renderGroup(Pipeline& p, Renderer* r);
+		virtual void renderGroup(Pipeline& p, Renderer* r);
+		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
 
 		void switchWeapon(WeaponSlotEnum slot);
-		void pickUpWeapon(Weapon* weapon);
-		Weapon* dropWeapon();
+		void pickUp(Weapon* weapon);
+		Weapon* drop();
 		void reloadWeapon();
 		Weapon* getCurWeapon();
 
@@ -134,7 +137,7 @@ class Player : public WorldObject
 		bool hasMoved();
 		Move getMoveState();
 
-		virtual bool ignorePhysics(WorldObject* obj);
+		virtual bool ignorePhysicsWith(WorldObject* obj);
 
 	private:
 		int m_id;
@@ -148,6 +151,7 @@ class Player : public WorldObject
 		vector<Weapon*> m_weapons;
 		Weapon* m_curWeapon;
 
+		bool m_isDefaultPlayer;
 
 		bool m_grenadeGatherMode = false;
 };

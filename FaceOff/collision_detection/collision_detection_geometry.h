@@ -8,9 +8,9 @@
 // Collision Detection Geometry
 enum CDEnum
 {
-	CD_NONE = 0,
-	CD_AABB,
-	CD_SPHERE
+	CD_AABB = 0,
+	CD_SPHERE,
+	CD_NULL
 };
 
 struct AABB

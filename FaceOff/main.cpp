@@ -373,7 +373,7 @@ void FaceOff::initObjects()
 	o_temp->setModel(m_mm.m_woodenBox);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
-	utl::debug("id is", o_temp->m_instanceId);
+
 
 
 	o_temp = new WorldObject();
@@ -384,7 +384,7 @@ void FaceOff::initObjects()
 	o_temp->setModel(m_mm.m_woodenBox);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
-	utl::debug("id is", o_temp->m_instanceId);
+
 
 
 	o_temp = new WorldObject();
@@ -394,11 +394,10 @@ void FaceOff::initObjects()
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
 	o_temp->setModel(m_mm.m_woodenBox);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-
 	m_objects.push_back(o_temp);
 
-	utl::debug("id is", o_temp->m_instanceId);
 
+	utl::debug("id is", o_temp->m_instanceId);
 	float formationGap = 40.0f;
 	
 
@@ -511,34 +510,82 @@ void FaceOff::initObjects()
 
 #if NETWORK_FLAG == 0
 
-	Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(M16));
-	mainWeapon->setCollisionDetectionGeometry(CD_AABB);
-	mainWeapon->m_name = "player mainWeapon";
+	Weapon* w = new Weapon(m_mm.getWeaponData(M16));
+	w->setCollisionDetectionGeometry(CD_AABB);
+	w->m_name = "player0 mainWeapon";
 
 	//	Weapon* pistol = new Weapon(m_mm.getWeaponData());
-	Weapon* knife = new Weapon(m_mm.getWeaponData(KNIFE));
-	knife->setCollisionDetectionGeometry(CD_AABB);
-	knife->m_name = "player knife";
+	Weapon* k = new Weapon(m_mm.getWeaponData(KNIFE));
+	k->setCollisionDetectionGeometry(CD_AABB);
+	k->m_name = "player0 knife";
 
-	Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
-	grenade->setMass(0.4);
-	grenade->setMaterialEnergyRestitution(0.6);
-	grenade->setMaterialSurfaceFriction(0.3);
-	grenade->setCollisionDetectionGeometry(CD_AABB);
-	grenade->m_name = "player grenade";
+	Weapon* g = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	g->setMass(0.4);
+	g->setMaterialEnergyRestitution(0.6);
+	g->setMaterialSurfaceFriction(0.3);
+	g->setCollisionDetectionGeometry(CD_AABB);
+	g->m_name = "player0 grenade";
 
+
+
+	Weapon* w1 = new Weapon(m_mm.getWeaponData(M16));
+	w1->setCollisionDetectionGeometry(CD_AABB);
+	w1->m_name = "player1 mainWeapon";
+	
+	Weapon* k1 = new Weapon(m_mm.getWeaponData(KNIFE));
+	k1->setCollisionDetectionGeometry(CD_AABB);
+	k1->m_name = "player1 knife";
+
+	Weapon* g1 = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	g1->setMass(0.4);
+	g1->setMaterialEnergyRestitution(0.6);
+	g1->setMaterialSurfaceFriction(0.3);
+	g1->setCollisionDetectionGeometry(CD_AABB);
+	g1->m_name = "player1 grenade";
+
+
+
+	Weapon* w2 = new Weapon(m_mm.getWeaponData(M16));
+	w2->setCollisionDetectionGeometry(CD_AABB);
+	w2->m_name = "player2 mainWeapon";
+
+	Weapon* k2 = new Weapon(m_mm.getWeaponData(KNIFE));
+	k2->setCollisionDetectionGeometry(CD_AABB);
+	k2->m_name = "player2 knife";
+
+	Weapon* g2 = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	g2->setMass(0.4);
+	g2->setMaterialEnergyRestitution(0.6);
+	g2->setMaterialSurfaceFriction(0.3);
+	g2->setCollisionDetectionGeometry(CD_AABB);
+	g2->m_name = "player2 grenade";
+
+	m_objects.push_back(w);
+	m_objects.push_back(k);
+	m_objects.push_back(g);
+	
+	m_objects.push_back(w1);
+	m_objects.push_back(k1);
+	m_objects.push_back(g1);
+
+	m_objects.push_back(w2);
+	m_objects.push_back(k2);
+	m_objects.push_back(g2);
 
 	m_defaultPlayerID = 0;
 	Player* p = new Player(m_defaultPlayerID);
 	p->m_name = "player 0";
+	p->setDefaultPlayerFlag(true);
 	p->setModel(m_mm.m_player);
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
+
+	p->pickUp(w);
+	p->pickUp(k);
+	p->pickUp(g);
+
 	m_players.push_back(p);
 
-	m_players[0]->pickUpWeapon(mainWeapon);
-	m_players[0]->pickUpWeapon(knife);
-	m_players[0]->pickUpWeapon(grenade);
 
 	p = new Player(1);
 	p->m_name = "player 1";
@@ -546,7 +593,13 @@ void FaceOff::initObjects()
 	p->setModel(m_mm.m_player);
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
+
+	p->pickUp(w1);
+	p->pickUp(k1);
+	p->pickUp(g1);
+
 	m_players.push_back(p);
+
 
 	p = new Player(2);
 	p->m_name = "player 2";
@@ -554,12 +607,15 @@ void FaceOff::initObjects()
 	p->setModel(m_mm.m_player);
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
+
+	p->pickUp(w2);
+	p->pickUp(k2);
+	p->pickUp(g2);
+
 	m_players.push_back(p);
 
 
-	m_objects.push_back(mainWeapon);
-	m_objects.push_back(knife);
-	m_objects.push_back(grenade);
+
 
 #endif
 
@@ -743,23 +799,37 @@ void FaceOff::initNetworkLobby()
 					float newSpawnZ = newPlayerId * 30;
 
 					// Add Player
-					m_players.push_back(new Player(newPlayerId));
-					m_players[newPlayerId]->m_guid = packet->guid;
-					m_players[newPlayerId]->setPosition(newSpawnX, newSpawnY, newSpawnZ);
+					Player* p = new Player(newPlayerId);
+					p->m_guid = packet->guid;
+					p->m_name = "player " + utl::intToStr(newPlayerId);
+					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
+					p->setModel(m_mm.m_player);
+					p->setMass(80);
+					p->setCollisionDetectionGeometry(CD_SPHERE);
 
-					
+
 					Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(M16));
+					mainWeapon->setCollisionDetectionGeometry(CD_AABB);
 					mainWeapon->m_name = "player mainWeapon";
 
 					Weapon* knife = new Weapon(m_mm.getWeaponData(KNIFE));
+					knife->setCollisionDetectionGeometry(CD_AABB);
 					knife->m_name = "player knife";
 
 					Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+					grenade->setMass(0.4);
+					grenade->setMaterialEnergyRestitution(0.6);
+					grenade->setMaterialSurfaceFriction(0.3);
+					grenade->setCollisionDetectionGeometry(CD_AABB);
 					grenade->m_name = "player grenade";
 
-					m_players[newPlayerId]->pickUpWeapon(mainWeapon);
-					m_players[newPlayerId]->pickUpWeapon(knife);
-					m_players[newPlayerId]->pickUpWeapon(grenade);
+					p->pickUp(mainWeapon);
+					p->pickUp(knife);
+					p->pickUp(grenade);
+
+
+					m_players.push_back(p);
+
 
 					m_objects.push_back(mainWeapon);
 					m_objects.push_back(knife);
@@ -773,7 +843,7 @@ void FaceOff::initNetworkLobby()
 					{
 						// send new client notification to existing clients
 						cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
-						m_players[newPlayerId]->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
+						p->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
 
 						for (int i = 0; i < m_players.size(); i++)
 						{
@@ -796,7 +866,7 @@ void FaceOff::initNetworkLobby()
 								continue;
 
 							cout << "sending for " << i << endl;
-							m_players[i]->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
+							p->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
 							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 						}
 					}
@@ -811,7 +881,7 @@ void FaceOff::initNetworkLobby()
 					// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 
 					// write a WELCOME message and include the clients index + 1
-					m_players[newPlayerId]->toBitStream((RakNet::MessageID)SPAWN_INFORMATION, bsOut);
+					p->toBitStream((RakNet::MessageID)SPAWN_INFORMATION, bsOut);
 
 					// send the message back to the same address the current packet came from (the new client)
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
@@ -863,6 +933,7 @@ void FaceOff::initNetworkLobby()
 					{
 						Player* newPlayer = new Player();
 						newPlayer->setFromBitStream(bsIn);
+						newPlayer->setDefaultPlayerFlag(true);
 
 						m_defaultPlayerID = newPlayer->getId();
 
@@ -882,7 +953,7 @@ void FaceOff::initNetworkLobby()
 							if (weaponEnum != -1)
 							{
 								Weapon* weapon = new Weapon(m_mm.getWeaponData((WeaponNameEnum)weaponEnum));
-								newPlayer->pickUpWeapon(weapon);
+								newPlayer->pickUp(weapon);
 								m_objects.push_back(weapon);
 
 								utl::debug("weaponEnum is ", weaponEnum);
@@ -1494,7 +1565,7 @@ void FaceOff::clientHandleDeviceEvents()
 			case SDLK_g:
 			{
 				utl::debug("Dropping Weapon");
-				Weapon* droppedWeapon = m_players[m_defaultPlayerID]->dropWeapon();
+				Weapon* droppedWeapon = m_players[m_defaultPlayerID]->drop();
 				if (droppedWeapon != NULL)
 				{
 					m_objectKDtree.insert(droppedWeapon);
@@ -1880,12 +1951,14 @@ void FaceOff::simulatePhysics()
 				neighbor->isTested = true;
 			}
 
+			// note weapons that hasOwner are not in the kdTree, so we don't need to check for collisions for that
+
 			if (collisionDetectionTestPairs.alreadyTested(p->m_instanceId, neighbor->m_instanceId))
 				continue;
 			else
 				collisionDetectionTestPairs.addPairs(p->m_instanceId, neighbor->m_instanceId);
 			
-			if (p->ignorePhysics(neighbor))
+			if (p->ignorePhysicsWith(neighbor))
 			{
 				continue;
 			}
@@ -1932,25 +2005,20 @@ void FaceOff::simulatePhysics()
 		WorldObject* object = m_objects[i];
 
 		if (object == NULL)
-			continue;
-
-		object->updateGameInfo();
-
-		if (object->getDynamicType() == STATIC)
 		{
 			continue;
 		}
 
+		object->updateGameInfo();
+
+		if (object->ignorePhysics())
+		{
+			continue;
+		}
 		
 		if (object->getObjectType() == WEAPON)
 		{
 			Weapon* wObject = (Weapon*)object;
-
-			if (wObject->hasOwner == true || wObject->getWeaponSlot() != PROJECTILE)
-			{
-				continue;
-			}
-
 			
 			if (wObject->getWeaponSlot() == PROJECTILE && wObject->shouldExplode())
 			{
@@ -1987,7 +2055,7 @@ void FaceOff::simulatePhysics()
 			else
 				collisionDetectionTestPairs.addPairs(object->m_instanceId, neighbor->m_instanceId);
 			
-			if (object->ignorePhysics(neighbor))
+			if (object->ignorePhysicsWith(neighbor))
 			{
 				continue;
 			}
@@ -2028,21 +2096,19 @@ void FaceOff::render()
 	m_pipeline.loadIdentity();
 
 
-	simulatePhysics();
-
-
 	if (m_isServer)
 	{
 		m_serverCamera.control();
 		m_serverCamera.updateViewMatrix(m_pipeline);
 		o_skybox.setPosition(m_serverCamera.getEyePoint());
-		serverUpdate();
 
-		//	serverSimulation();
+		serverUpdate();
+		simulatePhysics();
 	}
 	else
 	{
-		// collision detection
+		simulatePhysics();
+
 		m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
 
 		o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
@@ -2089,15 +2155,6 @@ void FaceOff::render()
 			if (object == NULL)
 				continue;
 
-
-			if (object->getObjectType() == WEAPON)
-			{
-				if (((Weapon*)object)->hasOwner == true)
-					continue;
-				else
-					object->renderGroup(m_pipeline, p_renderer);
-			}
-
 			if (object->isTested != true && object->isCollided != true && object->isHit != true)
 			{
 				object->renderGroup(m_pipeline, p_renderer);
@@ -2139,12 +2196,6 @@ void FaceOff::render()
 		if (object == NULL)
 			continue;
 
-
-		if (object->getObjectType() == WEAPON)
-		{
-			if (((Weapon*)object)->hasOwner == true)
-				continue;
-		}
 
 		object->renderWireFrameGroup(m_pipeline, p_renderer);
 	}
@@ -2193,11 +2244,6 @@ void FaceOff::render()
 
 
 			object->alreadyFireTested = false;
-
-			if (object->getObjectType() == WEAPON)
-			{
-				continue;
-			}
 
 			if (object->isHit)
 			{
@@ -2274,7 +2320,17 @@ void FaceOff::render()
 	p_renderer->enableShader();
 	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 
-	{
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			Player* p = m_players[i];
+
+			if (p->isHit == false)
+			{
+				p->renderGroup(m_pipeline, p_renderer);
+			}
+		}
+
+
 		for (int i = 0; i < m_objects.size(); i++)
 		{
 			WorldObject* object = m_objects[i];
@@ -2282,44 +2338,12 @@ void FaceOff::render()
 			if (object == NULL)
 				continue;
 
-			if (object->getObjectType() == WEAPON)
-			{
-				if (((Weapon*)object)->hasOwner == true)
-					continue;
-			}
-
-
-			if (object->isHit != true)
+			if (object->isHit == false)
 			{
 				object->renderGroup(m_pipeline, p_renderer);
 			}
-
 		}
 
-
-
-		for (int i = 0; i < m_players.size(); i++)
-		{
-			Player* player = m_players[i];
-			if (i == m_defaultPlayerID)
-			{
-				if (m_players[i]->getCurWeapon() != NULL)
-				{
-					m_players[i]->getCurWeapon()->renderGroup(m_pipeline, p_renderer);
-				}
-			}
-			else 
-			{
-				if (player->isHit != true)
-				{
-					m_players[i]->renderGroup(m_pipeline, p_renderer);
-				}
-			}
-			
-		}
-
-
-	}
 	p_renderer->disableShader();
 
 
@@ -2327,48 +2351,45 @@ void FaceOff::render()
 	p_renderer = &m_rm.r_fullVertexColor;
 	p_renderer->enableShader();
 
-	o_worldAxis.renderGroup(m_pipeline, p_renderer);
+		o_worldAxis.renderGroup(m_pipeline, p_renderer);
 
-
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-
-		if (object == NULL)
-			continue;
-
-
-		if (object->getObjectType() == WEAPON)
+		
+		// wireframes are rendered regardless you're getting hit or not
+		for (int i = 0; i < m_players.size(); i++)
 		{
-			if (((Weapon*)object)->hasOwner == true)
-				continue;
+			Player* p = m_players[i];
+			p->renderWireFrameGroup(m_pipeline, p_renderer);
 		}
 
-		object->renderWireFrameGroup(m_pipeline, p_renderer);
-	}
 
+		for (int i = 0; i < m_objects.size(); i++)
+		{
+			WorldObject* object = m_objects[i];
+
+			if (object == NULL)
+				continue;
+
+			if (object->getName() == "player0 mainWeapon")
+			{
+				int a = 1;
+			}
+
+			object->renderWireFrameGroup(m_pipeline, p_renderer);
+		}
+		
 
 	
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		if (i == m_defaultPlayerID)
-			continue;
 
-		Player* player = m_players[i];
 
-		player->renderWireFrameGroup(m_pipeline, p_renderer);
-	}
-	
-
-	if (containedFlag)
-	{
-		m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
-	}
-	else
-	{
-		//	if (hitNode != NULL)
-		//		m_objectKDtree.renderNode(m_pipeline, p_renderer, hitNode);
-	}
+		if (containedFlag)
+		{
+			m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
+		}
+		else
+		{
+			//	if (hitNode != NULL)
+			//		m_objectKDtree.renderNode(m_pipeline, p_renderer, hitNode);
+		}
 	p_renderer->disableShader();
 
 
@@ -2379,61 +2400,56 @@ void FaceOff::render()
 	p_renderer->enableShader();
 	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 
-	if (!containedFlag)
-		m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
-
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-
-		if (object == NULL)
-			continue;
+		if (!containedFlag)
+			m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
 
 
-		object->alreadyFireTested = false;
-
-		if (object->getObjectType() == WEAPON)
+		// rendering players
+		for (int i = 0; i < m_players.size(); i++)
 		{
-			continue;
-		}
+			Player* p = m_players[i];
 
-		if (object->isHit)
-		{
-			p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
-			object->renderGroup(m_pipeline, p_renderer);
-		}
-	}
+			p->alreadyFireTested = false;
 
-
-	// rendering players
-	for (int i = 0; i < m_players.size(); i++)
-	{
-
-		Player* p = m_players[i];
-
-		p->alreadyFireTested = false;
-		if (i == m_defaultPlayerID)
-		{
-			continue;
+			if (p->isHit)
+			{
+				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+				p->renderGroup(m_pipeline, p_renderer);
+			}
 		}
 
 
-		if (p->isHit)
+		for (int i = 0; i < m_objects.size(); i++)
 		{
-			p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
-			p->renderGroup(m_pipeline, p_renderer);
+			WorldObject* object = m_objects[i];
+
+			if (object == NULL)
+				continue;
+
+			object->alreadyFireTested = false;
+
+			if (object->getObjectType() == WEAPON)
+			{
+				continue;
+			}
+
+			if (object->isHit)
+			{
+				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+				object->renderGroup(m_pipeline, p_renderer);
+			}
 		}
 
-	}
 
-	/*
-	// rendering hitPointMarks
-	for (int i = 0; i < m_hitPointMarks.size(); i++)
-	{
-		p_renderer->setData(R_FULL_COLOR::u_color, RED);
-		m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
-	}
-	*/
+
+		/*
+		// rendering hitPointMarks
+		for (int i = 0; i < m_hitPointMarks.size(); i++)
+		{
+			p_renderer->setData(R_FULL_COLOR::u_color, RED);
+			m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
+		}
+		*/
 
 	p_renderer->disableShader();
 
@@ -2594,6 +2610,8 @@ bool FaceOff::testCollisionDetection(WorldObject* a, WorldObject* b, ContactData
 void FaceOff::destroyWorldObjectByIndex(int i)
 {
 	WorldObject* object = m_objects[i];
+
+	//remove object from its stored kdTree nodes
 	for (int j = 0; j < object->m_parentNodes.size(); j++)
 	{
 		KDTreeNode* kNode = object->m_parentNodes[j];
@@ -2602,6 +2620,7 @@ void FaceOff::destroyWorldObjectByIndex(int i)
 		kNode->remove(object);
 	}
 
+	// remove object from main's object containers
 	m_emptyBucketPool.push(i);
 
 	delete m_objects[i];

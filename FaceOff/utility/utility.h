@@ -450,6 +450,7 @@ namespace utl
 	vector<T> reserveVector(int size);
 
 	/// utl_Math.cpp
+	string intToStr(int value);
 	string floatToStr(float value);
 	int randInt(int min = 0, int max = 100);
 	float randFloat(float min = 0, float max = 1);

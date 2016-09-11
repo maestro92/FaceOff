@@ -14,7 +14,7 @@ WorldObject::WorldObject()
 	
 	m_model = NULL;
 
-	m_geometryType = CD_NONE;
+	m_geometryType = CD_NULL;
 	m_aabb = NULL;
 	m_sphere = NULL;
 
@@ -30,7 +30,6 @@ WorldObject::WorldObject()
 
 WorldObject::~WorldObject()
 {
-	
 	if (m_aabb != NULL)
 	{
 		delete m_aabb;
@@ -191,7 +190,13 @@ void WorldObject::updateCollisionDetectionGeometry()
 }
 
 
-bool WorldObject::ignorePhysics(WorldObject* obj)
+bool WorldObject::ignorePhysics()
+{
+	return m_dynamicType == STATIC;
+}
+
+
+bool WorldObject::ignorePhysicsWith(WorldObject* obj)
 {
 	return false;
 }
@@ -205,74 +210,3 @@ WeaponNameEnum WorldObject::getWeaponName()
 {
 	return WEAPON_NAME_NULL;
 }
-/*
-void WorldObject::updateAABB()
-{
-	
-	// The following Two are equivalent
-	// glm::mat4 M = m_rotation * glm::scale(m_scale);
-	// M = glm::transpose(M);
-	
-	glm::mat4 M = glm::scale(m_scale) * m_rotation;
-
-	for (int i = 0; i < 3; i++)
-	{
-		m_aabb.min[i] = m_aabb.max[i] = m_position[i];
-
-		for (int j = 0; j < 3; j++)
-		{
-			float e = M[i][j] * m_model->m_aabb.min[j];
-			float f = M[i][j] * m_model->m_aabb.max[j];
-
-
-			if (e < f)
-			{
-				m_aabb.min[i] += e;
-				m_aabb.max[i] += f;
-			}
-			else
-			{
-				m_aabb.min[i] += f;
-				m_aabb.max[i] += e;
-			}
-		}
-	}
-}
-*/
-
-
-/*
-void WorldObject::setAABBByPosition(float x, float y, float z)
-{
-	setPosition(x, y, z);
-	updateAABB();
-}
-
-
-void WorldObject::setAABBByPosition(glm::vec3 pos)
-{
-	setPosition(pos);
-	updateAABB();
-}
-*/
-
-/*
-void WorldObject::updateCollisionDetectionGeometryByPosition(float x, float y, float z)
-{
-	setPosition(x, y, z);
-	if (m_geometry != NULL)
-	{
-		m_geometry->setPosition(x, y, z);
-	}
-}
-
-
-void WorldObject::updateCollisionDetectionGeometryByPosition(glm::vec3 pos)
-{
-	setPosition(pos);
-	if (m_geometry != NULL)
-	{
-		m_geometry->setPosition(pos);
-	}
-}
-*/

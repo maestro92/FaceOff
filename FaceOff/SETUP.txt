@@ -101,3 +101,16 @@ http://stackoverflow.com/questions/1434937/namespace-functions-versus-static-met
 
 https://www.opengl.org/archives/resources/faq/technical/viewing.htm
 
+
+
+-	should i specify virtual on the sub-classes methods as well
+
+No you technically do not need to specify virtual. If the base method is virtual then C++ will automatically make the matching override method virtual.
+However you should be marking them virtual. The method is virtual after all and it makes your code much clearer and easier to follow by other developers.
+
+http://stackoverflow.com/questions/3167045/do-i-need-to-specify-virtual-on-the-sub-classes-methods-as-well
+
+
+-	why do we need private-variables
+http://programmers.stackexchange.com/questions/143736/why-do-we-need-private-variables
+

@@ -4,8 +4,8 @@
 
 Weapon::Weapon()
 {
-//	m_type = MELEE;
 	hasOwner = false;
+	isBeingUsed = false;
 	m_angle = 0.0f;
 	m_dynamicType = DYNAMIC;
 
@@ -22,6 +22,7 @@ Weapon::Weapon(WeaponData data)
 {
 	setData(data);
 	hasOwner = false;
+	isBeingUsed = false;
 	m_angle = 0.0f;
 	m_dynamicType = DYNAMIC;
 
@@ -166,9 +167,31 @@ int Weapon::getGrenadeThrowerId()
 }
 
 
+void Weapon::renderGroup(Pipeline& p, Renderer* r)
+{
+	if (hasOwner == false || (hasOwner && isBeingUsed))
+	{
+		WorldObject::renderGroup(p, r);
+	}
+}
 
 
-bool Weapon::ignorePhysics(WorldObject* obj)
+void Weapon::renderWireFrameGroup(Pipeline& p, Renderer* r)
+{
+	if (hasOwner == false || (hasOwner && isBeingUsed))
+	{
+		WorldObject::renderWireFrameGroup(p, r);
+	}
+}
+
+
+bool Weapon::ignorePhysics()
+{
+	return (hasOwner == true || m_slotEnum != PROJECTILE);
+}
+
+
+bool Weapon::ignorePhysicsWith(WorldObject* obj)
 {
 	int id = obj->getInstanceId();
 

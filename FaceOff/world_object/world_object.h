@@ -84,6 +84,8 @@ class WorldObject
 		CDEnum getGeometryType();
 
 
+		inline void setName(string s);
+		inline string getName();
 
 		inline uint32_t getInstanceId();
         inline void setScale(float s);
@@ -117,8 +119,8 @@ class WorldObject
 		CubeWireFrameModel* m_wireFrameModel;
 		CubeWireFrameModel* m_staticWireFrameModel;
 
-		void renderStaticWireFrameGroup(Pipeline& p, Renderer* r);
-		void renderWireFrameGroup(Pipeline& p, Renderer* r);
+		virtual void renderStaticWireFrameGroup(Pipeline& p, Renderer* r);
+		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
 
 		void setCollisionDetectionGeometry(CDEnum type);
 		void updateCollisionDetectionGeometry();
@@ -130,37 +132,19 @@ class WorldObject
 		inline void setMaterialSurfaceFriction(float friction);
 		inline float getMaterialSurfaceFriction();
 		inline float getHalfMaterialSurfaceFriction();
-		
-
-		/*
-		// AABB or Sphere or others
-		void updateCollisionDetectionGeometry();
-		void updateCollisionDetectionGeometryByPosition(float x, float y, float z);
-		void updateCollisionDetectionGeometryByPosition(glm::vec3 pos);
-		*/
-
-		/*
-		void updateAABB();
-		void setAABBByPosition(float x, float y, float z);
-		void setAABBByPosition(glm::vec3 pos);
-
-		void updateSphere();
-		void setSphereByPosition(float x, float y, float z);
-		void setSphereyPosition(glm::vec3 pos);
-		
-		void updateAABB();
-		void setAABBByPosition(float x, float y, float z);
-		void setAABBByPosition(glm::vec3 pos);
-		*/
+		inline float getMaterialSurfaceFrictionToBitStream();
 
 		virtual void updateGameInfo();
 
 		void update(); 
 
 		void addParentNode(KDTreeNode* node);
-		
+
+		// check if we should skip itself testing in the collision detection
+		virtual bool ignorePhysics();
+
 		// check if we ignore physics testing with the object with the instanceId
-		virtual bool ignorePhysics(WorldObject* obj);
+		virtual bool ignorePhysicsWith(WorldObject* obj);
 		
 		virtual WeaponSlotEnum getWeaponSlot();
 		virtual WeaponNameEnum getWeaponName();
@@ -181,6 +165,15 @@ class WorldObject
 };
 
 
+inline void WorldObject::setName(string s)
+{
+	m_name = s;
+}
+
+inline string WorldObject::getName()
+{
+	return m_name;
+}
 
 inline uint32_t WorldObject::getInstanceId()
 {
@@ -322,7 +315,10 @@ inline float WorldObject::getHalfMaterialSurfaceFriction()
 	return m_halfMaterialSurfaceFriction;
 }
 
-
+inline float WorldObject::getMaterialSurfaceFrictionToBitStream()
+{
+	return 1 - m_materialSurfaceFriction;
+}
 
 
 #endif

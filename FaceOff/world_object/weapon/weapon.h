@@ -36,18 +36,13 @@ class Weapon : public WorldObject
 
 		virtual void updateGameInfo();
 
-		bool hasOwner;
+
 
 		float m_modelScale;
 
 
 		glm::vec3 m_firstPOVOffset;
 		float m_firstPOVScale;
-
-
-
-
-
 
 		void setData(WeaponData data);
 
@@ -60,9 +55,6 @@ class Weapon : public WorldObject
 		WorldObjectType getObjectType();
 
 
-		void setGrenadeThrowerId(int id);
-		int getGrenadeThrowerId();
-
 		ParticleEffect* explode();
 
 
@@ -73,11 +65,23 @@ class Weapon : public WorldObject
 		virtual WeaponNameEnum getWeaponName();
 
 
+
+		void setGrenadeThrowerId(int id);
+		int getGrenadeThrowerId();
+
+
 		bool shouldExplode();
+		
+		virtual bool ignorePhysics();
+		virtual bool ignorePhysicsWith(WorldObject* obj);
 
-		virtual bool ignorePhysics(WorldObject* obj);
+		
+		virtual void renderGroup(Pipeline& p, Renderer* r);
+		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
+		
 
-
+		bool hasOwner;
+		bool isBeingUsed;
 	private:
 		long long m_explodeDelayStartTime;
 		long long m_explodeDelayTime;
@@ -88,6 +92,8 @@ class Weapon : public WorldObject
 		bool m_readyToExplode;
 
 		float m_angle;
+
+
 
 		int m_grenadeThrowerInstanceId;
 

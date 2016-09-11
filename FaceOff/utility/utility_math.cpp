@@ -1,7 +1,12 @@
 #include "utility.h"
 
 
-
+string utl::intToStr(int value)
+{
+	stringstream ss;
+	ss << value; // add number to string
+	return ss.str();
+}
 
 string utl::floatToStr(float value)
 {

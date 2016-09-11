@@ -55,6 +55,8 @@ Player::Player(int id)
 	m_healthBarGUI = NULL;
 
 	m_dynamicType = DYNAMIC;
+
+	m_isDefaultPlayer = false;
 }
 
 Player::~Player()
@@ -106,6 +108,11 @@ Move Player::getMoveState()
 	return move;
 }
 
+void Player::setDefaultPlayerFlag(bool b)
+{
+	m_isDefaultPlayer = b;
+}
+
 
 // this obviously doesn't work with a slanted falling incline
 bool Player::isNotJumping()
@@ -116,7 +123,6 @@ bool Player::isNotJumping()
 
 void Player::updateGameStats()
 {
-	
 	static bool incrFlag = false;
 
 	if (incrFlag)
@@ -134,12 +140,11 @@ void Player::updateGameStats()
 	{
 		incrFlag = false;
 	}
+
 	if (m_curHP <= 0)
 	{
-
 		incrFlag = true;
 	}
-
 
 	if (m_healthBarGUI != NULL)
 	{
@@ -155,8 +160,6 @@ void Player::updateGameStats()
 	{
 		m_ammoBarGUI->computeForegroundWidth(m_curHP);
 	}
-
-
 }
 
 
@@ -169,14 +172,12 @@ void Player::updateCamera(Pipeline& p)
 	// adjustWeaponAndBulletPosition();
 
 	m_camera->updateViewMatrix(p);
-//	updateAABB();
 	updateCollisionDetectionGeometry();
 	updateWeaponTransform();
 }
 
 void Player::updateWeaponTransform()
 {
-
 	if (m_curWeapon != NULL)
 	{
 		glm::vec3 xAxis = m_camera->m_targetXAxis;
@@ -345,11 +346,15 @@ void Player::switchWeapon(WeaponSlotEnum slot)
 
 	m_grenadeGatherMode = false;
 
-
+	if (m_curWeapon != NULL)
+	{
+		m_curWeapon->isBeingUsed = false;
+	}
 
 	if (m_weapons[slot] != NULL)
-	{
+	{	
 		m_curWeapon = m_weapons[slot];
+		m_curWeapon->isBeingUsed = true;
 		utl::debug("m_curWeapon slot", m_curWeapon->getWeaponSlot());
 	}
 	else
@@ -367,7 +372,7 @@ bool Player::hasWeaponAtSlot(WeaponSlotEnum slot)
 
 }
 
-void Player::pickUpWeapon(Weapon* weapon)
+void Player::pickUp(Weapon* weapon)
 {
 	/*
 	if (m_curWeapon != NULL && m_curWeapon->getType() == weapon->getType())
@@ -378,15 +383,26 @@ void Player::pickUpWeapon(Weapon* weapon)
 	
 	utl::debug("		weapon slot", weapon->getWeaponSlot());
 
-	weapon->hasOwner = true;
-	m_weapons[weapon->getWeaponSlot()] = weapon;
+	WeaponSlotEnum slot = weapon->getWeaponSlot();
 
-	// if (m_curWeapon->m_slot == MAIN)
+	weapon->hasOwner = true;
+	weapon->isBeingUsed = false;
+
+	m_weapons[slot] = weapon;
 	weapon->setScale(weapon->m_firstPOVScale);
 
-
-	m_curWeapon = weapon;
-
+	if (m_curWeapon != NULL)
+	{
+		if (slot < m_curWeapon->getWeaponSlot())
+		{
+			switchWeapon(slot);
+		}
+	}
+	else
+	{
+		weapon->isBeingUsed = true;
+		m_curWeapon = weapon;
+	}
 	/*
 	if (m_curWeapon != NULL)
 	{
@@ -434,6 +450,7 @@ Weapon* Player::throwGrenade()
 
 
 	grenade->hasOwner = false;
+	grenade->isBeingUsed = false;
 	// set it back to world model scale
 	grenade->setScale(grenade->m_modelScale);
 	grenade->setRotation(glm::mat4(1.0));
@@ -466,7 +483,7 @@ Weapon* Player::throwGrenade()
 	return grenade;
 }
 
-Weapon* Player::dropWeapon()
+Weapon* Player::drop()
 {
 	if (m_curWeapon == NULL)
 		return NULL;
@@ -570,20 +587,22 @@ float Player::getCameraYaw()
 }
 
 
+
+
+
 void Player::renderGroup(Pipeline& p, Renderer* r)
 {
-	WorldObject::renderGroup(p, r);
-
-	// render the weapon
-	if (m_curWeapon != NULL)
+	if (!m_isDefaultPlayer)
 	{
+		WorldObject::renderGroup(p, r);
+	}
+}
 
-		if (m_grenadeGatherMode)
-		{
-		//	utl::debug("weapon pos is", m_curWeapon->m_position);
-		}
-
-		m_curWeapon->renderGroup(p, r);
+void Player::renderWireFrameGroup(Pipeline& p, Renderer* r)
+{
+	if (!m_isDefaultPlayer)
+	{
+		WorldObject::renderWireFrameGroup(p, r);
 	}
 }
 
@@ -660,11 +679,11 @@ glm::vec3 Player::getFirePosition()
 	return m_camera->getFirePosition();
 }
 
-bool Player::ignorePhysics(WorldObject* obj)
+bool Player::ignorePhysicsWith(WorldObject* obj)
 {
 	if (obj->getWeaponSlot() == PROJECTILE)
 	{
-		return (obj->ignorePhysics(this));
+		return (obj->ignorePhysicsWith(this));
 	}
 	return false;
 }
@@ -718,6 +737,17 @@ void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
 	bs.Write(getCameraPitch());
 	bs.Write(getCameraYaw());
+	/*
+	bs.WriteVector(m_position.x, m_position.y, m_position.z);
+	bs.WriteVector(m_position.x, m_position.y, m_position.z);
+	bs.WriteVector(m_position.x, m_position.y, m_position.z);
+	bs.WriteVector(m_position.x, m_position.y, m_position.z);
+	*/
+
+	bs.Write(getGeometryType());
+	bs.Write(getMass());
+	bs.Write(getMaterialEnergyRestitution());
+	bs.Write(getMaterialSurfaceFrictionToBitStream());
 
 	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
 	{
@@ -743,22 +773,17 @@ void Player::setFromBitStream(RakNet::BitStream& bs)
 	bs.Read(m_camera->m_pitch);
 	bs.Read(m_camera->m_yaw);
 
+	bs.Read(m_geometryType);	setCollisionDetectionGeometry(m_geometryType);
+	float mass = 0;
+	bs.Read(mass);	setMass(mass);
 
-	/*
-	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
-	{
-		int weaponEnum = 0;
-		bs.Read(weaponEnum);
-		if (weaponEnum != -1)
-		{
-			utl::debug("weaponEnum is ", weaponEnum);
-		}
-		else
-		{
-			utl::debug("weaponEnum is None");
-		}
-	}
-	*/
+	float restitution = 0;
+	bs.Read(restitution);		setMaterialEnergyRestitution(restitution);
+
+	float friction = 0;
+	bs.Read(friction);			setMaterialSurfaceFriction(friction);
+
+	// the weapons are read somewhere else
 }
 
 
@@ -785,4 +810,29 @@ void Player::addWeapon(Weapon* weapon)
 
 }
 
+*/
+
+
+
+/*
+void Player::update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis)
+{
+	zAxis = -zAxis;
+
+	xAxis = utl::scaleGlmVec(xAxis, m_weaponPositionOffsets[m_curWeaponIndex].x);
+	yAxis = utl::scaleGlmVec(yAxis, m_weaponPositionOffsets[m_curWeaponIndex].y);
+	zAxis = utl::scaleGlmVec(zAxis, m_weaponPositionOffsets[m_curWeaponIndex].z);
+	
+	glm::vec3 pos = m_position + xAxis + yAxis + zAxis;
+	m_weapons[m_curWeaponIndex]->setPosition(pos);
+
+	m_weapons[m_curWeaponIndex]->setScale(0.01);
+
+	glm::mat4 rot = glm::mat4(1.0);
+	rot = rot * glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+	rot = rot * glm::rotate(m_camera->m_yaw, 0.0f, 1.0f, 0.0f);
+	rot = rot * glm::rotate(m_camera->m_pitch, 0.0f, 0.0f, -1.0f);
+
+	m_weapons[m_curWeaponIndex]->setRotation(rot);
+}
 */
