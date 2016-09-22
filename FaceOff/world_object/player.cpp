@@ -1,11 +1,13 @@
 #include "player.h"
 
+#define TESTING_FIRST_POV_WEAPON_OFFSET_FLAG 0
+#define TESTING_THIRD_POV_WEAPON_OFFSET_FLAG 1
 
 // glm::vec3 Player::firstPOVWeaponOffset = glm::vec3(0.35, -0.64, 1.26);
 
 // AK47
 glm::vec3 Player::firstPOVWeaponOffset = glm::vec3(0.35, -0.64, 1.26);
-glm::vec3 Player::thirdPOVWeaponOffset = glm::vec3(2.11, -2.49, 5.2);
+glm::vec3 Player::thirdPOVWeaponOffset = glm::vec3(3.59, 2.27, 4.43);
 
 // M4
 // glm::vec3 Player::firstPOVWeaponOffset = glm::vec3(0.33, -0.35, 1.66);
@@ -24,16 +26,6 @@ Player::Player(int id)
 //	((FirstPersonCamera*)m_camera)->setFreeMode(true);
 //	m_camera = new ThirdPersonCamera();
 
-
-	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
-	m_model = new ImportedModel("./Assets/models/sphere/sphere.obj", textures);
-	m_model->setMeshRandTextureIdx();
-
-
-
-	// m_renderer = &RendererManager::r_fullColor;
-	setModel(m_model);
-
 	setPosition(0.0, 5.0, 0.0);
 	setScale(5.0);
 
@@ -48,8 +40,6 @@ Player::Player(int id)
 
 	m_weapons.resize(NUM_WEAPON_SLOTS);
 
-	m_curCollidedWeapon = NULL;
-
 	m_grenadeGatherMode = false;
 
 	m_healthBarGUI = NULL;
@@ -57,6 +47,7 @@ Player::Player(int id)
 	m_dynamicType = DYNAMIC;
 
 	m_isDefaultPlayer = false;
+	inMidAir = false;
 }
 
 Player::~Player()
@@ -88,11 +79,65 @@ void Player::setPosition(float x, float y, float z)
 	setPosition(glm::vec3(x, y, z));
 }
 
-
+/*
 void Player::control()
 {
 	m_camera->control();
-	m_position = m_camera->getTargetPoint();
+//	m_position += m_camera->getTargetPoint();
+//	m_position += m_camera->m_velocity;
+	m_rotation = m_camera->m_targetRotation;
+}
+*/
+
+
+
+void Player::control()
+{
+	glm::vec3 vel;
+	bool canJumpFlag = canJump();
+	
+	m_camera->control(vel, canJumpFlag);
+
+	if (m_camera->m_moveState.input.jump)
+	{
+		inMidAir = true;
+	}
+
+	if (inMidAir)
+	{
+		vel.x = 0.025 * vel.x;
+		vel.z = 0.025 * vel.z;
+	}
+
+	m_velocity += vel;
+	m_rotation = m_camera->m_targetRotation;
+}
+
+
+int counter = 0;
+
+// only used for spawning
+void Player::processInput(Move move)
+{
+	glm::vec3 vel;
+
+	bool canJumpFlag = canJump();
+	m_camera->processInput(move, vel, canJumpFlag);
+
+	if (move.input.jump)
+	{
+		inMidAir = true;
+	}
+
+	if (inMidAir)
+	{
+		vel.x = 0.025 * vel.x;
+		vel.z = 0.025 * vel.z;
+	}
+
+
+	m_velocity += vel;
+	setRotation(move.state.pitch, move.state.yaw);
 }
 
 
@@ -114,12 +159,27 @@ void Player::setDefaultPlayerFlag(bool b)
 }
 
 
-// this obviously doesn't work with a slanted falling incline
-bool Player::isNotJumping()
+bool Player::isDefaultPlayer()
 {
-	return abs(m_velocity.y - utl::BIASED_HALF_GRAVITY.y) <= utl::MATH_EPISON;
+	return m_isDefaultPlayer;
 }
 
+// this obviously doesn't work with a slanted falling incline
+bool Player::canJump()
+{
+	return inMidAir == false && abs(m_velocity.y - utl::BIASED_HALF_GRAVITY.y) <= utl::MATH_EPISON;
+}
+
+void Player::updateMidAirFlag()
+{
+	if (inMidAir)
+	{
+		if (abs(m_velocity.y - utl::BIASED_HALF_GRAVITY.y) <= utl::MATH_EPISON)
+		{
+			inMidAir = false;
+		}
+	}
+}
 
 void Player::updateGameStats()
 {
@@ -166,60 +226,124 @@ void Player::updateGameStats()
 void Player::updateCamera(Pipeline& p)
 {
 	m_camera->m_target = m_position;
-
-	// ((ThirdPersonCamera*)m_camera)->updateViewMatrix(p);
 	
-	// adjustWeaponAndBulletPosition();
-
 	m_camera->updateViewMatrix(p);
+
+	m_rotation = m_camera->m_targetRotation;
+
+	m_xAxis = m_camera->m_targetXAxis;
+	m_yAxis = m_camera->m_targetYAxis;
+	m_zAxis = -m_camera->m_targetZAxis;
+
 	updateCollisionDetectionGeometry();
 	updateWeaponTransform();
 }
 
+
+
+void Player::setRotation(float pitch, float yaw)
+{
+	glm::mat4 rot = glm::mat4(1.0);
+	
+	/*
+	if (roll != 0)
+	{
+		rot = rot * glm::rotoate(roll, 0.0f, 0.0f, 1.0f);
+	}
+	*/
+
+	if (yaw != 0)
+	{
+		rot = rot * glm::rotate(yaw, 0.0f, 1.0f, 0.0f);
+	}
+
+	if (pitch != 0)
+	{
+		rot = rot * glm::rotate(pitch, 1.0f, 0.0f, 0.0f);
+	}
+
+	
+	m_xAxis = glm::vec3(rot[0][0], rot[0][1], rot[0][2]);
+	m_yAxis = glm::vec3(rot[1][0], rot[1][1], rot[1][2]);
+	m_zAxis = glm::vec3(rot[2][0], rot[2][1], rot[2][2]);
+	
+
+	/*
+	float temp[16] = { rot[0][0], rot[1][0], rot[2][0], 0,
+						rot[0][1], rot[1][1], rot[2][1], 0,
+						rot[0][2], rot[1][2], rot[2][2], 0,
+						0, 0, 0, 1 };
+	*/				
+	/*
+	float temp[16] = { m_xAxis[0], m_yAxis[0], m_zAxis[0], 0,
+						m_xAxis[1], m_yAxis[1], m_zAxis[1], 0,
+						m_xAxis[2], m_yAxis[2], m_zAxis[2], 0,
+						0, 0, 0, 1 };
+	*/				
+	m_rotation = rot;
+}
+
+
 void Player::updateWeaponTransform()
 {
+	// adjustWeaponAndBulletPosition();
+	glm::vec3 xOffset;
+	glm::vec3 yOffset;
+	glm::vec3 zOffset;
+
 	if (m_curWeapon != NULL)
 	{
-		glm::vec3 xAxis = m_camera->m_targetXAxis;
-		glm::vec3 yAxis = m_camera->m_targetYAxis;
-		glm::vec3 zAxis = -m_camera->m_targetZAxis;
-
-		glm::vec3 wOffset = m_curWeapon->m_firstPOVOffset;
-/*
-#if 1
-		xAxis = xAxis * wOffset.x;
-		yAxis = yAxis * wOffset.y;
-		zAxis = zAxis * wOffset.z;
-#else			
-		xAxis = xAxis * Player::firstPOVWeaponOffset.x;
-		yAxis = yAxis * Player::firstPOVWeaponOffset.y;
-		zAxis = zAxis * Player::firstPOVWeaponOffset.z;
-#endif
-*/
-		glm::vec3 pos;
-//		glm::vec3 pos = m_camera->getTargetPoint() + xAxis + yAxis + zAxis;
-		
-		if (m_grenadeGatherMode)
+		if (m_isDefaultPlayer)
 		{
-			xAxis = xAxis * wOffset.x;
-			yAxis = yAxis * (wOffset.y + 0.05f);
-			zAxis = zAxis * wOffset.z;
+			glm::vec3 wOffset = m_curWeapon->m_firstPOVOffset;
+
+			glm::vec3 pos;
+			if (m_grenadeGatherMode)
+			{
+				xOffset = m_xAxis * wOffset.x;
+				yOffset = m_yAxis * (wOffset.y + 0.05f);
+				zOffset = m_zAxis * wOffset.z;
+			}
+			else
+			{
+				xOffset = m_xAxis * wOffset.x;
+				yOffset = m_yAxis * wOffset.y;
+				zOffset = m_zAxis * wOffset.z;
+			}
+
+			pos = m_camera->getEyePoint() + xOffset + yOffset + zOffset;
+			m_curWeapon->setPosition(pos);
+			// dont need to set scale, that's done at pickUp()
 		}
 		else
 		{
-			xAxis = xAxis * wOffset.x;
-			yAxis = yAxis * wOffset.y;
-			zAxis = zAxis * wOffset.z;	
+
+			glm::vec3 wOffset = m_curWeapon->m_thirdPOVOffset;
+		//	glm::vec3 wOffset = thirdPOVWeaponOffset;
+
+		//	utl::debug("woffset", thirdPOVWeaponOffset);
+
+			glm::vec3 pos;
+			if (m_grenadeGatherMode)
+			{
+				xOffset = m_xAxis * wOffset.x;
+				yOffset = m_yAxis * (wOffset.y + 0.05f);
+				zOffset = m_zAxis * wOffset.z;
+			}
+			else
+			{
+				xOffset = m_xAxis * wOffset.x;
+				yOffset = m_yAxis * wOffset.y;
+				zOffset = m_zAxis * wOffset.z;
+			}
+
+			pos = m_position + xOffset + yOffset + zOffset;
+			m_curWeapon->setPosition(pos);		
+			// dont need to set scale, that's done at pickUp()
 		}
 
-		pos = m_camera->getEyePoint() + xAxis + yAxis + zAxis;
-
-		m_curWeapon->setPosition(pos);
-//		m_curWeapon->setScale(0.005);
-
+		m_curWeapon->setRotation(m_rotation);
 //		glm::mat4 rot = m_camera->m_targetRotation * 
-
-		m_curWeapon->setRotation(m_camera->m_targetRotation);
 	}
 
 	/*
@@ -389,7 +513,20 @@ void Player::pickUp(Weapon* weapon)
 	weapon->isBeingUsed = false;
 
 	m_weapons[slot] = weapon;
-	weapon->setScale(weapon->m_firstPOVScale);
+
+	if (m_isDefaultPlayer)
+	{
+		weapon->setScale(weapon->m_firstPOVScale);
+		utl::debug("Here default");
+		utl::debug("w scale is", weapon->m_firstPOVScale);
+
+	}
+	else
+	{
+		weapon->setScale(weapon->m_thirdPOVScale);
+		utl::debug("Here third");
+		utl::debug("w scale is", weapon->m_thirdPOVScale);
+	}
 
 	if (m_curWeapon != NULL)
 	{
@@ -403,6 +540,10 @@ void Player::pickUp(Weapon* weapon)
 		weapon->isBeingUsed = true;
 		m_curWeapon = weapon;
 	}
+
+
+	updateWeaponTransform();
+	utl::debug("in player pickup, weapon pos is", m_curWeapon->getPosition());
 	/*
 	if (m_curWeapon != NULL)
 	{
@@ -645,34 +786,71 @@ void Player::adjustWeaponAndBulletPosition()
 	}
 	*/
 	
-	if (state[SDLK_t])
+
+
+	glm::vec3 offset;
+#if TESTING_FIRST_POV_WEAPON_OFFSET_FLAG == 1
+	offset = firstPOVWeaponOffset;
+#else if TESTING_THIRD_POV_WEAPON_OFFSET_FLAG == 1
+	offset = thirdPOVWeaponOffset;
+#endif 
+
+//	if (m_isDefaultPlayer)
 	{
-		firstPOVWeaponOffset.z += step;
+		if (state[SDLK_i])
+		{
+			offset.z += step;
+		}
+		else if (state[SDLK_k])
+		{
+			offset.z -= step;
+		}
+
+
+		if (state[SDLK_j])
+		{
+			offset.x -= step;
+		}
+		else if (state[SDLK_l])
+		{
+			offset.x += step;
+		}
+
+
+		if (state[SDLK_n])
+		{
+			offset.y += step;
+		}
+		else if (state[SDLK_m])
+		{
+			offset.y -= step;
+		}
+//		utl::debug("x y z", offset);
+
+#if TESTING_FIRST_POV_WEAPON_OFFSET_FLAG == 1
+		firstPOVWeaponOffset = offset;
+#else if TESTING_THIRD_POV_WEAPON_OFFSET_FLAG == 1
+		thirdPOVWeaponOffset = offset;
+#endif 
+	//	if (m_id == 1)
+	//		utl::debug("thirdPOVWeaponOffset in adjust", thirdPOVWeaponOffset);
 	}
-	else if (state[SDLK_g])
-	{
-		firstPOVWeaponOffset.z -= step;
-	}
-
-
-	if (state[SDLK_f])
-		firstPOVWeaponOffset.x -= step;
-	
-	else if (state[SDLK_h])
-		firstPOVWeaponOffset.x += step;
-	
-
-
-	if (state[SDLK_r])
-		firstPOVWeaponOffset.y += step;
-	else if (state[SDLK_y])
-		firstPOVWeaponOffset.y -= step;
-	
-	utl::debug("x y z", firstPOVWeaponOffset);
-
 	
 }
 
+/*
+glm::vec3 Player::getArmPosition()
+{
+	if (m_isDefaultPlayer)
+	{
+		return m_camera->getEyePoint();
+	}
+	else
+	{
+		return m_position;
+	}
+}
+*/
 
 glm::vec3 Player::getFirePosition()
 {
@@ -729,10 +907,10 @@ void Player::spawnFromBitStream(RakNet::BitStream& bs)
 */
 
 
-void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
+void Player::spawnInfoToBitStream(RakNet::BitStream& bs)
 {
 	bs.Reset();
-	bs.Write(msgId);
+	bs.Write(SPAWN_INFORMATION);
 	bs.Write(m_id);
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
 	bs.Write(getCameraPitch());
@@ -744,6 +922,7 @@ void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
 	*/
 
+	bs.Write(m_modelEnum);
 	bs.Write(getGeometryType());
 	bs.Write(getMass());
 	bs.Write(getMaterialEnergyRestitution());
@@ -759,6 +938,84 @@ void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
 		else
 		{
 			bs.Write(-1);
+			utl::debug("weaponEnum is None");
+		}
+	}
+}
+
+
+void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
+{
+	bs.Reset();
+	bs.Write(msgId);
+	bs.Write(m_id);
+	bs.WriteVector(m_position.x, m_position.y, m_position.z);
+	bs.Write(getCameraPitch());
+	bs.Write(getCameraYaw());
+
+	bs.Write(m_modelEnum);
+	bs.Write(getGeometryType());
+	bs.Write(getMass());
+	bs.Write(getMaterialEnergyRestitution());
+	bs.Write(getMaterialSurfaceFrictionToBitStream());
+
+	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
+	{
+		if (m_weapons[i] != NULL)
+		{
+			bs.Write(m_weapons[i]->getWeaponName());
+			utl::debug("weaponEnum is ", m_weapons[i]->getWeaponName());
+		}
+		else
+		{
+			bs.Write(-1);
+			utl::debug("weaponEnum is None");
+		}
+	}
+}
+
+
+void Player::spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm)
+{
+	// the message id is already ignored
+	bs.Read(m_id);
+	bs.ReadVector(m_position.x, m_position.y, m_position.z);
+	
+
+	float pitch, yaw;
+	bs.Read(pitch);					bs.Read(yaw);
+	m_camera->m_pitch = pitch;		m_camera->m_yaw = yaw;
+	setRotation(pitch, yaw);
+
+	bs.Read(m_modelEnum);		
+	setModel(mm->get(m_modelEnum));
+
+	bs.Read(m_geometryType);	 
+	setCollisionDetectionGeometry(m_geometryType);
+
+	float mass = 0;
+	bs.Read(mass);	setMass(mass);
+
+	float restitution = 0;
+	bs.Read(restitution);		setMaterialEnergyRestitution(restitution);
+
+	float friction = 0;
+	bs.Read(friction);			setMaterialSurfaceFriction(friction);
+
+	
+	// set the weapon
+	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
+	{
+		int weaponEnum = 0;
+		bs.Read(weaponEnum);
+		if (weaponEnum != -1)
+		{
+			Weapon* weapon = new Weapon(mm->getWeaponData((WeaponNameEnum)weaponEnum));
+			pickUp(weapon);
+			utl::debug("weaponEnum is ", weaponEnum);
+		}
+		else
+		{
 			utl::debug("weaponEnum is None");
 		}
 	}
@@ -794,12 +1051,6 @@ vector<Weapon*>Player::getWeapons()
 }
 
 
-// only used for spawning
-void Player::processInput(Move move)
-{
-	m_camera->processInput(move);
-	m_position = m_camera->getTargetPoint();
-}
 
 
 /*

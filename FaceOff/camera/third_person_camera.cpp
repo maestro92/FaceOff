@@ -133,10 +133,21 @@ void ThirdPersonCamera::control()
 }
 
 
+void ThirdPersonCamera::control(glm::vec3& vel, bool canJump)
+{
+
+}
+
 void ThirdPersonCamera::processInput(Input input)
 {
 
 }
+
+void ThirdPersonCamera::processInput(Input input, glm::vec3& vel, bool canJump)
+{
+
+}
+
 
 void ThirdPersonCamera::updateTarget()
 {
@@ -150,7 +161,6 @@ void ThirdPersonCamera::updateTarget()
 						m_targetZAxis[0], m_targetZAxis[1], m_targetZAxis[2], 0,
 						0,				  0,				0,				  1 };
 	m_targetRotation = glm::make_mat4(temp);
-	m_targetRotation *= glm::rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 	m_target += -m_targetZAxis * m_forwardSpeed;
 }
 

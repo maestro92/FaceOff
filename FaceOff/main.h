@@ -71,7 +71,6 @@ struct KDTreeNode;
 #include "RakNetTypes.h"	// Message ID
 
 #include "game_messages.h"
-#include "network_info.h"
 
 #include "collision_detection/contact_data.h"
 #include "collision_detection/collision_detection.h"
@@ -81,6 +80,7 @@ struct KDTreeNode;
 #include "terrain/terrain.h"
 #include "terrain/multitexture_terrain.h"
 
+#include "network/network_manager.h"
 
 #include <al.h>
 #include <alc.h>
@@ -246,7 +246,7 @@ class FaceOff
 	public:
 		RendererManager				m_rm;
 		ModelManager				m_mm;
-
+		NetworkManager				m_nm;
 		Renderer*					p_renderer;
 
 		/// GUI
@@ -275,13 +275,6 @@ class FaceOff
 
 		// models
 		Model*          p_model;
-		XYZAxisModel    m_xyzModel;
-		ImportedModel	m_bulletModel;
-
-		ImportedModel	m_lowPolyTree;
-		ImportedModel	m_stairs;
-		ImportedModel	m_woodenBox;
-
 
 		// objects
 		Terrain o_terrain;
@@ -298,7 +291,6 @@ class FaceOff
 		WorldObject		o_cubeWireFrame;
 		WorldObject     o_worldAxis;
 		WorldObject     o_ground;
-		WorldObject     o_gun;
 		SkyBox          o_skybox;
 		WorldObject		o_sampleBullet;
 
@@ -312,7 +304,7 @@ class FaceOff
 
 		vector<Player*> m_players;
 
-		GLuint tempTexture;
+//		GLuint tempTexture;
 
 		GUIManager m_gui;
 
@@ -321,8 +313,6 @@ class FaceOff
 		bool m_zoomedIn;
 		float m_zoomFactor;
 	public:
-
-		Player p;
 
 		KDTreeNode* hitNode;
 		long long m_currentTimeMillis;
@@ -336,7 +326,7 @@ class FaceOff
 		RakNet::RakString rs;
 		RakNet::SystemAddress server_address;
 
-		int int_message;
+
 		RakNet::BitStream bsOut;
 
 
@@ -364,6 +354,7 @@ class FaceOff
 		// vector<FireWorkEffect*> m_fireWorkEffects;
 
 		CollisionDetectionTestPairs collisionDetectionTestPairs;
+		CollisionDetectionTestPairs clientInputCollisionDetectionTestPairs;
 
 		FaceOff();
 		~FaceOff();
@@ -371,7 +362,6 @@ class FaceOff
 		/// init functions
 		void init();
 		void initObjects();
-		void initModels();
 		void initRenderers();
 		void initGUI();
 		void initAudio();
@@ -397,12 +387,17 @@ class FaceOff
 		void serverUpdate();
 		void clientUpdate();
 
+
 		void serverSimulation();
 		void clientSimulation();
 
+		void simulatePlayerPhysics(Player* p, int i);
+		void simulatePlayerPhysics(Player* p, int i, Move move);
+		void simulateObjectPhysics(WorldObject* obj, int i);
 		void simulatePhysics();
 		bool testCollisionDetection(WorldObject* a, WorldObject* b, ContactData& contactData);
-//		bool testCollisionDetectionPlayerVersion(WorldObject* a, WorldObject* b, ContactData& contactData);
+		void checkNeighbors(WorldObject* obj);
+		void checkNeighborsAfterClientInput(WorldObject* obj);
 
 		void render();
 

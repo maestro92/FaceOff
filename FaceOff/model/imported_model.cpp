@@ -224,9 +224,12 @@ bool ImportedModel::initMaterials2(const aiScene* pScene, const std::string& Fil
         }
 
    //     utl::debug(fullPath, m_textures[i].m_id);
-        if (!success)
-            m_textures[i].m_id = utl::loadTexture("Assets/models/weapons/Ak_47/ak-47.jpg");
-//            m_textures[i].m_id = utl::loadTexture("Assets/models/weapons/M9/Tex_0009_1.jpg");
+   
+		
+	//     if (!success)
+   //         m_textures[i].m_id = utl::loadTexture("Assets/models/weapons/Ak_47/ak-47.jpg");
+
+	//            m_textures[i].m_id = utl::loadTexture("Assets/models/weapons/M9/Tex_0009_1.jpg");
     //    utl::debugLn("final: " + fullPath, m_textures[i].m_id);
     }
 

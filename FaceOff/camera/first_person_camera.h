@@ -9,15 +9,19 @@ class FirstPersonCamera : public Camera
 {
     public:
         FirstPersonCamera();
-        ~FirstPersonCamera();
+		FirstPersonCamera(glm::vec3 pos);
+		~FirstPersonCamera();
 
-		void control();
+		virtual void control();
+		virtual void control(glm::vec3& vel, bool canJump);
+
 		void setFreeMode(bool b);
 		void updateViewMatrix(Pipeline& p);
+		inline void setEyePoint(glm::vec3 eye);
+		virtual void processInput(Move move);
+		virtual void processInput(Move move, glm::vec3& vel, bool canJump);
 
-		void processInput(Move move);
-private:
-
+	private:
         int m_screenMidX;
         int m_screenMidY;
 
@@ -27,9 +31,22 @@ private:
         void updatePosXZ(float dir);
         void updatePosY(float dir);
 
+		void updateVelXZ(float dir, glm::vec3 & vel);
+		void updateVelY(float dir, glm::vec3 & vel);
 		
 		glm::vec3 getFirePosition();
 		
 		virtual CameraType getCameraType();
+
 };
+
+
+
+
+
+
+
+
 #endif
+
+

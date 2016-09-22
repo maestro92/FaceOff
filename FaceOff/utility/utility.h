@@ -44,6 +44,7 @@
 #include "json_spirit_writer_template.h"
 #include <cassert>
 #include <fstream>
+#include <mutex>
 
 #ifndef JSON_SPIRIT_MVALUE_ENABLED
 #error Please define JSON_SPIRIT_MVALUE_ENABLED for the mValue type to be enabled 
@@ -357,6 +358,7 @@ struct Move
 
 struct MoveQueue
 {
+	std::mutex mtx;
 	queue<Move> buffer;
 
 	MoveQueue()
@@ -374,12 +376,14 @@ struct MoveQueue
 			bs.Write((RakNet::MessageID)CLIENT_INPUT);
 
 			bs.Write(size);
-			cout << "client has " << size << " size " << endl;
+		//	cout << "client has " << size << " size " << endl;
 
 			for (int i = 0; i < size; i++)
 			{
+				mtx.lock();
 				Move move = buffer.front();
 				buffer.pop();
+				mtx.unlock();
 
 				move.toBitStream(bs);
 			}
@@ -388,44 +392,60 @@ struct MoveQueue
 
 	void setFromBitStream(RakNet::BitStream& bs)
 	{
+		// no need for message id
+		//	RakNet::MessageID msgId;
+		//	bs.Read(msgId);
+
 		int size = 0;
-
-	// no need for message id
-	//	RakNet::MessageID msgId;
-	//	bs.Read(msgId);
-
 		bs.Read(size);
 
 		for (int i = 0; i < size; i++)
 		{
 			Move move(bs);
+			mtx.lock();
 			buffer.push(move);
+			mtx.unlock();
 		}
 	}
 
 	Move front()
 	{
-		return buffer.front();
+		mtx.lock();
+		Move f = buffer.front();
+		mtx.unlock();
+		return f;
 	}
 
 	void push(Move move)
 	{
+		mtx.lock();
 		buffer.push(move);
+		mtx.unlock();
 	}
 
-	void pop()
+	Move pop()
 	{
+		mtx.lock();
+		Move f = buffer.front();
 		buffer.pop();
+		mtx.unlock();
+		return f;
 	}
 
 	int size()
 	{
-		return buffer.size();
+		mtx.lock();
+		int size = buffer.size();
+		mtx.unlock();
+		return size;
 	}
 
 	bool empty()
 	{
-		return buffer.size() == 0;
+		mtx.lock();
+		bool b = (buffer.size() == 0);
+		mtx.unlock();
+		return b;
 	}
 };
 
@@ -436,7 +456,8 @@ namespace utl
 	const float Z_FAR = 2000.0;
 	const int SCREEN_WIDTH = 800;
 	const int SCREEN_HEIGHT = 600;
-
+	const int SCREEN_WIDTH_MIDDLE = SCREEN_WIDTH / 2;
+	const int SCREEN_HEIGHT_MIDDLE = SCREEN_HEIGHT / 2; 
 
 	const float MATH_EPISON = 0.000001f;
 	const float GRAVITY_CONSTANT = 0.01f;
@@ -562,11 +583,6 @@ namespace utl
 	void setUniLoc(GLuint location, glm::mat3 value);
 	void setUniLoc(GLuint location, glm::mat4 value);
 	void setUniLocTranspose(GLuint location, glm::mat4 value);
-
-
-	/// utl_network.cpp
-	void readBitStream(RakNet::BitStream& bsIn, glm::vec3& v);
-	void setBitStream(RakNet::BitStream& bsOut, glm::vec3& v);
 
 
 

@@ -4,7 +4,7 @@
 using namespace std;
 
 #include <unordered_map>
-
+#include "model_enum.h"
 
 #include "utility.h"
 
@@ -50,17 +50,10 @@ class ModelManager
 		void initWeaponsData();
 		Weapon createWeapon(WeaponNameEnum name);
 
-
-		Model* m_player;
-		Model* m_healthBar;
-		Model* m_xyzAxis;
-		Model* m_tree;
-		Model* m_cube;
-		Model* m_ground;
-		Model* m_woodenBox;
+		
 
 
-
+		vector<Model> m_models;
 
 	//	const mValue& findValue(const mObject& obj, const string& name);
 	//	glm::vec3 findVec3(const mObject& obj, const string& name);
@@ -72,6 +65,30 @@ class ModelManager
 		WeaponData getWeaponData(WeaponNameEnum name);
 
 		unordered_map<WeaponNameEnum, WeaponData> m_weaponDatas;
+
+		Model* get(int modelEnum);
+
+	private:
+		Model* m_player;
+		Model* m_healthBar;
+		Model* m_xyzAxis;
+		Model* m_tree;
+		Model* m_cube;
+		Model* m_ground;
+		Model* m_woodenBox;
+		Model* m_legoMan;
+
+
+		/*
+		XYZAxisModel    m_xyzModel;
+		ImportedModel	m_bulletModel;
+
+		ImportedModel	m_lowPolyTree;
+		ImportedModel	m_stairs;
+		ImportedModel	m_woodenBox;
+		*/
+
+
 };
 
 

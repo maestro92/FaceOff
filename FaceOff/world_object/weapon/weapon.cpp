@@ -60,6 +60,8 @@ void Weapon::setData(WeaponData data)
 	m_firstPOVScale = data.firstPOVScale;
 	m_firstPOVOffset = data.firstPOVOffset;
 
+	m_thirdPOVScale = data.thirdPOVScale;
+	m_thirdPOVOffset = data.thirdPOVOffset;
 
 	m_slotEnum = data.slotEnum;
 	m_model = data.model;

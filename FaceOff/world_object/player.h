@@ -48,16 +48,10 @@ class Player : public WorldObject
 		string name;
 		RakNet::RakNetGUID m_guid;
 
-		
-
         Camera* m_camera;
 
 		static glm::vec3 firstPOVWeaponOffset;
 		static glm::vec3 thirdPOVWeaponOffset;
-
-		Weapon* m_curCollidedWeapon;
-
-		Renderer* r_gun;
 		
 		void setId(int id);
 
@@ -65,15 +59,17 @@ class Player : public WorldObject
 		void setPosition(float x, float y, float z);
 
 
+
 		void setDefaultPlayerFlag(bool b);
 		
-//		vector<WorldObject*> m_weapons;
-//		int m_curWeaponIndex;
-//		vector<Weapon*> m_weapons;
+
 		vector<glm::vec3> m_weaponPositionOffsets;
 		vector<glm::vec3> m_bulletStartPositionOffsets;
 		vector<glm::vec3> m_bulletStartPositionOffsetScale;
 
+
+		// for weapons
+		// glm::vec3 getArmPosition();
 		glm::vec3 getFirePosition();
 
 		void update(Pipeline& p);
@@ -94,7 +90,9 @@ class Player : public WorldObject
 		void updateBulletTransform();
 		void adjustWeaponAndBulletPosition();
 
-		bool isNotJumping();
+		bool canJump();
+		bool inMidAir;
+		void updateMidAirFlag();
 
 		virtual void renderGroup(Pipeline& p, Renderer* r);
 		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
@@ -110,6 +108,9 @@ class Player : public WorldObject
 		int getId();
 
 		bool hasWeaponAtSlot(WeaponSlotEnum slot);
+
+
+		void setRotation(float pitch, float yaw);
 
 		void fireWeapon();
 		Weapon* throwGrenade();
@@ -127,9 +128,10 @@ class Player : public WorldObject
 		bool isUsingLongRangedWeapon();
 
 		// used for spawn
-	//	void spawnFromBitStream(RakNet::BitStream& bs);
-
+		void spawnInfoToBitStream(RakNet::BitStream& bs);
 		void toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs);
+
+		void spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm);
 		void setFromBitStream(RakNet::BitStream& bs);
 
 		void processInput(Move move);
@@ -137,7 +139,10 @@ class Player : public WorldObject
 		bool hasMoved();
 		Move getMoveState();
 
+		bool isDefaultPlayer();
+
 		virtual bool ignorePhysicsWith(WorldObject* obj);
+
 
 	private:
 		int m_id;
@@ -147,6 +152,12 @@ class Player : public WorldObject
 
 		int m_maxArmor;
 		int m_curArmor;
+
+		glm::vec3 m_xAxis;
+		glm::vec3 m_yAxis;
+		glm::vec3 m_zAxis;
+
+
 
 		vector<Weapon*> m_weapons;
 		Weapon* m_curWeapon;

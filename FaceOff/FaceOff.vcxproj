@@ -243,7 +243,6 @@
     <ClCompile Include="utility\utility_gl_uni_loc.cpp" />
     <ClCompile Include="utility\utility_math.cpp" />
     <ClCompile Include="utility\utility_sdl.cpp" />
-    <ClCompile Include="utility\utility_network.cpp" />
     <ClCompile Include="utility\utility_json.cpp" />
     <ClCompile Include="utility\utility_time.cpp" />
     <ClCompile Include="world_object\billboard_list.cpp" />
@@ -455,6 +454,7 @@
     <ClInclude Include="model\mesh.h" />
     <ClInclude Include="model\imported_model.h" />
     <ClInclude Include="model\model.h" />
+    <ClInclude Include="model\model_enum.h" />
     <ClInclude Include="model\model_manager.h" />
     <ClInclude Include="model\texture.h" />
     <ClInclude Include="model\vertex_data.h" />
@@ -464,7 +464,7 @@
     <ClInclude Include="world_object\particle_effect\smoke_effect.h" />
     <ClInclude Include="world_object\particle_effect\particle_effect.h" />
     <ClInclude Include="world_object\terrain\multitexture_terrain.h" />
-    <ClInclude Include="network\network_info.h" />
+    <ClInclude Include="network\network_utility.h" />
     <ClInclude Include="network\game_messages.h" />
     <ClInclude Include="network\network_client.h" />
     <ClInclude Include="network\network_manager.h" />

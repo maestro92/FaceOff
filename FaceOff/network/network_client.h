@@ -19,7 +19,6 @@
 #include "RakNetTypes.h"	// Message ID
 
 #include "game_messages.h"
-#include "network_info.h"
 
 
 class NetworkClient

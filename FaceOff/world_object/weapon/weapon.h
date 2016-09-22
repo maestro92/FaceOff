@@ -40,9 +40,11 @@ class Weapon : public WorldObject
 
 		float m_modelScale;
 
-
 		glm::vec3 m_firstPOVOffset;
 		float m_firstPOVScale;
+
+		glm::vec3 m_thirdPOVOffset;
+		float m_thirdPOVScale;
 
 		void setData(WeaponData data);
 

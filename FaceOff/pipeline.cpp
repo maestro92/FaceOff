@@ -76,7 +76,8 @@ glm::vec3 Pipeline::getViewPosition()
 void Pipeline::translate(float x,float y,float z)
 {
 	if(m_curMatrixMode==MODEL_MATRIX)
-		m_modelMatrix[m_modelMatrix.size()-1]*=glm::translate(x,y,z);
+		m_modelMatrix[m_modelMatrix.size()-1] *= glm::translate(x, y, z);
+	
 	else if (m_curMatrixMode == VIEW_MATRIX)
 		m_viewMatrix[m_viewMatrix.size() - 1] *= glm::translate(-x, -y, -z);
 	
@@ -84,12 +85,14 @@ void Pipeline::translate(float x,float y,float z)
 }
 
 
-void Pipeline::translate(glm::vec3 trans_matrix)
+void Pipeline::translate(glm::vec3 transMatrix)
 {
 	if(m_curMatrixMode==MODEL_MATRIX)
-		m_modelMatrix[m_modelMatrix.size()-1]*=glm::translate(trans_matrix.x,trans_matrix.y,trans_matrix.z);
+		m_modelMatrix[m_modelMatrix.size() - 1] *= glm::translate(transMatrix.x, transMatrix.y, transMatrix.z);
+
 	else if(m_curMatrixMode==VIEW_MATRIX)
-		m_viewMatrix[m_viewMatrix.size()-1]*=glm::translate(-trans_matrix.x,-trans_matrix.y,-trans_matrix.z);
+		m_viewMatrix[m_viewMatrix.size() - 1] *= glm::translate(-transMatrix.x, -transMatrix.y, -transMatrix.z);
+	
 	matricesReady=false;
 }
 
@@ -107,9 +110,11 @@ void Pipeline::scale(float x,float y,float z)
 void Pipeline::scale(glm::vec3 v)
 {
 	if(m_curMatrixMode==MODEL_MATRIX)
-		m_modelMatrix[m_modelMatrix.size()-1]*=glm::scale(v.x, v.y, v.z);
+		m_modelMatrix[m_modelMatrix.size()-1] *= glm::scale(v.x, v.y, v.z);
+
 	else if(m_curMatrixMode==VIEW_MATRIX)
-		m_viewMatrix[m_viewMatrix.size()-1]*=glm::scale(v.x, v.y, v.z);
+		m_viewMatrix[m_viewMatrix.size()-1] *= glm::scale(v.x, v.y, v.z);
+	
 	matricesReady=false;
 }
 
@@ -133,10 +138,11 @@ void Pipeline::rotateZ(float angle)
 void Pipeline::rotate(float angle, float x, float y, float z)
 {
 	if(m_curMatrixMode==MODEL_MATRIX)
-		m_modelMatrix[m_modelMatrix.size()-1]*=glm::rotate(angle,x,y,z);
+		m_modelMatrix[m_modelMatrix.size()-1] *= glm::rotate(angle,x,y,z);
 
 	else if(m_curMatrixMode==VIEW_MATRIX)
-		m_viewMatrix[m_viewMatrix.size()-1]*=glm::rotate(-angle,x,y,z);
+		m_viewMatrix[m_viewMatrix.size()-1] *= glm::rotate(-angle,x,y,z);
+
 	matricesReady=false;
 }
 
@@ -146,10 +152,10 @@ void Pipeline::rotate(glm::quat q_rotation)
     glm::mat4 RotationMatrix = glm::toMat4(q_rotation);
 
 	if(m_curMatrixMode==MODEL_MATRIX)
-		m_modelMatrix[m_modelMatrix.size()-1]*=RotationMatrix;
+		m_modelMatrix[m_modelMatrix.size()-1] *= RotationMatrix;
 
 	else if(m_curMatrixMode==VIEW_MATRIX)
-		m_viewMatrix[m_viewMatrix.size()-1]*=RotationMatrix;
+		m_viewMatrix[m_viewMatrix.size()-1] *= RotationMatrix;
 
 	matricesReady=false;
 }
@@ -158,10 +164,10 @@ void Pipeline::rotate(glm::quat q_rotation)
 void Pipeline::addMatrix(glm::mat4 m)
 {
     if(m_curMatrixMode==MODEL_MATRIX)
-		m_modelMatrix[m_modelMatrix.size()-1]*=m;
+		m_modelMatrix[m_modelMatrix.size()-1] *= m;
 
 	else if(m_curMatrixMode==VIEW_MATRIX)
-		m_viewMatrix[m_viewMatrix.size()-1]*=m;
+		m_viewMatrix[m_viewMatrix.size()-1] *= m;
 
 	matricesReady=false;
 }
@@ -174,13 +180,13 @@ void Pipeline::ortho(float left,float right,float bottom,float top,float near,fl
 	matricesReady=false;
 }
 
-void Pipeline::perspective(float angle,float aRatio,float near,float far)	//==gluPerspective
+void Pipeline::perspective(float angle,float aRatio,float near,float far) //==gluPerspective
 {
 	m_projectionMatrix[m_projectionMatrix.size()-1]=glm::perspective(angle,aRatio,near,far);
 	matricesReady=false;
 }
 
-		//getters
+//getters
 glm::mat4 Pipeline::getModelMatrix()
 {
 	return m_modelMatrix[m_modelMatrix.size()-1];

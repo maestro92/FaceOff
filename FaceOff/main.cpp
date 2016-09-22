@@ -1,6 +1,6 @@
 #include "main.h"
 
-#define NETWORK_FLAG 0
+#define NETWORK_FLAG 1
 #define SERVER_RENDER_FLAG 0
 
 
@@ -27,7 +27,18 @@
 bool incrFlag = true;
 bool incrFlag2 = true;
 
+bool incrAngleFlag = true;
+bool incrAngleFlag2 = true;
+
+float tempPitch = 0;
+float tempYaw = 0;
+
+float tempPitch2 = 0;
+float tempYaw2 = 0;
+
 // the server simluates the game in descirete time steps called ticks
+
+glm::vec3 oldPos;
 
 /*
 RakNet Ogre tutorial
@@ -76,7 +87,6 @@ const int SERVER_SNAPSHOT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 const int CLIENT_INPUT_SENT_PER_SECOND = 30;
 const int CLIENT_INPUT_SENT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 
-
 FaceOff::FaceOff()
 {
 	m_isServer = false;
@@ -100,8 +110,6 @@ void FaceOff::init()
 	containedFlag = false;
 	hitNode = NULL;
 
-
-	initModels();
 	initObjects();
 	initRenderers();
    
@@ -137,75 +145,30 @@ void FaceOff::init()
 
 GLuint tempTexture;
 
-void FaceOff::initModels()
-{
-
-	m_mm.init();
-
-
-	float scale = 1.0;
-
-	vector<string> textures;
-
-	m_xyzModel = XYZAxisModel();
-
-
-
-	tempTexture = utl::loadTexture("Assets/Images/chess.png");
-
-	// m_groundModel.load("Assets/models/quad.obj");
-	//	m_groundModel.load("Assets/models/ground.obj");
-	// textures.clear();  textures.push_back("Assets/Images/chess.png"); //textures.push_back("Assets/tree.png"); // textures.push_back("Assets/Images/chess.png");
-	// m_groundModel.setTextures(textures);
-	// m_groundModel.setMeshRandTextureIdx();
-
-
-	m_bulletModel.load("./Assets/models/cylinder_base.obj");
-
-
-
-
-	textures.clear();  textures.push_back("Assets/lowPolyTree.png");
-	m_lowPolyTree.load("Assets/lowPolyTree.obj", textures);
-
-
-	textures.clear(); textures.push_back("Assets/models/basic stair/texture.png");
-	m_stairs.load("Assets/models/basic stair/stairs.obj", textures);
-	m_stairs.setMeshRandTextureIdx();
-
-	textures.clear(); textures.push_back("Assets/models/wooden box/WoodPlanks_Color.jpg");
-	m_woodenBox.load("Assets/models/wooden box/WoodenBoxOpen02.obj", textures);
-	m_woodenBox.setMeshRandTextureIdx();
-
-
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		m_players[i]->setModel(m_mm.m_player);
-	}
-}
 
 
 
 void FaceOff::initObjects()
 {
+	m_mm.init();
+	m_nm.init(&m_mm, &m_objects, &m_players);
+
 	if (m_isServer)
 	{
-		m_serverCamera = FirstPersonCamera();
-		m_serverCamera.setEyePoint(glm::vec3(-59.362, 94.037, 153.189));
+		m_serverCamera = FirstPersonCamera(glm::vec3(49.83, 200.67, 59.87));
+		m_serverCamera.setPitch(-63.5);
+		m_serverCamera.setYaw(56.5);
 		m_serverCamera.setFreeMode(true);
+
+	//	utl::debug("m_serverCamera eye", m_serverCamera.getEyePoint());
 	}
 
 	float scale = 100.0;
 	o_worldAxis.setScale(scale);
-	o_worldAxis.setModel(m_mm.m_xyzAxis);
+	o_worldAxis.setModelEnum(ModelEnum::xyzAxis);
+	o_worldAxis.setModel(m_mm.get(ModelEnum::xyzAxis));
 
-
-
-	o_gun.setPosition(200, 0, 200);
-	o_gun.setRotation(glm::rotate(90.0f, 0.0f, 1.0f, 0.0f));
-	o_gun.setScale(0.5);
-
-
+	
 	o_sampleBullet.setScale(1.0, 5.0, 1.0);
 
 	o_skybox = SkyBox();
@@ -235,7 +198,8 @@ void FaceOff::initObjects()
 	WorldObject* o_temp = new WorldObject();
 	o_temp->setScale(xbound, zbound, 1.0);
 	o_temp->setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
-	o_temp->setModel(m_mm.m_ground);
+	o_temp->setModelEnum(ModelEnum::ground);
+	o_temp->setModel(m_mm.get(ModelEnum::ground));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	o_temp->m_name = "ground";
 	m_objects.push_back(o_temp);
@@ -246,7 +210,9 @@ void FaceOff::initObjects()
 	o_temp->m_name = "south wall";
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setPosition(0, ybound / 2, zbound + wallWidth);
-	o_temp->setModel(m_mm.m_cube);
+//	o_temp->setModel(m_mm.m_cube);
+	o_temp->setModelEnum(ModelEnum::cube);
+	o_temp->setModel(m_mm.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -256,7 +222,9 @@ void FaceOff::initObjects()
 	o_temp->setPosition(0, ybound / 2, -zbound - wallWidth);
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
-	o_temp->setModel(m_mm.m_cube);
+//	o_temp->setModel(m_mm.m_cube);
+	o_temp->setModelEnum(ModelEnum::cube);
+	o_temp->setModel(m_mm.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -265,7 +233,9 @@ void FaceOff::initObjects()
 	o_temp->m_name = "west wall";
 	o_temp->setPosition(-xbound - wallWidth, ybound / 2, 0.0);
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
-	o_temp->setModel(m_mm.m_cube);
+//	o_temp->setModel(m_mm.m_cube);
+	o_temp->setModelEnum(ModelEnum::cube);
+	o_temp->setModel(m_mm.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -274,7 +244,9 @@ void FaceOff::initObjects()
 	o_temp->m_name = "east wall";
 	o_temp->setPosition(xbound + wallWidth, ybound / 2, 0.0);
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
-	o_temp->setModel(m_mm.m_cube);
+//	o_temp->setModel(m_mm.m_cube);
+	o_temp->setModelEnum(ModelEnum::cube);
+	o_temp->setModel(m_mm.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -314,7 +286,9 @@ void FaceOff::initObjects()
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-		o_temp->setModel(m_mm.m_woodenBox);
+//		o_temp->setModel(m_mm.m_woodenBox);
+		o_temp->setModelEnum(ModelEnum::woodenBox);
+		o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
 		m_objects.push_back(o_temp);
 	}
@@ -331,7 +305,9 @@ void FaceOff::initObjects()
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-		o_temp->setModel(m_mm.m_woodenBox);
+//		o_temp->setModel(m_mm.m_woodenBox);
+		o_temp->setModelEnum(ModelEnum::woodenBox);
+		o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
 		m_objects.push_back(o_temp);
 	}
@@ -360,7 +336,9 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, -halfPosZMag);
-	o_temp->setModel(m_mm.m_woodenBox);
+//	o_temp->setModel(m_mm.m_woodenBox);
+	o_temp->setModelEnum(ModelEnum::woodenBox);
+	o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -370,7 +348,9 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, -halfPosZMag);
-	o_temp->setModel(m_mm.m_woodenBox);
+//	o_temp->setModel(m_mm.m_woodenBox);
+	o_temp->setModelEnum(ModelEnum::woodenBox);
+	o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -381,7 +361,9 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, halfPosZMag);
-	o_temp->setModel(m_mm.m_woodenBox);
+//	o_temp->setModel(m_mm.m_woodenBox);
+	o_temp->setModelEnum(ModelEnum::woodenBox);
+	o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -392,7 +374,9 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
-	o_temp->setModel(m_mm.m_woodenBox);
+//	o_temp->setModel(m_mm.m_woodenBox);
+	o_temp->setModelEnum(ModelEnum::woodenBox);
+	o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -564,6 +548,7 @@ void FaceOff::initObjects()
 	m_objects.push_back(k);
 	m_objects.push_back(g);
 	
+	
 	m_objects.push_back(w1);
 	m_objects.push_back(k1);
 	m_objects.push_back(g1);
@@ -571,12 +556,14 @@ void FaceOff::initObjects()
 	m_objects.push_back(w2);
 	m_objects.push_back(k2);
 	m_objects.push_back(g2);
+	
 
 	m_defaultPlayerID = 0;
 	Player* p = new Player(m_defaultPlayerID);
 	p->m_name = "player 0";
 	p->setDefaultPlayerFlag(true);
-	p->setModel(m_mm.m_player);
+	p->setModelEnum(ModelEnum::player);
+	p->setModel(m_mm.get(ModelEnum::player));
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -590,7 +577,8 @@ void FaceOff::initObjects()
 	p = new Player(1);
 	p->m_name = "player 1";
 	p->setPosition(0, 5, 25);
-	p->setModel(m_mm.m_player);
+	p->setModelEnum(ModelEnum::player);
+	p->setModel(m_mm.get(ModelEnum::player));
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -604,7 +592,8 @@ void FaceOff::initObjects()
 	p = new Player(2);
 	p->m_name = "player 2";
 	p->setPosition(0, 5, -40);
-	p->setModel(m_mm.m_player);
+	p->setModelEnum(ModelEnum::player);
+	p->setModel(m_mm.get(ModelEnum::player));
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -639,13 +628,13 @@ void FaceOff::initObjects()
 
 	
 	SmokeEffect* smEffect = new SmokeEffect();
-	smEffect->setPosition(glm::vec3(15.0, 5.0, -13.0));
+	smEffect->setPosition(glm::vec3(15.0, 5.0, -53.0));
 	smEffect->setScale(5.0);
 
 	smEffect->init();
 	m_smokeEffects.push_back(smEffect);
 	
-	m_objectKDtree.print();
+//	m_objectKDtree.print();
 }
 
 
@@ -803,7 +792,9 @@ void FaceOff::initNetworkLobby()
 					p->m_guid = packet->guid;
 					p->m_name = "player " + utl::intToStr(newPlayerId);
 					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
-					p->setModel(m_mm.m_player);
+					p->setRotation(0, 0);
+					p->setModelEnum(ModelEnum::player);
+					p->setModel(m_mm.get(ModelEnum::player));
 					p->setMass(80);
 					p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -829,8 +820,6 @@ void FaceOff::initNetworkLobby()
 
 
 					m_players.push_back(p);
-
-
 					m_objects.push_back(mainWeapon);
 					m_objects.push_back(knife);
 					m_objects.push_back(grenade);
@@ -915,7 +904,6 @@ void FaceOff::initNetworkLobby()
 	}
 	else
 	{
-		int int_message;
 		while (waitingInLobby)
 		{
 			// iterate over each message received
@@ -931,40 +919,10 @@ void FaceOff::initNetworkLobby()
 				{
 					case SPAWN_INFORMATION:
 					{
-						Player* newPlayer = new Player();
-						newPlayer->setFromBitStream(bsIn);
+						Player* newPlayer = m_nm.spawnClientPlayer(bsIn, true);
 						newPlayer->setDefaultPlayerFlag(true);
-
 						m_defaultPlayerID = newPlayer->getId();
 
-						if (m_defaultPlayerID + 1 >= m_players.size())
-						{
-							m_players.resize(m_defaultPlayerID + 1);
-						}
-
-						m_players[m_defaultPlayerID] = newPlayer;
-						
-
-
-						for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
-						{
-							int weaponEnum = 0;
-							bsIn.Read(weaponEnum);
-							if (weaponEnum != -1)
-							{
-								Weapon* weapon = new Weapon(m_mm.getWeaponData((WeaponNameEnum)weaponEnum));
-								newPlayer->pickUp(weapon);
-								m_objects.push_back(weapon);
-
-								utl::debug("weaponEnum is ", weaponEnum);
-							}
-							else
-							{
-								utl::debug("weaponEnum is None");
-							}
-						}
-						
-						
 						server_address = packet->systemAddress;
 
 						printf("Server said I'm client number %d at %f, %f, %f\n", newPlayer->getId(), newPlayer->getPosition().x, newPlayer->getPosition().y, newPlayer->getPosition().z);
@@ -974,20 +932,8 @@ void FaceOff::initNetworkLobby()
 
 					case NEW_CLIENT:
 					{
-						Player* newPlayer = new Player();
-						newPlayer->setFromBitStream(bsIn);
-
-						int id = newPlayer->getId();
-
-						if (id + 1 >= m_players.size())
-						{
-							m_players.resize(id + 1);
-						}
-
-						m_players[id] = newPlayer;
-
-
-						printf("Received new client info for %d: %f, %f, %f", id, newPlayer->getPosition().x, newPlayer->getPosition().y, newPlayer->getPosition().z);
+						Player* newPlayer = m_nm.spawnClientPlayer(bsIn, false);
+						printf("Received new client info for %d: %f, %f, %f", newPlayer->getId(), newPlayer->getPosition().x, newPlayer->getPosition().y, newPlayer->getPosition().z);
 
 						cout << "Player List" << endl;
 						for (int i = 0; i < m_players.size(); i++)
@@ -1273,7 +1219,7 @@ void FaceOff::clientNetworkThread()
 		{
 			if (!m_inputQueue.empty())
 			{
-				cout << "sending server my inputs" << endl;
+		//		cout << "sending server my inputs" << endl;
 				m_inputQueue.toBitStream(bsOut);
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
 			}
@@ -1459,7 +1405,8 @@ void FaceOff::clientHandleDeviceEvents()
 							WorldObject* hitPointMark = new WorldObject();
 							hitPointMark->setPosition(hitPoint);
 							hitPointMark->setScale(1.0, 1.0, 1.0);
-							hitPointMark->setModel(m_mm.m_cube);
+							hitPointMark->setModelEnum(ModelEnum::cube);
+							hitPointMark->setModel(m_mm.get(ModelEnum::cube));
 							hitPointMark->m_name = "hitMark";
 							//								m_hitPointMarks.push_back(hitPointMark);
 						}
@@ -1809,51 +1756,72 @@ void FaceOff::update()
 }
 
 
+/*
 
-void FaceOff::serverUpdate()
-{
-	// process client inputs
-	
-	if (m_inputQueue.size() > 0)
-	{
-		utl::debug("inputQueue size is", m_inputQueue.size());
-	}
+Frame
+	get input, update velocity
+	gravity on velocity
 
-	
-	for (int i = 0; i < m_inputQueue.size(); i++)
-	{
-		Move move = m_inputQueue.front();
-		m_inputQueue.pop();
-		move.print();
+	pos = pos + velocity
 
-		int playerId = move.playerId;
-		
-		m_players[playerId]->processInput(move);
-	}	
-}
+	resolveVelocity
+	resolvePenetration
 
-
-void FaceOff::clientUpdate()
-{
-
-}
+	update camera
+*/
 
 
 void FaceOff::serverSimulation()
 {
+	collisionDetectionTestPairs.clear();
 
+	// process client inputs
+
+	int size = m_inputQueue.size();
+	if (size > 0)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			Move move = m_inputQueue.pop();
+			//	move.print();
+
+			int playerId = move.playerId;
+			Player* p = m_players[playerId];
+
+
+			simulatePlayerPhysics(p, playerId, move);
+
+
+			if (m_isServer)
+			{
+				if (oldPos != p->getPosition())
+				{
+					utl::debug("pos", p->getPosition());
+					oldPos = p->getPosition();
+				}
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < m_players.size() ; i++)
+		{
+			Player* p = m_players[i];
+			simulatePlayerPhysics(p, i);
+		}
+
+	}
+
+
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+		simulateObjectPhysics(object, i);
+	}
 }
 
 void FaceOff::clientSimulation()
 {
-
-}
-
-
-void FaceOff::simulatePhysics()
-{
-	unordered_set<int> objectsAlreadyTested;
-
 	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
 	// then deallocating memory
 	collisionDetectionTestPairs.clear();
@@ -1862,232 +1830,365 @@ void FaceOff::simulatePhysics()
 	for (int i = 0; i < m_players.size(); i++)
 	{
 		Player* p = m_players[i];
+	
+		simulatePlayerPhysics(p, i);
 
-		if (p == NULL)
-		{
-			continue;
-		}
-
-		p->m_velocity += utl::BIASED_HALF_GRAVITY;
 		
-		if (i == m_defaultPlayerID)
+		if (oldPos != p->getPosition())
 		{
-			p->m_camera->m_target += p->m_velocity;
+			utl::debug("pos", p->getPosition());
+			oldPos = p->getPosition();
+		}
+		
+	}
 
-			Uint8* state = SDL_GetKeyState(NULL);
+	
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+		simulateObjectPhysics(object, i);
+	}
+}
 
-			if (state[SDLK_SPACE])
-			{
-				if (p->isNotJumping())
-					p->m_velocity += glm::vec3(0.0, 175.0, 0.0) * utl::GRAVITY_CONSTANT;
-			}
+void FaceOff::simulatePlayerPhysics(Player* p, int i, Move move)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+	p->m_velocity += utl::BIASED_HALF_GRAVITY;
+	p->updateMidAirFlag();
 
-			p->control();
+	p->processInput(move);
+
+	p->m_position += p->m_velocity;
+
+	p->updateCollisionDetectionGeometry();
+
+	checkNeighborsAfterClientInput(p);
+
+	p->updateCollisionDetectionGeometry();
+	m_objectKDtree.reInsert(p);
+
+
+	p->updateWeaponTransform();
+	p->updateGameInfo();
+}
+
+
+void FaceOff::simulatePlayerPhysics(Player* p, int i)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+
+	p->updateGameInfo();
+
+
+	p->m_velocity += utl::BIASED_HALF_GRAVITY;
+	p->updateMidAirFlag();
+
+	if (p->isDefaultPlayer())
+	{
+		p->control();
 
 #if NETWORK_FLAG == 1
-			if (m_players[m_defaultPlayerID]->hasMoved())
-			{
-				m_inputQueue.push(m_players[m_defaultPlayerID]->getMoveState());
-			}
-#endif		
-			p->updateGameStats();
+		if (m_players[m_defaultPlayerID]->hasMoved())
+		{
+			m_inputQueue.push(m_players[m_defaultPlayerID]->getMoveState());
 		}
+#endif		
+		p->updateGameStats();
+	}
+
+	p->m_position += p->m_velocity;
 
 #if NETWORK_FLAG == 0 
-		else if (i == 1)
+	if (i == 1)
+	{
+		/*
+		float tempDist = 100;
+
+		if (incrFlag)
+			p->m_position.z += 0.05;
+		else
+			p->m_position.z -= 0.05;
+
+		if (p->m_position.z > tempDist)
+			incrFlag = false;
+		if (p->m_position.z < 20)
+			incrFlag = true;
+		*/
+
+
+		/*
+		float tempMaxAngle = 150;
+
+		if (incrAngleFlag)
 		{
-			float tempDist = 100;
-
-			if (incrFlag)
-				p->m_position.z += 0.05;
-			else
-				p->m_position.z -= 0.05;
-
-			if (p->m_position.z > tempDist)
-				incrFlag = false;
-			if (p->m_position.z < 20)
-				incrFlag = true;
-
-			p->m_position += p->m_velocity;
+			tempPitch = 0;
+			tempYaw += 1;
+		}
+		else
+		{
+			tempPitch = 0;
+			tempYaw -= 1;
 		}
 
-		else if (i == 2)
+		if (tempPitch > tempMaxAngle)
 		{
-			float tempDist = 15;
-
-			if (incrFlag2)
-				p->m_position.x += 0.05;
-			else
-				p->m_position.x -= 0.05;
-
-
-			if (p->m_position.x > tempDist)
-				incrFlag2 = false;
-			if (p->m_position.x < -tempDist)
-				incrFlag2 = true;
-
-			p->m_position += p->m_velocity;
+			incrAngleFlag = false;
 		}
+		if (tempPitch < -tempMaxAngle)
+		{
+			incrAngleFlag = true;
+		}
+		*/
+		p->setRotation(tempPitch, tempYaw);
+	}
+
+	else if (i == 2)
+	{
+		/*
+		float tempDist = 15;
+
+		if (incrFlag2)
+			p->m_position.x += 0.05;
+		else
+			p->m_position.x -= 0.05;
+
+
+		if (p->m_position.x > tempDist)
+			incrFlag2 = false;
+		if (p->m_position.x < -tempDist)
+			incrFlag2 = true;
+			*/
+
+		
+		/*
+		float tempMaxAngle = 150;
+
+		if (incrAngleFlag2)
+		{
+			tempPitch2 += 0.05;
+			tempYaw2 += 1;
+		}
+		else
+		{
+			tempPitch2 += 0.05;
+			tempYaw2 -= 1;
+		}
+
+		if (tempPitch2 > tempMaxAngle)
+		{
+			incrAngleFlag2 = false;
+		}
+		if (tempPitch2 < -tempMaxAngle)
+		{
+			incrAngleFlag2 = true;
+		}
+		*/
+	//	tempPitch2 = 0;
+	//	tempYaw2 = 0;
+
+		p->setRotation(tempPitch2, tempYaw2);		
+	}
+
 #endif
 
-		p->updateCollisionDetectionGeometry();
-		p->updateGameInfo();
+
+	p->updateCollisionDetectionGeometry();
+
+	checkNeighbors(p);
+
+	p->updateCollisionDetectionGeometry();
+	m_objectKDtree.reInsert(p);
+
+	p->updateWeaponTransform();
+
+}
 
 
-		vector<WorldObject*> neighbors;
-		glm::vec3 volNearPoint(p->m_position);
-		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, p, volNearPoint, neighbors);
+void FaceOff::simulateObjectPhysics(WorldObject* object, int i)
+{
+	if (object == NULL)
+	{
+		return;
+	}
 
+	object->updateGameInfo();
 
-		// collision between static object and dynamic object
-		// Game Physics Engine Development P.109 - 119
-		for (int j = 0; j < neighbors.size(); j++)
+	if (object->ignorePhysics())
+	{
+		return;
+	}
+
+	if (object->getObjectType() == WEAPON)
+	{
+		Weapon* wObject = (Weapon*)object;
+
+		if (wObject->getWeaponSlot() == PROJECTILE && wObject->shouldExplode())
 		{
-			WorldObject* neighbor = neighbors[j];
-			
-			// this is for debugging, will render it with "tested color"
-			if (i == m_defaultPlayerID)
-			{
-				neighbor->isTested = true;
-			}
+			utl::debug("Exploding");
 
-			// note weapons that hasOwner are not in the kdTree, so we don't need to check for collisions for that
+			ParticleEffect* effect = wObject->explode();
+			m_smokeEffects.push_back((SmokeEffect*)effect);
 
-			if (collisionDetectionTestPairs.alreadyTested(p->m_instanceId, neighbor->m_instanceId))
-				continue;
-			else
-				collisionDetectionTestPairs.addPairs(p->m_instanceId, neighbor->m_instanceId);
-			
-			if (p->ignorePhysicsWith(neighbor))
-			{
-				continue;
-			}
-
-
-			ContactData contactData;
-			bool collideFlag = testCollisionDetection(p, neighbor, contactData);
-
-			if (collideFlag)
-			{
-				// this is for debugging, will render it with "collided color"
-				if (i == m_defaultPlayerID)
-				{
-					neighbor->isCollided = true;
-				}
-
-				if (neighbor->getDynamicType() == STATIC)
-				{
-					contactData.pair[0] = p;
-					contactData.pair[1] = NULL;
-				}
-				else
-				{
-					contactData.pair[0] = p;
-					contactData.pair[1] = neighbor;
-				}
-
-				contactData.resolveVelocity();
-				contactData.resolveInterpenetration();
-				neighbor->updateCollisionDetectionGeometry();
-			}
+			destroyWorldObjectByIndex(i);
+			return;
 		}
-
-		p->updateCollisionDetectionGeometry();
-		m_objectKDtree.reInsert(p);
 	}
 
 
 
+	object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
+	object->m_position += object->m_velocity;
+	// object->m_velocity += utl::BIASED_HALF_GRAVITY;
+	// object->m_position += object->m_velocity;
+	object->updateCollisionDetectionGeometry();
+
+	checkNeighbors(object);
+
+	object->updateCollisionDetectionGeometry();
+	m_objectKDtree.reInsert(object);
+
+
+}
+
+
+void FaceOff::checkNeighbors(WorldObject* obj)
+{
+	vector<WorldObject*> neighbors;
+	glm::vec3 volNearPoint(obj->getPosition());
+	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, obj, volNearPoint, neighbors);
+
+
+	for (int j = 0; j < neighbors.size(); j++)
+	{
+		WorldObject* neighbor = neighbors[j];
+		/*
+		// this is for debugging, will render it with "collided color"
+		if (p->isDefaultPlayer())
+		{
+			neighbor->isTested = true;
+		}
+		*/
+
+
+		if (collisionDetectionTestPairs.alreadyTested(obj->m_instanceId, neighbor->m_instanceId))
+			continue;
+		else
+			collisionDetectionTestPairs.addPairs(obj->m_instanceId, neighbor->m_instanceId);
+
+
+		if (obj->ignorePhysicsWith(neighbor))
+		{
+			continue;
+		}
+
+
+		ContactData contactData;
+		if (testCollisionDetection(obj, neighbor, contactData))
+		{
+			if (neighbor->getDynamicType() == STATIC)
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = NULL;
+			}
+			else
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = neighbor;
+			}
+
+			contactData.resolveVelocity();
+			contactData.resolveInterpenetration();
+			neighbor->updateCollisionDetectionGeometry();
+		}
+	}
+}
+
+void FaceOff::checkNeighborsAfterClientInput(WorldObject* obj)
+{
+	clientInputCollisionDetectionTestPairs.clear();
+
+	vector<WorldObject*> neighbors;
+	glm::vec3 volNearPoint(obj->getPosition());
+	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, obj, volNearPoint, neighbors);
+
+
+	for (int j = 0; j < neighbors.size(); j++)
+	{
+		WorldObject* neighbor = neighbors[j];
+		/*
+		// this is for debugging, will render it with "collided color"
+		if (p->isDefaultPlayer())
+		{
+		neighbor->isTested = true;
+		}
+		*/
+
+
+		if (collisionDetectionTestPairs.alreadyTested(obj->m_instanceId, neighbor->m_instanceId) == false)
+		{
+			collisionDetectionTestPairs.addPairs(obj->m_instanceId, neighbor->m_instanceId);
+		}
+
+		if (clientInputCollisionDetectionTestPairs.alreadyTested(obj->m_instanceId, neighbor->m_instanceId))
+			continue;
+		else
+			clientInputCollisionDetectionTestPairs.addPairs(obj->m_instanceId, neighbor->m_instanceId);
+
+
+		if (obj->ignorePhysicsWith(neighbor))
+		{
+			continue;
+		}
+
+
+		ContactData contactData;
+		if (testCollisionDetection(obj, neighbor, contactData))
+		{
+			if (neighbor->getDynamicType() == STATIC)
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = NULL;
+			}
+			else
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = neighbor;
+			}
+
+			contactData.resolveVelocity();
+			contactData.resolveInterpenetration();
+			neighbor->updateCollisionDetectionGeometry();
+		}
+	}
+}
+/*
+void FaceOff::simulatePhysics()
+{
+	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
+	// then deallocating memory
+	collisionDetectionTestPairs.clear();
+	// CollisionDetectionTestPairs collisionDetectionTestPairs;
+
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		Player* p = m_players[i];
+		simulatePlayerPhysics(p, i, m_isServer);
+	}
 
 
 	for (int i = 0; i < m_objects.size(); i++)
 	{
 		WorldObject* object = m_objects[i];
-
-		if (object == NULL)
-		{
-			continue;
-		}
-
-		object->updateGameInfo();
-
-		if (object->ignorePhysics())
-		{
-			continue;
-		}
-		
-		if (object->getObjectType() == WEAPON)
-		{
-			Weapon* wObject = (Weapon*)object;
-			
-			if (wObject->getWeaponSlot() == PROJECTILE && wObject->shouldExplode())
-			{
-				utl::debug("Exploding");
-
-				ParticleEffect* effect = wObject->explode();
-				m_smokeEffects.push_back((SmokeEffect*)effect);
-				
-				destroyWorldObjectByIndex(i);
-				continue;
-			}
-		}
-		
-
-
-
-		object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
-		object->m_position += object->m_velocity;
-		// object->m_velocity += utl::BIASED_HALF_GRAVITY;
-		// object->m_position += object->m_velocity;
-		object->updateCollisionDetectionGeometry();
-
-		vector<WorldObject*> neighbors;
-		glm::vec3 volNearPoint(object->getPosition());
-		m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, object, volNearPoint, neighbors);
-
-
-		for (int j = 0; j < neighbors.size(); j++)
-		{
-			WorldObject* neighbor = neighbors[j];
-
-			if (collisionDetectionTestPairs.alreadyTested(object->m_instanceId, neighbor->m_instanceId))
-				continue;
-			else
-				collisionDetectionTestPairs.addPairs(object->m_instanceId, neighbor->m_instanceId);
-			
-			if (object->ignorePhysicsWith(neighbor))
-			{
-				continue;
-			}
-
-
-			ContactData contactData;
-			if (testCollisionDetection(object, neighbor, contactData))
-			{
-				if (neighbor->getDynamicType() == STATIC)
-				{
-					contactData.pair[0] = object;
-					contactData.pair[1] = NULL;
-				}
-				else
-				{
-					contactData.pair[0] = object;
-					contactData.pair[1] = neighbor;
-				}
-
-				contactData.resolveVelocity();
-				contactData.resolveInterpenetration();
-				neighbor->updateCollisionDetectionGeometry();
-			}
-		}
-
-		object->updateCollisionDetectionGeometry();
-		
-		m_objectKDtree.reInsert(object);
-
+		simulateObjectPhysics(object, i);
 	}
 }
-
+*/
 
 
 void FaceOff::render()
@@ -2100,14 +2201,14 @@ void FaceOff::render()
 	{
 		m_serverCamera.control();
 		m_serverCamera.updateViewMatrix(m_pipeline);
+
 		o_skybox.setPosition(m_serverCamera.getEyePoint());
 
-		serverUpdate();
-		simulatePhysics();
+		serverSimulation();
 	}
 	else
 	{
-		simulatePhysics();
+		clientSimulation();
 
 		m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
 
@@ -2155,8 +2256,15 @@ void FaceOff::render()
 			if (object == NULL)
 				continue;
 
+
+
+
 			if (object->isTested != true && object->isCollided != true && object->isHit != true)
 			{
+				if (m_isServer && object->getName() == "player mainWeapon")
+				{
+					utl::debug("object name is", object->getName());
+				}
 				object->renderGroup(m_pipeline, p_renderer);
 			}
 		}
@@ -2323,7 +2431,17 @@ void FaceOff::render()
 		for (int i = 0; i < m_players.size(); i++)
 		{
 			Player* p = m_players[i];
+			/*
+			if (!m_isServer)
+			{
+				if (oldPos != p->getPosition())
+				{
+					utl::debug("pos", p->getPosition());
 
+					oldPos = p->getPosition();
+				}
+			}
+			*/
 			if (p->isHit == false)
 			{
 				p->renderGroup(m_pipeline, p_renderer);
@@ -2352,35 +2470,7 @@ void FaceOff::render()
 	p_renderer->enableShader();
 
 		o_worldAxis.renderGroup(m_pipeline, p_renderer);
-
 		
-		// wireframes are rendered regardless you're getting hit or not
-		for (int i = 0; i < m_players.size(); i++)
-		{
-			Player* p = m_players[i];
-			p->renderWireFrameGroup(m_pipeline, p_renderer);
-		}
-
-
-		for (int i = 0; i < m_objects.size(); i++)
-		{
-			WorldObject* object = m_objects[i];
-
-			if (object == NULL)
-				continue;
-
-			if (object->getName() == "player0 mainWeapon")
-			{
-				int a = 1;
-			}
-
-			object->renderWireFrameGroup(m_pipeline, p_renderer);
-		}
-		
-
-	
-
-
 		if (containedFlag)
 		{
 			m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
@@ -2402,7 +2492,6 @@ void FaceOff::render()
 
 		if (!containedFlag)
 			m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
-
 
 		// rendering players
 		for (int i = 0; i < m_players.size(); i++)
@@ -2627,41 +2716,6 @@ void FaceOff::destroyWorldObjectByIndex(int i)
 	m_objects[i] = NULL;
 }
 
-/*
-bool FaceOff::testCollisionDetectionPlayerVersion(WorldObject* a, WorldObject* b, ContactData& contactData)
-{
-	if (a->getGeometryType() == CD_AABB)
-	{
-		if (b->getGeometryType() == CD_AABB)
-		{
-			return CollisionDetection::testAABBAABB(*(a->m_aabb), *(b->m_aabb), contactData);
-		}
-		else if (b->getGeometryType() == CD_SPHERE)
-		{
-			return CollisionDetection::testSphereAABB(*(b->m_sphere), *(a->m_aabb), contactData);
-		}
-	}
-
-	else if (a->getGeometryType() == CD_SPHERE)
-	{
-		if (b->getDynamicType() == STATIC && b->getGeometryType() == CD_AABB)
-		{
-//			return CollisionDetection::testSphereAABBPlayerVersion(*(a->m_sphere), *(b->m_aabb), contactData);
-			return CollisionDetection::testSphereAABB(*(a->m_sphere), *(b->m_aabb), contactData);
-		}
-		else if (b->getGeometryType() == CD_AABB)
-		{
-			return CollisionDetection::testSphereAABB(*(a->m_sphere), *(b->m_aabb), contactData);
-		}
-		else if (b->getGeometryType() == CD_SPHERE)
-		{
-			return CollisionDetection::testSphereSphere(*(a->m_sphere), *(b->m_sphere), contactData);
-		}
-	}
-
-	return false;
-}
-*/
 
 
 
@@ -2957,563 +3011,4 @@ void FaceOff::removeObject(WorldObject* object)
 
 
 
-#if 0
-void FaceOff::initNetworkThread()
-{
 
-	if (m_isServer)
-	{
-		peer = RakNet::RakPeerInterface::GetInstance();
-
-		RakNet::SocketDescriptor sd(SERVER_PORT, 0);
-		peer->Startup(MAX_CLIENTS, &sd, 1);
-
-		printf("Starting the server.\n");
-		// We need to let the server accept incoming connections from the clients
-		// Sets how many incoming connections are allowed. 
-		peer->SetMaximumIncomingConnections(MAX_CLIENTS);
-	}
-	else
-	{
-		connected = false;
-		peer = RakNet::RakPeerInterface::GetInstance();
-
-		RakNet::SocketDescriptor sd;
-		peer->Startup(1, &sd, 1);
-
-		char str[512];
-
-		printf("Enter server IP or hit enter for 127.0.0.1\n");
-		gets(str);
-		if (str[0] == 0)
-			strcpy(str, "127.0.0.1");
-
-		printf("Starting the client.\n");
-		peer->Connect(str, SERVER_PORT, 0, 0);
-	}
-
-
-	int mx, my;
-	SDL_GetMouseState(&mx, &my);
-
-	m_mouseState.m_pos = glm::vec2(mx, utl::SCREEN_HEIGHT - my);
-
-	/*
-	for (int i = 0; i < m_players.size(); i++)
-	{
-	if (i != m_defaultPlayerID && m_players[i] != NULL)
-	m_players[i]->updateModel();
-
-	}
-	*/
-
-
-
-#if	SERVER_NETWORK_THREAD != 1
-	if (m_isServer)
-	{
-
-		// iterate over each message received
-		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
-		{
-			// we first initalized bitStream with the packet->data
-			RakNet::BitStream bsIn(packet->data, packet->length, false);
-
-			// we ignore the first part of each message (due to RakNet convention)
-			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-
-			cout << endl << "New Packet from:" << packet->guid.g << endl;
-
-
-			// Handle message here 
-			switch (packet->data[0])
-			{
-			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-				printf("Another client has disconnected.\n");
-				break;
-			case ID_REMOTE_CONNECTION_LOST:
-				printf("Another client has lost the connection.\n");
-				break;
-			case ID_REMOTE_NEW_INCOMING_CONNECTION:
-				printf("Another client has connected.\n");
-				break;
-			case ID_NEW_INCOMING_CONNECTION:
-				printf("A connection is incoming.\n");
-				break;
-			case ID_DISCONNECTION_NOTIFICATION:
-				printf("A client has disconnected.\n");
-				break;
-			case ID_CONNECTION_LOST:
-				printf("A client lost the connection.\n");
-				break;
-
-			case PLAYER_UPDATE:
-				// received new position from client       
-			{
-				int player_id = 0;
-				glm::vec3 pos, wPos;
-				float camPitch, camYaw;
-
-				bsIn.Read(player_id);
-				bsIn.ReadVector(pos.x, pos.y, pos.z);
-				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-				bsIn.Read(camPitch);
-				bsIn.Read(camYaw);
-
-
-				printf("Player %d sent new position ", player_id);			utl::debug("", pos);
-				printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
-				printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
-				printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
-
-
-				m_players[player_id]->setPosition(pos);
-				m_players[player_id]->update(wPos, camPitch, camYaw);
-
-
-
-
-				cout << "sending new position value to each client" << endl;
-
-
-				bsOut.Reset();
-				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-				bsOut.Write(player_id);
-				bsOut.WriteVector(pos.x, pos.y, pos.z);
-				bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
-				bsOut.Write(camPitch);
-				bsOut.Write(camYaw);
-
-
-				for (int i = 0; i < m_players.size(); i++)
-				{
-					if (player_id != i)
-					{
-						cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
-						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-					}
-					else
-						cout << "	Not Sending to own client: " << player_id << endl;
-				}
-				break;
-			}
-
-
-			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				break;
-			}
-			bsOut.Reset();
-		}
-	}
-#endif
-
-#if CLIENT_NETWORK_THREAD != 1
-	if (!m_isServer)
-	{
-
-		//		utl::debug("m_nextGameTick", m_nextGameTick);
-		//		utl::debug("curTick", curTick);
-
-		//	m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES;
-
-		//	if (m_nextGameTick > SDL_GetTicks())
-		if (m_nextGameTick > DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES)
-		{
-			cout << "sending each server my location" << endl;
-			bsOut.Reset();
-			bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-			bsOut.Write(m_defaultPlayerID);
-
-
-			utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_position);
-			utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->getCurWeapon()->m_position);
-			bsOut.Write(m_players[m_defaultPlayerID]->getCameraPitch());
-			bsOut.Write(m_players[m_defaultPlayerID]->getCameraYaw());
-
-
-			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
-
-			m_nextGameTick = 0;
-		}
-		m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES / 10;
-
-
-		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
-		{
-			cout << "here" << endl;
-
-			RakNet::BitStream bsIn(packet->data, packet->length, false);
-			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-
-			switch (packet->data[0])
-			{
-			case NEW_CLIENT:
-				cout << "NEW_CLIENT message " << endl;
-				break;
-
-			case ID_CONNECTION_REQUEST_ACCEPTED:
-				break;
-
-			case PLAYER_UPDATE:
-			{
-				// report the server's new counter value
-
-				cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
-
-				int other_player_id = 0;
-				int player_id = 0;
-				glm::vec3 pos, wPos;
-				float camPitch, camYaw;
-
-				bsIn.Read(other_player_id);
-				bsIn.ReadVector(pos.x, pos.y, pos.z);
-				bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-				bsIn.Read(camPitch);
-				bsIn.Read(camYaw);
-
-				utl::debug("other_player_id", other_player_id);
-
-				m_players[other_player_id]->setPosition(pos);
-				m_players[other_player_id]->update(wPos, camPitch, camYaw);
-				break;
-			}
-
-
-			case YOUR_TURN:
-				printf("My Turn. Sending message.\n");
-				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				break;
-			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				break;
-			}
-		}
-
-	}
-#endif
-}
-#endif
-
-
-
-
-
-#if 0
-
-m_pipeline.setMatrixMode(VIEW_MATRIX);
-m_pipeline.loadIdentity();
-
-
-if (m_isServer)
-{
-	m_serverCamera.control();
-	m_serverCamera.updateViewMatrix(m_pipeline);
-	o_skybox.setPosition(m_serverCamera.getEyePoint());
-	serverUpdate();
-
-	//	serverSimulation();
-}
-else
-{
-	m_players[m_defaultPlayerID]->m_velocity += utl::BIASED_HALF_GRAVITY;
-	m_players[m_defaultPlayerID]->m_camera->m_target += m_players[m_defaultPlayerID]->m_velocity;
-
-
-	Uint8* state = SDL_GetKeyState(NULL);
-
-	if (state[SDLK_SPACE])
-	{
-		if (m_players[m_defaultPlayerID]->isNotJumping())
-			m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 175.0, 0.0) * utl::GRAVITY_CONSTANT;
-	}
-
-	m_players[m_defaultPlayerID]->control();
-
-	if (m_players[m_defaultPlayerID]->hasMoved())
-	{
-		m_inputQueue.push(m_players[m_defaultPlayerID]->getMoveState());
-	}
-
-	// m_playerInputQueue
-
-	vector<WorldObject*> neighbors;
-	glm::vec3 volNearPoint(m_players[m_defaultPlayerID]->m_position);
-	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], volNearPoint, neighbors);
-
-	m_players[m_defaultPlayerID]->m_boundingSphere.center = m_players[m_defaultPlayerID]->m_position;
-	// collision between static object and dynamic object
-	// Game Physics Engine Development P.109 - 119
-
-	unordered_set<int> objectsAlreadyTested;
-
-	for (int i = 0; i < neighbors.size(); i++)
-	{
-		neighbors[i]->isTested = true;
-
-		ContactData contactData;
-
-		bool collideFlag = false;
-
-		if (neighbors[i]->getDynamicType() == STATIC && neighbors[i]->getGeometryType() == GM_AABB)
-		{
-			collideFlag = CollisionDetection::testSphereAABBHackVersion(m_players[m_defaultPlayerID]->m_boundingSphere,
-				neighbors[i]->m_aabb,
-				contactData);
-		}
-		else
-		{
-			collideFlag = CollisionDetection::testSphereAABB(m_players[m_defaultPlayerID]->m_boundingSphere,
-				neighbors[i]->m_aabb,
-				contactData);
-		}
-
-
-		if (collideFlag)
-		{
-			neighbors[i]->isCollided = true;
-
-			// ground was getting inserted twice. We dont want that!
-			if (objectsAlreadyTested.find(neighbors[i]->m_instanceId) != objectsAlreadyTested.end())
-				continue;
-			else
-				objectsAlreadyTested.insert(neighbors[i]->m_instanceId);
-
-			contactData.pair[0] = m_players[m_defaultPlayerID];
-			contactData.pair[1] = NULL;
-
-			contactData.restitution = 0.0;
-
-			contactData.resolveVelocity();
-			contactData.resolveInterpenetration();
-		}
-	}
-
-
-	m_players[m_defaultPlayerID]->updateGameStats();
-
-
-
-#if NETWORK_FLAG == 0 
-	int tempId = 1;
-	float tempDist = 100;
-
-	if (incrFlag)
-		m_players[tempId]->m_position.z += 0.05;
-	else
-		m_players[tempId]->m_position.z -= 0.05;
-
-
-	if (m_players[tempId]->m_position.z > tempDist)
-		incrFlag = false;
-	if (m_players[tempId]->m_position.z < 20)
-		incrFlag = true;
-
-	m_players[tempId]->updateAABB();
-
-
-
-	int tempId2 = 2;
-	float tempDist2 = 15;
-
-	if (incrFlag2)
-		m_players[tempId2]->m_position.x += 0.05;
-	else
-		m_players[tempId2]->m_position.x -= 0.05;
-
-
-	if (m_players[tempId2]->m_position.x > tempDist2)
-		incrFlag2 = false;
-	if (m_players[tempId2]->m_position.x < -tempDist2)
-		incrFlag2 = true;
-
-	m_players[tempId]->updateAABB();
-#endif
-
-
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		m_players[i]->updateGameInfo();
-	}
-
-
-
-	// update each player's place in the kdTree
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		Player* p = m_players[i];
-
-
-		// first: remove the player from player's kdtree parent nodes
-		for (int j = 0; j < p->m_parentNodes.size(); j++)
-		{
-			KDTreeNode* kNode = p->m_parentNodes[j];
-
-			if (kNode == NULL)
-				continue;
-
-			kNode->removeObject(p);
-		}
-
-
-		// then: we clear player's stored parentNodes
-		while (!p->m_emptyIndexPool.empty())
-		{
-			p->m_emptyIndexPool.pop();
-		}
-
-		for (int j = 0; j < p->m_parentNodes.size(); j++)
-		{
-			p->m_parentNodes[j] = NULL;
-			p->m_emptyIndexPool.push(j);
-		}
-
-		// last: we re-insert the player back into the kdtree
-		m_objectKDtree.insert(p);
-	}
-
-
-	// collision detection
-	m_players[m_defaultPlayerID]->updateCamera(m_pipeline);
-
-	o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
-}
-
-
-
-
-
-for (int i = 0; i < m_objects.size(); i++)
-{
-	WorldObject* object = m_objects[i];
-
-	if (object == NULL)
-		continue;
-
-	object->updateGameInfo();
-
-
-	if (object->getObjectType() == WEAPON)
-	{
-		Weapon* wObject = (Weapon*)object;
-		if (wObject->getWeaponSlot() == PROJECTILE && wObject->shouldExplode())
-		{
-			utl::debug("Exploding");
-
-			ParticleEffect* effect = wObject->explode();
-			m_smokeEffects.push_back((SmokeEffect*)effect);
-
-			delete wObject;
-			wObject = NULL;
-			m_objects[i] = NULL;
-		}
-	}
-
-}
-
-
-
-
-for (int i = 0; i < m_objects.size(); i++)
-{
-	WorldObject* object = m_objects[i];
-
-	if (object == NULL)
-		continue;
-
-	if (object->getDynamicType() == STATIC)
-	{
-		continue;
-	}
-
-	if (object->getObjectType() == WEAPON)
-	{
-		Weapon* wObject = (Weapon*)object;
-
-		if (wObject->hasOwner == true || wObject->getWeaponSlot() != PROJECTILE)
-		{
-			continue;
-		}
-	}
-
-
-	object->m_velocity += glm::vec3(0.0f, -9.81f, 0.0f) * 0.005f * 0.5f;
-	object->m_position += object->m_velocity;
-	// object->m_velocity += utl::BIASED_HALF_GRAVITY;
-	// object->m_position += object->m_velocity;
-	object->updateAABB();
-
-
-	vector<WorldObject*> neighbors;
-	glm::vec3 volNearPoint(object->m_position);
-	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, object, volNearPoint, neighbors);
-
-	unordered_set<int> objectsAlreadyTested;
-
-	for (int i = 0; i < neighbors.size(); i++)
-	{
-		ContactData contactData;
-		WorldObject* neighbor = neighbors[i];
-
-		if (neighbor->getObjectType() == PLAYER)
-		{
-			continue;
-		}
-
-
-		if (CollisionDetection::testAABBAABB(object->m_aabb,
-			neighbor->m_aabb,
-			contactData))
-		{
-
-			// ground was getting inserted twice. We dont want that!
-			if (objectsAlreadyTested.find(neighbor->m_instanceId) != objectsAlreadyTested.end())
-				continue;
-			else
-				objectsAlreadyTested.insert(neighbor->m_instanceId);
-
-
-			if (neighbor->getObjectType() == WEAPON)
-			{
-				continue;
-			}
-
-			contactData.pair[0] = object;
-			contactData.pair[1] = NULL;
-
-			contactData.resolveVelocity1();
-			contactData.resolveInterpenetration();
-		}
-	}
-
-	object->updateAABB();
-
-	utl::debug("object name", object->m_name);
-	utl::debug("object parent size", object->m_parentNodes.size());
-
-	for (int j = 0; j < object->m_parentNodes.size(); j++)
-	{
-		KDTreeNode* kNode = object->m_parentNodes[j];
-		if (kNode == NULL)
-			continue;
-		kNode->removeObject(object);
-	}
-
-
-
-	// removing, we pop empty our queue, and set everything in vector to NULL
-	while (!object->m_emptyIndexPool.empty())
-	{
-		object->m_emptyIndexPool.pop();
-	}
-	for (int j = 0; j < object->m_parentNodes.size(); j++)
-	{
-		object->m_parentNodes[j] = NULL;
-		object->m_emptyIndexPool.push(j);
-	}
-
-	m_objectKDtree.insert(object);
-}
-
-#endif

@@ -20,15 +20,14 @@ class Camera
         inline glm::vec3 getEyePoint();
 		inline glm::vec3 getTargetPoint();
 		
-		// virtual void control(Pipeline& p);
-		// virtual void control(Pipeline& p, Terrain* terrain);
-		virtual void control() = 0;
 
-		// virtual void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
+		virtual void control() = 0;
+		virtual void control(glm::vec3& vel, bool canJump) = 0;
 
 		virtual void updateViewMatrix(Pipeline& p) = 0;
 
 		virtual void processInput(Move move) = 0;
+		virtual void processInput(Move move, glm::vec3 & vel, bool canJump) = 0;
 
 		void setMouseIn(bool b);
 		bool getMouseIn();
@@ -37,6 +36,11 @@ class Camera
 
 		void setPitch(float pitch);
 		void setYaw(float yaw);
+		void setRoll(float roll);
+
+		float getPitch();
+		float getYaw();
+		float getRoll();
 
 		// First POV:	both direction will be the same
 		// Third POV:	TargetDirection: aim direction of the player
@@ -58,12 +62,14 @@ class Camera
         Camera();
         virtual ~Camera();
 
+		// camera's three axes
 		glm::vec3 m_xAxis;
 		glm::vec3 m_yAxis;
 		glm::vec3 m_zAxis;
 		glm::mat4 m_viewMatrix;
 		glm::mat4 m_modelMatrix;
 
+		// the target's three axes
 		glm::vec3 m_targetXAxis;
 		glm::vec3 m_targetYAxis;
 		glm::vec3 m_targetZAxis;
@@ -72,6 +78,7 @@ class Camera
 		glm::vec3 m_target;
         glm::vec3 m_eye;
 		glm::vec3 m_eyeOffset;
+		glm::vec3 m_velocity;
 
 		bool m_moved;
 		Move m_moveState;
@@ -79,7 +86,8 @@ class Camera
         /// expressed in degrees
         float m_pitch;
         float m_yaw;	
-	
+		float m_roll;
+
 		glm::vec3 getFirePosition();
 
 	protected:
@@ -90,13 +98,6 @@ inline glm::vec3 Camera::getEyePoint()
 {
     return m_eye;
 }
-
-
-inline void Camera::setEyePoint(glm::vec3 eye)
-{
-	m_eye = eye;
-}
-
 
 inline glm::vec3 Camera::getTargetPoint()
 {
@@ -110,6 +111,12 @@ inline void Camera::setMouseIn(bool b)
 		SDL_ShowCursor(SDL_DISABLE);
 	else
 		SDL_ShowCursor(SDL_ENABLE);
+}
+
+
+inline void Camera::setEyePoint(glm::vec3 eye)
+{
+	m_eye = eye;
 }
 
 
@@ -129,5 +136,24 @@ inline void Camera::setYaw(float yaw)
 	m_yaw = yaw;
 }
 
+inline void Camera::setRoll(float roll)
+{
+	m_roll = roll;
+}
+
+inline float Camera::getPitch()
+{
+	return m_pitch;
+}
+
+inline float Camera::getYaw()
+{
+	return m_yaw;
+}
+
+inline float Camera::getRoll()
+{
+	return m_roll;
+}
 
 #endif

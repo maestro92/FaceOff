@@ -4,6 +4,7 @@
 #include "utility.h"
 #include "weapon_enum.h"
 #include "renderer.h"
+#include "model_enum.h"
 #include "model.h"
 #include <string>
 #include "cube_wireframe_model.h"
@@ -98,7 +99,9 @@ class WorldObject
         inline void setVelocity(glm::vec3 vel);
         inline void setVelocity(float x, float y, float z);
 
+		inline void setModelEnum(int modelEnum);
 		inline void setModel(Model* model);
+		inline int getModelEnum();
 
 		inline void updateModelMatrix();
 
@@ -112,6 +115,7 @@ class WorldObject
 		inline float getInvMass();
 
         virtual inline void setRotation(glm::mat4 rot);
+
 
 		virtual void renderSingle(Pipeline& p, Renderer* r);
 		virtual void renderGroup(Pipeline& p, Renderer* r);
@@ -134,6 +138,8 @@ class WorldObject
 		inline float getHalfMaterialSurfaceFriction();
 		inline float getMaterialSurfaceFrictionToBitStream();
 
+
+
 		virtual void updateGameInfo();
 
 		void update(); 
@@ -152,8 +158,10 @@ class WorldObject
 		vector<KDTreeNode*> m_parentNodes;
 		queue<int> m_emptyIndexPool;
 
-	private:
 
+
+	protected:
+		int m_modelEnum;
 		float m_mass;
 		float m_invMass;
 
@@ -245,8 +253,20 @@ inline glm::mat4 WorldObject::getRotation()
 	return m_rotation;
 }
 
+
+inline void WorldObject::setModelEnum(int modelEnum)
+{
+	m_modelEnum = modelEnum;
+}
+
 inline void WorldObject::setModel(Model* model)
 {
+	if (m_modelEnum == -1)
+	{
+		cout << m_name << " doesn't have a model" << endl;
+		while (1)
+		{}
+	}
 	m_model = model;
 	m_wireFrameModel = new CubeWireFrameModel(model->m_aabb);
 
@@ -254,6 +274,7 @@ inline void WorldObject::setModel(Model* model)
 
 //	m_staticWireFrameModel = new CubeWireFrameModel(m_aabb);
 }
+
 
 
 inline void WorldObject::updateModelMatrix()

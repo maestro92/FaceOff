@@ -7,6 +7,7 @@ Camera::Camera()
     m_eye = glm::vec3(0.0, 0.0, 0.0);
     m_pitch = 0.0;
     m_yaw = 0.0;
+	m_roll = 0.0;
 
 	m_mouseIn = false;
 	m_targetRotation = glm::mat4(1.0);

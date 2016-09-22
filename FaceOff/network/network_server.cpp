@@ -9,8 +9,10 @@ NetworkServer::~NetworkServer()
 
 }
 
+
 void NetworkServer::init()
 {
+	/*
 	peer = RakNet::RakPeerInterface::GetInstance();
 
 	RakNet::SocketDescriptor sd(SERVER_PORT, 0);
@@ -20,6 +22,7 @@ void NetworkServer::init()
 	// We need to let the server accept incoming connections from the clients
 	// Sets how many incoming connections are allowed. 
 	peer->SetMaximumIncomingConnections(MAX_CLIENTS);
+	*/
 }
 
 

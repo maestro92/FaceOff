@@ -25,6 +25,8 @@ WorldObject::WorldObject()
 	setMaterialSurfaceFriction(1);
 
 	m_dynamicType = STATIC;
+
+	m_modelEnum = -1;
 }
 
 

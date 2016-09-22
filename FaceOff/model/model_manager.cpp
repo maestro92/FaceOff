@@ -1,5 +1,14 @@
 #include "model_manager.h"
 
+/*
+
+when working with models in blender
+the -z axis in game is the y axis in blender, 
+
+so to be sure to orient the models in the right direction
+
+
+*/
 
 ModelManager::ModelManager()
 {
@@ -13,47 +22,61 @@ ModelManager::~ModelManager()
 
 void ModelManager::init()
 {
+	m_models.resize(ModelEnum::NUM_MODELS);
 
 	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
-	m_player = new ImportedModel("./Assets/models/sphere/sphere.obj", textures);
+	m_player = new ImportedModel("./Assets/models/sphere_player.obj", textures);
 	m_player->setMeshRandTextureIdx();
 
-	/*
-	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
-	m_model = new ImportedModel("./Assets/models/sphere/sphere.obj", textures);
-	m_model->setMeshRandTextureIdx();
-	*/
+
+	m_healthBar = new QuadModel(1, 1);
+
+	m_xyzAxis = new XYZAxisModel();
 
 	textures.clear();  textures.push_back("Assets/tree.png");
 	m_tree = new ImportedModel("Assets/tree.obj", textures);
 
-	/*
-	textures.clear();  textures.push_back("Assets/Images/chess.png");
-	m_cube = new ImportedModel("Assets/models/unit_cube.obj", textures);
-	m_cube->setMeshRandTextureIdx();
-	*/
-
-
-
-
-	textures.clear();  textures.push_back("Assets/Images/chess.png");
-	m_ground = new ImportedModel("Assets/models/quad.obj", textures);
-
+	m_cube = new ImportedModel("Assets/models/unit_cube1.obj");
 
 	m_woodenBox = new ImportedModel("Assets/models/wooden box/WoodenBoxOpen02.obj");
+
+	m_ground = new ImportedModel("Assets/models/quad.obj", textures);
+
+	textures.clear();  textures.push_back("Assets/Images/chess.png");
+	m_legoMan = new ImportedModel("Assets/models/lego_man.obj");
 	
 
-	m_healthBar = new QuadModel(1, 1);
 
+	m_models[ModelEnum::player] = *m_player;
+	m_models[ModelEnum::healthbar] = *m_healthBar;
+	m_models[ModelEnum::xyzAxis] = *m_xyzAxis;
+	m_models[ModelEnum::tree] = *m_tree;
+	m_models[ModelEnum::cube] = *m_cube;
+	m_models[ModelEnum::woodenBox] = *m_woodenBox;
+	m_models[ModelEnum::ground] = *m_ground;
+	m_models[ModelEnum::legoMan] = *m_legoMan;
 
-
-	m_xyzAxis = new XYZAxisModel();
-
-
+	/*
+	m_models[ModelEnum::player] = ImportedModel;
+	m_models[ModelEnum::healthbar] = QuadModel(1, 1);
+	m_models[ModelEnum::xyzAxis] = XYZAxisModel();
+	m_models[ModelEnum::tree] = ImportedModel("Assets/tree.obj");
+	m_models[ModelEnum::cube] = ImportedModel("Assets/models/unit_cube1.obj");
+	m_models[ModelEnum::woodenBox] = ImportedModel("Assets/models/wooden box/WoodenBoxOpen02.obj");
+	m_models[ModelEnum::ground] = ImportedModel("Assets/models/quad.obj");
+	m_models[ModelEnum::legoMan] = ImportedModel("Assets/models/lego_man.obj");
+	*/
 	initWeaponsData();
-	m_cube = new ImportedModel("Assets/models/unit_cube1.obj");
+
 }
 
+
+
+Model* ModelManager::get(int modelEnum)
+{
+	Model* m = &m_models[modelEnum];
+	return m;
+}
 
 WeaponData ModelManager::getWeaponData(WeaponNameEnum name)
 {
@@ -120,30 +143,34 @@ void ModelManager::initWeaponsData()
 
 		string name =					utl::findValue(obj, "name").get_str();
 		WeaponNameEnum nameEnum =		m_weaponNameToEnum[name];
+		string weaponSlotStr =			utl::findValue(obj, "slot").get_str();
+		WeaponSlotEnum slotEnum =		m_weaponSlotToEnum[weaponSlotStr];
+		
 		int damage =					utl::findValue(obj, "damage").get_int();
 		int magazineCapacity =			utl::findValue(obj, "magazineCapacity").get_int();
 		int maxMagazineCount =			utl::findValue(obj, "maxMagazineCount").get_int();
 
 		float modelScale =				utl::findValue(obj, "modelScale").get_real();
-		string weaponSlotStr =			utl::findValue(obj, "slot").get_str();
-		WeaponSlotEnum slotEnum =		m_weaponSlotToEnum[weaponSlotStr];
-
 		float fPOVScale =				utl::findValue(obj, "firstPOVScale").get_real();
 		glm::vec3 fPOVOffset =			utl::findVec3(obj, "firstPOVOffset");
 
-		string modelFileName =			modelPath + utl::findValue(obj, "model").get_str();
-		
+		float thirdPOVScale =			utl::findValue(obj, "thirdPOVScale").get_real();
+		glm::vec3 thirdPOVOffset =		utl::findVec3(obj, "thirdPOVOffset");
+
+		string modelFileName =			modelPath + utl::findValue(obj, "model").get_str();		
 		ImportedModel* model = new ImportedModel(modelFileName);
 
 		m_weaponDatas[nameEnum] = { name, 
-									nameEnum, 
+									nameEnum,
+									slotEnum,
 									damage, 
 									magazineCapacity, 
 									maxMagazineCount, 
 									modelScale, 
 									fPOVScale,
 									fPOVOffset,
-									slotEnum,
+									thirdPOVScale,
+									thirdPOVOffset,
 									model };
 	}
 	

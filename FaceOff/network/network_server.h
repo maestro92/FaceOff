@@ -19,7 +19,6 @@
 #include "BitStream.h"
 #include "RakNetTypes.h"	// Message ID
 
-#include "network_info.h"
 #include "game_messages.h"
 
 using namespace std;
@@ -38,7 +37,7 @@ class NetworkServer
 		void run();
 
 		RakNet::RakPeerInterface* peer;
-		vector<Client> clients;
+//		vector<Client> clients;
 };
 
 

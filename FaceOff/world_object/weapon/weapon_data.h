@@ -14,16 +14,18 @@ struct WeaponData
 {
 	string displayedName;
 	WeaponNameEnum nameEnum;
+	WeaponSlotEnum slotEnum;
+
 	int damage;
 	int magazineCapacity;
 	int maxMagazineCount;
-	float modelScale;
 
+	float modelScale;
 	float firstPOVScale;
 	glm::vec3 firstPOVOffset;
+	float thirdPOVScale;
+	glm::vec3 thirdPOVOffset;
 
-	WeaponSlotEnum slotEnum;
-//	WeaponTypeEnum type;
 	Model* model;
 };
 
