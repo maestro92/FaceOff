@@ -212,3 +212,11 @@ WeaponNameEnum WorldObject::getWeaponName()
 {
 	return WEAPON_NAME_NULL;
 }
+
+void WorldObject::updateContactNormalInfo(glm::vec3 normal)
+{
+
+}
+
+
+

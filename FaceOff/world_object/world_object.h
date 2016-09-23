@@ -138,7 +138,7 @@ class WorldObject
 		inline float getHalfMaterialSurfaceFriction();
 		inline float getMaterialSurfaceFrictionToBitStream();
 
-
+		virtual void updateContactNormalInfo(glm::vec3 normal);
 
 		virtual void updateGameInfo();
 
@@ -157,6 +157,8 @@ class WorldObject
 
 		vector<KDTreeNode*> m_parentNodes;
 		queue<int> m_emptyIndexPool;
+		
+		bool inMidAir;
 
 
 
@@ -170,6 +172,8 @@ class WorldObject
 
 		float m_materialSurfaceFriction;
 		float m_halfMaterialSurfaceFriction;
+
+		bool testedForNotInMidAir;
 };
 
 

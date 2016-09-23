@@ -91,8 +91,7 @@ class Player : public WorldObject
 		void adjustWeaponAndBulletPosition();
 
 		bool canJump();
-		bool inMidAir;
-		void updateMidAirFlag();
+	
 
 		virtual void renderGroup(Pipeline& p, Renderer* r);
 		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
@@ -143,7 +142,10 @@ class Player : public WorldObject
 
 		virtual bool ignorePhysicsWith(WorldObject* obj);
 
+		void updateMidAirVelocity();
+		void updateContactNormalInfo(glm::vec3 normal);
 
+		virtual void updateGameInfo();
 	private:
 		int m_id;
 
@@ -157,7 +159,7 @@ class Player : public WorldObject
 		glm::vec3 m_yAxis;
 		glm::vec3 m_zAxis;
 
-
+		glm::vec3 m_midAirHorVel;
 
 		vector<Weapon*> m_weapons;
 		Weapon* m_curWeapon;
@@ -165,6 +167,12 @@ class Player : public WorldObject
 		bool m_isDefaultPlayer;
 
 		bool m_grenadeGatherMode = false;
+
+		int jumpCoolDown;
+		int curJumpCoolDown;
+		bool jumped;
+
+		float cdAngle;
 };
 
 #endif // PLAYER_H_

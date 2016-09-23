@@ -1,6 +1,6 @@
 #include "main.h"
 
-#define NETWORK_FLAG 1
+#define NETWORK_FLAG 0
 #define SERVER_RENDER_FLAG 0
 
 
@@ -84,7 +84,7 @@ const int SERVER_SNAPSHOT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 
 // But instead of sending a new packet to the server for each user command, the client sends command packets at a certain rate of packets per second (usually 30).
 // This means two or more user commands are transmitted within the same packet.
-const int CLIENT_INPUT_SENT_PER_SECOND = 30;
+const int CLIENT_INPUT_SENT_PER_SECOND = 33;
 const int CLIENT_INPUT_SENT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 
 FaceOff::FaceOff()
@@ -573,7 +573,7 @@ void FaceOff::initObjects()
 
 	m_players.push_back(p);
 
-
+	/*
 	p = new Player(1);
 	p->m_name = "player 1";
 	p->setPosition(0, 5, 25);
@@ -602,7 +602,7 @@ void FaceOff::initObjects()
 	p->pickUp(g2);
 
 	m_players.push_back(p);
-
+	*/
 
 
 
@@ -1808,6 +1808,15 @@ void FaceOff::serverSimulation()
 		{
 			Player* p = m_players[i];
 			simulatePlayerPhysics(p, i);
+
+			if (m_isServer)
+			{
+				if (oldPos != p->getPosition())
+				{
+					utl::debug("pos", p->getPosition());
+					oldPos = p->getPosition();
+				}
+			}
 		}
 
 	}
@@ -1831,15 +1840,18 @@ void FaceOff::clientSimulation()
 	{
 		Player* p = m_players[i];
 	
+
 		simulatePlayerPhysics(p, i);
 
-		
+		/*
 		if (oldPos != p->getPosition())
 		{
 			utl::debug("pos", p->getPosition());
+			utl::debug("vel", p->getVelocity());
 			oldPos = p->getPosition();
+			utl::debugLn(1);
 		}
-		
+		*/
 	}
 
 	
@@ -1856,8 +1868,10 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i, Move move)
 	{
 		return;
 	}
+
+	p->updateGameInfo();
+
 	p->m_velocity += utl::BIASED_HALF_GRAVITY;
-	p->updateMidAirFlag();
 
 	p->processInput(move);
 
@@ -1872,7 +1886,7 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i, Move move)
 
 
 	p->updateWeaponTransform();
-	p->updateGameInfo();
+
 }
 
 
@@ -1887,7 +1901,6 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i)
 
 
 	p->m_velocity += utl::BIASED_HALF_GRAVITY;
-	p->updateMidAirFlag();
 
 	if (p->isDefaultPlayer())
 	{
@@ -1903,7 +1916,7 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i)
 	}
 
 	p->m_position += p->m_velocity;
-
+	p->updateMidAirVelocity();
 #if NETWORK_FLAG == 0 
 	if (i == 1)
 	{
@@ -1998,6 +2011,7 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i)
 #endif
 
 
+
 	p->updateCollisionDetectionGeometry();
 
 	checkNeighbors(p);
@@ -2059,6 +2073,8 @@ void FaceOff::simulateObjectPhysics(WorldObject* object, int i)
 
 void FaceOff::checkNeighbors(WorldObject* obj)
 {
+	obj->inMidAir = true;
+
 	vector<WorldObject*> neighbors;
 	glm::vec3 volNearPoint(obj->getPosition());
 	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, obj, volNearPoint, neighbors);
@@ -2101,6 +2117,25 @@ void FaceOff::checkNeighbors(WorldObject* obj)
 				contactData.pair[0] = obj;
 				contactData.pair[1] = neighbor;
 			}
+
+			/*
+			// this is for debugging, will render it with "collided color"
+			if (obj->getObjectType() == PLAYER && ((Player*)(obj))->isDefaultPlayer() && neighbor->getName() == "woodenBox -80")
+			{
+				utl::debug("With WoodenBox");
+				utl::debug("obj ", obj->getName());
+				utl::debug("neighbor ", neighbor->getName());
+				utl::debug("normal ", contactData.normal);
+			}
+			
+			if (obj->getObjectType() == PLAYER && ((Player*)(obj))->isDefaultPlayer() && neighbor->getName() == "ground")
+			{
+				utl::debug("With ground");
+				utl::debug("obj ", obj->getName());
+				utl::debug("neighbor ", neighbor->getName());
+				utl::debug("normal ", contactData.normal);
+			}
+			*/
 
 			contactData.resolveVelocity();
 			contactData.resolveInterpenetration();

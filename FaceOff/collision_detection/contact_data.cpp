@@ -79,10 +79,14 @@ void ContactData::resolveVelocity()
 	totVel.z *= frictionRestitution;
 
 	if (abs(totVel.x) < VEL_THRESHOLD)
+	{
 		totVel.x = 0;
+	}
+
 	if (abs(totVel.z) < VEL_THRESHOLD)
+	{
 		totVel.z = 0;
-	
+	}
 
 	pair[0]->setVelocity(totVel);
 	
@@ -113,12 +117,17 @@ void ContactData::resolveInterpenetration()
 					 pair[0]->getInvMass() * movePerInvMass;
 	pair[0]->setPosition(temp);
 
+	pair[0]->updateContactNormalInfo(normal);
+
+
+
 	if (pair[1])
 	{
 		temp = pair[1]->getPosition() -
 			   pair[1]->getInvMass() * movePerInvMass;
 
 		pair[1]->setPosition(temp);
+		pair[1]->updateContactNormalInfo(-normal);
 	}
 }
 

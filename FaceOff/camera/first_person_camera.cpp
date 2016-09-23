@@ -228,6 +228,7 @@ void FirstPersonCamera::control(glm::vec3 & vel, bool canJump)
 	}
 }
 
+
 void FirstPersonCamera::processInput(Move move)
 {
 	m_pitch = move.state.pitch;

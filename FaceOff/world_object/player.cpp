@@ -46,8 +46,15 @@ Player::Player(int id)
 
 	m_dynamicType = DYNAMIC;
 
+
+	jumpCoolDown = 30;
+	curJumpCoolDown = 0;
+
 	m_isDefaultPlayer = false;
 	inMidAir = false;
+	testedForNotInMidAir = false;
+
+	jumped = false; 
 }
 
 Player::~Player()
@@ -89,24 +96,39 @@ void Player::control()
 }
 */
 
+//	jumpCoolDown = 1000;
+//	curJumpCoolDown = 0;
 
 
 void Player::control()
 {
-	glm::vec3 vel;
 	bool canJumpFlag = canJump();
-	
+	glm::vec3 vel(0.0);
+	m_midAirHorVel = glm::vec3(0.0);
 	m_camera->control(vel, canJumpFlag);
 
-	if (m_camera->m_moveState.input.jump)
+	Input input = m_camera->m_moveState.input;
+
+	if (input.jump)
 	{
 		inMidAir = true;
+		curJumpCoolDown = 0;
+		jumped = true;
 	}
 
 	if (inMidAir)
 	{
-		vel.x = 0.025 * vel.x;
-		vel.z = 0.025 * vel.z;
+		vel.x = 0.5 * vel.x;
+		vel.z = 0.5 * vel.z;
+
+		m_midAirHorVel.x = vel.x;
+		m_midAirHorVel.z = vel.z;
+	}
+
+	if (hasMoved())
+	{
+		utl::debug("before vel", m_velocity);
+		utl::debug("control vel", vel);
 	}
 
 	m_velocity += vel;
@@ -119,20 +141,26 @@ int counter = 0;
 // only used for spawning
 void Player::processInput(Move move)
 {
-	glm::vec3 vel;
-
+	// glm::vec3 vel;
 	bool canJumpFlag = canJump();
+	glm::vec3 vel(0.0);
+	m_midAirHorVel = glm::vec3(0.0);
 	m_camera->processInput(move, vel, canJumpFlag);
 
 	if (move.input.jump)
 	{
 		inMidAir = true;
+		curJumpCoolDown = 0;
+		jumped = true;
 	}
 
 	if (inMidAir)
 	{
-		vel.x = 0.025 * vel.x;
-		vel.z = 0.025 * vel.z;
+		vel.x = 0.5 * vel.x;
+		vel.z = 0.5 * vel.z;
+
+		m_midAirHorVel.x = vel.x;
+		m_midAirHorVel.z = vel.z;
 	}
 
 
@@ -167,18 +195,35 @@ bool Player::isDefaultPlayer()
 // this obviously doesn't work with a slanted falling incline
 bool Player::canJump()
 {
-	return inMidAir == false && abs(m_velocity.y - utl::BIASED_HALF_GRAVITY.y) <= utl::MATH_EPISON;
+//	jumpCoolDown = 1000;
+//	curJumpCoolDown = 0;
+
+	return jumped == false && inMidAir == false && curJumpCoolDown >= jumpCoolDown;
 }
 
-void Player::updateMidAirFlag()
+
+
+
+void Player::updateMidAirVelocity()
 {
 	if (inMidAir)
 	{
-		if (abs(m_velocity.y - utl::BIASED_HALF_GRAVITY.y) <= utl::MATH_EPISON)
-		{
-			inMidAir = false;
-		}
+	//	m_velocity.x -= m_dv.x;
+	//	m_velocity.z -= m_dv.z;
+		
+		m_velocity.x -= m_midAirHorVel.x;
+		m_velocity.z -= m_midAirHorVel.z;
+
+//		utl::debug("cdAngle", cdAngle);
+	//	utl::debug("midAirHorVel", m_midAirHorVel);
 	}
+	/*
+	else
+	{
+		utl::debug("cdAngle", cdAngle);
+		utl::debug("not in MidAir");
+	}
+	*/
 }
 
 void Player::updateGameStats()
@@ -240,6 +285,18 @@ void Player::updateCamera(Pipeline& p)
 }
 
 
+void Player::updateGameInfo()
+{
+	WorldObject::updateGameInfo();
+	testedForNotInMidAir = false;
+
+	if (jumped == false)
+	{
+		curJumpCoolDown++;
+	}
+
+}
+
 
 void Player::setRotation(float pitch, float yaw)
 {
@@ -282,6 +339,42 @@ void Player::setRotation(float pitch, float yaw)
 	*/				
 	m_rotation = rot;
 }
+
+
+void Player::updateContactNormalInfo(glm::vec3 normal)
+{
+	if (testedForNotInMidAir)
+	{
+		return;
+	}
+
+
+	glm::vec3 horizonVec3(normal.x, 0, normal.z);
+
+	float angle = glm::angle(normal, horizonVec3);
+
+	utl::debug("angle", angle);
+		
+
+	if (angle > 60)
+	{
+		inMidAir = false;
+		testedForNotInMidAir = true;
+		cdAngle = angle;
+
+
+		if (jumped == true)
+		{
+			jumped = false;
+			curJumpCoolDown = 0;
+		}
+	}
+	else
+	{
+		inMidAir = true;
+	}
+}
+
 
 
 void Player::updateWeaponTransform()
