@@ -6,7 +6,7 @@
 
 void NetworkManager::init(ModelManager* mm, vector<WorldObject*>* objects, vector<Player*>* players)
 {
-	m_mm = mm;
+	m_modelMgr = mm;
 	m_objects = objects;
 	m_players = players;
 }
@@ -19,7 +19,7 @@ Player* NetworkManager::spawnClientPlayer(RakNet::BitStream& bs, bool defaultFla
 	{
 		player->setDefaultPlayerFlag(true);
 	}
-	player->spawnInfoFromBitStream(bs, m_mm);
+	player->spawnInfoFromBitStream(bs, m_modelMgr);
 
 	int id = player->getId();
 
@@ -71,7 +71,7 @@ Player* NetworkManager::spawnClientPlayer(RakNet::BitStream& bs, bool defaultFla
 
 
 	// set the model
-	player->setModel(m_mm->get());
+	player->setModel(m_modelMgr->get());
 	
 	// set the weapon
 	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
@@ -80,7 +80,7 @@ Player* NetworkManager::spawnClientPlayer(RakNet::BitStream& bs, bool defaultFla
 		bs.Read(weaponEnum);
 		if (weaponEnum != -1)
 		{
-			Weapon* weapon = new Weapon(m_mm.getWeaponData((WeaponNameEnum)weaponEnum));
+			Weapon* weapon = new Weapon(m_modelMgr.getWeaponData((WeaponNameEnum)weaponEnum));
 			newPlayer->pickUp(weapon);
 			m_objects.push_back(weapon);
 

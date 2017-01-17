@@ -1,5 +1,7 @@
 #version 330
 
+#extension GL_NV_shadow_samplers_cube : enable
+
 uniform samplerCube u_cubeMapTextureID;
 
 in vec3 vf_position;

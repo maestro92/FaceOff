@@ -114,3 +114,21 @@ http://stackoverflow.com/questions/3167045/do-i-need-to-specify-virtual-on-the-s
 -	why do we need private-variables
 http://programmers.stackexchange.com/questions/143736/why-do-we-need-private-variables
 
+
+
+
+-	should the network code run its own thread?
+
+Glenn Fiedler said: Get it wokring on a single thread non-blocking first. If there are performance problems with that, move it to another thread
+as an optimization. DOn't feel you need to do it multithreadded initially.
+
+Next, for NAT punch through sure if you do client->client you would have to do that. So don’t :). Do client/server and have a server in a data center and no punching is required. This is the way ™. NAT punching and P2P are stupid and a waste of time.
+
+http://gafferongames.com/networking-for-game-programmers/
+
+
+
+Nath-punch through
+
+https://keithjohnston.wordpress.com/2014/02/17/nat-punch-through-for-multiplayer-games/
+

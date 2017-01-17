@@ -87,6 +87,9 @@ const int SERVER_SNAPSHOT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 const int CLIENT_INPUT_SENT_PER_SECOND = 33;
 const int CLIENT_INPUT_SENT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 
+RendererManager FaceOff::m_rendererMgr;
+ModelManager	FaceOff::m_modelMgr;
+
 FaceOff::FaceOff()
 {
 	m_isServer = false;
@@ -94,6 +97,9 @@ FaceOff::FaceOff()
 
 FaceOff::~FaceOff()
 {
+
+
+
 	if (m_networkThread.joinable())
 	{
 		m_networkThread.join();
@@ -150,8 +156,8 @@ GLuint tempTexture;
 
 void FaceOff::initObjects()
 {
-	m_mm.init();
-	m_nm.init(&m_mm, &m_objects, &m_players);
+	m_modelMgr.init();
+	m_nm.init(&m_modelMgr, &m_objects, &m_players);
 
 	if (m_isServer)
 	{
@@ -166,7 +172,7 @@ void FaceOff::initObjects()
 	float scale = 100.0;
 	o_worldAxis.setScale(scale);
 	o_worldAxis.setModelEnum(ModelEnum::xyzAxis);
-	o_worldAxis.setModel(m_mm.get(ModelEnum::xyzAxis));
+	o_worldAxis.setModel(m_modelMgr.get(ModelEnum::xyzAxis));
 
 	
 	o_sampleBullet.setScale(1.0, 5.0, 1.0);
@@ -199,7 +205,7 @@ void FaceOff::initObjects()
 	o_temp->setScale(xbound, zbound, 1.0);
 	o_temp->setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
 	o_temp->setModelEnum(ModelEnum::ground);
-	o_temp->setModel(m_mm.get(ModelEnum::ground));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::ground));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	o_temp->m_name = "ground";
 	m_objects.push_back(o_temp);
@@ -210,9 +216,9 @@ void FaceOff::initObjects()
 	o_temp->m_name = "south wall";
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setPosition(0, ybound / 2, zbound + wallWidth);
-//	o_temp->setModel(m_mm.m_cube);
+//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(m_mm.get(ModelEnum::cube));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -222,9 +228,9 @@ void FaceOff::initObjects()
 	o_temp->setPosition(0, ybound / 2, -zbound - wallWidth);
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
-//	o_temp->setModel(m_mm.m_cube);
+//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(m_mm.get(ModelEnum::cube));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -233,9 +239,9 @@ void FaceOff::initObjects()
 	o_temp->m_name = "west wall";
 	o_temp->setPosition(-xbound - wallWidth, ybound / 2, 0.0);
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
-//	o_temp->setModel(m_mm.m_cube);
+//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(m_mm.get(ModelEnum::cube));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -244,9 +250,9 @@ void FaceOff::initObjects()
 	o_temp->m_name = "east wall";
 	o_temp->setPosition(xbound + wallWidth, ybound / 2, 0.0);
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
-//	o_temp->setModel(m_mm.m_cube);
+//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(m_mm.get(ModelEnum::cube));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -286,9 +292,9 @@ void FaceOff::initObjects()
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-//		o_temp->setModel(m_mm.m_woodenBox);
+//		o_temp->setModel(m_modelMgr.m_woodenBox);
 		o_temp->setModelEnum(ModelEnum::woodenBox);
-		o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
+		o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
 		m_objects.push_back(o_temp);
 	}
@@ -305,9 +311,9 @@ void FaceOff::initObjects()
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-//		o_temp->setModel(m_mm.m_woodenBox);
+//		o_temp->setModel(m_modelMgr.m_woodenBox);
 		o_temp->setModelEnum(ModelEnum::woodenBox);
-		o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
+		o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
 		m_objects.push_back(o_temp);
 	}
@@ -336,9 +342,9 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, -halfPosZMag);
-//	o_temp->setModel(m_mm.m_woodenBox);
+//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -348,9 +354,9 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, -halfPosZMag);
-//	o_temp->setModel(m_mm.m_woodenBox);
+//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -361,9 +367,9 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, halfPosZMag);
-//	o_temp->setModel(m_mm.m_woodenBox);
+//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -374,9 +380,9 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
-//	o_temp->setModel(m_mm.m_woodenBox);
+//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(m_mm.get(ModelEnum::woodenBox));
+	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
@@ -387,14 +393,14 @@ void FaceOff::initObjects()
 
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(MAC_11));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(MAC_11));
 	o_temp->m_name = "MAC_11";
 	o_temp->setPosition(-3 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(AWM));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(AWM));
 	o_temp->m_name = "AWM";
 	o_temp->setPosition(-2 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -402,7 +408,7 @@ void FaceOff::initObjects()
 
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(MINIGUN));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(MINIGUN));
 	o_temp->m_name = "MINIGUN";
 	o_temp->setPosition(-1 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -410,7 +416,7 @@ void FaceOff::initObjects()
 
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(KNIFE));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(KNIFE));
 	o_temp->m_name = "knife";
 	o_temp->setPosition(formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -418,7 +424,7 @@ void FaceOff::initObjects()
 
 
 	/*
-	o_temp = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
 	o_temp->m_name = "FRAG_GRENADE";
 	o_temp->setAABBByPosition(2 * formationGap, 5, -110);
 	m_objects.push_back(o_temp);
@@ -427,14 +433,14 @@ void FaceOff::initObjects()
 
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(MP5));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(MP5));
 	o_temp->m_name = "MP5";
 	o_temp->setPosition(-3 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(MG42));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(MG42));
 	o_temp->m_name = "MG42";
 	o_temp->setPosition(-2 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -442,21 +448,21 @@ void FaceOff::initObjects()
 
 
 	// init weapons for the map
-	o_temp = new Weapon(m_mm.getWeaponData(AK_47));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(AK_47));
 	o_temp->m_name = "AK 47";
 	o_temp->setPosition(-formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(M16));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(M16));
 	o_temp->m_name = "M16";
 	o_temp->setPosition(formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	m_objects.push_back(o_temp);
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(KATANA));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(KATANA));
 	o_temp->m_name = "katana";
 	o_temp->setPosition(2 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -464,7 +470,7 @@ void FaceOff::initObjects()
 
 
 
-	o_temp = new Weapon(m_mm.getWeaponData(PISTOL_SHOTGUN));
+	o_temp = new Weapon(m_modelMgr.getWeaponData(PISTOL_SHOTGUN));
 	o_temp->m_name = "shotgun";
 	o_temp->setPosition(3 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -494,16 +500,16 @@ void FaceOff::initObjects()
 
 #if NETWORK_FLAG == 0
 
-	Weapon* w = new Weapon(m_mm.getWeaponData(M16));
+	Weapon* w = new Weapon(m_modelMgr.getWeaponData(M16));
 	w->setCollisionDetectionGeometry(CD_AABB);
 	w->m_name = "player0 mainWeapon";
 
-	//	Weapon* pistol = new Weapon(m_mm.getWeaponData());
-	Weapon* k = new Weapon(m_mm.getWeaponData(KNIFE));
+	//	Weapon* pistol = new Weapon(m_modelMgr.getWeaponData());
+	Weapon* k = new Weapon(m_modelMgr.getWeaponData(KNIFE));
 	k->setCollisionDetectionGeometry(CD_AABB);
 	k->m_name = "player0 knife";
 
-	Weapon* g = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	Weapon* g = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
 	g->setMass(0.4);
 	g->setMaterialEnergyRestitution(0.6);
 	g->setMaterialSurfaceFriction(0.3);
@@ -512,15 +518,15 @@ void FaceOff::initObjects()
 
 
 
-	Weapon* w1 = new Weapon(m_mm.getWeaponData(M16));
+	Weapon* w1 = new Weapon(m_modelMgr.getWeaponData(M16));
 	w1->setCollisionDetectionGeometry(CD_AABB);
 	w1->m_name = "player1 mainWeapon";
 	
-	Weapon* k1 = new Weapon(m_mm.getWeaponData(KNIFE));
+	Weapon* k1 = new Weapon(m_modelMgr.getWeaponData(KNIFE));
 	k1->setCollisionDetectionGeometry(CD_AABB);
 	k1->m_name = "player1 knife";
 
-	Weapon* g1 = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	Weapon* g1 = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
 	g1->setMass(0.4);
 	g1->setMaterialEnergyRestitution(0.6);
 	g1->setMaterialSurfaceFriction(0.3);
@@ -529,15 +535,15 @@ void FaceOff::initObjects()
 
 
 
-	Weapon* w2 = new Weapon(m_mm.getWeaponData(M16));
+	Weapon* w2 = new Weapon(m_modelMgr.getWeaponData(M16));
 	w2->setCollisionDetectionGeometry(CD_AABB);
 	w2->m_name = "player2 mainWeapon";
 
-	Weapon* k2 = new Weapon(m_mm.getWeaponData(KNIFE));
+	Weapon* k2 = new Weapon(m_modelMgr.getWeaponData(KNIFE));
 	k2->setCollisionDetectionGeometry(CD_AABB);
 	k2->m_name = "player2 knife";
 
-	Weapon* g2 = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+	Weapon* g2 = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
 	g2->setMass(0.4);
 	g2->setMaterialEnergyRestitution(0.6);
 	g2->setMaterialSurfaceFriction(0.3);
@@ -563,7 +569,7 @@ void FaceOff::initObjects()
 	p->m_name = "player 0";
 	p->setDefaultPlayerFlag(true);
 	p->setModelEnum(ModelEnum::player);
-	p->setModel(m_mm.get(ModelEnum::player));
+	p->setModel(m_modelMgr.get(ModelEnum::player));
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -578,7 +584,7 @@ void FaceOff::initObjects()
 	p->m_name = "player 1";
 	p->setPosition(0, 5, 25);
 	p->setModelEnum(ModelEnum::player);
-	p->setModel(m_mm.get(ModelEnum::player));
+	p->setModel(m_modelMgr.get(ModelEnum::player));
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -593,7 +599,7 @@ void FaceOff::initObjects()
 	p->m_name = "player 2";
 	p->setPosition(0, 5, -40);
 	p->setModelEnum(ModelEnum::player);
-	p->setModel(m_mm.get(ModelEnum::player));
+	p->setModel(m_modelMgr.get(ModelEnum::player));
 	p->setMass(80);
 	p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -646,8 +652,8 @@ void FaceOff::initRenderers()
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	m_rm.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
-	m_rm.initSceneRendererStaticLightsData(m_lightManager);
+	m_rendererMgr.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+	m_rendererMgr.initSceneRendererStaticLightsData(m_lightManager);
 }
 
 
@@ -794,20 +800,20 @@ void FaceOff::initNetworkLobby()
 					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
 					p->setRotation(0, 0);
 					p->setModelEnum(ModelEnum::player);
-					p->setModel(m_mm.get(ModelEnum::player));
+					p->setModel(m_modelMgr.get(ModelEnum::player));
 					p->setMass(80);
 					p->setCollisionDetectionGeometry(CD_SPHERE);
 
 
-					Weapon* mainWeapon = new Weapon(m_mm.getWeaponData(M16));
+					Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
 					mainWeapon->setCollisionDetectionGeometry(CD_AABB);
 					mainWeapon->m_name = "player mainWeapon";
 
-					Weapon* knife = new Weapon(m_mm.getWeaponData(KNIFE));
+					Weapon* knife = new Weapon(m_modelMgr.getWeaponData(KNIFE));
 					knife->setCollisionDetectionGeometry(CD_AABB);
 					knife->m_name = "player knife";
 
-					Weapon* grenade = new Weapon(m_mm.getWeaponData(FRAG_GRENADE));
+					Weapon* grenade = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
 					grenade->setMass(0.4);
 					grenade->setMaterialEnergyRestitution(0.6);
 					grenade->setMaterialSurfaceFriction(0.3);
@@ -1406,7 +1412,7 @@ void FaceOff::clientHandleDeviceEvents()
 							hitPointMark->setPosition(hitPoint);
 							hitPointMark->setScale(1.0, 1.0, 1.0);
 							hitPointMark->setModelEnum(ModelEnum::cube);
-							hitPointMark->setModel(m_mm.get(ModelEnum::cube));
+							hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
 							hitPointMark->m_name = "hitMark";
 							//								m_hitPointMarks.push_back(hitPointMark);
 						}
@@ -2261,18 +2267,18 @@ void FaceOff::render()
 	// *******************************************************
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_rm.m_backGroundLayerFBO.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_rendererMgr.m_backGroundLayerFBO.FBO);
 	//	Model::enableVertexAttribArrays();
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// the render function disables depth test Cull face already and enables it afterwards
-	o_skybox.render(m_pipeline, &m_rm.r_skybox);
+	o_skybox.render(m_pipeline, &m_rendererMgr.r_skybox);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 #if RENDER_DEBUG_FLAG
-	p_renderer = &m_rm.r_fullTexture;
+	p_renderer = &m_rendererMgr.r_fullTexture;
 	p_renderer->enableShader();
 	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 
@@ -2326,7 +2332,7 @@ void FaceOff::render()
 
 
 	// Rendering wireframes
-	p_renderer = &m_rm.r_fullVertexColor;
+	p_renderer = &m_rendererMgr.r_fullVertexColor;
 	p_renderer->enableShader();
 
 	o_worldAxis.renderGroup(m_pipeline, p_renderer);
@@ -2368,7 +2374,7 @@ void FaceOff::render()
 
 
 
-	p_renderer = &m_rm.r_fullColor;
+	p_renderer = &m_rendererMgr.r_fullColor;
 	p_renderer->enableShader();
 	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 
@@ -2459,7 +2465,7 @@ void FaceOff::render()
 	p_renderer->disableShader();
 
 #else
-	p_renderer = &m_rm.r_fullTexture;
+	p_renderer = &m_rendererMgr.r_fullTexture;
 	p_renderer->enableShader();
 	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 
@@ -2501,7 +2507,7 @@ void FaceOff::render()
 
 
 	// Rendering wireframes
-	p_renderer = &m_rm.r_fullVertexColor;
+	p_renderer = &m_rendererMgr.r_fullVertexColor;
 	p_renderer->enableShader();
 
 		o_worldAxis.renderGroup(m_pipeline, p_renderer);
@@ -2521,7 +2527,7 @@ void FaceOff::render()
 
 
 
-	p_renderer = &m_rm.r_fullColor;
+	p_renderer = &m_rendererMgr.r_fullColor;
 	p_renderer->enableShader();
 	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 
@@ -2588,7 +2594,7 @@ void FaceOff::render()
 	/*
 	if (m_fireWorkEffects.size() > 0)
 	{
-	p_renderer = &m_rm.r_fireWorkEffectUpdate;
+	p_renderer = &m_rendererMgr.r_fireWorkEffectUpdate;
 	p_renderer->enableShader();
 	for (int i = 0; i < m_fireWorkEffects.size(); i++)
 	{
@@ -2604,7 +2610,7 @@ void FaceOff::render()
 	p_renderer->disableShader();
 
 
-	p_renderer = &m_rm.r_fireWorkEffectRender;
+	p_renderer = &m_rendererMgr.r_fireWorkEffectRender;
 	p_renderer->enableShader();
 	for (int i = 0; i < m_fireWorkEffects.size(); i++)
 	{
@@ -2628,7 +2634,7 @@ void FaceOff::render()
 	m_gui.initGUIRenderingSetup();
 	if (!m_zoomedIn)
 	{
-		m_gui.renderTextureFullScreen(m_rm.m_backGroundLayerFBO.colorTexture);
+		m_gui.renderTextureFullScreen(m_rendererMgr.m_backGroundLayerFBO.colorTexture);
 	}
 
 	glEnable(GL_BLEND);
@@ -2641,7 +2647,7 @@ void FaceOff::render()
 	
 	if (m_smokeEffects.size() > 0)
 	{
-		p_renderer = &m_rm.r_smokeEffectUpdate;
+		p_renderer = &m_rendererMgr.r_smokeEffectUpdate;
 		p_renderer->enableShader();
 		for (int i = 0; i < m_smokeEffects.size(); i++)
 		{
@@ -2657,7 +2663,7 @@ void FaceOff::render()
 		p_renderer->disableShader();
 
 
-		p_renderer = &m_rm.r_smokeEffectRender;
+		p_renderer = &m_rendererMgr.r_smokeEffectRender;
 		p_renderer->enableShader();
 		for (int i = 0; i < m_smokeEffects.size(); i++)
 		{
@@ -2665,7 +2671,7 @@ void FaceOff::render()
 
 			p_renderer->setData(R_SMOKE_EFFECT_RENDER::u_angle, effect->m_particleRotation);
 			p_renderer->setData(R_SMOKE_EFFECT_RENDER::u_texture, 0, GL_TEXTURE_2D, effect->m_textureId);
-			p_renderer->setData(R_SMOKE_EFFECT_RENDER::u_depthTexture, 1, GL_TEXTURE_2D, m_rm.m_backGroundLayerFBO.depthTexture);
+			p_renderer->setData(R_SMOKE_EFFECT_RENDER::u_depthTexture, 1, GL_TEXTURE_2D, m_rendererMgr.m_backGroundLayerFBO.depthTexture);
 			effect->render(m_pipeline, p_renderer);
 		}
 		p_renderer->disableShader();
@@ -2676,7 +2682,7 @@ void FaceOff::render()
 	if (m_zoomedIn)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, RENDER_TO_SCREEN);
-		m_gui.renderSnipeScopeView(m_rm.m_backGroundLayerFBO.colorTexture);
+		m_gui.renderSnipeScopeView(m_rendererMgr.m_backGroundLayerFBO.colorTexture);
 	}
 
 //	Model::enableVertexAttribArrays();

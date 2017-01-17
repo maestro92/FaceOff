@@ -70,7 +70,11 @@ void ModelManager::init()
 
 }
 
+void ModelManager::shutDown()
+{
 
+
+}
 
 Model* ModelManager::get(int modelEnum)
 {

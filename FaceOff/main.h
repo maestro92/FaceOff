@@ -244,8 +244,8 @@ class FaceOff
 {
 	// private:
 	public:
-		RendererManager				m_rm;
-		ModelManager				m_mm;
+		static RendererManager		m_rendererMgr;
+		static ModelManager			m_modelMgr;
 		NetworkManager				m_nm;
 		Renderer*					p_renderer;
 
@@ -384,8 +384,8 @@ class FaceOff
 		void start();
 		void update();
 
-		void serverUpdate();
-		void clientUpdate();
+		void serverFrame();
+		void clientFrame();
 
 
 		void serverSimulation();

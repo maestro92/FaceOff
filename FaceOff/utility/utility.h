@@ -187,6 +187,8 @@ class LinkedList
 // http://gafferongames.com/game-physics/networked-physics/
 enum NetworkGameMessageEnum
 {
+	// server to client
+
 	SPAWN_INFORMATION = ID_USER_PACKET_ENUM + 1,
 	NEW_CLIENT = ID_USER_PACKET_ENUM + 2,
 	LOBBY_WAIT_END = ID_USER_PACKET_ENUM + 3,
@@ -194,6 +196,10 @@ enum NetworkGameMessageEnum
 	CLIENT_INPUT = ID_USER_PACKET_ENUM + 4,
 	SNAPSHOT_FROM_SERVER = ID_USER_PACKET_ENUM + 5,
 	PLAYER_UPDATE = ID_USER_PACKET_ENUM + 6,
+
+	// client to server
+	
+
 };
 
 

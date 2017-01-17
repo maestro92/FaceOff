@@ -47,7 +47,7 @@ class NetworkManager
 
 
 	private:
-		ModelManager* m_mm;
+		ModelManager* m_modelMgr;
 		vector<WorldObject*>* m_objects;
 		vector<Player*>* m_players;
 };

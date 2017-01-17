@@ -6,6 +6,13 @@
 #include "renderer.h"
 #include "scene_renderer.h"
 #include "light/light_manager.h"
+
+
+
+// draw transparent entities
+// we could sort these if it ever becomes a problem...
+
+
 class RendererManager
 {
     public:

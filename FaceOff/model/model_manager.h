@@ -43,6 +43,7 @@ class ModelManager
 
 
 		void init();
+		void shutDown();
 
 		void writeWeaponJsonFiles();
 		void readWeaponData(const mObject& obj);
@@ -53,7 +54,6 @@ class ModelManager
 		
 
 
-		vector<Model> m_models;
 
 	//	const mValue& findValue(const mObject& obj, const string& name);
 	//	glm::vec3 findVec3(const mObject& obj, const string& name);
@@ -79,6 +79,7 @@ class ModelManager
 		Model* m_legoMan;
 
 
+		vector<Model> m_models;
 		/*
 		XYZAxisModel    m_xyzModel;
 		ImportedModel	m_bulletModel;

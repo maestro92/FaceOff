@@ -353,7 +353,7 @@ void Player::updateContactNormalInfo(glm::vec3 normal)
 
 	float angle = glm::angle(normal, horizonVec3);
 
-	utl::debug("angle", angle);
+	// utl::debug("angle", angle);
 		
 
 	if (angle > 60)
