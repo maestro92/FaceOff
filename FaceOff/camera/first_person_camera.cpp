@@ -102,6 +102,7 @@ void FirstPersonCamera::control()
 		m_yaw += deltaYaw;
 		m_pitch += deltaPitch;
 
+
 		restrain();
 		SDL_WarpMouse(m_screenMidX, m_screenMidY);
 		Uint8* state = SDL_GetKeyState(NULL);
@@ -229,12 +230,13 @@ void FirstPersonCamera::control(glm::vec3 & vel, bool canJump)
 }
 
 
-void FirstPersonCamera::processInput(Move move)
+void FirstPersonCamera::processUserCmd(UserCmd cmd)
 {
-	m_pitch = move.state.pitch;
-	m_yaw = move.state.yaw;
+	m_pitch = cmd.angles[PITCH];
+	m_yaw = cmd.angles[YAW];
 
-	if (move.input.forward)
+
+	if (cmd.buttons & FORWARD)
 	{
 		updatePosXZ(0.0);
 		if (m_freeMode)
@@ -243,7 +245,7 @@ void FirstPersonCamera::processInput(Move move)
 		}
 	}
 
-	else if (move.input.back)
+	if (cmd.buttons & BACK)
 	{
 		updatePosXZ(180.0);
 		if (m_freeMode)
@@ -252,12 +254,12 @@ void FirstPersonCamera::processInput(Move move)
 		}
 	}
 
-	if (move.input.left)
+	if (cmd.buttons & LEFT)
 	{
 		updatePosXZ(90.0);
 	}
 
-	else if (move.input.right)
+	if (cmd.buttons & RIGHT)
 	{
 		updatePosXZ(270);
 	}
@@ -265,12 +267,12 @@ void FirstPersonCamera::processInput(Move move)
 
 
 
-void FirstPersonCamera::processInput(Move move, glm::vec3 & vel, bool canJump)
+void FirstPersonCamera::processUserCmd(UserCmd cmd, glm::vec3 & vel, bool canJump)
 {
-	m_pitch = move.state.pitch;
-	m_yaw = move.state.yaw;
+	m_pitch = cmd.angles[PITCH];
+	m_yaw = cmd.angles[YAW];
 
-	if (move.input.forward)
+	if (cmd.buttons & FORWARD)
 	{
 		updateVelXZ(0.0, vel);
 		if (m_freeMode)
@@ -279,7 +281,7 @@ void FirstPersonCamera::processInput(Move move, glm::vec3 & vel, bool canJump)
 		}
 	}
 
-	else if (move.input.back)
+	if (cmd.buttons & BACK)
 	{
 		updateVelXZ(180.0, vel);
 		if (m_freeMode)
@@ -288,22 +290,21 @@ void FirstPersonCamera::processInput(Move move, glm::vec3 & vel, bool canJump)
 		}
 	}
 
-	if (move.input.left)
+	if (cmd.buttons & LEFT)
 	{
 		updateVelXZ(90.0, vel);
 	}
 
-	else if (move.input.right)
+	if (cmd.buttons & RIGHT)
 	{
 		updateVelXZ(270, vel);
 	}
 
-	if (move.input.jump && canJump)
+	if (cmd.buttons & JUMP && canJump)
 	{
 		vel += glm::vec3(0.0, 175.0, 0.0) * utl::GRAVITY_CONSTANT;
 	}
 }
-
 
 
 void FirstPersonCamera::setFreeMode(bool b)

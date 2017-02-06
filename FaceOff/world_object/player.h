@@ -23,7 +23,7 @@
 #include "terrain/terrain.h"
 
 #include <list>
-
+#include "network/network_utility.h"
 
 #include "world_object/weapon/weapon.h"
 
@@ -46,7 +46,7 @@ class Player : public WorldObject
 
 
 		string name;
-		RakNet::RakNetGUID m_guid;
+		// RakNet::RakNetGUID m_guid;
 
         Camera* m_camera;
 
@@ -78,8 +78,6 @@ class Player : public WorldObject
 		void update(glm::vec3 wPos, float pitch, float yaw);
 
 		void control();
-		void control(KDTree* t);
-
 
 		void updateGameStats();
 		void updateCamera(Pipeline& p);
@@ -102,7 +100,7 @@ class Player : public WorldObject
 		void reloadWeapon();
 		Weapon* getCurWeapon();
 
-		vector<Weapon*> getWeapons();
+		vector<Weapon*>& getWeapons();
 
 		int getId();
 
@@ -127,13 +125,30 @@ class Player : public WorldObject
 		bool isUsingLongRangedWeapon();
 
 		// used for spawn
+		/*
 		void spawnInfoToBitStream(RakNet::BitStream& bs);
 		void toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs);
 
 		void spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm);
 		void setFromBitStream(RakNet::BitStream& bs);
+		*/
 
-		void processInput(Move move);
+//		void spawnInfoToBitStream(RakNet::BitStream& bs);
+//		void serializeSpawnInfo(RakNet::BitStream& bs);
+		void serialize(RakNet::BitStream& bs);
+		// void serialize(RakNet::MessageID msgId, RakNet::BitStream& bs);
+
+//		void spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm);
+		// void deserialize(RakNet::BitStream& bs, ModelManager* mm); , FOArray& objects);
+		void deserialize(RakNet::BitStream& bs, ModelManager* mm);
+		void deserialize(RakNet::BitStream& bs);
+
+
+		// void processInput(Move move);
+		void processUserCmd(UserCmd cmd);
+
+
+		int weaponCount;
 
 		bool hasMoved();
 		Move getMoveState();
@@ -146,6 +161,7 @@ class Player : public WorldObject
 		void updateContactNormalInfo(glm::vec3 normal);
 
 		virtual void updateGameInfo();
+
 	private:
 		int m_id;
 
@@ -160,9 +176,10 @@ class Player : public WorldObject
 		glm::vec3 m_zAxis;
 
 		glm::vec3 m_midAirHorVel;
-
 		vector<Weapon*> m_weapons;
+
 		Weapon* m_curWeapon;
+
 
 		bool m_isDefaultPlayer;
 

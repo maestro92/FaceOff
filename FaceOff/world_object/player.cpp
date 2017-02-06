@@ -21,6 +21,7 @@ Player::Player() : Player(0)
 Player::Player(int id)
 {
 	setId(id);
+	indexId = id;
 //
 	m_camera = new FirstPersonCamera();
 //	((FirstPersonCamera*)m_camera)->setFreeMode(true);
@@ -55,6 +56,7 @@ Player::Player(int id)
 	testedForNotInMidAir = false;
 
 	jumped = false; 
+	weaponCount = 0;
 }
 
 Player::~Player()
@@ -139,6 +141,7 @@ void Player::control()
 int counter = 0;
 
 // only used for spawning
+/*
 void Player::processInput(Move move)
 {
 	// glm::vec3 vel;
@@ -167,6 +170,41 @@ void Player::processInput(Move move)
 	m_velocity += vel;
 	setRotation(move.state.pitch, move.state.yaw);
 }
+*/
+
+// only used for spawning
+void Player::processUserCmd(UserCmd cmd)
+{
+	// glm::vec3 vel;
+	bool canJumpFlag = canJump();
+	glm::vec3 vel(0.0);
+	m_midAirHorVel = glm::vec3(0.0);
+
+	//	m_camera->processInput(move, vel, canJumpFlag);
+
+	m_camera->processUserCmd(cmd, vel, canJumpFlag);
+
+	if (cmd.buttons & JUMP)
+	{
+		inMidAir = true;
+		curJumpCoolDown = 0;
+		jumped = true;
+	}
+
+	if (inMidAir)
+	{
+		vel.x = 0.5 * vel.x;
+		vel.z = 0.5 * vel.z;
+
+		m_midAirHorVel.x = vel.x;
+		m_midAirHorVel.z = vel.z;
+	}
+
+
+	m_velocity += vel;
+	setRotation(cmd.angles[PITCH], cmd.angles[YAW]);
+}
+
 
 
 bool Player::hasMoved()
@@ -607,6 +645,8 @@ void Player::pickUp(Weapon* weapon)
 
 	m_weapons[slot] = weapon;
 
+	weaponCount++;
+
 	if (m_isDefaultPlayer)
 	{
 		weapon->setScale(weapon->m_firstPOVScale);
@@ -723,6 +763,7 @@ Weapon* Player::drop()
 		return NULL;
 
 	Weapon* drop = m_curWeapon;
+	weaponCount--;
 
 	drop->hasOwner = false;
 	// set it back to world model scale
@@ -999,8 +1040,8 @@ void Player::spawnFromBitStream(RakNet::BitStream& bs)
 }
 */
 
-
-void Player::spawnInfoToBitStream(RakNet::BitStream& bs)
+#if 0
+void Player::serializeSpawnInfo(RakNet::BitStream& bs)
 {
 	bs.Reset();
 	bs.Write(SPAWN_INFORMATION);
@@ -1035,12 +1076,11 @@ void Player::spawnInfoToBitStream(RakNet::BitStream& bs)
 		}
 	}
 }
+#endif
 
 
-void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
+void Player::serialize(RakNet::BitStream& bs)
 {
-	bs.Reset();
-	bs.Write(msgId);
 	bs.Write(m_id);
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
 	bs.Write(getCameraPitch());
@@ -1052,6 +1092,17 @@ void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
 	bs.Write(getMaterialEnergyRestitution());
 	bs.Write(getMaterialSurfaceFrictionToBitStream());
 
+	bs.Write(weaponCount);
+	for (int i = 0; i < m_weapons.size(); i++)
+	{
+		Weapon* weapon = m_weapons[i];
+		if (weapon != NULL)
+		{
+			weapon->serialize(bs);
+		}
+	}
+
+	/*
 	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
 	{
 		if (m_weapons[i] != NULL)
@@ -1065,10 +1116,62 @@ void Player::toBitStream(RakNet::MessageID msgId, RakNet::BitStream& bs)
 			utl::debug("weaponEnum is None");
 		}
 	}
+	*/
+
+}
+
+/*
+void Player::serialize(RakNet::MessageID msgId, RakNet::BitStream& bs)
+{
+//	bs.Write(msgId);
+	serialize(bs);
+}
+*/
+
+
+
+
+
+
+/*
+void FaceOff::serializePlayerAndWeapons(Player* p, RakNet::BitStream& bs)
+{
+	p->serialize(bs);
+	bs.Write(p->weaponCount);
+	for (int i = 0; i < p->getWeapons().size(); i++)
+	{
+		Weapon* weapon = p->getWeapons()[i];
+		if (weapon != NULL)
+		{
+			weapon->serialize(bs);
+		}
+	}
 }
 
 
-void Player::spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm)
+Player* FaceOff::deserializePlayerAndWeapons(RakNet::BitStream& bs, ModelManager* mm)
+{
+	Player* p = new Player();
+	p->deserialize(bs, &m_modelMgr);
+
+	int weaponCount = 0;
+	bs.Read(weaponCount);
+
+	for (int i = 0; i < weaponCount; i++)
+	{
+		Weapon* weapon = new Weapon();
+		weapon->deserialize(bs, &m_modelMgr);
+
+		p->pickUp(weapon);
+	}
+}
+*/
+
+
+
+
+// Note we still have to add this Player to the world if we haven't done that yet
+void Player::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 {
 	// the message id is already ignored
 	bs.Read(m_id);
@@ -1095,7 +1198,20 @@ void Player::spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm)
 	float friction = 0;
 	bs.Read(friction);			setMaterialSurfaceFriction(friction);
 
-	
+
+	int weaponCount = 0;
+	bs.Read(weaponCount);
+
+
+	for (int i = 0; i < weaponCount; i++)
+	{
+		Weapon* weapon = new Weapon();
+		weapon->deserialize(bs, mm);
+
+		pickUp(weapon);
+	}
+
+	/*
 	// set the weapon
 	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
 	{
@@ -1103,8 +1219,8 @@ void Player::spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm)
 		bs.Read(weaponEnum);
 		if (weaponEnum != -1)
 		{
-			Weapon* weapon = new Weapon(mm->getWeaponData((WeaponNameEnum)weaponEnum));
-			pickUp(weapon);
+	//		Weapon* weapon = new Weapon(mm->getWeaponData((WeaponNameEnum)weaponEnum));
+	//		pickUp(weapon);
 			utl::debug("weaponEnum is ", weaponEnum);
 		}
 		else
@@ -1112,10 +1228,12 @@ void Player::spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm)
 			utl::debug("weaponEnum is None");
 		}
 	}
+	//
+	*/
 }
 
 // only used for spawning
-void Player::setFromBitStream(RakNet::BitStream& bs)
+void Player::deserialize(RakNet::BitStream& bs)
 {
 	// the message id is already ignored
 	bs.Read(m_id);
@@ -1138,7 +1256,7 @@ void Player::setFromBitStream(RakNet::BitStream& bs)
 
 
 
-vector<Weapon*>Player::getWeapons()
+vector<Weapon*>& Player::getWeapons()
 {
 	return m_weapons;
 }

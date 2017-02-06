@@ -1,19 +1,22 @@
-#ifndef NETWORK_INFO_H_
-#define NETWORK_INFO_H_
+#ifndef NETWORK_UTILITY_H_
+#define NETWORK_UTILITY_H_
 
 #include "RakPeerInterface.h"
 #include <RakNetTypes.h>
 #include "MessageIdentifiers.h"
 #include "RakNetTypes.h"	// Message ID
+#include <string>
 
+#include "BitStream.h"
+#include "RakNetTypes.h"	// Message ID
+
+using namespace std;
 
 #define MAX_CLIENTS 10
+
+// How do you choose a port ? You can choose whatever you want as long as no one else is using it and its within the range of 2 ^ 16 (0 to 65535).
 #define SERVER_PORT 60000
-
-// How often the server sends position updates to the client
-// static const int DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES = 250;
-// static const int DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES = 1000;
-
+#define CLIENT_PORT 60006
 
 
 
@@ -29,12 +32,95 @@ that owns it
 
 */
 
+
+
+// angle indexes
+#define	PITCH	0		// up / down
+#define	YAW		1		// left / right
+#define	ROLL	2		// fall over
+
+#define FORWARD	(1<<0)
+#define BACK	(1<<1)
+#define LEFT	(1<<2)
+#define RIGHT	(1<<3)
+#define JUMP	(1<<4)
+#define ATTACK	(1<<5)	// left mouse
+
+const float TURN_SPEED = 0.5;
+const float FORWARD_SPEED = 0.4;
+
+const string serverDebugPrefix = "";
+const string clientDebugPrefix = "							";
+
+// this is sent to the server each client frame
+struct UserCmd
+{
+	int playerId;
+	int serverTime;
+	float angles[3];	// int angles[3]?
+	uint8_t buttons;
+	uint8_t weapon;
+	/*
+	bool forwardmove; 
+	bool rightmove;
+	bool 
+	bool 
+	*/
+
+	UserCmd()
+	{
+		playerId = 0;
+		serverTime = 0;
+		angles[PITCH] = 0.0f;
+		angles[YAW] = 0.0f;
+		angles[ROLL] = 0.0f;
+		buttons = 0;
+		weapon = 0;
+	}
+
+
+	void serialize(RakNet::BitStream& bs)
+	{
+		bs.Write(serverTime);
+		bs.Write(playerId);
+		
+		bs.Write(angles[0]);
+		bs.Write(angles[1]);
+		bs.Write(angles[2]);
+
+		bs.Write(buttons);
+		bs.Write(weapon);
+	}
+
+	void deserialize(RakNet::BitStream& bs)
+	{
+		bs.Read(serverTime);
+		bs.Read(playerId);
+
+		bs.Read(angles[0]);
+		bs.Read(angles[1]);
+		bs.Read(angles[2]);
+
+		bs.Read(buttons);
+		bs.Read(weapon);
+	}
+
+};
+
+
+
+
+
+#endif
+
+
+
 /*
 struct Move
 {
-	double time;
-	Input input;
-	State state;
+double time;
+Input input;
+State state;
 
 };
 */
@@ -42,31 +128,31 @@ struct Move
 /*
 struct NetworkPlayerInput
 {
-	bool left;
-	bool right;
-	bool forward;
-	bool back;
-	bool jump;
-	bool weaponFired;
+bool left;
+bool right;
+bool forward;
+bool back;
+bool jump;
+bool weaponFired;
 };
 */
 
 /*
 struct NetworkPlayerState
 {
-	glm::vec3 position;
-	glm::vec3 velocity;
+glm::vec3 position;
+glm::vec3 velocity;
 
 };
 */
 
+/*
 struct Client
 {
-	int id, x, y, z;
-	RakNet::RakNetGUID guid;
+int id, x, y, z;
+RakNet::RakNetGUID guid;
 
-	Client(int passed_id) : id(passed_id)
-	{}
+Client(int passed_id) : id(passed_id)
+{}
 };
-
-#endif
+*/

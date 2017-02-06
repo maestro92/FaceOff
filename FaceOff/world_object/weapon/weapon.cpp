@@ -20,6 +20,17 @@ Weapon::Weapon()
 
 Weapon::Weapon(WeaponData data)
 {
+	init(data);
+}
+
+
+Weapon::~Weapon()
+{
+	delete m_wireFrameModel;
+}
+
+void Weapon::init(WeaponData data)
+{
 	setData(data);
 	hasOwner = false;
 	isBeingUsed = false;
@@ -34,13 +45,6 @@ Weapon::Weapon(WeaponData data)
 	m_readyToExplode = false;
 	m_grenadeThrowerInstanceId = -1;
 }
-
-
-Weapon::~Weapon()
-{
-	delete m_wireFrameModel;
-}
-
 
 void Weapon::setData(WeaponData data)
 {
@@ -214,3 +218,33 @@ bool Weapon::ignorePhysicsWith(WorldObject* obj)
 	return false;
 }
 
+
+
+void Weapon::serialize(RakNet::BitStream& bs)
+{
+	bs.Write(indexId);
+	bs.Write(m_nameEnum);
+	bs.Write(m_slotEnum);
+	bs.Write(hasOwner);
+
+
+
+	//		Weapon* weapon = new Weapon(mm->getWeaponData((WeaponNameEnum)weaponEnum));
+}
+
+
+void Weapon::deserialize(RakNet::BitStream& bs)
+{
+
+}
+
+
+void Weapon::deserialize(RakNet::BitStream& bs, ModelManager* mm)
+{
+	bs.Read(indexId);
+	bs.Read(m_nameEnum);
+	bs.Read(m_slotEnum);
+	bs.Read(hasOwner);
+	init(mm->getWeaponData((WeaponNameEnum)m_nameEnum));
+	//		Weapon* weapon = new Weapon(mm->getWeaponData((WeaponNameEnum)weaponEnum));
+}

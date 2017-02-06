@@ -78,7 +78,7 @@ using namespace std;
 #define LIGHT_GRAY  glm::vec3(0.75, 0.75, 0.75)
 #define WHITE       glm::vec3(1.0,1.0,1.0)
 
-
+typedef long long UniqueId;
 
 
 struct MouseState
@@ -188,18 +188,14 @@ class LinkedList
 enum NetworkGameMessageEnum
 {
 	// server to client
-
 	SPAWN_INFORMATION = ID_USER_PACKET_ENUM + 1,
 	NEW_CLIENT = ID_USER_PACKET_ENUM + 2,
 	LOBBY_WAIT_END = ID_USER_PACKET_ENUM + 3,
 
-	CLIENT_INPUT = ID_USER_PACKET_ENUM + 4,
-	SNAPSHOT_FROM_SERVER = ID_USER_PACKET_ENUM + 5,
-	PLAYER_UPDATE = ID_USER_PACKET_ENUM + 6,
+	SERVER_SNAPSHOT = ID_USER_PACKET_ENUM + 4,
+	CLIENT_INPUT = ID_USER_PACKET_ENUM + 5,
 
 	// client to server
-	
-
 };
 
 

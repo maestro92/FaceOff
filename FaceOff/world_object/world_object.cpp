@@ -1,7 +1,11 @@
 #include "world_object.h"
 
+#include "collision_detection/kd_tree_node.h"
+
 WorldObject::WorldObject()
 {
+	active = true;
+
 	m_instanceId = utl::createUniqueObjectID();
 
     m_position = glm::vec3(0.0, 0.0, 0.0);
@@ -218,5 +222,16 @@ void WorldObject::updateContactNormalInfo(glm::vec3 normal)
 
 }
 
+void WorldObject::clearParentNodes()
+{
+	//remove object from its stored kdTree nodes
+	for (int i = 0; i < m_parentNodes.size(); i++)
+	{
+		KDTreeNode* kNode = m_parentNodes[i];
+		if (kNode == NULL)
+			continue;
 
+		kNode->remove(this);
+	}
+}
 

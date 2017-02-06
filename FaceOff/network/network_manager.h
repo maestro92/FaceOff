@@ -1,4 +1,3 @@
-
 #ifndef NETWORK_MANAGER_H_
 #define NETWORK_MANAGER_H_
 
@@ -21,7 +20,9 @@
 
 #include "game_messages.h"
 // #include "network_info.h"
+#include "network_utility.h"
 
+// #include "network_utility.h"
 #include "utility"
 #include "player.h"
 #include "weapon.h"
@@ -40,11 +41,14 @@ using namespace std;
 class NetworkManager
 {
 	public:
+		UserCmd getUserCmd(RakNet::BitStream& bs);
+
 		
-		void init(ModelManager* mm, vector<WorldObject*>* objects, vector<Player*>* players);
-		Player* spawnClientPlayer(RakNet::BitStream& bs, bool defaultFlag);
 
+		//		void init(ModelManager* mm, vector<WorldObject*>* objects, vector<Player*>* players);
+//		Player* spawnClientPlayer(RakNet::BitStream& bs, bool defaultFlag);
 
+		
 
 	private:
 		ModelManager* m_modelMgr;

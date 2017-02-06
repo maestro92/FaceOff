@@ -3,15 +3,16 @@
 
 
 
-
+/*
 void NetworkManager::init(ModelManager* mm, vector<WorldObject*>* objects, vector<Player*>* players)
 {
 	m_modelMgr = mm;
 	m_objects = objects;
 	m_players = players;
 }
+*/
 
-
+/*
 Player* NetworkManager::spawnClientPlayer(RakNet::BitStream& bs, bool defaultFlag)
 {
 	Player* player = new Player();
@@ -42,8 +43,27 @@ Player* NetworkManager::spawnClientPlayer(RakNet::BitStream& bs, bool defaultFla
 	}
 
 	return player;
+}
+*/
 
-	/*
+
+UserCmd NetworkManager::getUserCmd(RakNet::BitStream& bs)
+{
+	UserCmd cmd;
+
+	return cmd;
+}
+
+
+
+
+
+
+
+
+/*
+
+	
 	Player* player = new Player();
 	player->setFromBitStream(bs);
 	
@@ -103,8 +123,6 @@ Player* NetworkManager::spawnClientPlayer(RakNet::BitStream& bs, bool defaultFla
 	m_players[m_defaultPlayerID] = newPlayer;
 	
 	return player;
-	*/
+	
 
-}
-
-
+*/

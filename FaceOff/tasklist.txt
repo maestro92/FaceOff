@@ -1,0 +1,32 @@
+
+
+-	do the Gaffers on Games protocol instead of raknet
+
+
+
+
+
+
+
+
+
+
+
+-	try to profile 
+
+
+	vector of worldObject pointers + kdTree with storing vector pointers in each leaf 
+
+	vs
+
+	tag + index + uniqueId array + KdTree with storing array of (tag/index) and just AABB data
+
+
+
+
+
+
+
+-	add water into game?
+
+

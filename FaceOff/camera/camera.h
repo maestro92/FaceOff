@@ -1,7 +1,7 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
-
+#include "network/network_utility.h"
 #include "define.h"
 #include "utility.h"
 #include "pipeline.h"
@@ -26,8 +26,12 @@ class Camera
 
 		virtual void updateViewMatrix(Pipeline& p) = 0;
 
-		virtual void processInput(Move move) = 0;
-		virtual void processInput(Move move, glm::vec3 & vel, bool canJump) = 0;
+//		virtual void processInput(Move move) = 0;
+//		virtual void processInput(Move move, glm::vec3 & vel, bool canJump) = 0;
+
+
+		virtual void processUserCmd(UserCmd cmd) = 0;
+		virtual void processUserCmd(UserCmd cmd, glm::vec3 & vel, bool canJump) = 0;
 
 		void setMouseIn(bool b);
 		bool getMouseIn();

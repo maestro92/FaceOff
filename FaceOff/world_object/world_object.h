@@ -68,7 +68,9 @@ class WorldObject
 		glm::mat4 m_modelMatrix;
 
 
+		int indexId;
 
+		bool active;
 		// CollisionDetectionGeometry* m_geometry;
 		
 		// collision geometry, we use component based
@@ -155,6 +157,8 @@ class WorldObject
 		virtual WeaponSlotEnum getWeaponSlot();
 		virtual WeaponNameEnum getWeaponName();
 
+
+		void clearParentNodes();
 		vector<KDTreeNode*> m_parentNodes;
 		queue<int> m_emptyIndexPool;
 		

@@ -7,6 +7,8 @@
 #include "weapon_data.h"
 #include "particle_effect.h"
 #include "smoke_effect.h"
+class ModelManager;
+#include "model_manager.h"
 
 using namespace std;
 
@@ -29,6 +31,7 @@ class Weapon : public WorldObject
 
 
 
+		void init(WeaponData data);
 
 		int m_damage;
 		Magazine m_magazine;
@@ -68,6 +71,13 @@ class Weapon : public WorldObject
 
 
 
+		void serialize(RakNet::BitStream& bs);
+		void deserialize(RakNet::BitStream& bs);
+		void deserialize(RakNet::BitStream& bs, ModelManager* mm);
+
+
+
+
 		void setGrenadeThrowerId(int id);
 		int getGrenadeThrowerId();
 
@@ -99,8 +109,9 @@ class Weapon : public WorldObject
 
 		int m_grenadeThrowerInstanceId;
 
-		WeaponSlotEnum m_slotEnum;
 		WeaponNameEnum m_nameEnum;
+		WeaponSlotEnum m_slotEnum;
+
 };
 
 

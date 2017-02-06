@@ -32,7 +32,8 @@ using namespace std;
 using namespace std;
 using namespace json_spirit;
 
-
+// to resolve circular depenency issue
+class Weapon;
 
 class ModelManager
 {

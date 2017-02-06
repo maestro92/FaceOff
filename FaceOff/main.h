@@ -69,6 +69,11 @@ struct KDTreeNode;
 #include <vector>
 #include "BitStream.h"
 #include "RakNetTypes.h"	// Message ID
+// #include "network/network_manager.h"
+
+#include "network\network_manager.h"
+#include "network\server.h"
+#include "network\client.h"
 
 #include "game_messages.h"
 
@@ -80,7 +85,8 @@ struct KDTreeNode;
 #include "terrain/terrain.h"
 #include "terrain/multitexture_terrain.h"
 
-#include "network/network_manager.h"
+#include "network\network_utility.h"
+
 
 #include <al.h>
 #include <alc.h>
@@ -234,9 +240,396 @@ https://github.com/id-Software
 http://fabiensanglard.net/
 
 http://fabiensanglard.net/doom3/index.php
+
+http://buildnewgames.com/real-time-multiplayer/
+
+https://learn.goocreate.com/tutorials/create/multiplayer-fps/
+
+https://www.reddit.com/r/Overwatch/comments/3u5kfg/everything_you_need_to_know_about_tick_rate/
+
+*/
+
+// FaceOff Vector
+
+
+/*
+pros
+
+fixed size array (linear memory)
+with internal free list (O(1) alloc/free, stable indicies)
+with weak references keys (reuse of slot invalidates key)
+zero overhead dereferences (when known-valid)
+*/
+
+/*
+template<class T>
+struct FOArray
+{
+	struct Item{
+		T item;
+		int id;
+	}
+	
+	// http://stackoverflow.com/questions/14466620/c-template-specialization-calling-methods-on-types-that-could-be-pointers-or/14466705
+	template<typename T>
+	T * ptr(T & obj) { return &obj; } //turn reference into pointer!
+
+	template<typename T>
+	T * ptr(T * obj) { return obj; } //obj is already pointer, return it!
+	
+
+	vector<Item> objects;
+	vector<int> freeList;
+
+	int maxSize;
+	int maxUsed;
+	int count;
+
+	void init(int maxSize)
+	{
+		this->maxSize = maxSize;
+		objects.resize(maxSize);	
+
+		for (int i = maxSize - 1; i >= 0; i--)
+		{
+			freeList.push_back(i);
+		}
+
+		maxUsed = 0;
+		count = 0;
+	}
+
+	void clearFreeList()
+	{
+		freeList.clear();
+	}
+
+	int createObject()
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			freeList.pop_back();
+
+			objects[free].id = free;
+			objects[free].item = new T();
+
+			count++;
+			maxUsed = max(maxUsed, free);
+
+			return free;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	
+	T getObject(int id)
+	{
+		return objects[id]->id == -1 ? NULL : objects[id].item;
+	}
+
+	// TODO: need to fix this, de-allocation is expensive
+	void destroyObject(int id)
+	{
+		count--;
+		freeList.push_back(id);
+
+		
+		delete getObject(id);
+		objects[id] = NULL;
+	}
+
+	// only ever used on the client side
+	// do not use this on the server side
+	void set(T obj, int id)
+	{
+		if (getObject(id) != NULL)
+		{
+			destroyObject(id);
+		}
+		count++;
+		maxUsed = max(maxUsed, id);
+		objects[id] = obj;
+	}
+
+	int getIterationEnd()
+	{
+		return maxUsed + 1;
+	}
+};
 */
 
 
+struct FOArray
+{
+	vector<WorldObject*> objects;
+	vector<int> freeList;
+
+	vector<WorldObject*> toBeDestroyed;
+
+	int maxSize;
+	int maxUsed;
+	int count;
+
+	void init(int maxSize)
+	{
+		this->maxSize = maxSize;
+		objects.resize(maxSize, NULL);
+
+		for (int i = maxSize - 1; i >= 0; i--)
+		{
+			freeList.push_back(i);
+		}
+
+		maxUsed = 0;
+		count = 0;
+	}
+
+	WorldObject* get(int id)
+	{
+		return objects[id];
+		//		return objects[id]->indexId == -1 ? NULL : objects[id];
+	}
+
+	void clearFreeList()
+	{
+		freeList.clear();
+	}
+
+	int create()
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			freeList.pop_back();
+			objects[free] = new WorldObject();
+			objects[free]->indexId = free;
+
+			count++;
+			maxUsed = max(maxUsed, free);
+
+			return free;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	
+
+	int add(WorldObject* obj)
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			freeList.pop_back();
+			objects[free] = obj;
+			objects[free]->indexId = free;
+
+			count++;
+			maxUsed = max(maxUsed, free);
+
+			return free;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	void addToDestroyList(int id)
+	{
+		toBeDestroyed.push_back(get(id));
+	}
+
+	void destroyObjects()
+	{
+		for (int i = 0; i < toBeDestroyed.size(); i++)
+		{
+			WorldObject* obj = toBeDestroyed[i];
+			obj->clearParentNodes();
+			objects[obj->indexId] = NULL;
+		}
+
+		toBeDestroyed.clear();
+	}
+
+	// TODO: need to fix this, de-allocation is expensive
+	void destroy(int id)
+	{
+		count--;
+
+		delete get(id);
+		objects[id] = NULL;
+		freeList.push_back(id);
+	}
+
+	int nextAvaiableId()
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			return free;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	// only ever used on the client side
+	// do not use this on the server side
+	void set(WorldObject* obj, int id)
+	{
+		if (get(id) != NULL)
+		{
+			destroy(id);
+		}
+		count++;
+		maxUsed = max(maxUsed, id);
+		objects[id] = obj;
+	}
+
+	int getIterationEnd()
+	{
+		return maxUsed + 1;
+	}
+};
+
+
+
+// TODO: Need to srsly fix this, ether use template, or combine the two
+struct FOPlayerArray
+{
+	vector<Player*> objects;
+	vector<int> freeList;
+
+	int maxSize;
+	int maxUsed;
+	int count;
+
+	void init(int maxSize)
+	{
+		this->maxSize = maxSize;
+		objects.resize(maxSize, NULL);
+
+		for (int i = maxSize - 1; i >= 0; i--)
+		{
+			freeList.push_back(i);
+		}
+
+		maxUsed = 0;
+		count = 0;
+	}
+
+	Player* get(int id)
+	{
+		return objects[id];
+//		return objects[id]->indexId == -1 ? NULL : objects[id];
+	}
+	void clearFreeList()
+	{
+		freeList.clear();
+	}
+
+	int create()
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			freeList.pop_back();
+			objects[free] = new Player();
+			objects[free]->indexId = free;
+
+			count++;
+			maxUsed = max(maxUsed, free);
+
+			return free;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	int add(Player* obj)
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			freeList.pop_back();
+			objects[free] = obj;
+			objects[free]->indexId = free;
+
+			count++;
+			maxUsed = max(maxUsed, free);
+
+			return free;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	int nextAvaiableId()
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			return free;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	// TODO: need to fix this, de-allocation is expensive
+	void destroyObject(int id)
+	{
+		count--;
+
+		delete get(id);
+		objects[id] = NULL;
+		freeList.push_back(id);
+	}
+
+	// only ever used on the client side
+	// do not use this on the server side
+	void set(Player* obj, int id)
+	{
+		cout << "requesting id " << id << endl;
+		for (int i = 0; i < objects.size(); i++)
+		{
+			if (objects[i] == NULL)
+			{
+				cout << "	i " << i << " is null" << endl;
+			}
+			else
+			{
+				cout << "	i " << i << " is not null" << endl;
+
+			}
+
+		}
+
+
+		if (get(id) != NULL)
+		{
+			destroyObject(id);
+		}
+		count++;
+		maxUsed = max(maxUsed, id);
+		objects[id] = obj;
+	}
+
+	int getIterationEnd()
+	{
+		return maxUsed + 1;
+	}
+};
 
 
 
@@ -268,7 +661,9 @@ class FaceOff
 
 		bool isRunning;
 
-		FirstPersonCamera m_serverCamera;
+
+
+		FirstPersonCamera m_spectatorCamera;
 
 		// lights
 		LightManager m_lightManager;
@@ -298,17 +693,17 @@ class FaceOff
 
 		list<Particle> m_bullets;
 		queue<int> m_objectIndexPool;
-	//	list<WorldObject*> m_dynamicObjects;
-	
+
 		int m_defaultPlayerID;
 
-		vector<Player*> m_players;
 
-//		GLuint tempTexture;
+		void initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree);
+
+
 
 		GUIManager m_gui;
 
-		KDTree m_objectKDtree;
+
 
 		bool m_zoomedIn;
 		float m_zoomFactor;
@@ -317,22 +712,36 @@ class FaceOff
 		KDTreeNode* hitNode;
 		long long m_currentTimeMillis;
 
-		bool m_isServer;
-		RakNet::RakPeerInterface* peer;
-		bool connected;
 
 
 		RakNet::Packet* packet;
-		RakNet::RakString rs;
-		RakNet::SystemAddress server_address;
-
-
 		RakNet::BitStream bsOut;
 
+		// RakNet::RakString rs;
+		// RakNet::SystemAddress server_address;
 
-		void destroyWorldObjectByIndex(int i);
-		vector<WorldObject*> m_objects;
-		queue<int> m_emptyBucketPool;
+
+
+
+		void destroyWorldObjectByIndex(vector<WorldObject*>& objects, int i);
+		// void destroyWorldObjectByIndex(int i);
+		// vector<WorldObject*> m_objects;
+
+		// keeping two copies
+		// vector<WorldObject*> sv_objects;	
+		// vector<WorldObject*> cl_objects;	// used for client parsing server snapshot and rendering
+
+
+		FOArray sv_objects;
+		FOArray cl_objects;	// this never creates, only sets objects
+
+		FOPlayerArray sv_players;
+		FOPlayerArray cl_players;
+
+		KDTree sv_objectKDtree;
+		KDTree cl_objectKDtree;
+
+//		queue<int> sv_emptyBucketPool;
 
 		vector<FireWorkEffect*> m_fireWorkEffects;
 		vector<SmokeEffect*> m_smokeEffects;
@@ -344,11 +753,8 @@ class FaceOff
 
 		// client uses this to collect inputs in each frame
 
-		MoveQueue m_inputQueue;
-
-		// queue<Move> m_clientInputQueue;
-		// mutex m_clientInputMutex;
-
+		// int lastObjectIndex;
+		// void addObject(vector<WorldObject*> objects, WorldObject* object);
 
 		// vector<WorldObject*> m_hitPointMarks;
 		// vector<FireWorkEffect*> m_fireWorkEffects;
@@ -356,12 +762,18 @@ class FaceOff
 		CollisionDetectionTestPairs collisionDetectionTestPairs;
 		CollisionDetectionTestPairs clientInputCollisionDetectionTestPairs;
 
+
+		// networking portion
+		Client m_client;	// for the main player
+		Server m_server;
+
 		FaceOff();
 		~FaceOff();
 
 		/// init functions
 		void init();
 		void initObjects();
+		void lateInitObjects();
 		void initRenderers();
 		void initGUI();
 		void initAudio();
@@ -372,45 +784,101 @@ class FaceOff
 		void serverHandleDeviceEvents();
 		void clientHandleDeviceEvents();
 
-		void initNetworkServerClient();
+		void initNetwork();
 		void initNetworkLobby();
 		void startNetworkThread();
 
-		void clientNetworkThread();
-		void serverNetworkThread();
+		// void serializePlayerAndWeapons(Player* p, RakNet::MessageID msgId, RakNet::BitStream& bs);
+		// void deserializePlayerAndWeapons(RakNet::BitStream& bs, ModelManager* mm);
 
+		void addDeserializedPlayerAndWeaponToWorld(Player* p, RakNet::BitStream& bs, bool curPlayer);
 
+		void replyBackToNewClient(int playerId, RakNet::BitStream& bs);
+		void broadCastNewClientJoining(int playerId, RakNet::BitStream& bs);
 
 		void start();
 		void update();
 
+		void initMap();
+
 		void serverFrame();
 		void clientFrame();
 
+		void serverReadPackets();
+		void clientReadPackets();
 
-		void serverSimulation();
-		void clientSimulation();
+		void serverCalculatePing();
+		void serverCheckTimeouts();
 
-		void simulatePlayerPhysics(Player* p, int i);
-		void simulatePlayerPhysics(Player* p, int i, Move move);
-		void simulateObjectPhysics(WorldObject* obj, int i);
-		void simulatePhysics();
-		bool testCollisionDetection(WorldObject* a, WorldObject* b, ContactData& contactData);
-		void checkNeighbors(WorldObject* obj);
-		void checkNeighborsAfterClientInput(WorldObject* obj);
+		void serverSimulationTick(int msec);
+		void clientSimulationTick();
+
+		void serverRunClientMoveCmd(UserCmd cmd);
+		
+		void serverSendClientMessages();
+		void serverSendClientSnapshot();
+		void serverBuildClientSnapshot();
+
+
+		void serverConstructSnapshotToClient();
+
+
+
+		void clientParseServerSnapshot();
+		void clientParsePacketEntities(Snapshot* prev, Snapshot* cur);
+
+
+		void clientSendCmd();
+		void clientSendPacket();
+		
+		UserCmd clientCreateNewCmd();
+		void clientCheckForResend();
+
+		void clientPrediction();
+
 
 		void render();
 
+		Player* parsePlayer(RakNet::BitStream& bs, bool defaultFlag);
+
+		void simulatePlayerPhysics(KDTree& tree, Player* p, int i);
+		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, UserCmd cmd);
+
+		// void simulatePlayerPhysics(Player* p, int i, Move move);
+		// void simulatePlayerPhysics(Player* p, int i);
+
+		// void simulateObjectPhysics(KDTree& tree, vector<WorldObject*>& objects, WorldObject* obj, int i);
+		void simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject* object, int i);
+
+		bool testCollisionDetection(WorldObject* a, WorldObject* b, ContactData& contactData);
+		
+		
+//		void checkNeighbors(WorldObject* obj);
+		void checkNeighbors(KDTree& tree, WorldObject* obj);
+//		void checkNeighborsAfterClientInput(WorldObject* obj);
+		// void simulatePhysics();
 
 		void renderGUI();
 
 		void startCB();
 		void resetGameBoardCB();
 
-		thread m_networkThread;
 
 		long long getCurrentTimeMillis();
 
+
 };
+
+/*
+thread m_networkThread;
+
+// void clientNetworkThread();
+// void serverNetworkThread();
+// MoveQueue m_inputQueue;
+
+// queue<Move> m_clientInputQueue;
+// mutex m_clientInputMutex;
+
+*/
 
 #endif

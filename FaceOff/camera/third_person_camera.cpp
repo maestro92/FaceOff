@@ -138,15 +138,16 @@ void ThirdPersonCamera::control(glm::vec3& vel, bool canJump)
 
 }
 
-void ThirdPersonCamera::processInput(Input input)
+void ThirdPersonCamera::processUserCmd(UserCmd cmd)
 {
 
 }
 
-void ThirdPersonCamera::processInput(Input input, glm::vec3& vel, bool canJump)
+void ThirdPersonCamera::processUserCmd(UserCmd cmd, glm::vec3& vel, bool canJump)
 {
 
 }
+
 
 
 void ThirdPersonCamera::updateTarget()

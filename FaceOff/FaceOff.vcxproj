@@ -228,9 +228,9 @@
     <ClCompile Include="model\imported_model.cpp" />
     <ClCompile Include="model\model.cpp" />
     <ClCompile Include="model\model_manager.cpp" />
-    <ClCompile Include="network\network_client.cpp" />
+    <ClCompile Include="network\client.cpp" />
     <ClCompile Include="network\network_manager.cpp" />
-    <ClCompile Include="network\network_server.cpp" />
+    <ClCompile Include="network\server.cpp" />
     <ClCompile Include="pipeline.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
     <ClCompile Include="renderer\renderer_manager.cpp" />
@@ -467,9 +467,9 @@
     <ClInclude Include="world_object\terrain\multitexture_terrain.h" />
     <ClInclude Include="network\network_utility.h" />
     <ClInclude Include="network\game_messages.h" />
-    <ClInclude Include="network\network_client.h" />
+    <ClInclude Include="network\client.h" />
     <ClInclude Include="network\network_manager.h" />
-    <ClInclude Include="network\network_server.h" />
+    <ClInclude Include="network\server.h" />
     <ClInclude Include="pipeline.h" />
     <ClInclude Include="renderer\renderer.h" />
     <ClInclude Include="renderer\renderer_manager.h" />

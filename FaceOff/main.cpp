@@ -1,6 +1,6 @@
 #include "main.h"
 
-#define NETWORK_FLAG 0
+#define NETWORK_FLAG 1
 #define SERVER_RENDER_FLAG 0
 
 
@@ -21,8 +21,12 @@
 
 #define RENDER_DEBUG_FLAG 0
 
-#define MAX_CLIENTS 10
-#define SERVER_PORT 60000
+
+// const float GAME_SPEED = 1f;
+// const float FIXED_TICK_TIME_s;
+
+// #define MAX_CLIENTS 10
+// #define SERVER_PORT 60000
 
 bool incrFlag = true;
 bool incrFlag2 = true;
@@ -35,6 +39,10 @@ float tempYaw = 0;
 
 float tempPitch2 = 0;
 float tempYaw2 = 0;
+
+
+#define NUM_MAX_OBJECTS 256
+
 
 // the server simluates the game in descirete time steps called ticks
 
@@ -70,8 +78,6 @@ SDL_Surface* pDisplaySurface = NULL;
 //event structure
 SDL_Event event;
 
-static float runningTime = 0.0f;
-
 
 // 15 ms, 66.6 ticks per sec are simulated
 const int SERVER_SIMLUATION_FRAMES_PER_SECOND = 66;
@@ -92,20 +98,12 @@ ModelManager	FaceOff::m_modelMgr;
 
 FaceOff::FaceOff()
 {
-	m_isServer = false;
+
 }
 
 FaceOff::~FaceOff()
 {
 
-
-
-	if (m_networkThread.joinable())
-	{
-		m_networkThread.join();
-	}
-
-	RakNet::RakPeerInterface::DestroyInstance(peer);
 }
 
 
@@ -121,10 +119,13 @@ void FaceOff::init()
    
 	// initAudio();
 #if NETWORK_FLAG == 1
+	initNetwork();
 	initNetworkLobby();
 #else
 	m_defaultPlayerID = 0;
 #endif
+
+	lateInitObjects();
 
 	// initGUI depends on the m_defaultPlayerID, so initNetworkLobby needs to run first
 	initGUI();
@@ -153,44 +154,11 @@ GLuint tempTexture;
 
 
 
-
-void FaceOff::initObjects()
+void FaceOff::initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree)
 {
-	m_modelMgr.init();
-	m_nm.init(&m_modelMgr, &m_objects, &m_players);
-
-	if (m_isServer)
-	{
-		m_serverCamera = FirstPersonCamera(glm::vec3(49.83, 200.67, 59.87));
-		m_serverCamera.setPitch(-63.5);
-		m_serverCamera.setYaw(56.5);
-		m_serverCamera.setFreeMode(true);
-
-	//	utl::debug("m_serverCamera eye", m_serverCamera.getEyePoint());
-	}
-
-	float scale = 100.0;
-	o_worldAxis.setScale(scale);
-	o_worldAxis.setModelEnum(ModelEnum::xyzAxis);
-	o_worldAxis.setModel(m_modelMgr.get(ModelEnum::xyzAxis));
-
-	
-	o_sampleBullet.setScale(1.0, 5.0, 1.0);
-
-	o_skybox = SkyBox();
-
-
-
-
-	//	WeaponManager::initWeaponsData();
-	//	Weapon::initGameWeapons();
-
-	/*
-	float xbound = 150;
-	float ybound = 50;
-	float zbound = 150;
-	*/
-
+	objects.init(NUM_MAX_OBJECTS);
+	players.init(NUM_MAX_CLIENTS);
+		
 	float wallWidth = 10.0f;
 
 	float xbound = 150;
@@ -200,7 +168,8 @@ void FaceOff::initObjects()
 	float xboundWithWalls = 150 + wallWidth * 2;
 	float zboundWithWalls = 150 + wallWidth * 2;
 
-	scale = 150;
+	float scale = 150;
+		
 	WorldObject* o_temp = new WorldObject();
 	o_temp->setScale(xbound, zbound, 1.0);
 	o_temp->setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
@@ -208,19 +177,19 @@ void FaceOff::initObjects()
 	o_temp->setModel(m_modelMgr.get(ModelEnum::ground));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	o_temp->m_name = "ground";
-	m_objects.push_back(o_temp);
-
+	objects.add(o_temp);
 
 
 	o_temp = new WorldObject();
 	o_temp->m_name = "south wall";
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setPosition(0, ybound / 2, zbound + wallWidth);
-//	o_temp->setModel(m_modelMgr.m_cube);
+	//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
 	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 	o_temp = new WorldObject();
@@ -228,55 +197,37 @@ void FaceOff::initObjects()
 	o_temp->setPosition(0, ybound / 2, -zbound - wallWidth);
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
-//	o_temp->setModel(m_modelMgr.m_cube);
+	//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
 	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 	o_temp = new WorldObject();
 	o_temp->m_name = "west wall";
 	o_temp->setPosition(-xbound - wallWidth, ybound / 2, 0.0);
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
-//	o_temp->setModel(m_modelMgr.m_cube);
+	//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
 	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
+
 
 
 	o_temp = new WorldObject();
 	o_temp->m_name = "east wall";
 	o_temp->setPosition(xbound + wallWidth, ybound / 2, 0.0);
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
-//	o_temp->setModel(m_modelMgr.m_cube);
+	//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
 	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
 
-
-	/*
-	scale = 15.0f;
-	o_temp = new WorldObject();
-	o_temp->setScale(scale);
-	o_temp->setPosition(0, 0, 20);
-	o_temp->setModel(&m_stairs);
-	o_temp->updateAABB();
-	o_temp->m_name = "stairs 20";
-	m_objects.push_back(o_temp);
-
-
-	o_temp = new WorldObject();
-	o_temp->setScale(scale);
-	o_temp->setPosition(0, 0, -20);
-	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
-	o_temp->setModel(&m_stairs);
-	o_temp->updateAABB();
-	o_temp->m_name = "stairs -20";
-	m_objects.push_back(o_temp);
-	*/
 
 	scale = 10.0f;
 	float gap = 10.0;
@@ -292,11 +243,11 @@ void FaceOff::initObjects()
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-//		o_temp->setModel(m_modelMgr.m_woodenBox);
+		//		o_temp->setModel(m_modelMgr.m_woodenBox);
 		o_temp->setModelEnum(ModelEnum::woodenBox);
 		o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
-		m_objects.push_back(o_temp);
+		objects.add(o_temp);
 	}
 
 
@@ -311,11 +262,11 @@ void FaceOff::initObjects()
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-//		o_temp->setModel(m_modelMgr.m_woodenBox);
+		//		o_temp->setModel(m_modelMgr.m_woodenBox);
 		o_temp->setModelEnum(ModelEnum::woodenBox);
 		o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
-		m_objects.push_back(o_temp);
+		objects.add(o_temp);
 	}
 
 
@@ -336,17 +287,18 @@ void FaceOff::initObjects()
 
 	utl::debug("x is", halfPosXMag);
 	utl::debug("z is", halfPosZMag);
-	
+
 	o_temp = new WorldObject();
 	o_temp->m_name = "NW Pillar";
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, -halfPosZMag);
-//	o_temp->setModel(m_modelMgr.m_woodenBox);
+	//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
 	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 	o_temp = new WorldObject();
@@ -354,11 +306,12 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, -halfPosZMag);
-//	o_temp->setModel(m_modelMgr.m_woodenBox);
+	//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
 	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 
@@ -367,11 +320,11 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, halfPosZMag);
-//	o_temp->setModel(m_modelMgr.m_woodenBox);
+	//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
 	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
 
 
 
@@ -380,31 +333,31 @@ void FaceOff::initObjects()
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
-//	o_temp->setModel(m_modelMgr.m_woodenBox);
+	//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
 	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 	utl::debug("id is", o_temp->m_instanceId);
 	float formationGap = 40.0f;
-	
-
 
 
 	o_temp = new Weapon(m_modelMgr.getWeaponData(MAC_11));
 	o_temp->m_name = "MAC_11";
 	o_temp->setPosition(-3 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
 
 
 	o_temp = new Weapon(m_modelMgr.getWeaponData(AWM));
 	o_temp->m_name = "AWM";
 	o_temp->setPosition(-2 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 
@@ -412,7 +365,7 @@ void FaceOff::initObjects()
 	o_temp->m_name = "MINIGUN";
 	o_temp->setPosition(-1 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
 
 
 
@@ -420,31 +373,22 @@ void FaceOff::initObjects()
 	o_temp->m_name = "knife";
 	o_temp->setPosition(formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
-
-
-	/*
-	o_temp = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
-	o_temp->m_name = "FRAG_GRENADE";
-	o_temp->setAABBByPosition(2 * formationGap, 5, -110);
-	m_objects.push_back(o_temp);
-	*/
-
-
+	objects.add(o_temp);
 
 
 	o_temp = new Weapon(m_modelMgr.getWeaponData(MP5));
 	o_temp->m_name = "MP5";
 	o_temp->setPosition(-3 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
 
 
 	o_temp = new Weapon(m_modelMgr.getWeaponData(MG42));
 	o_temp->m_name = "MG42";
 	o_temp->setPosition(-2 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 	// init weapons for the map
@@ -452,21 +396,22 @@ void FaceOff::initObjects()
 	o_temp->m_name = "AK 47";
 	o_temp->setPosition(-formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
 
 
 	o_temp = new Weapon(m_modelMgr.getWeaponData(M16));
 	o_temp->m_name = "M16";
 	o_temp->setPosition(formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 	o_temp = new Weapon(m_modelMgr.getWeaponData(KATANA));
 	o_temp->m_name = "katana";
 	o_temp->setPosition(2 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
 
 
 
@@ -474,153 +419,73 @@ void FaceOff::initObjects()
 	o_temp->m_name = "shotgun";
 	o_temp->setPosition(3 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
-	m_objects.push_back(o_temp);
+	objects.add(o_temp);
+
 
 
 
 
 	vector<WorldObject*> objectsForKDTree;
 
-	for (int i = 0; i < m_objects.size(); i++)
+	for (int i = 0; i < objects.getIterationEnd(); i++)
 	{
-		WorldObject* obj = m_objects[i];
+		WorldObject* obj = objects.get(i);
+
+		if (obj != NULL)
+		{
+			continue;
+		}
 
 		if (obj->getObjectType() == WEAPON && ((Weapon*)(obj))->hasOwner == true)
 		{
 			continue;
 		}
+
 		objectsForKDTree.push_back(obj);
 	}
 
 
-	m_objectKDtree.build(objectsForKDTree, glm::vec3(xboundWithWalls + 1, ybound + 1, zboundWithWalls + 1), glm::vec3(-xboundWithWalls - 1, -1, -zboundWithWalls - 1));
+	//	m_objectKDtree.build(objectsForKDTree, glm::vec3(xboundWithWalls + 1, ybound + 1, zboundWithWalls + 1), glm::vec3(-xboundWithWalls - 1, -1, -zboundWithWalls - 1));
+	tree.build(objectsForKDTree, glm::vec3(xboundWithWalls + 1, ybound + 1, zboundWithWalls + 1), glm::vec3(-xboundWithWalls - 1, -1, -zboundWithWalls - 1));
+
+
+
+}
 
 
 
 
-#if NETWORK_FLAG == 0
+void FaceOff::initObjects()
+{
+	m_modelMgr.init();
+	// m_nm.init(&m_modelMgr, &m_objects, &m_players);
 
-	Weapon* w = new Weapon(m_modelMgr.getWeaponData(M16));
-	w->setCollisionDetectionGeometry(CD_AABB);
-	w->m_name = "player0 mainWeapon";
+	/*/
+	if (m_isServer)
+	{
+		m_spectatorCamera = FirstPersonCamera(glm::vec3(49.83, 200.67, 59.87));
+		m_spectatorCamera.setPitch(-63.5);
+		m_spectatorCamera.setYaw(56.5);
+		m_spectatorCamera.setFreeMode(true);
 
-	//	Weapon* pistol = new Weapon(m_modelMgr.getWeaponData());
-	Weapon* k = new Weapon(m_modelMgr.getWeaponData(KNIFE));
-	k->setCollisionDetectionGeometry(CD_AABB);
-	k->m_name = "player0 knife";
-
-	Weapon* g = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
-	g->setMass(0.4);
-	g->setMaterialEnergyRestitution(0.6);
-	g->setMaterialSurfaceFriction(0.3);
-	g->setCollisionDetectionGeometry(CD_AABB);
-	g->m_name = "player0 grenade";
-
-
-
-	Weapon* w1 = new Weapon(m_modelMgr.getWeaponData(M16));
-	w1->setCollisionDetectionGeometry(CD_AABB);
-	w1->m_name = "player1 mainWeapon";
-	
-	Weapon* k1 = new Weapon(m_modelMgr.getWeaponData(KNIFE));
-	k1->setCollisionDetectionGeometry(CD_AABB);
-	k1->m_name = "player1 knife";
-
-	Weapon* g1 = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
-	g1->setMass(0.4);
-	g1->setMaterialEnergyRestitution(0.6);
-	g1->setMaterialSurfaceFriction(0.3);
-	g1->setCollisionDetectionGeometry(CD_AABB);
-	g1->m_name = "player1 grenade";
-
-
-
-	Weapon* w2 = new Weapon(m_modelMgr.getWeaponData(M16));
-	w2->setCollisionDetectionGeometry(CD_AABB);
-	w2->m_name = "player2 mainWeapon";
-
-	Weapon* k2 = new Weapon(m_modelMgr.getWeaponData(KNIFE));
-	k2->setCollisionDetectionGeometry(CD_AABB);
-	k2->m_name = "player2 knife";
-
-	Weapon* g2 = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
-	g2->setMass(0.4);
-	g2->setMaterialEnergyRestitution(0.6);
-	g2->setMaterialSurfaceFriction(0.3);
-	g2->setCollisionDetectionGeometry(CD_AABB);
-	g2->m_name = "player2 grenade";
-
-	m_objects.push_back(w);
-	m_objects.push_back(k);
-	m_objects.push_back(g);
-	
-	
-	m_objects.push_back(w1);
-	m_objects.push_back(k1);
-	m_objects.push_back(g1);
-
-	m_objects.push_back(w2);
-	m_objects.push_back(k2);
-	m_objects.push_back(g2);
-	
-
-	m_defaultPlayerID = 0;
-	Player* p = new Player(m_defaultPlayerID);
-	p->m_name = "player 0";
-	p->setDefaultPlayerFlag(true);
-	p->setModelEnum(ModelEnum::player);
-	p->setModel(m_modelMgr.get(ModelEnum::player));
-	p->setMass(80);
-	p->setCollisionDetectionGeometry(CD_SPHERE);
-
-	p->pickUp(w);
-	p->pickUp(k);
-	p->pickUp(g);
-
-	m_players.push_back(p);
-
-	/*
-	p = new Player(1);
-	p->m_name = "player 1";
-	p->setPosition(0, 5, 25);
-	p->setModelEnum(ModelEnum::player);
-	p->setModel(m_modelMgr.get(ModelEnum::player));
-	p->setMass(80);
-	p->setCollisionDetectionGeometry(CD_SPHERE);
-
-	p->pickUp(w1);
-	p->pickUp(k1);
-	p->pickUp(g1);
-
-	m_players.push_back(p);
-
-
-	p = new Player(2);
-	p->m_name = "player 2";
-	p->setPosition(0, 5, -40);
-	p->setModelEnum(ModelEnum::player);
-	p->setModel(m_modelMgr.get(ModelEnum::player));
-	p->setMass(80);
-	p->setCollisionDetectionGeometry(CD_SPHERE);
-
-	p->pickUp(w2);
-	p->pickUp(k2);
-	p->pickUp(g2);
-
-	m_players.push_back(p);
+	//	utl::debug("m_spectatorCamera eye", m_spectatorCamera.getEyePoint());
+	}
 	*/
 
-
-
-#endif
-
-	for (int i = 0; i < m_players.size(); i++)
-		m_objectKDtree.insert(m_players[i]);
-
-
-
+	float scale = 100.0;
+	o_worldAxis.setScale(scale);
+	o_worldAxis.setModelEnum(ModelEnum::xyzAxis);
+	o_worldAxis.setModel(m_modelMgr.get(ModelEnum::xyzAxis));
 
 	
+	o_sampleBullet.setScale(1.0, 5.0, 1.0);
+
+	o_skybox = SkyBox();
+
+
+	initMap(sv_objects, sv_players, sv_objectKDtree);
+	initMap(cl_objects, cl_players, cl_objectKDtree);
+
 	// Grenade particle effect
 	FireWorkEffect* fwEffect = new FireWorkEffect();
 	fwEffect->setPosition(glm::vec3(15.0, 0.0, 13.0));
@@ -640,10 +505,28 @@ void FaceOff::initObjects()
 	smEffect->init();
 	m_smokeEffects.push_back(smEffect);
 	
-//	m_objectKDtree.print();
 }
 
 
+
+void FaceOff::lateInitObjects()
+{
+	for (auto player : sv_players.objects)
+	{
+		if (player != NULL)
+		{
+			sv_objectKDtree.insert(player);
+		}
+	}
+
+	for (auto player : cl_players.objects)
+	{
+		if (player != NULL)
+		{
+			cl_objectKDtree.insert(player);
+		}
+	}
+}
 
 
 
@@ -657,22 +540,23 @@ void FaceOff::initRenderers()
 }
 
 
-void FaceOff::initNetworkServerClient()
+void FaceOff::initNetwork()
 {
 	bool invalidInput = true;
+	bool m_isServer = false;
 	utl::debugLn(5);
 	while (invalidInput)
 	{
 		char str[512];
-		printf("(C)lient or (S)erver?\n");
+		printf("Are You Hosting? Y/N \n");
 		gets(str);
 
-		if ((str[0] == 's') || (str[0] == 'S'))
+		if ((str[0] == 'Y') || (str[0] == 'y') || str[0] == '\0')
 		{
 			m_isServer = true;
 			invalidInput = false;
 		}
-		else if (str[0] == 'c' || str[0] == 'C')
+		else if (str[0] == 'N' || str[0] == 'n')
 		{
 			m_isServer = false;
 			invalidInput = false;
@@ -682,77 +566,40 @@ void FaceOff::initNetworkServerClient()
 			printf("InvalidInput!");
 		}
 	}
+
+	if (m_isServer)
+	{
+		m_server.init(50);
+	}
+
+	m_client.init();
 }
 
 void FaceOff::initNetworkLobby()
 {
-	if (m_isServer)
-	{
-		peer = RakNet::RakPeerInterface::GetInstance();
-
-		RakNet::SocketDescriptor sd(SERVER_PORT, 0);
-		peer->Startup(MAX_CLIENTS, &sd, 1);
-
-		printf("Starting the server.\n");
-		// We need to let the server accept incoming connections from the clients
-		// Sets how many incoming connections are allowed. 
-		peer->SetMaximumIncomingConnections(MAX_CLIENTS);
-	}
-	else
-	{
-		connected = false;
-		peer = RakNet::RakPeerInterface::GetInstance();
-
-		RakNet::SocketDescriptor sd;
-		peer->Startup(1, &sd, 1);
-
-		char str[512];
-
-		printf("Enter server IP or hit enter for 127.0.0.1\n");
-		gets(str);
-		if (str[0] == 0)
-			strcpy(str, "127.0.0.1");
-
-		printf("Starting the client.\n");
-		peer->Connect(str, SERVER_PORT, 0, 0);
-	}
-
-
-
-
 	// we're waiting in the lobby
 	bool waitingInLobby = true;
 
 	// we're gonna settle the player list
 	printf("Waiting in Lobby.\n");
 
-	if (m_isServer)
+
+	while (waitingInLobby)
 	{
-		m_defaultPlayerID = -1;
+		SDL_PumpEvents();
+		Uint8* state = SDL_GetKeyState(NULL);
+		if (state[SDLK_a] || state[SDLK_SPACE])
+		{ 
+			waitingInLobby = false;
+			break;
+		}
 
-		while (waitingInLobby)
+		// running server wait for lobby frame
+		if (m_server.isInitalized == true)
 		{
-			//			printf("In the lobby waiting loop.\n");			
-			while (SDL_PollEvent(&event))
-			{
-				switch (event.type)
-				{
-					case SDL_KEYDOWN:
-						switch (event.key.keysym.sym)
-						{
-							case SDLK_a:
-								utl::debug("pressed A, ending waitingInLobby");
-								waitingInLobby = false;
-								break;
-						}
-				}
-			}
-
-
-			// iterate over each message received
-			for (packet = peer->Receive();
-				packet;
-				peer->DeallocatePacket(packet), packet = peer->Receive())
+			for (packet = m_server.peer->Receive();	
+				packet; 
+				m_server.peer->DeallocatePacket(packet), packet = m_server.peer->Receive())
 			{
 				// we first initalized bitStream with the packet->data
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -760,162 +607,103 @@ void FaceOff::initNetworkLobby()
 				// we ignore the first part of each message (due to RakNet convention)
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
-
-
-				cout << endl << "	****	New Packet from:" << packet->guid.g << endl;
-
-				cout << "Player List" << endl;
-				for (int i = 0; i < (int)m_players.size(); i++)
-					cout << i << " - " << m_players[i]->m_guid.g << endl;
-
 				// Handle message here 
 				switch (packet->data[0])
 				{
-				case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-					printf("Another client has disconnected.\n");
-					break;
+					case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+						printf("Another client has disconnected.\n");
+						break;
 
-				case ID_REMOTE_CONNECTION_LOST:
-					printf("Another client has lost the connection.\n");
-					break;
+					case ID_REMOTE_CONNECTION_LOST:
+						printf("Another client has lost the connection.\n");
+						break;
 
-				case ID_REMOTE_NEW_INCOMING_CONNECTION:
-					printf("Another client has connected.\n");
-					break;
+					case ID_REMOTE_NEW_INCOMING_CONNECTION:
+						printf("Another client has connected.\n");
+						break;
 
-
-				case ID_NEW_INCOMING_CONNECTION:
-				{
-					printf("A connection is incoming.\n");
-
-					int newPlayerId = m_players.size();
-					float newSpawnX = newPlayerId * 30;
-					float newSpawnY = 5;
-					float newSpawnZ = newPlayerId * 30;
-
-					// Add Player
-					Player* p = new Player(newPlayerId);
-					p->m_guid = packet->guid;
-					p->m_name = "player " + utl::intToStr(newPlayerId);
-					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
-					p->setRotation(0, 0);
-					p->setModelEnum(ModelEnum::player);
-					p->setModel(m_modelMgr.get(ModelEnum::player));
-					p->setMass(80);
-					p->setCollisionDetectionGeometry(CD_SPHERE);
-
-
-					Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
-					mainWeapon->setCollisionDetectionGeometry(CD_AABB);
-					mainWeapon->m_name = "player mainWeapon";
-
-					Weapon* knife = new Weapon(m_modelMgr.getWeaponData(KNIFE));
-					knife->setCollisionDetectionGeometry(CD_AABB);
-					knife->m_name = "player knife";
-
-					Weapon* grenade = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
-					grenade->setMass(0.4);
-					grenade->setMaterialEnergyRestitution(0.6);
-					grenade->setMaterialSurfaceFriction(0.3);
-					grenade->setCollisionDetectionGeometry(CD_AABB);
-					grenade->m_name = "player grenade";
-
-					p->pickUp(mainWeapon);
-					p->pickUp(knife);
-					p->pickUp(grenade);
-
-
-					m_players.push_back(p);
-					m_objects.push_back(mainWeapon);
-					m_objects.push_back(knife);
-					m_objects.push_back(grenade);
-
-
-					utl::debug("new_player_id", newPlayerId);
-					utl::debug("player position", m_players[newPlayerId]->getPosition());
-
-					if (m_players.size() > 0)
+					case ID_NEW_INCOMING_CONNECTION:
 					{
-						// send new client notification to existing clients
-						cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
-						p->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
+						printf("A connection is incoming.\n");
+						m_server.addClient(packet);
 
-						for (int i = 0; i < m_players.size(); i++)
-						{
-							if (i == newPlayerId)
-								continue;
+						int newPlayerId = sv_players.nextAvaiableId();
+						float newSpawnX = newPlayerId * 30;
+						float newSpawnY = 5;
+						float newSpawnZ = newPlayerId * 30;
 
-							cout << " To: " << i << " - " << m_players[i]->m_guid.g << endl;
-							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-						}
-						
-	
+						// Add Player
+						Player* p = new Player(newPlayerId);
+						p->m_name = "player " + utl::intToStr(newPlayerId);
+						p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
+						p->setRotation(0, 0);
+						p->setModelEnum(ModelEnum::player);
+						p->setModel(m_modelMgr.get(ModelEnum::player));
+						p->setMass(80);
+						p->setCollisionDetectionGeometry(CD_SPHERE);
 
-						// Sending each client's position to new client
-						utl::debug("m_players size", m_players.size());
-						cout << "Sending each client's position to new client" << endl;
 
-						for (int i = 0; i < m_players.size(); i++)
-						{
-							if (i == newPlayerId)
-								continue;
+						Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
+						mainWeapon->setCollisionDetectionGeometry(CD_AABB);
+						mainWeapon->m_name = "player mainWeapon";
 
-							cout << "sending for " << i << endl;
-							p->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
-							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-						}
-					}
-					else
-					{
-						cout << "No clients yet, didn't send spawn pos to existing " << "nor each existing pos to new " << endl;
+						Weapon* knife = new Weapon(m_modelMgr.getWeaponData(KNIFE));
+						knife->setCollisionDetectionGeometry(CD_AABB);
+						knife->m_name = "player knife";
+
+						Weapon* grenade = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
+						grenade->setMass(0.4);
+						grenade->setMaterialEnergyRestitution(0.6);
+						grenade->setMaterialSurfaceFriction(0.3);
+						grenade->setCollisionDetectionGeometry(CD_AABB);
+						grenade->m_name = "player grenade";
+
+						p->pickUp(mainWeapon);
+						p->pickUp(knife);
+						p->pickUp(grenade);
+
+
+						sv_players.add(p);
+						sv_objects.add(mainWeapon);
+						sv_objects.add(knife);
+						sv_objects.add(grenade);
+
+
+						sv_objectKDtree.insert(p);
+
+
+						utl::debug("new_player_id", newPlayerId);
+						utl::debug("player position", sv_players.get(newPlayerId)->getPosition());
+
+						broadCastNewClientJoining(newPlayerId, bsOut);
+						replyBackToNewClient(newPlayerId, bsOut);
+						break;
 					}
 
 
+					case ID_DISCONNECTION_NOTIFICATION:
+						printf("A client has disconnected.\n");
+						break;
+					case ID_CONNECTION_LOST:
+						printf("A client lost the connection.\n");
+						break;
 
-					// Use a BitStream to write a custom user message
-					// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
-
-					// write a WELCOME message and include the clients index + 1
-					p->toBitStream((RakNet::MessageID)SPAWN_INFORMATION, bsOut);
-
-					// send the message back to the same address the current packet came from (the new client)
-					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-
-					cout << "Player List" << endl;
-					for (int i = 0; i < m_players.size(); i++)
-					{
-						cout << i << " - " << m_players[i]->getId() << " position " << m_players[i]->m_position.x << " "
-							<< m_players[i]->m_position.y << " "
-							<< m_players[i]->m_position.z << endl;
-					}
-
-					break;
-				}
-
-
-				case ID_DISCONNECTION_NOTIFICATION:
-					printf("A client has disconnected.\n");
-					break;
-				case ID_CONNECTION_LOST:
-					printf("A client lost the connection.\n");
-					break;
-
-				default:
-					printf("Message with identifier %i has arrived.\n", packet->data[0]);
-					break;
+					default:
+						printf("Message with identifier %i has arrived.\n", packet->data[0]);
+						break;
 				}
 				bsOut.Reset();
 			}
 		}
-	}
-	else
-	{
-		while (waitingInLobby)
+
+
+		// running client wait for lobby frame
+		if (m_server.isDedicated == false)
 		{
 			// iterate over each message received
-			for (packet = peer->Receive();
+			for (packet = m_client.peer->Receive();
 				packet;
-				peer->DeallocatePacket(packet), packet = peer->Receive())
+				m_client.peer->DeallocatePacket(packet), packet = m_client.peer->Receive())
 			{
 
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -925,37 +713,61 @@ void FaceOff::initNetworkLobby()
 				{
 					case SPAWN_INFORMATION:
 					{
-						Player* newPlayer = m_nm.spawnClientPlayer(bsIn, true);
-						newPlayer->setDefaultPlayerFlag(true);
-						m_defaultPlayerID = newPlayer->getId();
+						m_client.systemAddress = packet->systemAddress;
 
-						server_address = packet->systemAddress;
+						std::cout << clientDebugPrefix << "Server gave me Spawn Information" << endl;
 
-						printf("Server said I'm client number %d at %f, %f, %f\n", newPlayer->getId(), newPlayer->getPosition().x, newPlayer->getPosition().y, newPlayer->getPosition().z);
+						// the new player
+						Player* p = new Player();
+						addDeserializedPlayerAndWeaponToWorld(p, bsIn, true);
+
+						std::cout << clientDebugPrefix;  utl::debug("new_player_id", p->indexId);
+						std::cout << clientDebugPrefix;  utl::debug("player position", cl_players.get(p->indexId)->getPosition());
+
+
+						// existing player
+						int existingPlayerCount = 0;
+						bsIn.Read(existingPlayerCount);
+
+						for (int i = 0; i < existingPlayerCount; i++)
+						{
+							Player* p = new Player();
+							addDeserializedPlayerAndWeaponToWorld(p, bsIn, false);
+						}
+
+
+						// std::cout << clientDebugPrefix;
+						// printf("Server said I'm client number %d at %f, %f, %f\n", p->getId(), p->getPosition().x, p->getPosition().y, p->getPosition().z);
+					
+
 						break;
 					}
 
 
 					case NEW_CLIENT:
 					{
-						Player* newPlayer = m_nm.spawnClientPlayer(bsIn, false);
-						printf("Received new client info for %d: %f, %f, %f", newPlayer->getId(), newPlayer->getPosition().x, newPlayer->getPosition().y, newPlayer->getPosition().z);
+						std::cout << clientDebugPrefix << "Received info about new client info for" << endl;
+
+						Player* p = new Player();
+						addDeserializedPlayerAndWeaponToWorld(p, bsIn, false);
+
+						printf("Received new client info for %d: %f, %f, %f", p->getId(), p->getPosition().x, p->getPosition().y, p->getPosition().z);
 
 						cout << "Player List" << endl;
-						for (int i = 0; i < m_players.size(); i++)
+						for (int i = 0; i < cl_players.getIterationEnd(); i++)
 						{
+							Player* p = cl_players.get(i);
 
-							if (m_players[i] == NULL)
+							if (p == NULL)
 							{
 								cout << "player " << i << " is null" << endl;
 							}
 							else
 							{
-								cout << i << " - " << m_players[i]->getId() << " position " << m_players[i]->m_position.x << " "
-									<< m_players[i]->m_position.y << " "
-									<< m_players[i]->m_position.z << endl;
+								cout << i << " - " << p->indexId << endl;  utl::debug("position ", p->m_position);
 							}
 						}
+					
 						break;
 					}
 
@@ -964,210 +776,408 @@ void FaceOff::initNetworkLobby()
 						break;
 
 					case ID_CONNECTION_REQUEST_ACCEPTED:
-						connected = true;
+						m_client.isConnected = true;
 						break;
 					}
-
+				bsOut.Reset();
 			}
 		}
 	}
 
 
 
-	if (m_isServer)
+
+	if (m_server.isInitalized)
 	{
 		// send the end termination signal to client
 
-		for (int i = 0; i < m_players.size(); i++)
+		for (int i = 0; i < m_server.clients.size(); i++)
 		{
-			if (i == m_defaultPlayerID)
-				continue;
+			Client client = m_server.getClient(i);
 
-			cout << "sending each client lobby wait end signal" << i << endl;
+			std::cout << "sending each client lobby wait end signal" << i << endl;
 			bsOut.Reset();
 			bsOut.Write((RakNet::MessageID)LOBBY_WAIT_END);
 			bsOut.Write(i);
 
-			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+			m_server.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, client.systemAddress, false);
+			//			m_server.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
 		}
 
 	}
-
+	/*
 	utl::debug("m_defaultPlayerId", m_defaultPlayerID);
 
-	cout << "Player List" << endl;
+	std::cout << "Player List" << endl;
 	for (int i = 0; i < m_players.size(); i++)
 	{
 
 		if (m_players[i] == NULL)
 		{
-			cout << "player " << i << " is null" << endl;
+			std::cout << "player " << i << " is null" << endl;
 		}
 		else
 		{
-			cout << i << " - " << m_players[i]->getId() << " position " << m_players[i]->m_position.x << " "
+			std::cout << i << " - " << m_players[i]->getId() << " position " << m_players[i]->m_position.x << " "
 				<< m_players[i]->m_position.y << " "
 				<< m_players[i]->m_position.z << endl;
 		}
 	}
-
+	*/
 
 	printf("Done waiting in the Lobby.\n");
 
 }
 
 
-
-
-/*
-while running
+void FaceOff::broadCastNewClientJoining(int playerId, RakNet::BitStream& bs)
 {
-	lock
-		check incoming packets
-			put in queue
-	unlock
+	bs.Reset();	// Very important!!
 
+	Player* p = sv_players.get(playerId);
 
-	check time
-	send outgoing packets
-
-}
-
-
-
--render thread
-
-while running
-{
-
-	process stuff in queue
-		lock
-			temp = queue.top
-		unlock
-		queue.pop
-
-	render as many frames as possible
-}
-*/
-
-void FaceOff::serverNetworkThread()
-{
-	Uint32 lastSnapShotSendTime = 0;
-	Uint32 curTime = 0;
-
-	while (isRunning)
+	if (sv_players.getIterationEnd() > 0)
 	{
-		
-		// iterate over each message received
-		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+		// send existing clients about the new client notification 
+		std::cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
+
+		bs.Write((RakNet::MessageID)NEW_CLIENT);
+		p->serialize(bs);
+
+		for (int i = 0; i < m_server.clients.size(); i++)
 		{
-			// we first initalized bitStream with the packet->data
-			RakNet::BitStream bsIn(packet->data, packet->length, false);
+			if (i == playerId)
+				continue;
 
-			// we ignore the first part of each message (due to RakNet convention)
-			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-
-			// Handle message here 
-			switch (packet->data[0])
-			{
-				case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-					printf("Another client has disconnected.\n");
-					break;
-				case ID_REMOTE_CONNECTION_LOST:
-					printf("Another client has lost the connection.\n");
-					break;
-				case ID_REMOTE_NEW_INCOMING_CONNECTION:
-					printf("Another client has connected.\n");
-					break;
-				case ID_NEW_INCOMING_CONNECTION:
-					printf("A connection is incoming.\n");
-					break;
-				case ID_DISCONNECTION_NOTIFICATION:
-					printf("A client has disconnected.\n");
-					break;
-				case ID_CONNECTION_LOST:
-					printf("A client lost the connection.\n");
-					break;
-
-				case CLIENT_INPUT:
-				{
-//					utl::debug(">>>>>> incoming client input");
-					m_inputQueue.setFromBitStream(bsIn);
-
-					/*
-					utl::debug("m_inputQueue size ", m_inputQueue.size());
-					
-					if (!m_inputQueue.empty())
-					{
-						int size = m_inputQueue.buffer.size();
-						for (int i = 0; i < size; i++)
-						{
-							Move move = m_inputQueue.front();
-							m_inputQueue.pop();
-							move.print();
-						}
-
-						cout << endl << endl;
-					}
-					*/
-
-					break;
-				}
-
-				case PLAYER_UPDATE:
-				{
-					// received new position from client    
-					int player_id = 0;
-
-					m_players[player_id]->setFromBitStream(bsIn);
-
-					printf("Player %d sent new position ", player_id);			utl::debug("", m_players[player_id]->getPosition());
-					printf("Player %d sent new weapon position ", player_id);	
-					printf("Player %d sent new pitch ", player_id);				utl::debug("", m_players[player_id]->getCameraPitch());
-					printf("Player %d sent new yaw ", player_id);				utl::debug("", m_players[player_id]->getCameraYaw());
-				
-
-
-					// sending new position value to each client
-					cout << "sending new position value to each client" << endl;
-					m_players[player_id]->toBitStream((RakNet::MessageID)PLAYER_UPDATE, bsOut);
-
-					for (int i = 0; i < m_players.size(); i++)
-					{
-						if (player_id != i)
-						{
-							cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
-							peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-						}
-						else
-							cout << "	Not Sending to own client: " << player_id << endl;
-					}
-					break;
-				}
-
-
-
-				default:
-				{
-					printf("Message with identifier %i has arrived.\n", packet->data[0]);
-					break;
-				}
-
-			}
-		}
-		
-		
-		curTime = SDL_GetTicks();
-
-		if (curTime - lastSnapShotSendTime > SERVER_SNAPSHOT_TIME_STEP)
-		{
-		//	utl::debug("	>>>> Sending snapshot to shits at time", (int)curTime);
-
-			lastSnapShotSendTime = curTime;
+			Client client = m_server.getClient(i);
+			std::cout << " To: " << i << " - " << client.m_guid.g << endl;
+			m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE, 0, client.systemAddress, false);
 		}
 	}
 }
 
+
+void FaceOff::addDeserializedPlayerAndWeaponToWorld(Player* p, RakNet::BitStream& bs, bool curPlayer)
+{
+	p->deserialize(bs, &m_modelMgr);
+
+	p->setDefaultPlayerFlag(curPlayer);
+
+	cl_players.set(p, p->indexId);
+	cl_objectKDtree.insert(p);
+
+	int weaponCount = 0;
+	bs.Read(weaponCount);
+	for (int i = 0; i < weaponCount; i++)
+	{
+		Weapon* weapon = new Weapon();
+		weapon->deserialize(bs, &m_modelMgr);
+
+		p->pickUp(weapon);
+		cl_objects.set(weapon, weapon->indexId);
+	}
+}
+
+/*
+void FaceOff::serializePlayerAndWeapons(Player* p, RakNet::BitStream& bs)
+{
+	p->serialize(bs);
+	bs.Write(p->weaponCount);
+	for (int i = 0; i < p->getWeapons().size(); i++)
+	{
+		Weapon* weapon = p->getWeapons()[i];
+		if (weapon != NULL)
+		{
+			weapon->serialize(bs);
+		}
+	}
+}
+
+
+Player* FaceOff::deserializePlayerAndWeapons(RakNet::BitStream& bs, ModelManager* mm)
+{
+	Player* p = new Player();
+	p->deserialize(bs, &m_modelMgr);
+
+	int weaponCount = 0;
+	bs.Read(weaponCount);
+
+	for (int i = 0; i < weaponCount; i++)
+	{
+		Weapon* weapon = new Weapon();
+		weapon->deserialize(bs, &m_modelMgr);
+
+		p->pickUp(weapon);
+	}
+}
+*/
+
+void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
+{
+	bs.Reset();	// Very important!!
+	
+	bs.Write((RakNet::MessageID)SPAWN_INFORMATION);
+	Player* p = sv_players.get(playerId);
+	p->serialize(bs);
+
+	// Sending each client's position to new client
+	utl::debug("m_players size", sv_players.count);
+	std::cout << "Sending each client's position to new client" << endl;
+
+	bs.Write(m_server.clientCount);
+
+	for (int i = 0; i < m_server.clients.size(); i++)
+	{
+		if (i == playerId)
+			continue;
+
+		Client client = m_server.getClient(i);
+		if (client.isConnected)
+		{
+			p = sv_players.get(i);
+
+			std::cout << "sending for " << i << endl;
+			p->serialize(bs);
+		}
+	}
+
+	m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(playerId).systemAddress, false);
+}
+
+
+void FaceOff::serverReadPackets()
+{
+	Uint32 lastSnapShotSendTime = 0;
+	Uint32 curTime = 0;
+
+	// iterate over each message received
+	for (packet = m_server.peer->Receive(); packet; m_server.peer->DeallocatePacket(packet), packet = m_server.peer->Receive())
+	{
+		// we first initalized bitStream with the packet->data
+		RakNet::BitStream bsIn(packet->data, packet->length, false);
+
+		// we ignore the first part of each message (due to RakNet convention)
+		bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+		// Handle message here 
+		switch (packet->data[0])
+		{
+			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+				printf("Another client has disconnected.\n");
+				break;
+			case ID_REMOTE_CONNECTION_LOST:
+				printf("Another client has lost the connection.\n");
+				break;
+			case ID_REMOTE_NEW_INCOMING_CONNECTION:
+				printf("Another client has connected.\n");
+				break;
+			case ID_NEW_INCOMING_CONNECTION:
+				printf("A connection is incoming.\n");
+				break;
+			case ID_DISCONNECTION_NOTIFICATION:
+				printf("A client has disconnected.\n");
+				break;
+			case ID_CONNECTION_LOST:
+				printf("A client lost the connection.\n");
+				break;
+
+			case CLIENT_INPUT:
+			{
+				// http://stackoverflow.com/questions/10381144/error-c2361-initialization-of-found-is-skipped-by-default-label
+				// for some reason i need to enclose this case 
+				// otherwise i get a initalization skipped by 'default' label error
+
+				std::cout << "CLIENT_INPUT" << endl;
+
+				// get client
+
+				// get the command
+				UserCmd cmd; 
+				cmd.deserialize(bsIn);
+				// run the command
+				serverRunClientMoveCmd(cmd);
+
+				break;
+			}
+			default:
+				printf("Message with identifier %i has arrived.\n", packet->data[0]);
+				
+
+			/*
+		case PLAYER_UPDATE:
+		{
+			// received new position from client    
+			int player_id = 0;
+
+			m_players[player_id]->setFromBitStream(bsIn);
+
+			printf("Player %d sent new position ", player_id);			utl::debug("", m_players[player_id]->getPosition());
+			printf("Player %d sent new weapon position ", player_id);
+			printf("Player %d sent new pitch ", player_id);				utl::debug("", m_players[player_id]->getCameraPitch());
+			printf("Player %d sent new yaw ", player_id);				utl::debug("", m_players[player_id]->getCameraYaw());
+
+
+
+			// sending new position value to each client
+			cout << "sending new position value to each client" << endl;
+			m_players[player_id]->toBitStream((RakNet::MessageID)PLAYER_UPDATE, bsOut);
+
+			for (int i = 0; i < m_players.size(); i++)
+			{
+				if (player_id != i)
+				{
+					cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+				}
+				else
+					cout << "	Not Sending to own client: " << player_id << endl;
+			}
+			break;
+		}
+		*/
+
+				
+
+		}
+	}
+
+
+	curTime = SDL_GetTicks();
+
+	if (curTime - lastSnapShotSendTime > SERVER_SNAPSHOT_TIME_STEP)
+	{
+		//	utl::debug("	>>>> Sending snapshot to shits at time", (int)curTime);
+
+		lastSnapShotSendTime = curTime;
+	}
+	
+}
+
+
+
+
+// i'm making things simple. Im just sending 
+void FaceOff::serverFrame()
+{
+	serverReadPackets();
+
+	// allow pause if only the local client is connected
+	/*
+	if (SV_CheckPaused()) 
+	{
+		return;
+	}
+	*/
+
+
+	serverCalculatePing();
+
+//	if (// if time to simulate)
+	{
+
+	}
+
+
+	
+	int msPerFrame;
+
+	msPerFrame = 1000 / m_server.m_fps;
+
+	//	m_server.timeResidual += msec;
+
+	while (m_server.m_deltaTimeAccumulator >= msPerFrame)
+	{
+		serverSimulationTick(msPerFrame);
+		m_server.m_deltaTimeAccumulator -= msPerFrame;
+	}
+
+
+//	serverCheckTimeOuts();
+
+	// if time to send snapshot
+	if (true)
+	{
+		serverSendClientMessages();
+	}
+}
+
+
+/*
+===================
+Updates the client ping variables
+===================
+*/
+void FaceOff::serverCalculatePing()
+{
+
+}
+
+void FaceOff::serverCheckTimeouts()
+{
+
+}
+
+
+void FaceOff::serverSendClientMessages()
+{
+
+	for (int i = 0; i < m_server.clients.size(); i++)
+	{
+		Client client = m_server.clients[i];
+		if (client.isConnected == false)
+		{
+			continue;
+		}
+
+		if (m_server.time < client.nextSnapshotTime)
+		{
+			continue;
+		}
+
+		serverSendClientSnapshot();
+	}
+}
+
+
+void FaceOff::serverSendClientSnapshot()
+{
+	serverBuildClientSnapshot();
+
+}
+
+
+void FaceOff::serverBuildClientSnapshot()
+{
+
+}
+
+void FaceOff::serverRunClientMoveCmd(UserCmd cmd)
+{
+	Player* player = sv_players.get(cmd.playerId);
+
+	player->processUserCmd(cmd);
+
+	if (cmd.buttons & FORWARD)
+	{
+
+	}
+
+	if (cmd.buttons & BACK)
+	{
+
+	}
+
+	if (cmd.buttons & LEFT)
+	{
+
+	}
+
+	if (cmd.buttons & RIGHT)
+	{
+
+	}
+
+}
 
 
 /*
@@ -1180,153 +1190,168 @@ responsiveness but requires more outgoing bandwidth, too.
 
 https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
 */
-void FaceOff::clientNetworkThread()
+void FaceOff::clientFrame()
+{
+	//clientHandleDeviceEvents(); 
+
+	clientReadPackets();
+
+	clientSendCmd();
+	clientCheckForResend();
+
+
+	clientPrediction();
+
+	render();
+
+
+
+}
+
+
+
+void FaceOff::clientReadPackets()
 {
 	Uint32 lastSnapShotSendTime = 0;
 	Uint32 curTime = 0;
 
-#if 1
-	while (isRunning)
+	for (packet = m_client.peer->Receive(); packet; m_client.peer->DeallocatePacket(packet), packet = m_client.peer->Receive())
 	{
-		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+		cout << "here" << endl;
+
+		RakNet::BitStream bsIn(packet->data, packet->length, false);
+		bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+		switch (packet->data[0])
 		{
-			cout << "here" << endl;
+		case NEW_CLIENT:
+			cout << "NEW_CLIENT message " << endl;
+			break;
 
-			RakNet::BitStream bsIn(packet->data, packet->length, false);
-			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+		case ID_CONNECTION_REQUEST_ACCEPTED:
+			break;
 
-			switch (packet->data[0])
-			{
-			case NEW_CLIENT:
-				cout << "NEW_CLIENT message " << endl;
-				break;
-
-			case ID_CONNECTION_REQUEST_ACCEPTED:
-				break;
-
-			case SNAPSHOT_FROM_SERVER:
-			{
-				// snap shot from server
-				cout << "SNAPSHOT from server" << endl;
-
-				break;
-			}
-
-			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				break;
-			}
+		case SERVER_SNAPSHOT:
+		{
+			// snap shot from server
+			cout << "SNAPSHOT from server" << endl;
+			clientParseServerSnapshot();
+			break;
 		}
 
-		// sending server my inputs
-		curTime = SDL_GetTicks();
-
-		if (curTime - lastSnapShotSendTime > CLIENT_INPUT_SENT_TIME_STEP)
-		{
-			if (!m_inputQueue.empty())
-			{
-		//		cout << "sending server my inputs" << endl;
-				m_inputQueue.toBitStream(bsOut);
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
-			}
-		
-			lastSnapShotSendTime = curTime;
+		default:
+			printf("Message with identifier %i has arrived.\n", packet->data[0]);
+			break;
 		}
 	}
-#endif
+
+	// sending server my inputs
+	curTime = SDL_GetTicks();
+
+	/*
+	if (curTime - lastSnapShotSendTime > CLIENT_INPUT_SENT_TIME_STEP)
+	{
+		if (!m_inputQueue.empty())
+		{
+			//		cout << "sending server my inputs" << endl;
+			m_inputQueue.toBitStream(bsOut);
+			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
+		}
+
+		lastSnapShotSendTime = curTime;
+	}
+	*/
 }
 
 
-
-void FaceOff::start()
-{
-	cout << "Start" << endl;
-	Uint32 startTime = SDL_GetTicks();
-	m_nextGameTick = 0;
-
-#if NETWORK_FLAG == 1
-	
-	if (m_isServer)
-	{
-		m_networkThread = thread(&FaceOff::serverNetworkThread, this);
-	}
-	else
-	{
-		m_networkThread = thread(&FaceOff::clientNetworkThread, this);
-	}
-	
-#endif
-
-	while (isRunning)
-	{
-		startTime = SDL_GetTicks();
-
-		if (m_isServer)
-		{
-			serverHandleDeviceEvents();
-		}
-		else
-		{
-			clientHandleDeviceEvents();
-		}
-
-		update();
-		render();
-		SDL_GL_SwapBuffers();
-	}
-}
-
-
-void FaceOff::serverHandleDeviceEvents()
+void FaceOff::clientCheckForResend()
 {
 
-	while (SDL_PollEvent(&event))
+}
+
+void FaceOff::clientParseServerSnapshot()
+{
+
+	Snapshot* prev = NULL;
+	Snapshot cur;
+
+	clientParsePacketEntities(prev, &cur);
+
+
+}
+
+
+void FaceOff::clientParsePacketEntities(Snapshot* prev, Snapshot* cur)
+{
+
+
+}
+
+
+
+void FaceOff::clientSendCmd()
+{
+
+	if (!m_client.isConnected)
 	{
-		int tmpx, tmpy;
-		switch (event.type)
+		return;
+	}
+	UserCmd cmd = clientCreateNewCmd();
+
+	m_client.cmdCounter++;
+	int newCmdIndex = m_client.cmdCounter & CMD_BUFFER_SIZE;
+	m_client.cmds[newCmdIndex] = cmd;
+
+	
+	// send it off with Raknet
+
+	/*
+	// don't send a packet if the last packet was sent too recently
+	if (!CL_ReadyToSendPacket()) {
+		if (cl_showSend->integer) {
+			Com_Printf(". ");
+		}s
+		return;
+	}
+	*/
+
+	cmd.serialize(bsOut);
+
+	bool b = (cmd.buttons == 0);
+
+
+	if (cmd.buttons != 0)
+	{
+		cout << "client sending cmd" << endl;
+		if (cmd.buttons & FORWARD)
 		{
-			case SDL_QUIT:
-				isRunning = false;
-				break;
+			cout << "	pressed FORWARD" << endl;
+		}
 
-			case SDL_MOUSEBUTTONDOWN:
+		if (cmd.buttons & BACK)
+		{
+			cout << "	pressed BACK" << endl;
+		}
 
-				switch (event.button.button)
-				{
-					int tmpx, tmpy;
-					case SDL_BUTTON_LEFT:
-					{
-						SDL_GetMouseState(&tmpx, &tmpy);
-						m_mouseState.m_leftButtonDown = true;
-						m_serverCamera.setMouseIn(true);
-						break;
-					}
-				}
-				break;
+		if (cmd.buttons & LEFT)
+		{
+			cout << "	pressed LEFT" << endl;
+		}
 
-
-			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym)
-				{
-					case SDLK_ESCAPE:
-						isRunning = false;
-						break;
-
-					case SDLK_0:
-						containedFlag = !containedFlag;
-						break;
-
-
-					case SDLK_z:
-						if (m_isServer)
-							m_serverCamera.setMouseIn(false);
-						break;
-				}
-				break;
+		if (cmd.buttons & RIGHT)
+		{
+			cout << "	pressed RIGHT" << endl;
 		}
 	}
 
+	clientSendPacket();
+
 }
+
+
+
+
+
 
 
 
@@ -1342,6 +1367,7 @@ void FaceOff::clientHandleDeviceEvents()
 			break;
 
 		case SDL_MOUSEBUTTONUP:
+			/*
 			switch (event.button.button)
 			{
 			case SDL_BUTTON_LEFT:
@@ -1363,8 +1389,9 @@ void FaceOff::clientHandleDeviceEvents()
 				SDL_GetMouseState(&tmpx, &tmpy);
 				break;
 			}
+			*/
 			break;
-
+			
 		case SDL_MOUSEBUTTONDOWN:
 
 			switch (event.button.button)
@@ -1373,7 +1400,7 @@ void FaceOff::clientHandleDeviceEvents()
 			case SDL_BUTTON_LEFT:
 				SDL_GetMouseState(&tmpx, &tmpy);
 				m_mouseState.m_leftButtonDown = true;
-
+				/*
 				if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
 				{
 
@@ -1423,10 +1450,10 @@ void FaceOff::clientHandleDeviceEvents()
 					}
 
 				}
+				*/
+				cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(true);
 
-				m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
 
-				
 
 
 
@@ -1471,7 +1498,7 @@ void FaceOff::clientHandleDeviceEvents()
 			case SDLK_0:
 				containedFlag = !containedFlag;
 				break;
-
+				/*
 				// main gun
 			case SDLK_1:
 				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MAIN);
@@ -1491,7 +1518,7 @@ void FaceOff::clientHandleDeviceEvents()
 			case SDLK_4:
 				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
 				break;
-
+				*/
 
 			case SDLK_8:
 			{
@@ -1511,18 +1538,21 @@ void FaceOff::clientHandleDeviceEvents()
 			case SDLK_r:
 			{
 				utl::debug("Reloading Weapon");
-				m_players[m_defaultPlayerID]->reloadWeapon();
+				//m_players[m_defaultPlayerID]->reloadWeapon();
 			}
 			break;
 
 			case SDLK_g:
 			{
+
 				utl::debug("Dropping Weapon");
+				/*
 				Weapon* droppedWeapon = m_players[m_defaultPlayerID]->drop();
 				if (droppedWeapon != NULL)
 				{
 					m_objectKDtree.insert(droppedWeapon);
 				}
+				*/
 			}
 			break;
 
@@ -1540,10 +1570,12 @@ void FaceOff::clientHandleDeviceEvents()
 				break;
 
 			case SDLK_z:
+				/*
 				if (m_isServer)
 					m_serverCamera.setMouseIn(false);
 				else
 					m_players[m_defaultPlayerID]->m_camera->setMouseIn(false);
+				|*/
 				break;
 			}
 			break;
@@ -1553,212 +1585,189 @@ void FaceOff::clientHandleDeviceEvents()
 }
 
 
+
+
+
+void FaceOff::clientSendPacket()
+{
+	m_client.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_client.serverSystemAddress, false);
+}
+
+UserCmd FaceOff::clientCreateNewCmd()
+{
+	// CA_PRIMED got gamestate, waiting for first frame
+	// no need to create usercmds until we have gamestate
+
+	/*
+	if ()
+	{
+		return;
+	}
+	*/
+
+	UserCmd cmd;
+	cmd.playerId = m_defaultPlayerID;
+
+	// get buttons
+	SDL_PumpEvents();
+	Uint8* state = SDL_GetKeyState(NULL);
+	if (state[SDLK_w])	{cmd.buttons |= FORWARD;}
+	if (state[SDLK_s])	{cmd.buttons |= BACK;}
+	if (state[SDLK_a])	{cmd.buttons |= LEFT;}
+	if (state[SDLK_d])	{cmd.buttons |= RIGHT;}
+	if (state[SDLK_SPACE])	{cmd.buttons |= JUMP;}
+	if (SDL_GetMouseState(NULL, NULL) && SDL_BUTTON(SDL_BUTTON_LEFT)) { cmd.buttons |= ATTACK; }
+
+
+	// get mouse movement
+	int mx, my;	
+	SDL_GetMouseState(&mx, &my);
+
+	float deltaYaw = TURN_SPEED * (utl::SCREEN_WIDTH_MIDDLE - mx);
+	float deltaPitch = FORWARD_SPEED * (utl::SCREEN_HEIGHT_MIDDLE - my);
+
+	// rate = sqrt(mx * mx + my * my) / (float)frame_msec;
+
+	// cmd.angles[YAW] += deltaYaw;
+	// cmd.angles[PITCH] += deltaPitch;
+
+	float pitch = cl_players.get(m_defaultPlayerID)->getCameraPitch();
+	float yaw = cl_players.get(m_defaultPlayerID)->getCameraYaw();
+
+	pitch += deltaPitch;
+	yaw += deltaYaw;
+
+	cmd.angles[PITCH] = pitch;
+	cmd.angles[YAW] = yaw;
+
+	if (cmd.angles[PITCH] > 90)
+		cmd.angles[PITCH] = 90;
+
+	if (cmd.angles[PITCH] < -90)
+		cmd.angles[PITCH] = -90;
+
+	if (cmd.angles[YAW] < 0.0)
+		cmd.angles[YAW] += 360.0;
+
+	if (cmd.angles[YAW] > 360.0)
+		cmd.angles[YAW] -= 360;
+
+	cmd.weapon = m_client.weapon;
+	cmd.serverTime = m_client.serverTime;
+
+	return cmd;
+}
+
+
+
+void FaceOff::clientPrediction()
+{
+	int cmdNum, current;
+	UserCmd oldestCmd, latestCmd;
+
+
+
+	// run all the commands
+//	for (cmdNum = current - CMD_BUFFER_SIZE + 1; cmdNum <= current; cmdNum++)
+
+}
+
+
+void FaceOff::start()
+{
+	cout << "Start" << endl;
+	Uint32 startTime = SDL_GetTicks();
+	m_nextGameTick = 0;
+
+	while (isRunning)
+	{
+		startTime = SDL_GetTicks();
+
+		update();
+
+		if (m_server.isInitalized == true)
+		{	
+			serverFrame();
+		}
+
+		if (m_server.isDedicated == false)
+		{
+			clientFrame();
+		}
+
+		// render();
+
+	}
+}
+
+
+
+
+
+
+#if 0
+void FaceOff::serverHandleDeviceEvents()
+{
+
+	while (SDL_PollEvent(&event))
+	{
+		int tmpx, tmpy;
+		switch (event.type)
+		{
+			case SDL_QUIT:
+				isRunning = false;
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+
+				switch (event.button.button)
+				{
+					int tmpx, tmpy;
+					case SDL_BUTTON_LEFT:
+					{
+						SDL_GetMouseState(&tmpx, &tmpy);
+						m_mouseState.m_leftButtonDown = true;
+						m_spectatorCamera.setMouseIn(true);
+						break;
+					}
+				}
+				break;
+
+
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym)
+				{
+					case SDLK_ESCAPE:
+						isRunning = false;
+						break;
+
+					case SDLK_0:
+						containedFlag = !containedFlag;
+						break;
+
+
+					case SDLK_z:
+						if (m_server.isInitalized)
+							m_spectatorCamera.setMouseIn(false);
+						break;
+				}
+				break;
+		}
+	}
+
+}
+#endif
+
+
+
 void FaceOff::update()
 {
 	int mx, my;
 	SDL_GetMouseState(&mx, &my);
 
+	// need this for GUI
 	m_mouseState.m_pos = glm::vec2(mx, utl::SCREEN_HEIGHT - my);
 
-	/*
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		if (i != m_defaultPlayerID && m_players[i] != NULL)
-		m_players[i]->updateModel();
-
-	}
-	*/
-
-
-#if 0
-#if NETWORK_FLAG == 1
-
-#if	SERVER_NETWORK_THREAD != 1
-	if (m_isServer)
-	{
-
-		// iterate over each message received
-		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
-		{
-			// we first initalized bitStream with the packet->data
-			RakNet::BitStream bsIn(packet->data, packet->length, false);
-
-			// we ignore the first part of each message (due to RakNet convention)
-			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-
-			cout << endl << "New Packet from:" << packet->guid.g << endl;
-
-
-			// Handle message here 
-			switch (packet->data[0])
-			{
-			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-				printf("Another client has disconnected.\n");
-				break;
-			case ID_REMOTE_CONNECTION_LOST:
-				printf("Another client has lost the connection.\n");
-				break;
-			case ID_REMOTE_NEW_INCOMING_CONNECTION:
-				printf("Another client has connected.\n");
-				break;
-			case ID_NEW_INCOMING_CONNECTION:
-				printf("A connection is incoming.\n");
-				break;
-			case ID_DISCONNECTION_NOTIFICATION:
-				printf("A client has disconnected.\n");
-				break;
-			case ID_CONNECTION_LOST:
-				printf("A client lost the connection.\n");
-				break;
-
-			case PLAYER_UPDATE:
-				// received new position from client       
-			{
-								  int player_id = 0;
-								  glm::vec3 pos, wPos;
-								  float camPitch, camYaw;
-
-								  bsIn.Read(player_id);
-								  bsIn.ReadVector(pos.x, pos.y, pos.z);
-								  bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-								  bsIn.Read(camPitch);
-								  bsIn.Read(camYaw);
-
-
-								  printf("Player %d sent new position ", player_id);			utl::debug("", pos);
-								  printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
-								  printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
-								  printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
-
-
-								  m_players[player_id]->setPosition(pos);
-								  m_players[player_id]->update(wPos, camPitch, camYaw);
-
-
-
-
-								  cout << "sending new position value to each client" << endl;
-
-
-								  bsOut.Reset();
-								  bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-								  bsOut.Write(player_id);
-								  bsOut.WriteVector(pos.x, pos.y, pos.z);
-								  bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
-								  bsOut.Write(camPitch);
-								  bsOut.Write(camYaw);
-
-
-								  for (int i = 0; i < m_players.size(); i++)
-								  {
-									  if (player_id != i)
-									  {
-										  cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
-										  peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-									  }
-									  else
-										  cout << "	Not Sending to own client: " << player_id << endl;
-								  }
-								  break;
-			}
-
-
-			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				break;
-			}
-			bsOut.Reset();
-		}
-	}
-#endif
-
-#if CLIENT_NETWORK_THREAD != 1
-	if (!m_isServer)
-	{
-
-		//		utl::debug("m_nextGameTick", m_nextGameTick);
-		//		utl::debug("curTick", curTick);
-
-		//	m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES;
-
-		//	if (m_nextGameTick > SDL_GetTicks())
-		if (m_nextGameTick > DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES)
-		{
-			cout << "sending each server my location" << endl;
-			bsOut.Reset();
-			bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-			bsOut.Write(m_defaultPlayerID);
-
-
-			utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_position);
-			utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->getCurWeapon()->m_position);
-			bsOut.Write(m_players[m_defaultPlayerID]->getCameraPitch());
-			bsOut.Write(m_players[m_defaultPlayerID]->getCameraYaw());
-
-
-			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
-
-			m_nextGameTick = 0;
-		}
-		m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES / 10;
-
-
-		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
-		{
-			cout << "here" << endl;
-
-			RakNet::BitStream bsIn(packet->data, packet->length, false);
-			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-
-			switch (packet->data[0])
-			{
-			case NEW_CLIENT:
-				cout << "NEW_CLIENT message " << endl;
-				break;
-
-			case ID_CONNECTION_REQUEST_ACCEPTED:
-				break;
-
-			case PLAYER_UPDATE:
-			{
-								  // report the server's new counter value
-
-								  cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
-
-								  int other_player_id = 0;
-								  int player_id = 0;
-								  glm::vec3 pos, wPos;
-								  float camPitch, camYaw;
-
-								  bsIn.Read(other_player_id);
-								  bsIn.ReadVector(pos.x, pos.y, pos.z);
-								  bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
-								  bsIn.Read(camPitch);
-								  bsIn.Read(camYaw);
-
-								  utl::debug("other_player_id", other_player_id);
-
-								  m_players[other_player_id]->setPosition(pos);
-								  m_players[other_player_id]->update(wPos, camPitch, camYaw);
-								  break;
-			}
-
-
-			case YOUR_TURN:
-				printf("My Turn. Sending message.\n");
-				bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				break;
-			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				break
-			}
-		}
-
-	}
-#endif
-#endif
-#endif
 }
 
 
@@ -1767,7 +1776,7 @@ void FaceOff::update()
 Frame
 	get input, update velocity
 	gravity on velocity
-
+	ser
 	pos = pos + velocity
 
 	resolveVelocity
@@ -1777,98 +1786,44 @@ Frame
 */
 
 
-void FaceOff::serverSimulation()
-{
-	collisionDetectionTestPairs.clear();
-
-	// process client inputs
-
-	int size = m_inputQueue.size();
-	if (size > 0)
-	{
-		for (int i = 0; i < size; i++)
-		{
-			Move move = m_inputQueue.pop();
-			//	move.print();
-
-			int playerId = move.playerId;
-			Player* p = m_players[playerId];
-
-
-			simulatePlayerPhysics(p, playerId, move);
-
-
-			if (m_isServer)
-			{
-				if (oldPos != p->getPosition())
-				{
-					utl::debug("pos", p->getPosition());
-					oldPos = p->getPosition();
-				}
-			}
-		}
-	}
-	else
-	{
-		for (int i = 0; i < m_players.size() ; i++)
-		{
-			Player* p = m_players[i];
-			simulatePlayerPhysics(p, i);
-
-			if (m_isServer)
-			{
-				if (oldPos != p->getPosition())
-				{
-					utl::debug("pos", p->getPosition());
-					oldPos = p->getPosition();
-				}
-			}
-		}
-
-	}
-
-
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-		simulateObjectPhysics(object, i);
-	}
-}
-
-void FaceOff::clientSimulation()
+void FaceOff::serverSimulationTick(int msec)
 {
 	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
 	// then deallocating memory
 	collisionDetectionTestPairs.clear();
 	// CollisionDetectionTestPairs collisionDetectionTestPairs;
 
-	for (int i = 0; i < m_players.size(); i++)
+	for (int i = 0; i < sv_players.getIterationEnd(); i++)
 	{
-		Player* p = m_players[i];
-	
-
-		simulatePlayerPhysics(p, i);
-
-		/*
-		if (oldPos != p->getPosition())
+		Player* p = sv_players.get(i);
+		if (p == NULL)
 		{
-			utl::debug("pos", p->getPosition());
-			utl::debug("vel", p->getVelocity());
-			oldPos = p->getPosition();
-			utl::debugLn(1);
+			continue;
 		}
-		*/
+
+		simulatePlayerPhysics(sv_objectKDtree, p, i);
 	}
 
-	
-	for (int i = 0; i < m_objects.size(); i++)
+
+	for (int i = 0; i < sv_objects.getIterationEnd(); i++)
 	{
-		WorldObject* object = m_objects[i];
-		simulateObjectPhysics(object, i);
+		WorldObject* object = sv_objects.get(i);
+		if (object == NULL)
+		{
+			continue;
+		}
+
+		simulateObjectPhysics(sv_objectKDtree, sv_objects, object, i);
 	}
+
+	sv_objects.destroyObjects();
 }
 
-void FaceOff::simulatePlayerPhysics(Player* p, int i, Move move)
+
+
+
+
+void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
 {
 	if (p == NULL)
 	{
@@ -1879,47 +1834,7 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i, Move move)
 
 	p->m_velocity += utl::BIASED_HALF_GRAVITY;
 
-	p->processInput(move);
-
-	p->m_position += p->m_velocity;
-
-	p->updateCollisionDetectionGeometry();
-
-	checkNeighborsAfterClientInput(p);
-
-	p->updateCollisionDetectionGeometry();
-	m_objectKDtree.reInsert(p);
-
-
-	p->updateWeaponTransform();
-
-}
-
-
-void FaceOff::simulatePlayerPhysics(Player* p, int i)
-{
-	if (p == NULL)
-	{
-		return;
-	}
-
-	p->updateGameInfo();
-
-
-	p->m_velocity += utl::BIASED_HALF_GRAVITY;
-
-	if (p->isDefaultPlayer())
-	{
-		p->control();
-
-#if NETWORK_FLAG == 1
-		if (m_players[m_defaultPlayerID]->hasMoved())
-		{
-			m_inputQueue.push(m_players[m_defaultPlayerID]->getMoveState());
-		}
-#endif		
-		p->updateGameStats();
-	}
+	p->updateGameStats();
 
 	p->m_position += p->m_velocity;
 	p->updateMidAirVelocity();
@@ -1930,14 +1845,14 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i)
 		float tempDist = 100;
 
 		if (incrFlag)
-			p->m_position.z += 0.05;
+		p->m_position.z += 0.05;
 		else
-			p->m_position.z -= 0.05;
+		p->m_position.z -= 0.05;
 
 		if (p->m_position.z > tempDist)
-			incrFlag = false;
+		incrFlag = false;
 		if (p->m_position.z < 20)
-			incrFlag = true;
+		incrFlag = true;
 		*/
 
 
@@ -1946,22 +1861,22 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i)
 
 		if (incrAngleFlag)
 		{
-			tempPitch = 0;
-			tempYaw += 1;
+		tempPitch = 0;
+		tempYaw += 1;
 		}
 		else
 		{
-			tempPitch = 0;
-			tempYaw -= 1;
+		tempPitch = 0;
+		tempYaw -= 1;
 		}
 
 		if (tempPitch > tempMaxAngle)
 		{
-			incrAngleFlag = false;
+		incrAngleFlag = false;
 		}
 		if (tempPitch < -tempMaxAngle)
 		{
-			incrAngleFlag = true;
+		incrAngleFlag = true;
 		}
 		*/
 		p->setRotation(tempPitch, tempYaw);
@@ -1973,45 +1888,45 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i)
 		float tempDist = 15;
 
 		if (incrFlag2)
-			p->m_position.x += 0.05;
+		p->m_position.x += 0.05;
 		else
-			p->m_position.x -= 0.05;
+		p->m_position.x -= 0.05;
 
 
 		if (p->m_position.x > tempDist)
-			incrFlag2 = false;
+		incrFlag2 = false;
 		if (p->m_position.x < -tempDist)
-			incrFlag2 = true;
-			*/
+		incrFlag2 = true;
+		*/
 
-		
+
 		/*
 		float tempMaxAngle = 150;
 
 		if (incrAngleFlag2)
 		{
-			tempPitch2 += 0.05;
-			tempYaw2 += 1;
+		tempPitch2 += 0.05;
+		tempYaw2 += 1;
 		}
 		else
 		{
-			tempPitch2 += 0.05;
-			tempYaw2 -= 1;
+		tempPitch2 += 0.05;
+		tempYaw2 -= 1;
 		}
 
 		if (tempPitch2 > tempMaxAngle)
 		{
-			incrAngleFlag2 = false;
+		incrAngleFlag2 = false;
 		}
 		if (tempPitch2 < -tempMaxAngle)
 		{
-			incrAngleFlag2 = true;
+		incrAngleFlag2 = true;
 		}
 		*/
-	//	tempPitch2 = 0;
-	//	tempYaw2 = 0;
+		//	tempPitch2 = 0;
+		//	tempYaw2 = 0;
 
-		p->setRotation(tempPitch2, tempYaw2);		
+		p->setRotation(tempPitch2, tempYaw2);
 	}
 
 #endif
@@ -2020,17 +1935,18 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i)
 
 	p->updateCollisionDetectionGeometry();
 
-	checkNeighbors(p);
+	checkNeighbors(tree, p);
 
 	p->updateCollisionDetectionGeometry();
-	m_objectKDtree.reInsert(p);
+	tree.reInsert(p);
 
 	p->updateWeaponTransform();
 
 }
 
 
-void FaceOff::simulateObjectPhysics(WorldObject* object, int i)
+
+void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject* object, int i)
 {
 	if (object == NULL)
 	{
@@ -2055,7 +1971,7 @@ void FaceOff::simulateObjectPhysics(WorldObject* object, int i)
 			ParticleEffect* effect = wObject->explode();
 			m_smokeEffects.push_back((SmokeEffect*)effect);
 
-			destroyWorldObjectByIndex(i);
+			objects.addToDestroyList(i);
 			return;
 		}
 	}
@@ -2068,22 +1984,23 @@ void FaceOff::simulateObjectPhysics(WorldObject* object, int i)
 	// object->m_position += object->m_velocity;
 	object->updateCollisionDetectionGeometry();
 
-	checkNeighbors(object);
+	checkNeighbors(tree, object);
 
 	object->updateCollisionDetectionGeometry();
-	m_objectKDtree.reInsert(object);
+	tree.reInsert(object);
 
 
 }
 
 
-void FaceOff::checkNeighbors(WorldObject* obj)
+
+void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj)
 {
 	obj->inMidAir = true;
 
 	vector<WorldObject*> neighbors;
 	glm::vec3 volNearPoint(obj->getPosition());
-	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, obj, volNearPoint, neighbors);
+	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
 
 
 	for (int j = 0; j < neighbors.size(); j++)
@@ -2124,25 +2041,6 @@ void FaceOff::checkNeighbors(WorldObject* obj)
 				contactData.pair[1] = neighbor;
 			}
 
-			/*
-			// this is for debugging, will render it with "collided color"
-			if (obj->getObjectType() == PLAYER && ((Player*)(obj))->isDefaultPlayer() && neighbor->getName() == "woodenBox -80")
-			{
-				utl::debug("With WoodenBox");
-				utl::debug("obj ", obj->getName());
-				utl::debug("neighbor ", neighbor->getName());
-				utl::debug("normal ", contactData.normal);
-			}
-			
-			if (obj->getObjectType() == PLAYER && ((Player*)(obj))->isDefaultPlayer() && neighbor->getName() == "ground")
-			{
-				utl::debug("With ground");
-				utl::debug("obj ", obj->getName());
-				utl::debug("neighbor ", neighbor->getName());
-				utl::debug("normal ", contactData.normal);
-			}
-			*/
-
 			contactData.resolveVelocity();
 			contactData.resolveInterpenetration();
 			neighbor->updateCollisionDetectionGeometry();
@@ -2150,6 +2048,9 @@ void FaceOff::checkNeighbors(WorldObject* obj)
 	}
 }
 
+
+
+/*
 void FaceOff::checkNeighborsAfterClientInput(WorldObject* obj)
 {
 	clientInputCollisionDetectionTestPairs.clear();
@@ -2162,13 +2063,6 @@ void FaceOff::checkNeighborsAfterClientInput(WorldObject* obj)
 	for (int j = 0; j < neighbors.size(); j++)
 	{
 		WorldObject* neighbor = neighbors[j];
-		/*
-		// this is for debugging, will render it with "collided color"
-		if (p->isDefaultPlayer())
-		{
-		neighbor->isTested = true;
-		}
-		*/
 
 
 		if (collisionDetectionTestPairs.alreadyTested(obj->m_instanceId, neighbor->m_instanceId) == false)
@@ -2208,6 +2102,9 @@ void FaceOff::checkNeighborsAfterClientInput(WorldObject* obj)
 		}
 	}
 }
+*/
+
+
 /*
 void FaceOff::simulatePhysics()
 {
@@ -2237,13 +2134,13 @@ void FaceOff::render()
 	m_pipeline.setMatrixMode(VIEW_MATRIX);
 	m_pipeline.loadIdentity();
 
-
-	if (m_isServer)
+	/*
+	if (in spectator mode)
 	{
-		m_serverCamera.control();
-		m_serverCamera.updateViewMatrix(m_pipeline);
+		m_spectatorCamera.control();
+		m_spectatorCamera.updateViewMatrix(m_pipeline);
 
-		o_skybox.setPosition(m_serverCamera.getEyePoint());
+		o_skybox.setPosition(m_spectatorCamera.getEyePoint());
 
 		serverSimulation();
 	}
@@ -2255,10 +2152,13 @@ void FaceOff::render()
 
 		o_skybox.setPosition(m_players[m_defaultPlayerID]->m_camera->getEyePoint());
 	}
+	*/
 
 
-
-
+	
+	
+	
+	cl_players.get(m_defaultPlayerID)->updateCamera(m_pipeline);
 
 
 
@@ -2469,9 +2369,14 @@ void FaceOff::render()
 	p_renderer->enableShader();
 	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 
-		for (int i = 0; i < m_players.size(); i++)
+		for (int i = 0; i < cl_players.getIterationEnd(); i++)
 		{
-			Player* p = m_players[i];
+			Player* p = cl_players.get(i);
+
+			if (p == NULL)
+			{
+				continue;
+			}
 			/*
 			if (!m_isServer)
 			{
@@ -2490,9 +2395,9 @@ void FaceOff::render()
 		}
 
 
-		for (int i = 0; i < m_objects.size(); i++)
+		for (int i = 0; i < cl_objects.getIterationEnd(); i++)
 		{
-			WorldObject* object = m_objects[i];
+			WorldObject* object = cl_objects.get(i);
 
 			if (object == NULL)
 				continue;
@@ -2514,7 +2419,7 @@ void FaceOff::render()
 		
 		if (containedFlag)
 		{
-			m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
+			cl_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
 		}
 		else
 		{
@@ -2532,12 +2437,17 @@ void FaceOff::render()
 	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 
 		if (!containedFlag)
-			m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
+			cl_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
 
 		// rendering players
-		for (int i = 0; i < m_players.size(); i++)
+		for (int i = 0; i < cl_players.getIterationEnd(); i++)
 		{
-			Player* p = m_players[i];
+			Player* p = cl_players.get(i);
+
+			if (p == NULL)
+			{
+				continue;
+			}
 
 			p->alreadyFireTested = false;
 
@@ -2549,9 +2459,9 @@ void FaceOff::render()
 		}
 
 
-		for (int i = 0; i < m_objects.size(); i++)
+		for (int i = 0; i < cl_objects.getIterationEnd(); i++)
 		{
-			WorldObject* object = m_objects[i];
+			WorldObject* object = cl_objects.get(i);
 
 			if (object == NULL)
 				continue;
@@ -2685,10 +2595,10 @@ void FaceOff::render()
 		m_gui.renderSnipeScopeView(m_rendererMgr.m_backGroundLayerFBO.colorTexture);
 	}
 
-//	Model::enableVertexAttribArrays();
+
 	m_gui.updateAndRender(m_mouseState);
-//	renderGUI();
-//	Model::disableVertexAttribArrays();
+
+	SDL_GL_SwapBuffers();
 }
 
 
@@ -2736,10 +2646,10 @@ bool FaceOff::testCollisionDetection(WorldObject* a, WorldObject* b, ContactData
 	return false;
 }
 
-
-void FaceOff::destroyWorldObjectByIndex(int i)
+/*
+void FaceOff::destroyWorldObjectByIndex(vector<WorldObject*>& objects, int i)
 {
-	WorldObject* object = m_objects[i];
+	WorldObject* object = objects[i];
 
 	//remove object from its stored kdTree nodes
 	for (int j = 0; j < object->m_parentNodes.size(); j++)
@@ -2753,9 +2663,10 @@ void FaceOff::destroyWorldObjectByIndex(int i)
 	// remove object from main's object containers
 	m_emptyBucketPool.push(i);
 
-	delete m_objects[i];
-	m_objects[i] = NULL;
+	delete objects[i];
+	objects[i] = NULL;
 }
+*/
 
 
 
@@ -2770,10 +2681,21 @@ int main(int argc, char *argv[])
 	utl::initGLEW();
 	FaceOff Martin;
 
+	/*
+	//Added_by_Fabien_Sanglard, build a console window so we can use printf
+	HWND			consoleHandle;
+	//END Added_by_Fabien_Sanglard
 
-#if NETWORK_FLAG == 1
-	Martin.initNetworkServerClient();
-#endif
+	//Added_by_Fabien_Sanglard, build a console window so we can use printf
+	AllocConsole();
+	freopen("conin$", "r", stdin);
+	freopen("conout$", "w", stdout);
+	freopen("conout$", "w", stderr);
+	consoleHandle = GetConsoleWindow();
+	//MoveWindow(consoleHandle, 0, 0, 680, 650, 1);
+	printf("[sys_win.c] Console initialized.\n");
+	//END Added_by_Fabien_Sanglard
+	*/
 
 	Martin.init();
 	Martin.start();
@@ -2977,7 +2899,7 @@ void FaceOff::initGUI()
 
 	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	Control::init("", 25, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
-	if (!m_isServer)
+//	if (!m_isServer)
 	{
 		int xOffset = 55;
 		int yOffset = 570;
@@ -2986,15 +2908,15 @@ void FaceOff::initGUI()
 		int BAR_HEIGHT = 10;
 
 		Control* HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GREEN, "icon_hp.png");
-		m_players[m_defaultPlayerID]->m_healthBarGUI = (Bar*)HPBar;
+		cl_players.get(m_defaultPlayerID)->m_healthBarGUI = (Bar*)HPBar;
 
 		xOffset = 175;
 		Control* armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_armor.png");
-		m_players[m_defaultPlayerID]->m_armorBarGUI = (Bar*)armorBar;
+		cl_players.get(m_defaultPlayerID)->m_armorBarGUI = (Bar*)armorBar;
 
 		xOffset = 700;
 		Control* ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
-		m_players[m_defaultPlayerID]->m_ammoBarGUI = (Bar*)ammoBar;
+		cl_players.get(m_defaultPlayerID)->m_ammoBarGUI = (Bar*)ammoBar;
 
 		int aimWidth = 20;
 		int aimHeight = 20;
@@ -3041,6 +2963,26 @@ void FaceOff::renderGUI()
 
 }
 
+
+
+
+
+
+
+/*
+void FaceOff::destroyWorldObject(WorldObject* object)
+{
+	//remove object from its stored kdTree nodes
+	for (int j = 0; j < object->m_parentNodes.size(); j++)
+	{
+		KDTreeNode* kNode = object->m_parentNodes[j];
+		if (kNode == NULL)
+			continue;
+		kNode->remove(object);
+	}
+}
+*/
+
 /*
 void FaceOff::removeObject(WorldObject* object)
 {
@@ -3048,8 +2990,853 @@ void FaceOff::removeObject(WorldObject* object)
 }
 */
 
+/*
+#if NETWORK_FLAG == 1
+
+if (m_isServer)
+{
+	m_networkThread = thread(&FaceOff::serverNetworkThread, this);
+}
+else
+{
+	m_networkThread = thread(&FaceOff::clientNetworkThread, this);
+}
+
+#endif
+*/
+
+/*
+while running
+{
+	lock
+		check incoming packets
+			put in queue
+	unlock
+
+
+	check time
+	send outgoing packets
+
+}
+
+
+
+-render thread
+
+while running
+{
+
+	process stuff in queue
+		lock
+			temp = queue.top
+		unlock
+		queue.pop
+
+	render as many frames as possible
+}
+*/
+
+
+
+/*
+				case ID_NEW_INCOMING_CONNECTION:
+				{
+					printf("A connection is incoming.\n");
+
+					int newPlayerId = m_players.size();
+					float newSpawnX = newPlayerId * 30;
+					float newSpawnY = 5;
+					float newSpawnZ = newPlayerId * 30;
+
+					// Add Player
+					Player* p = new Player(newPlayerId);
+					p->m_guid = packet->guid;
+					p->m_name = "player " + utl::intToStr(newPlayerId);
+					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
+					p->setRotation(0, 0);
+					p->setModelEnum(ModelEnum::player);
+					p->setModel(m_modelMgr.get(ModelEnum::player));
+					p->setMass(80);
+					p->setCollisionDetectionGeometry(CD_SPHERE);
+
+
+					Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
+					mainWeapon->setCollisionDetectionGeometry(CD_AABB);
+					mainWeapon->m_name = "player mainWeapon";
+
+					Weapon* knife = new Weapon(m_modelMgr.getWeaponData(KNIFE));
+					knife->setCollisionDetectionGeometry(CD_AABB);
+					knife->m_name = "player knife";
+
+					Weapon* grenade = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
+					grenade->setMass(0.4);
+					grenade->setMaterialEnergyRestitution(0.6);
+					grenade->setMaterialSurfaceFriction(0.3);
+					grenade->setCollisionDetectionGeometry(CD_AABB);
+					grenade->m_name = "player grenade";
+
+					p->pickUp(mainWeapon);
+					p->pickUp(knife);
+					p->pickUp(grenade);
+
+
+					m_players.push_back(p);
+					m_objects.push_back(mainWeapon);
+					m_objects.push_back(knife);
+					m_objects.push_back(grenade);
+
+
+					utl::debug("new_player_id", newPlayerId);
+					utl::debug("player position", m_players[newPlayerId]->getPosition());
+
+					if (m_players.size() > 0)
+					{
+						// send new client notification to existing clients
+						cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
+						p->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
+
+						for (int i = 0; i < m_players.size(); i++)
+						{
+							if (i == newPlayerId)
+								continue;
+
+							cout << " To: " << i << " - " << m_players[i]->m_guid.g << endl;
+							peer->Send(&bsOut, IMMEDIATE_PRIORITY, UNRELIABLE, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+						}
+
+
+
+						// Sending each client's position to new client
+						utl::debug("m_players size", m_players.size());
+						cout << "Sending each client's position to new client" << endl;
+
+						for (int i = 0; i < m_players.size(); i++)
+						{
+							if (i == newPlayerId)
+								continue;
+
+							cout << "sending for " << i << endl;
+							p->toBitStream((RakNet::MessageID)NEW_CLIENT, bsOut);
+							peer->Send(&bsOut, IMMEDIATE_PRIORITY, UNRELIABLE, 0, packet->systemAddress, false);
+						}
+					}
+					else
+					{
+						cout << "No clients yet, didn't send spawn pos to existing " << "nor each existing pos to new " << endl;
+					}
+
+
+
+					// Use a BitStream to write a custom user message
+					// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
+
+					// write a WELCOME message and include the clients index + 1
+					p->toBitStream((RakNet::MessageID)SPAWN_INFORMATION, bsOut);
+
+					// send the message back to the same address the current packet came from (the new client)
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
+					cout << "Player List" << endl;
+					for (int i = 0; i < m_players.size(); i++)
+					{
+						cout << i << " - " << m_players[i]->getId() << " position " << m_players[i]->m_position.x << " "
+							<< m_players[i]->m_position.y << " "
+							<< m_players[i]->m_position.z << endl;
+					}
+
+					break;
+				}
+*/
 
 
 
 
 
+
+
+
+
+#if 0
+#if NETWORK_FLAG == 1
+
+#if	SERVER_NETWORK_THREAD != 1
+if (m_isServer)
+{
+
+	// iterate over each message received
+	for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+	{
+		// we first initalized bitStream with the packet->data
+		RakNet::BitStream bsIn(packet->data, packet->length, false);
+
+		// we ignore the first part of each message (due to RakNet convention)
+		bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+		cout << endl << "New Packet from:" << packet->guid.g << endl;
+
+
+		// Handle message here 
+		switch (packet->data[0])
+		{
+		case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+			printf("Another client has disconnected.\n");
+			break;
+		case ID_REMOTE_CONNECTION_LOST:
+			printf("Another client has lost the connection.\n");
+			break;
+		case ID_REMOTE_NEW_INCOMING_CONNECTION:
+			printf("Another client has connected.\n");
+			break;
+		case ID_NEW_INCOMING_CONNECTION:
+			printf("A connection is incoming.\n");
+			break;
+		case ID_DISCONNECTION_NOTIFICATION:
+			printf("A client has disconnected.\n");
+			break;
+		case ID_CONNECTION_LOST:
+			printf("A client lost the connection.\n");
+			break;
+
+		case PLAYER_UPDATE:
+			// received new position from client       
+		{
+			int player_id = 0;
+			glm::vec3 pos, wPos;
+			float camPitch, camYaw;
+
+			bsIn.Read(player_id);
+			bsIn.ReadVector(pos.x, pos.y, pos.z);
+			bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+			bsIn.Read(camPitch);
+			bsIn.Read(camYaw);
+
+
+			printf("Player %d sent new position ", player_id);			utl::debug("", pos);
+			printf("Player %d sent new weapon position ", player_id);	utl::debug("", wPos);
+			printf("Player %d sent new pitch ", player_id);				utl::debug("", camPitch);
+			printf("Player %d sent new yaw ", player_id);				utl::debug("", camYaw);
+
+
+			m_players[player_id]->setPosition(pos);
+			m_players[player_id]->update(wPos, camPitch, camYaw);
+
+
+
+
+			cout << "sending new position value to each client" << endl;
+
+
+			bsOut.Reset();
+			bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+			bsOut.Write(player_id);
+			bsOut.WriteVector(pos.x, pos.y, pos.z);
+			bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
+			bsOut.Write(camPitch);
+			bsOut.Write(camYaw);
+
+
+			for (int i = 0; i < m_players.size(); i++)
+			{
+				if (player_id != i)
+				{
+					cout << "	To: " << " - " << m_players[i]->m_guid.g << endl;
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+				}
+				else
+					cout << "	Not Sending to own client: " << player_id << endl;
+			}
+			break;
+		}
+
+
+		default:
+			printf("Message with identifier %i has arrived.\n", packet->data[0]);
+			break;
+		}
+		bsOut.Reset();
+	}
+}
+#endif
+
+#if CLIENT_NETWORK_THREAD != 1
+if (!m_isServer)
+{
+
+	//		utl::debug("m_nextGameTick", m_nextGameTick);
+	//		utl::debug("curTick", curTick);
+
+	//	m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES;
+
+	//	if (m_nextGameTick > SDL_GetTicks())
+	if (m_nextGameTick > DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES)
+	{
+		cout << "sending each server my location" << endl;
+		bsOut.Reset();
+		bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+		bsOut.Write(m_defaultPlayerID);
+
+
+		utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->m_position);
+		utl::setBitStream(bsOut, m_players[m_defaultPlayerID]->getCurWeapon()->m_position);
+		bsOut.Write(m_players[m_defaultPlayerID]->getCameraPitch());
+		bsOut.Write(m_players[m_defaultPlayerID]->getCameraYaw());
+
+
+		peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, server_address, false);
+
+		m_nextGameTick = 0;
+	}
+	m_nextGameTick += DEFAULT_SERVER_MILLISECONDS_BETWEEN_UPDATES / 10;
+
+
+	for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+	{
+		cout << "here" << endl;
+
+		RakNet::BitStream bsIn(packet->data, packet->length, false);
+		bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+		switch (packet->data[0])
+		{
+		case NEW_CLIENT:
+			cout << "NEW_CLIENT message " << endl;
+			break;
+
+		case ID_CONNECTION_REQUEST_ACCEPTED:
+			break;
+
+		case PLAYER_UPDATE:
+		{
+			// report the server's new counter value
+
+			cout << "PLAYER_UPDATE, updating other_player_id's position" << endl;
+
+			int other_player_id = 0;
+			int player_id = 0;
+			glm::vec3 pos, wPos;
+			float camPitch, camYaw;
+
+			bsIn.Read(other_player_id);
+			bsIn.ReadVector(pos.x, pos.y, pos.z);
+			bsIn.ReadVector(wPos.x, wPos.y, wPos.z);
+			bsIn.Read(camPitch);
+			bsIn.Read(camYaw);
+
+			utl::debug("other_player_id", other_player_id);
+
+			m_players[other_player_id]->setPosition(pos);
+			m_players[other_player_id]->update(wPos, camPitch, camYaw);
+			break;
+		}
+
+
+		case YOUR_TURN:
+			printf("My Turn. Sending message.\n");
+			bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
+			peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			break;
+		default:
+			printf("Message with identifier %i has arrived.\n", packet->data[0]);
+			break
+		}
+	}
+
+}
+#endif
+#endif
+
+
+
+
+
+#if 0
+if (sv_players.getIterationEnd() > 0)
+{
+	// send existing clients about the new client notification 
+	std::cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
+	p->serialize((RakNet::MessageID)NEW_CLIENT, bsOut);
+
+	bsOut.Write(p->weaponCount);
+
+	for (int i = 0; i < p->getWeapons().size(); i++)
+	{
+		Weapon* weapon = p->getWeapons()[i];
+		if (weapon != NULL)
+		{
+			weapon->serialize(bsOut);
+		}
+	}
+
+	for (int i = 0; i < m_server.clients.size(); i++)
+	{
+		if (i == newPlayerId)
+			continue;
+
+		Client client = m_server.getClient(i);
+		std::cout << " To: " << i << " - " << client.m_guid.g << endl;
+		// peer->Send(&bsOut, IMMEDIATE_PRIORITY, UNRELIABLE, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+		m_server.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, client.systemAddress, false);
+	}
+
+
+
+	// Sending each client's position to new client
+	utl::debug("m_players size", sv_players.count);
+	std::cout << "Sending each client's position to new client" << endl;
+
+	for (int i = 0; i < m_server.clients.size(); i++)
+	{
+		if (i == newPlayerId)
+			continue;
+
+		std::cout << "sending for " << i << endl;
+		p->serialize((RakNet::MessageID)NEW_CLIENT, bsOut);
+		m_server.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, packet->systemAddress, false);
+	}
+}
+else
+{
+	std::cout << "No clients yet, didn't send spawn pos to existing " << "nor each existing pos to new " << endl;
+}
+
+
+
+// Use a BitStream to write a custom user message
+// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
+
+// write a WELCOME message and include the clients index + 1
+// p->serializeSpawnInfo((RakNet::MessageID)SPAWN_INFORMATION, bsOut);
+
+
+
+bsOut.Reset();
+p->serialize((RakNet::MessageID)SPAWN_INFORMATION, bsOut);
+
+// send the message back to the same address the current packet came from (the new client)
+m_server.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
+/*
+cout << "Player List" << endl;
+for (int i = 0; i < m_players.size(); i++)
+{
+cout << i << " - " << m_players[i]->getId() << " position " << m_players[i]->m_position.x << " "
+<< m_players[i]->m_position.y << " "
+<< m_players[i]->m_position.z << endl;
+}
+*/
+#endif
+
+
+
+
+#if 0
+void FaceOff::clientHandleDeviceEvents()
+{
+	while (SDL_PollEvent(&event))
+	{
+		int tmpx, tmpy;
+		switch (event.type)
+		{
+		case SDL_QUIT:
+			isRunning = false;
+			break;
+
+		case SDL_MOUSEBUTTONUP:
+			switch (event.button.button)
+			{
+			case SDL_BUTTON_LEFT:
+				m_mouseState.m_leftButtonDown = false;
+				SDL_GetMouseState(&tmpx, &tmpy);
+
+				if (m_players[m_defaultPlayerID]->inGrenadeGatherMode())
+				{
+					utl::debug("here in Grenade gather mode");
+					Weapon* grenade = m_players[m_defaultPlayerID]->throwGrenade();
+				}
+
+				hitNode = NULL;
+
+				break;
+
+			case SDL_BUTTON_RIGHT:
+				m_mouseState.m_rightButtonDown = false;
+				SDL_GetMouseState(&tmpx, &tmpy);
+				break;
+			}
+			break;
+
+		case SDL_MOUSEBUTTONDOWN:
+
+			switch (event.button.button)
+			{
+				int tmpx, tmpy;
+			case SDL_BUTTON_LEFT:
+				SDL_GetMouseState(&tmpx, &tmpy);
+				m_mouseState.m_leftButtonDown = true;
+
+				if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
+				{
+
+					m_players[m_defaultPlayerID]->fireWeapon();
+
+					if (m_players[m_defaultPlayerID]->isUsingLongRangedWeapon())
+					{
+
+						WorldObject* hitObject = NULL;
+
+						glm::vec3 lineStart = m_players[m_defaultPlayerID]->getFirePosition();
+						glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
+
+
+						utl::debug("lineStart", lineStart);
+						utl::debug("lineDir", lineDir);
+
+						// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
+
+						float hitObjectSqDist = FLT_MAX;
+						glm::vec3 hitPoint;
+
+						unordered_set<int> objectsAlreadyTested;
+
+						m_objectKDtree.visitNodes(m_objectKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+
+						//	utl::debug("player pos", lineStart);
+						//	utl::debug("target z", lineDir);
+
+						if (hitObject != NULL)
+						{
+							utl::debug("name", hitObject->m_name);
+							hitObject->isHit = true;
+
+							WorldObject* hitPointMark = new WorldObject();
+							hitPointMark->setPosition(hitPoint);
+							hitPointMark->setScale(1.0, 1.0, 1.0);
+							hitPointMark->setModelEnum(ModelEnum::cube);
+							hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
+							hitPointMark->m_name = "hitMark";
+							//								m_hitPointMarks.push_back(hitPointMark);
+						}
+						else
+							utl::debug("hitObject is NULL");
+						// VisitNodes
+
+					}
+
+				}
+
+				m_players[m_defaultPlayerID]->m_camera->setMouseIn(true);
+
+
+
+
+
+				break;
+
+
+			case SDL_BUTTON_RIGHT:
+				cout << "clicking right" << endl;
+				SDL_GetMouseState(&tmpx, &tmpy);
+				m_mouseState.m_rightButtonDown = true;
+
+				m_zoomedIn = !m_zoomedIn;
+				m_gui.setSniperZoomMode(m_zoomedIn);
+
+				if (m_zoomedIn)
+				{
+					m_zoomFactor = 0.2f;
+					m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+				}
+				else
+				{
+					m_zoomFactor = 1.0f;
+					m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+				}
+				break;
+			}
+			break;
+
+		case SDL_KEYUP:
+			switch (event.key.keysym.sym)
+			{
+			}
+			break;
+
+		case SDL_KEYDOWN:
+			switch (event.key.keysym.sym)
+			{
+			case SDLK_ESCAPE:
+				isRunning = false;
+				break;
+
+			case SDLK_0:
+				containedFlag = !containedFlag;
+				break;
+
+				// main gun
+			case SDLK_1:
+				//	m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MAIN);
+				break;
+
+				// pistol
+			case SDLK_2:
+				//	m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PISTOL);
+				break;
+
+				// MELEE
+			case SDLK_3:
+				//	m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MELEE);
+				break;
+
+				// GRENADES
+			case SDLK_4:
+				//	m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
+				break;
+
+
+			case SDLK_8:
+			{
+
+
+			}
+
+			break;
+
+
+
+			case SDLK_9:
+				//	if (m_players[m_defaultPlayerID]->has
+				break;
+
+
+			case SDLK_r:
+			{
+				utl::debug("Reloading Weapon");
+				//	m_players[m_defaultPlayerID]->reloadWeapon();
+			}
+			break;
+
+			case SDLK_g:
+			{
+				utl::debug("Dropping Weapon");
+				/*
+				Weapon* droppedWeapon = m_players[m_defaultPlayerID]->drop();
+				if (droppedWeapon != NULL)
+				{
+				m_objectKDtree.insert(droppedWeapon);
+				}
+				*/
+			}
+			break;
+
+
+
+
+			case SDLK_SPACE:
+				//		if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
+				//		utl::debug(">>>> Just Jumped");
+				//		utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
+
+				//		if (m_players[m_defaultPlayerID]->isNotJumping())
+				//			m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 150.0, 0.0) * utl::GRAVITY_CONSTANT;
+
+				break;
+
+			case SDLK_z:
+				/*
+				if (m_server.isInitalized)
+				m_spectatorCamera.setMouseIn(false);
+				else
+				m_players[m_defaultPlayerID]->m_camera->setMouseIn(false);
+				*/
+				break;
+			}
+			break;
+		}
+	}
+
+}
+#endif
+
+
+
+/*
+void FaceOff::clientSimulation()
+{
+	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
+	// then deallocating memory
+	collisionDetectionTestPairs.clear();
+	// CollisionDetectionTestPairs collisionDetectionTestPairs;
+
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		Player* p = m_players[i];
+		simulatePlayerPhysics(p, i);
+	}
+
+	
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+		simulateObjectPhysics(object, i);
+	}
+}
+*/
+
+
+/*
+void FaceOff::simulatePlayerPhysics(Player* p, int i, Move move)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+
+	p->updateGameInfo();
+
+	p->m_velocity += utl::BIASED_HALF_GRAVITY;
+
+	p->processInput(move);
+
+	p->m_position += p->m_velocity;
+
+	p->updateCollisionDetectionGeometry();
+
+	checkNeighborsAfterClientInput(p);
+
+	p->updateCollisionDetectionGeometry();
+	m_objectKDtree.reInsert(p);
+
+
+	p->updateWeaponTransform();
+}
+*/
+
+#if 0
+void FaceOff::simulatePlayerPhysics(Player* p, int i)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+
+	p->updateGameInfo();
+
+
+	p->m_velocity += utl::BIASED_HALF_GRAVITY;
+
+	if (p->isDefaultPlayer())
+	{
+		p->control();
+		p->updateGameStats();
+	}
+
+	p->m_position += p->m_velocity;
+	p->updateMidAirVelocity();
+#if NETWORK_FLAG == 0 
+	if (i == 1)
+	{
+		/*
+		float tempDist = 100;
+
+		if (incrFlag)
+			p->m_position.z += 0.05;
+		else
+			p->m_position.z -= 0.05;
+
+		if (p->m_position.z > tempDist)
+			incrFlag = false;
+		if (p->m_position.z < 20)
+			incrFlag = true;
+		*/
+
+
+		/*
+		float tempMaxAngle = 150;
+
+		if (incrAngleFlag)
+		{
+			tempPitch = 0;
+			tempYaw += 1;
+		}
+		else
+		{
+			tempPitch = 0;
+			tempYaw -= 1;
+		}
+
+		if (tempPitch > tempMaxAngle)
+		{
+			incrAngleFlag = false;
+		}
+		if (tempPitch < -tempMaxAngle)
+		{
+			incrAngleFlag = true;
+		}
+		*/
+		p->setRotation(tempPitch, tempYaw);
+	}
+
+	else if (i == 2)
+	{
+		/*
+		float tempDist = 15;
+
+		if (incrFlag2)
+			p->m_position.x += 0.05;
+		else
+			p->m_position.x -= 0.05;
+
+
+		if (p->m_position.x > tempDist)
+			incrFlag2 = false;
+		if (p->m_position.x < -tempDist)
+			incrFlag2 = true;
+			*/
+
+		
+		/*
+		float tempMaxAngle = 150;
+
+		if (incrAngleFlag2)
+		{
+			tempPitch2 += 0.05;
+			tempYaw2 += 1;
+		}
+		else
+		{
+			tempPitch2 += 0.05;
+			tempYaw2 -= 1;
+		}
+
+		if (tempPitch2 > tempMaxAngle)
+		{
+			incrAngleFlag2 = false;
+		}
+		if (tempPitch2 < -tempMaxAngle)
+		{
+			incrAngleFlag2 = true;
+		}
+		*/
+	//	tempPitch2 = 0;
+	//	tempYaw2 = 0;
+
+		p->setRotation(tempPitch2, tempYaw2);		
+	}
+
+#endif
+
+
+
+	p->updateCollisionDetectionGeometry();
+
+	checkNeighbors(p);
+
+	p->updateCollisionDetectionGeometry();
+	sv_objectKDtree.reInsert(p);
+
+	p->updateWeaponTransform();
+
+}
+#endif
+
+#endif

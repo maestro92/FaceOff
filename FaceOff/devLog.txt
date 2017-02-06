@@ -1,0 +1,131 @@
+#############################################################################################
+####################################### 2017 Feb 4th ########################################
+#############################################################################################
+
+-	This is my first entry of my dev-log, I thought it will be nice to start this dev-log (cuz John Carmack did for quake3? haha), cuz i think this will allow me 
+to practice explaining some of the design decisions I made for my game, and I think putting my thoughts into words will certianly be helpful in the future in my interviews
+
+
+I am at a point where I am working on the collision detection on both the server and client side. From reading the quake3 source, server has all entities in the game, and he actually
+only sends the objects the client can see or neighboring objects (this is determined his through BSP tree) to the client. So client only knows about a subset of all the entities in the game. After parsing the snapshot from the server, the client then does collision detection on the subset for the client-side prediciton part.
+
+Although I already have the KD-tree collision detection system setup (which is a different algorithm), I don't know how to accomplish the equivalent of getting the only neighboring/visible objects. This is also my first attempt on getting the collision detection to work on both sides, so I just want it to be functional at this point. Hence I am just gonna send every entity down from the server to the client.
+
+so after that decisions, I had to think about how I organize entities on both the server/client side. An array pointers? just an array?
+
+So I did some googling on "best data structures for games" and 
+http://seanmiddleditch.com/data-structures-for-game-developers-the-slot-map/
+http://gamedev.stackexchange.com/questions/33888/what-is-the-most-efficient-container-to-store-dynamic-game-objects-in
+
+
+the basic idea I got out of it is that for the 
+	Fixed Size Simple Array Object Table vs Slot Map(the one single array version, not the array of array version) 
+You should go with the Slot Map if you want to avoid the 
+	"
+	 When an object is freed, its "unique" identifier (its index into the array) is put on the free list and eventually reused. This can cause bugs in many use cases. Say, for instance, that a delayed event is put in a queue to send a message to object #27. That object is subsequently destroyed. However, before that delayed event fires, a new object is created, and it gets given the id #27. When the event fires, it is now delivered to the wrong object!
+	 "
+
+Situation. This results in a solution of using tag + index for referencing objects.
+
+It seems to be that this is only necessary if you have "delayed events situation". I am not sure at this point of my game if I have delayed events. Therefore I am just gonna 
+use the "fixed size simple array object table" solution on the server for now.
+
+As for the client, it is to my understanding that the client does not actually ever create or destory objects on its own. It is only when the server sends down the snapshot that the client will add or remove entities from its main object array. Since I am only just using index as a uniqueId to access objects, I am just going to directly set the object at the index as I parse the snapshot from server
+
+
+
+
+
+
+
+-	had a C++ problem cross include problem, essentially the problem is stack overflow post below illustrated below
+
+http://stackoverflow.com/questions/31513890/c-pointer-to-incomplete-class-type-is-not-allowed
+
+
+
+
+
+
+
+
+there Other things I've learned from the past, I am just gonna put it here on the first entry
+Curiously recurring template pattern for the Weapon Class
+I Needed a static variable for each derived class
+
+
+-	What's the difference between calling detach() and not calling detach()
+
+http://stackoverflow.com/questions/22803600/when-should-i-use-stdthreaddetach
+
+
+-	difference between std::tread and boost threads?
+
+
+
+
+
+
+
+-	difference between namespace-functions vs static methods on a class
+
+essentially, when I was making the utility functions, my first approach is just to have a class full of static functions. Then later on, I switched to namespace
+
+short answer:
+By default, use namespaced functions.
+Classes are to build objects, not to replace namespaces.
+
+long answer:
+http://stackoverflow.com/questions/1434937/namespace-functions-versus-static-methods-on-a-class
+
+
+
+
+-	creating zoom
+
+https://www.opengl.org/archives/resources/faq/technical/viewing.htm
+
+
+
+-	should i specify virtual on the sub-classes methods as well
+
+No you technically do not need to specify virtual. If the base method is virtual then C++ will automatically make the matching override method virtual.
+However you should be marking them virtual. The method is virtual after all and it makes your code much clearer and easier to follow by other developers.
+
+http://stackoverflow.com/questions/3167045/do-i-need-to-specify-virtual-on-the-sub-classes-methods-as-well
+
+
+-	why do we need private-variables
+http://programmers.stackexchange.com/questions/143736/why-do-we-need-private-variables
+
+
+
+
+-	should the network code run its own thread?
+
+Glenn Fiedler said: Get it wokring on a single thread non-blocking first. If there are performance problems with that, move it to another thread
+as an optimization. DOn't feel you need to do it multithreadded initially.
+
+Next, for NAT punch through sure if you do client->client you would have to do that. So don’t :). Do client/server and have a server in a data center and no punching is required. This is the way ™. NAT punching and P2P are stupid and a waste of time.
+
+http://gafferongames.com/networking-for-game-programmers/
+
+
+
+Nath-punch through
+
+https://keithjohnston.wordpress.com/2014/02/17/nat-punch-through-for-multiplayer-games/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
