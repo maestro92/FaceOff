@@ -1,12 +1,12 @@
 #include "world_object.h"
-
+#include "model_manager.h"
 #include "collision_detection/kd_tree_node.h"
 
 WorldObject::WorldObject()
 {
 	active = true;
 
-	m_instanceId = utl::createUniqueObjectID();
+	// m_instanceId = utl::createUniqueObjectID();
 
     m_position = glm::vec3(0.0, 0.0, 0.0);
     m_velocity = glm::vec3(0.0, 0.0, 0.0);
@@ -36,6 +36,8 @@ WorldObject::WorldObject()
 
 WorldObject::~WorldObject()
 {
+	clearParentNodes();
+
 	if (m_aabb != NULL)
 	{
 		delete m_aabb;
@@ -235,3 +237,80 @@ void WorldObject::clearParentNodes()
 	}
 }
 
+
+
+#if 1
+void WorldObject::serialize(RakNet::BitStream& bs)
+{
+	bs.Write(objectId.id);
+	bs.Write(m_name);
+	bs.WriteVector(m_position.x, m_position.y, m_position.z);
+//	bs.Write(getCameraPitch());
+//	bs.Write(getCameraYaw());
+
+	bs.Write(m_modelEnum);
+
+	// cout << "objectId.id " << objectId.id << endl;
+	// cout << "	m_modelEnum " << m_modelEnum << endl << endl;
+
+	bs.Write(getGeometryType());
+	bs.Write(getMass());
+	bs.Write(getMaterialEnergyRestitution());
+	bs.Write(getMaterialSurfaceFrictionToBitStream());
+
+}
+
+
+int WorldObject::getInstanceId()
+{
+	return objectId.id;
+}
+
+
+void WorldObject::deserialize(RakNet::BitStream& bs, ModelManager* mm)
+{
+	// the message id is already ignored
+	bs.Read(objectId.id);
+	bs.Read(m_name);
+	bs.ReadVector(m_position.x, m_position.y, m_position.z);
+
+	if (m_position.x != 0 || m_position.z != 0)
+	{
+		utl::clDebug("position is", m_position);
+	}
+
+	/*
+	float pitch, yaw;
+	bs.Read(pitch);					bs.Read(yaw);
+	m_camera->m_pitch = pitch;		m_camera->m_yaw = yaw;
+	setRotation(pitch, yaw);
+	*/
+	
+
+	/*
+	cout << "	objectId id " << objectId.id << endl;
+	cout << "	tag " << objectId.s.tag << endl;
+	cout << "	index " << objectId.s.index << endl;
+	*/
+	bs.Read(m_modelEnum);
+	// cout << "	m_modelEnum " << m_modelEnum << endl;
+	setModel(mm->get(m_modelEnum));
+
+	bs.Read(m_geometryType);
+	setCollisionDetectionGeometry(m_geometryType);
+
+	float mass = 0;
+	bs.Read(mass);	setMass(mass);
+
+	float restitution = 0;
+	bs.Read(restitution);		setMaterialEnergyRestitution(restitution);
+
+	float friction = 0;
+	bs.Read(friction);			setMaterialSurfaceFriction(friction);
+}
+
+
+
+
+
+#endif

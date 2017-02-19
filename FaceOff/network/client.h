@@ -20,19 +20,19 @@
 
 #include "game_messages.h"
 #include "network_utility.h"
-
+#include "utility.h"
 
 
 
 #define	CMD_BUFFER_SIZE			64	
-#define	CMD_MASK			(CMD_BACKUP - 1)
+#define	CMD_BUFFER_MASK			(CMD_BUFFER_SIZE - 1)
 // allow a lot of command backups for very fast systems
 // multiple commands may be combined into a single packet, so this
 // needs to be larger than PACKET_BACKUP
 
 // must be power of two
 #define	SNAPSHOT_BUFFER_SIZE	16	// copies of Snapshots to keep buffered
-#define	UPDATE_MASK		(UPDATE_BACKUP-1)
+#define	SNAPSHOT_BUFFER_MASK	(SNAPSHOT_BUFFER_SIZE-1)
 
 
 #define	MAX_ENTITIES_IN_SNAPSHOT	256
@@ -79,12 +79,27 @@ struct Snapshot
 
 	int numEntities;
 
+	int firstEntityIndex;	// first index into the circular curSVSnapshotObjects[]
+							// the entities must be in increasing state number
 
 
 };
 
 
+// see quake3 net_chan.c 
+// Netchan_setup
+struct NetChannel
+{
 
+	NetChannel()
+	{
+		incomingSequence = 0;	// in quake3, this is mainly used to check packets are out of order?								
+		outgoingSequence = 1;
+	}
+
+	int incomingSequence;
+	int outgoingSequence;
+};
 
 class Client
 {
@@ -123,11 +138,14 @@ class Client
 		Snapshot prevSnapshot;		// latest received from server
 		Snapshot snapshots[SNAPSHOT_BUFFER_SIZE];
 
+		int lastUserCmdFrame;	// the frame that the last client usercmd send over
+		NetChannel netchan;
 
 		RakNet::RakNetGUID m_guid;
 		RakNet::SystemAddress systemAddress;
 		RakNet::SystemAddress serverSystemAddress;
 
+		int id;
 		// EntityState entityBaseLines[MAX_ENTITIES];
 		// EntityState parseEntities[MAX_PARSE_ENTITIES];
 

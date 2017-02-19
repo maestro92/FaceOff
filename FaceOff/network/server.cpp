@@ -8,12 +8,16 @@ Server::Server(bool dedicatedFlag)
 	//clients.resize(MAX_CLIENTS);
 	isDedicated = dedicatedFlag;
 	isInitalized = false;
+	peer = NULL;
 }
 
 
 Server::~Server()
 {
-	RakNet::RakPeerInterface::DestroyInstance(peer);
+	if (peer != NULL)
+	{
+		RakNet::RakPeerInterface::DestroyInstance(peer);
+	}
 }
 
 // http://www.jenkinssoftware.com/raknet/manual/detailedimplementation.html
@@ -33,6 +37,10 @@ void Server::init(int fps)
 
 	isInitalized = true;
 
+
+	snapshotObjectStatesBufferSize = NUM_SNAPSHOT_ENTITIES;	
+	snapshotObjectStates.resize(snapshotObjectStatesBufferSize);
+	nextSnapshotEntityIndex = 0;
 	/*
 	peer = RakNet::RakPeerInterface::GetInstance();
 
@@ -47,12 +55,14 @@ void Server::init(int fps)
 }
 
 
-
+ 
 void Server::addClient(RakNet::Packet* packet)
 {
 	Client client(packet->guid);
 	client.systemAddress = peer->GetSystemAddressFromGuid(packet->guid);
+	client.isConnected = true;
 	clients.push_back(client);
+	
 
 	clientCount++;
 }

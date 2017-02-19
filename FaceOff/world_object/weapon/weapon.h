@@ -7,7 +7,7 @@
 #include "weapon_data.h"
 #include "particle_effect.h"
 #include "smoke_effect.h"
-class ModelManager;
+//class ModelManager;
 #include "model_manager.h"
 
 using namespace std;

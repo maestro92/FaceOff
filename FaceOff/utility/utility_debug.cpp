@@ -151,3 +151,82 @@ void utl::debug(string s, glm::mat4 m)
 
     cout << endl << endl;
 }
+
+
+void utl::clDebug(string s)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s);
+}
+
+void utl::clDebug(string s, bool b)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, b);
+}
+void utl::clDebug(string s, char c)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, c);
+}
+
+void utl::clDebug(string s, string s2)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, s2);
+}
+
+/*
+void utl::clDebug(string s, const char* s2)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, s2);
+}
+*/
+void utl::clDebug(string s, unsigned int i)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, i);
+}
+
+void utl::clDebug(string s, int i)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, i);
+}
+
+void utl::clDebug(string s, float f)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, f);
+}
+
+void utl::clDebug(string s, glm::vec2 v)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, v);
+}
+
+void utl::clDebug(string s, glm::vec3 v)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, v);
+}
+
+void utl::clDebug(string s, glm::vec4 v)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, v);
+}
+
+void utl::clDebug(string s, glm::mat3 m)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, m);
+}
+
+void utl::clDebug(string s, glm::mat4 m)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, m);
+}

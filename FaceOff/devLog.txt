@@ -123,8 +123,146 @@ https://keithjohnston.wordpress.com/2014/02/17/nat-punch-through-for-multiplayer
 
 
 
+#############################################################################################
+####################################### 2017 Feb 5th ########################################
+#############################################################################################
+
+-	follow up on yesterday's thought on what entities to include in the snapshot when sending it down from the server the client. It seems like what BSP-PVS based games are doing is that they are testing visibility by doing a frustrum test into the BSP. Then they send the visible ones down to the client. 
+
+Regardless, i am still just gonna send everything down on my first try.
 
 
+-	Also as I mentioned yesterday, I am using a straight up index based array for entities on my first attemp. As a small improvement, I am adding a "preferredIterationStart" variable in the FOArray (the name for my simple index based array) class. I am making the assumption that all the static objects, such as map geometry, are always loaded first, then all the dynamic ones are added afterwards. So when I decide which entities to send down, I only need to start iterating from the start of the dynamic objects. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+#############################################################################################
+####################################### 2017 Feb 10th #######################################
+#############################################################################################
+
+I had a chance to read about Game Programming Gems 2, Chapter 1.1 "Optimization for C++ Games" and I found out that
+there is actually a performance difference between "i++" and "++i". Reread that chapter if you are ever interested, and I also found some links
+
+http://stackoverflow.com/questions/24901/is-there-a-performance-difference-between-i-and-i-in-c
+
+http://stackoverflow.com/questions/4706199/post-increment-and-pre-increment-within-a-for-loop-produce-same-output
+(see Anders Sjoqvist)
+
+essentially the memo is: Use ++i if you don’t have a specific reason to use i++. This is becuz i++ creates a temporary variable to store the original value of i, then performs the incrementation and returns the temporary variable.
+
+
+I am gonna start writing ++i just to get in a habit of doing it
+
+
+
+
+
+
+#############################################################################################
+####################################### 2017 Feb 11th #######################################
+#############################################################################################
+
+I came to realize that my original thought on "fixed size simple array object table" solution has a huge flaw in one scenario in my game. I previous reasoning behind this solution is that, the "tag + index" solution is only needed when I have to deal with past events. In my current structure, that is true if I play on my "client only single player" mode, I forgot that I have to deal with past information when the server creates the new snapshot becuz he has to compare the entity information from the last snapshot to the current one. 
+
+take the example below
+
+
+Last snapshot
+
+    client_entities index       0       1       2       3       4
+
+    client_entities            _______________________________________
+                              | ent0  | ent1  | ent2  | ent3  | ent4  |
+                              |  10   |  11   |  12   | (gun) | 14    |
+                              |_______|_______|_______|_______|_______|
+
+
+    gun destroyed, bullet added
+
+
+new snapshot
+
+    client_entities index       0       1       2       3       4
+
+    client_entities            _______________________________________
+                              | ent0  | ent1  | ent2  | ent3  | ent4  |
+                              |  10   |  11   |  12   |bullet | 14    |
+                              |_______|_______|_______|_______|_______|
+
+
+so if I only identity entities by index, I would run into the problem that the game thinking the gun and the bullet is the same entity, which is clearly incorrect.
+
+
+So I have to actually implement the "tag + index" solution for my game to function properly
+
+
+
+
+
+also I am taking the advice from the article http://seanmiddleditch.com/data-structures-for-game-developers-the-slot-map/
+by having The object_id type restated as a struct or union. 
+
+
+union ObjectId
+{
+  int id;
+  struct 
+  {
+    uint16_t tag;
+    uint16_t index;
+  } u;
+};
+
+
+
+
+
+#############################################################################################
+####################################### 2017 Feb 13th #######################################
+#############################################################################################
+
+I was looking through RakNet Manual, esepcially on the reliability types part
+
+http://www.jenkinssoftware.com/raknet/manual/reliabilitytypes.html
+
+the amount of information is overwhelming the say the least. From reading Gaffers On Games, I know that UDP is the way to go for a time sensitive game, such as my FPS, but even for UDP
+there are mulitple types lsited on the link above
+  
+  Unreliable
+  Unreliable sequenced
+  Reliable
+  Reliable ordered
+
+I think to really understand the difference between these, I will have to learn to write my own network protocol first, then also read RakNet source code to really understand what is going on. So for now 
+I will just have to do everything with IMMEDIATE_PRIORITY + RELIABLE_ORDERED to get single player working first
+
+
+
+
+
+
+
+
+
+
+
+
+#############################################################################################
+####################################### 2017 Feb 16th #######################################
+#############################################################################################
+
+
+I was looking through RakNet Manual, esepcially on the reliability types part
 
 
 

@@ -50,12 +50,12 @@ const float TURN_SPEED = 0.5;
 const float FORWARD_SPEED = 0.4;
 
 const string serverDebugPrefix = "";
-const string clientDebugPrefix = "							";
+
 
 // this is sent to the server each client frame
 struct UserCmd
 {
-	int playerId;
+//	int playerId;
 	int serverTime;
 	float angles[3];	// int angles[3]?
 	uint8_t buttons;
@@ -69,7 +69,7 @@ struct UserCmd
 
 	UserCmd()
 	{
-		playerId = 0;
+//		playerId = 0;
 		serverTime = 0;
 		angles[PITCH] = 0.0f;
 		angles[YAW] = 0.0f;
@@ -82,7 +82,7 @@ struct UserCmd
 	void serialize(RakNet::BitStream& bs)
 	{
 		bs.Write(serverTime);
-		bs.Write(playerId);
+//		bs.Write(playerId);
 		
 		bs.Write(angles[0]);
 		bs.Write(angles[1]);
@@ -95,7 +95,7 @@ struct UserCmd
 	void deserialize(RakNet::BitStream& bs)
 	{
 		bs.Read(serverTime);
-		bs.Read(playerId);
+//		bs.Read(playerId);
 
 		bs.Read(angles[0]);
 		bs.Read(angles[1]);

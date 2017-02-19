@@ -4,17 +4,22 @@
 Client::Client()
 {
 	isConnected = false;
+	peer = NULL;
 }
 
 Client::Client(RakNet::RakNetGUID guid)
 {
 	m_guid = guid;
 	isConnected = false;
+	peer = NULL;
 }
 
 Client::~Client()
 {
-	RakNet::RakPeerInterface::DestroyInstance(peer);
+	if (peer != NULL)
+	{
+		RakNet::RakPeerInterface::DestroyInstance(peer);
+	}
 }
 
 void Client::init()
@@ -26,8 +31,8 @@ void Client::init()
 
 	char str[512];
 
-	cout << clientDebugPrefix << "Starting the client." << endl;
-	cout << clientDebugPrefix << "Enter server IP or hit enter for 127.0.0.1" << endl;
+	utl::clDebug("Starting the client.");
+	utl::clDebug("Enter server IP or hit enter for 127.0.0.1");
 	gets(str);
 	if (str[0] == 0)
 	{

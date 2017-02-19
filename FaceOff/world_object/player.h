@@ -27,7 +27,7 @@
 
 #include "world_object/weapon/weapon.h"
 
-#include "model_manager.h"
+// #include "model_manager.h"
 
 #include "custom_gui/bar.h"
 
@@ -102,10 +102,15 @@ class Player : public WorldObject
 
 		vector<Weapon*>& getWeapons();
 
+		void debug();
+
 		int getId();
 
 		bool hasWeaponAtSlot(WeaponSlotEnum slot);
 
+
+
+		int getInstanceId();
 
 		void setRotation(float pitch, float yaw);
 

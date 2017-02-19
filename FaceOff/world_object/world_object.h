@@ -9,7 +9,9 @@
 #include <string>
 #include "cube_wireframe_model.h"
 #include "collision_detection_geometry.h"
+class ModelManager;
 
+#include "shared.h"
 /*
 struct KDTreeNode;
 #include "collision_detection/kd_tree_node.h"
@@ -43,13 +45,17 @@ enum WorldObjectType
 	PARTICLE_EFFECT
 };
 
+
+
+
+
 class WorldObject
 {
     public:
         WorldObject();
 		~WorldObject();
 		string m_name;
-		uint32_t m_instanceId;
+		// uint32_t m_instanceId;
 
 		bool isTested;
 		bool isCollided;
@@ -68,7 +74,7 @@ class WorldObject
 		glm::mat4 m_modelMatrix;
 
 
-		int indexId;
+		ObjectId objectId;
 
 		bool active;
 		// CollisionDetectionGeometry* m_geometry;
@@ -90,7 +96,7 @@ class WorldObject
 		inline void setName(string s);
 		inline string getName();
 
-		inline uint32_t getInstanceId();
+		virtual int getInstanceId();
         inline void setScale(float s);
         inline void setScale(glm::vec3 scale);
         inline void setScale(float x, float y, float z);
@@ -157,6 +163,7 @@ class WorldObject
 		virtual WeaponSlotEnum getWeaponSlot();
 		virtual WeaponNameEnum getWeaponName();
 
+		inline WorldObjectState GetState();
 
 		void clearParentNodes();
 		vector<KDTreeNode*> m_parentNodes;
@@ -164,7 +171,8 @@ class WorldObject
 		
 		bool inMidAir;
 
-
+		virtual void serialize(RakNet::BitStream& bs);
+		virtual void deserialize(RakNet::BitStream& bs, ModelManager* mm);
 
 	protected:
 		int m_modelEnum;
@@ -189,11 +197,6 @@ inline void WorldObject::setName(string s)
 inline string WorldObject::getName()
 {
 	return m_name;
-}
-
-inline uint32_t WorldObject::getInstanceId()
-{
-	return m_instanceId;
 }
 
 inline void WorldObject::setPosition(glm::vec3 pos)
@@ -349,5 +352,18 @@ inline float WorldObject::getMaterialSurfaceFrictionToBitStream()
 	return 1 - m_materialSurfaceFriction;
 }
 
+
+inline WorldObjectState WorldObject::GetState()
+{
+	WorldObjectState state;
+	state.objectId = objectId;
+	state.position = m_position;
+	/*
+	state.angles[PITCH] = 
+	state.angles[YAW] = 
+	state.angles[ROLL|] = 
+	*/
+	return state;
+}
 
 #endif

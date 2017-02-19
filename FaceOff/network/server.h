@@ -23,8 +23,12 @@
 #include "client.h"
 #include "game_messages.h"
 
+#include "shared.h"
+
 #define NUM_MAX_CLIENTS 10
 
+
+#define NUM_SNAPSHOT_ENTITIES 256;
 
 using namespace std;
 
@@ -59,9 +63,22 @@ class Server
 
 		int snapshotCounter;	// incremented for each snapshot built
 		// int	timeResidual;		// <= 1000 / sv_frame->value
-		
-		int m_deltaTimeAccumulator;
+		// the circular objects states used when building snapshot on the server
+		vector<WorldObjectState> snapshotObjectStates;
+		vector<WorldObjectState> snapshotObjectStatesBaselines;
+
+		int nextSnapshotEntityIndex;
+		int snapshotObjectStatesBufferSize;
+
+
+
+//		vector<WorldObjectState> snapshotPlayerStates;
+
+
+		int m_deltaTimeAccumulatorMS;
 		int	nextFrameTime;		// when time > nextFrameTime, process world
+
+		int frameNum;
 
 		int num_entities;		// current number, <= MAX_GENTITIES
 

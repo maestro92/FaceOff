@@ -183,7 +183,6 @@ class LinkedList
 
 
 
-
 // http://gafferongames.com/game-physics/networked-physics/
 enum NetworkGameMessageEnum
 {
@@ -194,7 +193,7 @@ enum NetworkGameMessageEnum
 
 	SERVER_SNAPSHOT = ID_USER_PACKET_ENUM + 4,
 	CLIENT_INPUT = ID_USER_PACKET_ENUM + 5,
-
+	NONE = ID_USER_PACKET_ENUM + 6,
 	// client to server
 };
 
@@ -466,6 +465,8 @@ namespace utl
 	const glm::vec3 BIASED_HALF_GRAVITY = glm::vec3(0.0f, -9.81f, 0.0f) * GRAVITY_CONSTANT * 0.5f;
 
 
+	const string clientDebugPrefix = "									";
+
 	const float DEGREE_TO_RADIAN = 0.0174;    /// pi/180
 	const float RADIAN_TO_DEGREE = 57.32;     /// 180/pi
 
@@ -571,6 +572,22 @@ namespace utl
 
 	template <class T>
 	void debug(string s, vector< vector<T> > v);
+
+
+
+	void clDebug(string s);
+	void clDebug(string s, bool b);
+	void clDebug(string s, char c);
+	void clDebug(string s, string s2);
+	// void clDebug(string s, const char* s2);
+	void clDebug(string s, unsigned int i);
+	void clDebug(string s, int i);
+	void clDebug(string s, float f);
+	void clDebug(string s, glm::vec2 v);
+	void clDebug(string s, glm::vec3 v);
+	void clDebug(string s, glm::vec4 v);
+	void clDebug(string s, glm::mat3 m);
+	void clDebug(string s, glm::mat4 m);
 
 	void checkGLError();
 

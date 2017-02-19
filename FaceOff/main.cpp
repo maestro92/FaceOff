@@ -41,7 +41,7 @@ float tempPitch2 = 0;
 float tempYaw2 = 0;
 
 
-#define NUM_MAX_OBJECTS 256
+
 
 
 // the server simluates the game in descirete time steps called ticks
@@ -79,6 +79,18 @@ SDL_Surface* pDisplaySurface = NULL;
 SDL_Event event;
 
 
+
+
+
+
+const float GAME_SPEED = 1.0f;
+const float _FIXED_UPDATE_TIME_s = 0.01667f;
+const float FIXED_UPDATE_TIME_s = _FIXED_UPDATE_TIME_s / GAME_SPEED;
+const float FIXED_UPDATE_TIME_ms = FIXED_UPDATE_TIME_s * 1000;
+//const float _FIXED_UPDATE_TIME_s = 
+
+
+
 // 15 ms, 66.6 ticks per sec are simulated
 const int SERVER_SIMLUATION_FRAMES_PER_SECOND = 66;
 const int SERVER_SIMLUATION_TIME_STEP = 1000 / SERVER_SIMLUATION_FRAMES_PER_SECOND;
@@ -93,8 +105,13 @@ const int SERVER_SNAPSHOT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 const int CLIENT_INPUT_SENT_PER_SECOND = 33;
 const int CLIENT_INPUT_SENT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 
+
+const int INVALID_OBJECT = 0x7FFFFFFF;
+
 RendererManager FaceOff::m_rendererMgr;
 ModelManager	FaceOff::m_modelMgr;
+
+
 
 FaceOff::FaceOff()
 {
@@ -109,6 +126,10 @@ FaceOff::~FaceOff()
 
 void FaceOff::init()
 {
+
+
+
+
 	isRunning = true;
 
 	containedFlag = false;
@@ -125,7 +146,7 @@ void FaceOff::init()
 	m_defaultPlayerID = 0;
 #endif
 
-	lateInitObjects();
+//	lateInitObjects();
 
 	// initGUI depends on the m_defaultPlayerID, so initNetworkLobby needs to run first
 	initGUI();
@@ -339,9 +360,10 @@ void FaceOff::initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree)
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
+	// making the start of dynamic objects
+	objects.preferredIterationStart = objects.maxUsed + 1;
 
-
-	utl::debug("id is", o_temp->m_instanceId);
+	// utl::debug("id is", o_temp->m_instanceId);
 	float formationGap = 40.0f;
 
 
@@ -357,8 +379,6 @@ void FaceOff::initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree)
 	o_temp->setPosition(-2 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
-
-
 
 
 	o_temp = new Weapon(m_modelMgr.getWeaponData(MINIGUN));
@@ -429,9 +449,9 @@ void FaceOff::initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree)
 
 	for (int i = 0; i < objects.getIterationEnd(); i++)
 	{
-		WorldObject* obj = objects.get(i);
+		WorldObject* obj = objects.getByIndex(i);
 
-		if (obj != NULL)
+		if (obj == NULL)
 		{
 			continue;
 		}
@@ -484,7 +504,9 @@ void FaceOff::initObjects()
 
 
 	initMap(sv_objects, sv_players, sv_objectKDtree);
+
 	initMap(cl_objects, cl_players, cl_objectKDtree);
+
 
 	// Grenade particle effect
 	FireWorkEffect* fwEffect = new FireWorkEffect();
@@ -508,9 +530,10 @@ void FaceOff::initObjects()
 }
 
 
-
+/*
 void FaceOff::lateInitObjects()
 {
+
 	for (auto player : sv_players.objects)
 	{
 		if (player != NULL)
@@ -526,8 +549,9 @@ void FaceOff::lateInitObjects()
 			cl_objectKDtree.insert(player);
 		}
 	}
-}
 
+}
+*/
 
 
 void FaceOff::initRenderers()
@@ -573,6 +597,9 @@ void FaceOff::initNetwork()
 	}
 
 	m_client.init();
+
+
+	// cout << "client address " <<  RakNet::SystemAddress::ToInteger(m_client.systemAddress) << endl;
 }
 
 void FaceOff::initNetworkLobby()
@@ -597,18 +624,23 @@ void FaceOff::initNetworkLobby()
 		// running server wait for lobby frame
 		if (m_server.isInitalized == true)
 		{
-			for (packet = m_server.peer->Receive();	
-				packet; 
-				m_server.peer->DeallocatePacket(packet), packet = m_server.peer->Receive())
+			for (sv_packet = m_server.peer->Receive();
+				sv_packet;
+				m_server.peer->DeallocatePacket(sv_packet), sv_packet = m_server.peer->Receive())
 			{
+
+				printf("server reading msg.\n");
+
 				// we first initalized bitStream with the packet->data
-				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				RakNet::BitStream bsIn(sv_packet->data, sv_packet->length, false);
+
+				cout << "sv client address " << RakNet::SystemAddress::ToInteger(sv_packet->systemAddress) << endl;
 
 				// we ignore the first part of each message (due to RakNet convention)
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
 				// Handle message here 
-				switch (packet->data[0])
+				switch (sv_packet->data[0])
 				{
 					case ID_REMOTE_DISCONNECTION_NOTIFICATION:
 						printf("Another client has disconnected.\n");
@@ -625,7 +657,7 @@ void FaceOff::initNetworkLobby()
 					case ID_NEW_INCOMING_CONNECTION:
 					{
 						printf("A connection is incoming.\n");
-						m_server.addClient(packet);
+						m_server.addClient(sv_packet);
 
 						int newPlayerId = sv_players.nextAvaiableId();
 						float newSpawnX = newPlayerId * 30;
@@ -658,10 +690,6 @@ void FaceOff::initNetworkLobby()
 						grenade->setCollisionDetectionGeometry(CD_AABB);
 						grenade->m_name = "player grenade";
 
-						p->pickUp(mainWeapon);
-						p->pickUp(knife);
-						p->pickUp(grenade);
-
 
 						sv_players.add(p);
 						sv_objects.add(mainWeapon);
@@ -669,12 +697,28 @@ void FaceOff::initNetworkLobby()
 						sv_objects.add(grenade);
 
 
+						p->pickUp(mainWeapon);
+						p->pickUp(knife);
+						p->pickUp(grenade);
+
+
 						sv_objectKDtree.insert(p);
+						// sv_objectKDtree.print();
+						// simulatePlayerPhysics(sv_objectKDtree, p, 0);
 
+						utl::debug("number of parent nodes are", p->m_parentNodes.size());
 
-						utl::debug("new_player_id", newPlayerId);
-						utl::debug("player position", sv_players.get(newPlayerId)->getPosition());
+						for (int i = 0; i < p->m_parentNodes.size(); i++)
+						{
+							utl::debug("	parent node i", p->m_parentNodes[i]->id);
+						}
 
+						// utl::debug("new_player_id", newPlayerId);
+						// utl::debug("player position", sv_players.get(newPlayerId)->getPosition());
+
+						// sv_objectKDtree.print();
+
+						RakNet::BitStream bsOut;
 						broadCastNewClientJoining(newPlayerId, bsOut);
 						replyBackToNewClient(newPlayerId, bsOut);
 						break;
@@ -687,12 +731,29 @@ void FaceOff::initNetworkLobby()
 					case ID_CONNECTION_LOST:
 						printf("A client lost the connection.\n");
 						break;
+						
+					case NONE:
+					{
+						printf("A client NONE the connection.\n");
 
+						if (noneCounter < 5)
+						{
+							RakNet::BitStream bsOut1;
+							bsOut1.Write((RakNet::MessageID)NONE);
+							bsOut1.Write("Hello world");
+
+							//				m_server.peer->Send(&bsOut1, HIGH_PRIORITY, RELIABLE_ORDERED, 0, sv_packet->systemAddress, false);
+							m_server.peer->Send(&bsOut1, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(0).systemAddress, false);
+							noneCounter++;
+						}
+						break;
+					}
+					
 					default:
-						printf("Message with identifier %i has arrived.\n", packet->data[0]);
+						printf("Message with identifier %i has arrived.\n", sv_packet->data[0]);
 						break;
 				}
-				bsOut.Reset();
+				// bsOut.Reset();
 			}
 		}
 
@@ -701,28 +762,32 @@ void FaceOff::initNetworkLobby()
 		if (m_server.isDedicated == false)
 		{
 			// iterate over each message received
-			for (packet = m_client.peer->Receive();
-				packet;
-				m_client.peer->DeallocatePacket(packet), packet = m_client.peer->Receive())
+			for (cl_packet = m_client.peer->Receive();
+				cl_packet;
+				m_client.peer->DeallocatePacket(cl_packet), cl_packet = m_client.peer->Receive())
 			{
 
-				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				printf("client reading msg.\n");
+
+				RakNet::BitStream bsIn(cl_packet->data, cl_packet->length, false);
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
-				switch (packet->data[0])
+				switch (cl_packet->data[0])
 				{
 					case SPAWN_INFORMATION:
 					{
-						m_client.systemAddress = packet->systemAddress;
+						m_client.serverSystemAddress = cl_packet->systemAddress;
 
-						std::cout << clientDebugPrefix << "Server gave me Spawn Information" << endl;
+						cout << "sv address " << RakNet::SystemAddress::ToInteger(cl_packet->systemAddress) << endl;
+
+						utl::clDebug("Server gave me Spawn Information");
 
 						// the new player
 						Player* p = new Player();
-						addDeserializedPlayerAndWeaponToWorld(p, bsIn, true);
+						deserializePlayerAndWeaponAndAddToWorld(p, bsIn, true);
 
-						std::cout << clientDebugPrefix;  utl::debug("new_player_id", p->indexId);
-						std::cout << clientDebugPrefix;  utl::debug("player position", cl_players.get(p->indexId)->getPosition());
+		
+						p->debug();
 
 
 						// existing player
@@ -732,13 +797,21 @@ void FaceOff::initNetworkLobby()
 						for (int i = 0; i < existingPlayerCount; i++)
 						{
 							Player* p = new Player();
-							addDeserializedPlayerAndWeaponToWorld(p, bsIn, false);
+							deserializePlayerAndWeaponAndAddToWorld(p, bsIn, false);
 						}
 
+						
+						// bsOut.Reset();
+						RakNet::BitStream bsOut1;
+						bsOut1.Write((RakNet::MessageID)NONE);
+						bsOut1.Write("Hello world");
 
 						// std::cout << clientDebugPrefix;
 						// printf("Server said I'm client number %d at %f, %f, %f\n", p->getId(), p->getPosition().x, p->getPosition().y, p->getPosition().z);
 					
+						cout << "client sending information " << endl;
+						m_client.peer->Send(&bsOut1, IMMEDIATE_PRIORITY, RELIABLE, 0, m_client.serverSystemAddress, false);
+//						m_client.peer->Send(&bsOut1, HIGH_PRIORITY, RELIABLE, 0, cl_packet->systemAddress, false);
 
 						break;
 					}
@@ -746,12 +819,15 @@ void FaceOff::initNetworkLobby()
 
 					case NEW_CLIENT:
 					{
-						std::cout << clientDebugPrefix << "Received info about new client info for" << endl;
+						utl::clDebug("Received info about new client info for");
 
 						Player* p = new Player();
-						addDeserializedPlayerAndWeaponToWorld(p, bsIn, false);
+						deserializePlayerAndWeaponAndAddToWorld(p, bsIn, false);
 
-						printf("Received new client info for %d: %f, %f, %f", p->getId(), p->getPosition().x, p->getPosition().y, p->getPosition().z);
+						// printf("Received new client info for %d: %f, %f, %f", p->getId(), p->getPosition().x, p->getPosition().y, p->getPosition().z);
+
+						// utl::clDebug("Received info about new client info for");
+						// utl::clDebug("Received info about new client info for");
 
 						cout << "Player List" << endl;
 						for (int i = 0; i < cl_players.getIterationEnd(); i++)
@@ -764,7 +840,7 @@ void FaceOff::initNetworkLobby()
 							}
 							else
 							{
-								cout << i << " - " << p->indexId << endl;  utl::debug("position ", p->m_position);
+								cout << i << " - " << p->objectId.id << endl;  utl::debug("position ", p->m_position);
 							}
 						}
 					
@@ -778,8 +854,26 @@ void FaceOff::initNetworkLobby()
 					case ID_CONNECTION_REQUEST_ACCEPTED:
 						m_client.isConnected = true;
 						break;
-					}
-				bsOut.Reset();
+					
+					case NONE:
+					{
+						if (noneCounter < 5)
+						{
+							RakNet::RakString rs;
+							bsIn.Read(rs);
+							printf("						%s\n", rs.C_String());
+
+							RakNet::BitStream bsOut1;
+							bsOut1.Write((RakNet::MessageID)NONE);
+							bsOut1.Write("Hello world");
+							m_client.peer->Send(&bsOut1, HIGH_PRIORITY, RELIABLE_ORDERED, 0, cl_packet->systemAddress, false);
+							noneCounter++;
+						}
+						break;
+					}				
+					
+				}
+
 			}
 		}
 	}
@@ -796,12 +890,12 @@ void FaceOff::initNetworkLobby()
 			Client client = m_server.getClient(i);
 
 			std::cout << "sending each client lobby wait end signal" << i << endl;
-			bsOut.Reset();
+			RakNet::BitStream bsOut;
 			bsOut.Write((RakNet::MessageID)LOBBY_WAIT_END);
 			bsOut.Write(i);
 
-			m_server.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, client.systemAddress, false);
-			//			m_server.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
+			m_server.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, client.systemAddress, false);
+//			m_server.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
 		}
 
 	}
@@ -851,66 +945,63 @@ void FaceOff::broadCastNewClientJoining(int playerId, RakNet::BitStream& bs)
 
 			Client client = m_server.getClient(i);
 			std::cout << " To: " << i << " - " << client.m_guid.g << endl;
-			m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE, 0, client.systemAddress, false);
+			m_server.peer->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, client.systemAddress, false);
 		}
 	}
 }
 
 
-void FaceOff::addDeserializedPlayerAndWeaponToWorld(Player* p, RakNet::BitStream& bs, bool curPlayer)
+void FaceOff::deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStream& bs, bool curPlayer)
 {
 	p->deserialize(bs, &m_modelMgr);
 
 	p->setDefaultPlayerFlag(curPlayer);
+	
 
-	cl_players.set(p, p->indexId);
+
+	
+	cl_players.set(p, p->objectId.id);
 	cl_objectKDtree.insert(p);
 
-	int weaponCount = 0;
-	bs.Read(weaponCount);
-	for (int i = 0; i < weaponCount; i++)
-	{
-		Weapon* weapon = new Weapon();
-		weapon->deserialize(bs, &m_modelMgr);
-
-		p->pickUp(weapon);
-		cl_objects.set(weapon, weapon->indexId);
-	}
-}
-
-/*
-void FaceOff::serializePlayerAndWeapons(Player* p, RakNet::BitStream& bs)
-{
-	p->serialize(bs);
-	bs.Write(p->weaponCount);
 	for (int i = 0; i < p->getWeapons().size(); i++)
 	{
 		Weapon* weapon = p->getWeapons()[i];
 		if (weapon != NULL)
 		{
-			weapon->serialize(bs);
+			cl_objects.set(weapon, weapon->objectId);
 		}
 	}
-}
 
-
-Player* FaceOff::deserializePlayerAndWeapons(RakNet::BitStream& bs, ModelManager* mm)
-{
-	Player* p = new Player();
-	p->deserialize(bs, &m_modelMgr);
-
+	/*
 	int weaponCount = 0;
 	bs.Read(weaponCount);
-
+	
+	cout << ">>>> desearializing Players " << endl;
 	for (int i = 0; i < weaponCount; i++)
 	{
 		Weapon* weapon = new Weapon();
 		weapon->deserialize(bs, &m_modelMgr);
 
 		p->pickUp(weapon);
+		cl_objects.set(weapon, weapon->objectId);
 	}
+	*/
 }
-*/
+
+
+void FaceOff::deserializeEntityAndAddToWorld(WorldObject* obj, RakNet::BitStream& bs)
+{
+	obj->deserialize(bs, &m_modelMgr);
+
+	cl_objects.set(obj, obj->objectId);
+
+	cl_objectKDtree.insert(obj);
+}
+
+
+
+
+
 
 void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
 {
@@ -924,10 +1015,14 @@ void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
 	utl::debug("m_players size", sv_players.count);
 	std::cout << "Sending each client's position to new client" << endl;
 
-	bs.Write(m_server.clientCount);
+
+	// excluding yourself
+	bs.Write(m_server.clientCount-1);
 
 	for (int i = 0; i < m_server.clients.size(); i++)
 	{
+		cout << "in reply, looking at player " << i << endl;
+
 		if (i == playerId)
 			continue;
 
@@ -941,7 +1036,13 @@ void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
 		}
 	}
 
+
+//	cout << "client address " << RakNet::SystemAddress::ToInteger(m_server.getClient(playerId).systemAddress) << endl;
+
+//	HIGH_PRIORITY, RELIABLE_ORDERED,
 	m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(playerId).systemAddress, false);
+
+	// m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(playerId).systemAddress, false);
 }
 
 
@@ -951,16 +1052,20 @@ void FaceOff::serverReadPackets()
 	Uint32 curTime = 0;
 
 	// iterate over each message received
-	for (packet = m_server.peer->Receive(); packet; m_server.peer->DeallocatePacket(packet), packet = m_server.peer->Receive())
+	for (sv_packet = m_server.peer->Receive(); 
+		sv_packet; 
+		m_server.peer->DeallocatePacket(sv_packet), sv_packet = m_server.peer->Receive())
 	{
+		// cout << "here in serverReadPackets" << endl;
+
 		// we first initalized bitStream with the packet->data
-		RakNet::BitStream bsIn(packet->data, packet->length, false);
+		RakNet::BitStream bsIn(sv_packet->data, sv_packet->length, false);
 
 		// we ignore the first part of each message (due to RakNet convention)
 		bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
 		// Handle message here 
-		switch (packet->data[0])
+		switch (sv_packet->data[0])
 		{
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
 				printf("Another client has disconnected.\n");
@@ -987,21 +1092,30 @@ void FaceOff::serverReadPackets()
 				// for some reason i need to enclose this case 
 				// otherwise i get a initalization skipped by 'default' label error
 
-				std::cout << "CLIENT_INPUT" << endl;
+				int sequence = 0;
+				bsIn.Read(sequence);
 
-				// get client
+				// utl::debug("sequence is", sequence);
+				// std::cout << "CLIENT_INPUT" << endl;
+
+
+
+				int clientId = 0;
+				bsIn.Read(clientId);
+
+				m_server.clients[clientId].lastUserCmdFrame = sequence;
 
 				// get the command
 				UserCmd cmd; 
 				cmd.deserialize(bsIn);
 				// run the command
-				serverRunClientMoveCmd(cmd);
+				serverRunClientMoveCmd(clientId, cmd);
 
 				break;
 			}
 			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[0]);
-				
+				printf("Message with identifier %i has arrived.\n", sv_packet->data[0]);
+				break;
 
 			/*
 		case PLAYER_UPDATE:
@@ -1059,6 +1173,7 @@ void FaceOff::serverReadPackets()
 // i'm making things simple. Im just sending 
 void FaceOff::serverFrame()
 {
+
 	serverReadPackets();
 
 	// allow pause if only the local client is connected
@@ -1069,6 +1184,19 @@ void FaceOff::serverFrame()
 	}
 	*/
 
+	// this can happen considerably earlier when lots of clients play and the map doesn't change
+	if (m_server.time >= 0x70000000)
+	{
+		cout << "Restarting server due to time wrapping" << endl;
+		return;
+	}
+
+	// this can happen considerably earlier when lots of clients play and the map doesn't change
+	if (m_server.nextSnapshotEntityIndex >= 0x7FFFFFFE - m_server.nextSnapshotEntityIndex)
+	{
+		cout << "Restarting server due to m_server.nextSnapshotEntityStartIndex wrapping" << endl;
+		return;
+	}
 
 	serverCalculatePing();
 
@@ -1085,10 +1213,11 @@ void FaceOff::serverFrame()
 
 	//	m_server.timeResidual += msec;
 
-	while (m_server.m_deltaTimeAccumulator >= msPerFrame)
+	m_server.m_deltaTimeAccumulatorMS += FIXED_UPDATE_TIME_ms;
+	while (m_server.m_deltaTimeAccumulatorMS >= msPerFrame)
 	{
 		serverSimulationTick(msPerFrame);
-		m_server.m_deltaTimeAccumulator -= msPerFrame;
+		m_server.m_deltaTimeAccumulatorMS -= msPerFrame;
 	}
 
 
@@ -1120,62 +1249,449 @@ void FaceOff::serverCheckTimeouts()
 
 void FaceOff::serverSendClientMessages()
 {
-
 	for (int i = 0; i < m_server.clients.size(); i++)
 	{
-		Client client = m_server.clients[i];
-		if (client.isConnected == false)
+		Client* client = &m_server.clients[i];
+		if (client->isConnected == false)
 		{
 			continue;
 		}
-
-		if (m_server.time < client.nextSnapshotTime)
+		
+		if (m_server.time <client->nextSnapshotTime)
 		{
 			continue;
 		}
-
-		serverSendClientSnapshot();
+		
+		serverSendClientSnapshot(client, i);
 	}
 }
 
 
-void FaceOff::serverSendClientSnapshot()
+void FaceOff::serverSendClientSnapshot(Client* client, int clientId)
 {
-	serverBuildClientSnapshot();
 
+
+	// this is the snapshot we are creating
+	Snapshot *to, *from;
+
+	to = &client->snapshots[client->netchan.outgoingSequence & SNAPSHOT_BUFFER_MASK];
+
+
+	// check if it has been long since we got a snapshot last time
+	//
+	//
+	//
+	//
+
+
+	from = &client->snapshots[client->lastUserCmdFrame & SNAPSHOT_BUFFER_MASK];
+
+
+	RakNet::BitStream bs;
+	serverWritePlayers(from, to, clientId, bs);
+	serverWriteEntities(from, to, bs);
+
+
+	RakNet::BitStream bs1;
+	bs1.Write((RakNet::MessageID)SERVER_SNAPSHOT);
+	bs1.Write(client->netchan.outgoingSequence);
+	// utl::debug("sending snapshot sequence", client->netchan.outgoingSequence);
+
+	++client->netchan.outgoingSequence;
+	// utl::debug("sending snapshot sequence", client->netchan.outgoingSequence);
+
+	bs1.Write(bs);	
+	// cout << "bs " << bs.GetNumberOfBitsUsed() << endl;
+	// cout << "bs1 " << bs1.GetNumberOfBitsUsed() << endl;
+
+//	m_server.peer->Send(&bs1, HIGH_PRIORITY, RELIABLE_ORDERED, 0, client->systemAddress, false);
+
+//	m_server.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, client.systemAddress, false);
+
+	m_server.peer->Send(&bs1, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(clientId).systemAddress, false);
+}
+
+void FaceOff::serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, RakNet::BitStream& bs)
+{
+	for (int i = 0; i < sv_players.getIterationEnd(); i++)
+	{
+
+		Player* player = sv_players.getByIndex(i);
+		if (player != NULL)
+		{
+			if (i == clientId)
+			{
+				serverWriteDefaultPlayer(player, bs);
+			}
+			else
+			{
+				serverWriteDefaultPlayer(player, bs);
+			}
+		}
+	}
+
+	
+	bs.Write(END_OF_SV_SNAPSHOT_PLAYERS);
 }
 
 
-void FaceOff::serverBuildClientSnapshot()
+void FaceOff::serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs)
 {
+	int flags;
 
+	// positions
+	flags |= U_POSITION0;
+	flags |= U_POSITION1;
+	flags |= U_POSITION2;
+
+	bs.Write(flags);
+	bs.Write(p->objectId.id);
+
+	// cout << "In serverWriteDefaultPlayer flags " << flags << endl;
+	// cout << "In serverWriteDefaultPlayer id " << p->objectId.id << endl;
+	/*
+	// positions
+	if (0.0 != p->position[0])		flags |= U_POSITION0;
+	if (0.0 != p->position[1])		flags |= U_POSITION1;
+	if (0.0 != p->position[2])		flags |= U_POSITION2;
+	*/
+
+	/*
+	// angles
+	if (0.0 != obj1->angles[0])		flags |= U_ANGLE0;
+	if (0.0 != obj1->angles[1])		flags |= U_ANGLE1;
+	if (0.0 != obj1->angles[2])		flags |= U_ANGLE2;
+	*/
+
+	if (flags & U_POSITION0)		bs.Write(p->m_position[0]);
+	if (flags & U_POSITION1)		bs.Write(p->m_position[1]);
+	if (flags & U_POSITION2)		bs.Write(p->m_position[2]);
+	
+	/*
+	if (flags & U_ANGLE0)		bs.Write(obj1->angles[0]);
+	if (flags & U_ANGLE1)		bs.Write(obj1->angles[0]);
+	if (flags & U_ANGLE2)		bs.Write(obj1->angles[0]);
+	*/
 }
 
-void FaceOff::serverRunClientMoveCmd(UserCmd cmd)
+/*
+void FaceOff::serverWriteOtherPlayer(Player* p, RakNet::BitStream& bs)
 {
-	Player* player = sv_players.get(cmd.playerId);
+	int flags = 0;
 
-	player->processUserCmd(cmd);
+	bs.Write(flags);
+	bs.Write(obj1->objectId.id);
+
+	// positions
+	if (0.0 != obj1->position[0])		flags |= U_POSITION0;
+	if (0.0 != obj1->position[1])		flags |= U_POSITION1;
+	if (0.0 != obj1->position[2])		flags |= U_POSITION2;
+
+	// angles
+	if (0.0 != obj1->angles[0])		flags |= U_ANGLE0;
+	if (0.0 != obj1->angles[1])		flags |= U_ANGLE1;
+	if (0.0 != obj1->angles[2])		flags |= U_ANGLE2;
+
+	if (flags & U_POSITION0)		bs.Write(obj1->position[0]);
+	if (flags & U_POSITION1)		bs.Write(obj1->position[1]);
+	if (flags & U_POSITION2)		bs.Write(obj1->position[2]);
+
+	if (flags & U_ANGLE0)		bs.Write(obj1->angles[0]);
+	if (flags & U_ANGLE1)		bs.Write(obj1->angles[0]);
+	if (flags & U_ANGLE2)		bs.Write(obj1->angles[0]);
+}
+*/
+
+void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStream& bs)
+{
+	// these are only dynamic objects, we don't care about static objects
+	to->numEntities = 0;
+	to->firstEntityIndex = m_server.nextSnapshotEntityIndex;
+
+	/*
+	cout << "iterating" << endl;
+	for (int i = 0; i < sv_objects.getIterationEnd(); i++)
+	{
+		if (sv_objects.getByIndex(i) != NULL)
+		{
+			WorldObject* obj = sv_objects.getByIndex(i);
+
+			cout << "	" << i << endl;
+			cout << "		" << obj->objectId.s.tag << endl;
+			cout << "		" << obj->objectId.s.index << endl;
+		}
+
+	}
+	*/
+
+
+	for (int i = sv_objects.preferredIterationStart; i < sv_objects.getIterationEnd(); i++)
+	{
+		if (sv_objects.getByIndex(i) != NULL)
+		{
+			// recall we are using a circular buffer
+			int index = m_server.nextSnapshotEntityIndex % m_server.snapshotObjectStatesBufferSize;
+
+			m_server.snapshotObjectStates[index] = sv_objects.getByIndex(i)->GetState();
+			++m_server.nextSnapshotEntityIndex;
+
+
+			// this should never hit, the game should quit in serverFrame before
+			if (m_server.nextSnapshotEntityIndex >= 0x7FFFFFFE) 
+			{
+				cout << "svs.nextSnapshotEntityIndex wrapped" << endl;
+			}
+
+			to->numEntities++;
+		}
+	}
+
+
+
+	int firstIndex0 = from->firstEntityIndex;
+	int firstIndex1 = to->firstEntityIndex;
+
+	int numEntities0 = (from == NULL) ? 0 : from->numEntities; 
+	int numEntities1 = to->numEntities;
+
+
+	WorldObjectState* obj0 = NULL; 
+	WorldObjectState* obj1 = NULL;
+
+
+	int i0 = 0;
+	int i1 = 0;
+
+
+	ObjectId id0;
+	ObjectId id1;
+
+	id0.id = -1;
+	id1.id = -1;
+
+	// cout << "iterating"  << endl;
+
+
+	// we iterate till both lists are done
+	while (i1 < numEntities1 || i0 < numEntities0)
+	{
+		if (i1 >= numEntities1)
+		{
+			id1.id = INVALID_OBJECT;
+		}
+		else
+		{
+			obj1 = &m_server.snapshotObjectStates[ (firstIndex1 + i1) % m_server.snapshotObjectStatesBufferSize];
+			id1 = obj1->objectId;
+		}
+
+
+		if (i0 >= numEntities0)
+		{
+			id0.id = INVALID_OBJECT;
+		}
+		else
+		{
+			obj0 = &m_server.snapshotObjectStates[(firstIndex0 + i0) % m_server.snapshotObjectStatesBufferSize];
+			id0 = obj0->objectId;
+		}
+
+		/*
+		cout << "	id1 " << id1.id << endl;
+		cout << "	id0 " << id0.id << endl;
+
+		cout << "	id1 tag " << id1.s.tag << endl;
+		cout << "	id0 tag " << id0.s.tag << endl;
+
+		cout << "	id1 index " << id1.s.index << endl;
+		cout << "	id0 index " << id0.s.index << endl;
+		*/
+
+		// writing objects
+		if (id1.s.index == id0.s.index)
+		{
+			if (id1.s.tag == id0.s.tag)
+			{
+				serverWriteWorldObjects(obj0, obj1, bs, false);
+				++i0;
+				++i1;
+				continue;
+			}
+			else
+			{
+				// remove old object
+				serverWriteRemoveWorldObject(obj0, bs);
+				++i0;
+
+				// add new object
+				serverWriteNewWorldObject(obj1, bs);
+				++i1;
+				continue;
+			}
+		}
+
+		// adding new entity
+		if (id1.s.index < id0.s.index)
+		{
+			serverWriteNewWorldObject(obj1, bs);
+			++i1;
+			continue;
+
+		}
+
+		// the old entity isn't present in the new message
+		// removing entity
+		if (id1.s.index > id0.s.index)
+		{
+			serverWriteRemoveWorldObject(obj0, bs);
+			++i0;
+			continue;
+		}
+	}
+
+	bs.Write(END_OF_SV_SNAPSHOT_ENTITIES);
+
+	/*
+	// skip all the static objects
+	for (int i = sv_objects.preferredIterationStart; i < sv_objects.getIterationEnd(); i++)
+	{
+
+	}
+	*/
+}
+
+
+
+void FaceOff::serverWriteRemoveWorldObject(WorldObjectState* obj0, RakNet::BitStream& bs)
+{
+	int flags = 0;
+
+	flags |= U_REMOVE;
+
+	bs.Write(flags);
+	bs.Write(obj0->objectId.id);
+}
+
+
+
+void FaceOff::serverWriteNewWorldObject(WorldObjectState* obj1, RakNet::BitStream& bs)
+{
+	int flags = 0;
+
+	flags |= U_ADD;
+
+	WorldObject* obj = sv_objects.get(obj1->objectId.id);
+
+	if (obj->getObjectType() == WorldObjectType::SCENE_OBJECT)
+	{
+		flags |= U_SCENE_OBJECT;
+	}
+	else if (obj->getObjectType() == WorldObjectType::WEAPON)
+	{
+		flags |= U_WEAPON;
+	}
+
+	/*
+	// positions
+	if (0.0 != obj1->position[0])		flags |= U_POSITION0;
+	if (0.0 != obj1->position[1])		flags |= U_POSITION1;
+	if (0.0 != obj1->position[2])		flags |= U_POSITION2;
+
+	// angles
+	if (0.0 != obj1->angles[0])		flags |= U_ANGLE0;
+	if (0.0 != obj1->angles[1])		flags |= U_ANGLE1;
+	if (0.0 != obj1->angles[2])		flags |= U_ANGLE2;
+	*/
+
+	/*
+	// positions
+	flags |= U_POSITION0;
+	flags |= U_POSITION1;
+	flags |= U_POSITION2;
+
+	// angles
+	flags |= U_ANGLE0;
+	flags |= U_ANGLE1;
+	flags |= U_ANGLE2;
+	*/
+
+	bs.Write(flags);
+	// bs.Write(obj1->objectId.id);
+	/*
+	if (flags & U_POSITION0)		bs.Write(obj1->position[0]);
+	if (flags & U_POSITION1)		bs.Write(obj1->position[1]);
+	if (flags & U_POSITION2)		bs.Write(obj1->position[2]);
+
+	if (flags & U_ANGLE0)		bs.Write(obj1->angles[0]);
+	if (flags & U_ANGLE1)		bs.Write(obj1->angles[0]);
+	if (flags & U_ANGLE2)		bs.Write(obj1->angles[0]);
+	*/
+
+	sv_objects.get(obj1->objectId.id)->serialize(bs);
+}
+
+void FaceOff::serverWriteWorldObjects(WorldObjectState* obj0, WorldObjectState* obj1, RakNet::BitStream& bs, bool force)
+{
+	int flags = 0;
+
+	// positions
+	if (obj0->position[0] != obj1->position[0])		flags |= U_POSITION0;
+	if (obj0->position[1] != obj1->position[1])		flags |= U_POSITION1;
+	if (obj0->position[2] != obj1->position[2])		flags |= U_POSITION2;
+
+	// angles
+	if (obj0->angles[0] != obj1->angles[0])		flags |= U_ANGLE0;
+	if (obj0->angles[1] != obj1->angles[1])		flags |= U_ANGLE1;
+	if (obj0->angles[2] != obj1->angles[2])		flags |= U_ANGLE2;
+
+
+	if (!flags && !force)
+	{
+	//	cout << "nothing to send\n" << endl;
+		return;
+	}
+
+	flags |= U_DELTA;
+
+	bs.Write(flags);
+	bs.Write(obj0->objectId.id);
+	if (flags & U_POSITION0)		bs.Write(obj1->position[0]);
+	if (flags & U_POSITION1)		bs.Write(obj1->position[1]);
+	if (flags & U_POSITION2)		bs.Write(obj1->position[2]);
+
+	if (flags & U_ANGLE0)		bs.Write(obj1->angles[0]);
+	if (flags & U_ANGLE1)		bs.Write(obj1->angles[0]);
+	if (flags & U_ANGLE2)		bs.Write(obj1->angles[0]);
+}
+
+
+void FaceOff::serverRunClientMoveCmd(int playerId, UserCmd cmd)
+{
+	Player* player = sv_players.get(playerId);
 
 	if (cmd.buttons & FORWARD)
 	{
-
+		utl::clDebug("pressed forward");
 	}
 
 	if (cmd.buttons & BACK)
 	{
-
+		utl::clDebug("pressed BACK");
 	}
 
 	if (cmd.buttons & LEFT)
 	{
-
+		utl::clDebug("pressed LEFT");
 	}
 
 	if (cmd.buttons & RIGHT)
 	{
-
+		utl::clDebug("pressed RIGHT");
 	}
+
+	player->processUserCmd(cmd);
+
+
 
 }
 
@@ -1215,13 +1731,57 @@ void FaceOff::clientReadPackets()
 	Uint32 lastSnapShotSendTime = 0;
 	Uint32 curTime = 0;
 
-	for (packet = m_client.peer->Receive(); packet; m_client.peer->DeallocatePacket(packet), packet = m_client.peer->Receive())
+	for (cl_packet = m_client.peer->Receive(); 
+		cl_packet; 
+		m_client.peer->DeallocatePacket(cl_packet), cl_packet = m_client.peer->Receive())
 	{
-		cout << "here" << endl;
+	//	utl::clDebug("here in clientReadPackets");
 
-		RakNet::BitStream bsIn(packet->data, packet->length, false);
+		RakNet::BitStream bsIn(cl_packet->data, cl_packet->length, false);
 		bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
+		/*
+		int sequence = 0;
+		bsIn.Read(sequence);
+
+		utl::debug("sequence is", sequence);
+
+		RakNet::MessageID msgId = NONE;
+		bsIn.Read(msgId);
+		*/
+		switch (cl_packet->data[0])
+		{
+			case NEW_CLIENT:
+				cout << "NEW_CLIENT message " << endl;
+				break;
+
+			case ID_CONNECTION_REQUEST_ACCEPTED:
+				break;
+
+			case SERVER_SNAPSHOT:
+			{
+				// snap shot from server
+			//	utl::clDebug("SNAPSHOT from server");
+				int sequence = 0;
+				bsIn.Read(sequence);
+
+			//	utl::clDebug("sequence", sequence);
+
+
+				clientParseServerSnapshot(bsIn);
+				break;
+			}
+
+			case LOBBY_WAIT_END:
+				utl::debug("in LOBBY_WAIT_END");
+				break;
+
+			default:
+				printf("Message with identifier %i has arrived.\n", cl_packet->data[0]);
+				break;
+		}
+
+		/*
 		switch (packet->data[0])
 		{
 		case NEW_CLIENT:
@@ -1235,7 +1795,7 @@ void FaceOff::clientReadPackets()
 		{
 			// snap shot from server
 			cout << "SNAPSHOT from server" << endl;
-			clientParseServerSnapshot();
+			clientParseServerSnapshot(bsIn);
 			break;
 		}
 
@@ -1243,6 +1803,7 @@ void FaceOff::clientReadPackets()
 			printf("Message with identifier %i has arrived.\n", packet->data[0]);
 			break;
 		}
+		*/
 	}
 
 	// sending server my inputs
@@ -1269,25 +1830,218 @@ void FaceOff::clientCheckForResend()
 
 }
 
-void FaceOff::clientParseServerSnapshot()
+void FaceOff::clientParseServerSnapshot(RakNet::BitStream& bs)
 {
 
 	Snapshot* prev = NULL;
 	Snapshot cur;
+	clientParsePlayers(prev, &cur, bs);
 
-	clientParsePacketEntities(prev, &cur);
-
-
+	clientParseEntities(prev, &cur, bs);
 }
 
 
-void FaceOff::clientParsePacketEntities(Snapshot* prev, Snapshot* cur)
+void FaceOff::clientParsePlayers(Snapshot* prev, Snapshot* cur, RakNet::BitStream& bs)
 {
+	int id1 = 0;
 
+	while (true)
+	{
+		//bs.Read(id1);
 
+		int flags = 0;
+		bs.Read(flags);
+		if (flags == END_OF_SV_SNAPSHOT_PLAYERS)
+		{
+			break;
+		}
+
+		bs.Read(id1);
+
+		Player* p = cl_players.getByIndex(id1);
+
+		bs.Read(p->m_position[0]);
+		bs.Read(p->m_position[1]);
+		bs.Read(p->m_position[2]);
+		p->updateCollisionDetectionGeometry();
+
+		// cout << "id1 " << id1 << endl;
+		// utl::cldebug("	pos is ", p->m_position);
+
+		// p->debug();
+
+		/*
+		ObjectId objId(id1);
+
+		if (flags & U_DELTA)
+		{
+			clientParseDeltaEntity(flags, objId, bs);
+		}
+
+		else if (flags & U_ADD)
+		{
+			clientParseAddEntity(objId, bs);
+		}
+
+		else if (flags & U_REMOVE)
+		{
+			clientParseRemoveEntity(objId, bs);
+		}
+		*/
+	}
 }
 
 
+
+// we use the brute force way for now, 
+// quake2/3 uses the prev snapshot to check if something is new or not
+// for now, i'm sending the U_DELTA, U_ADD, U_REMOVE signal from the server side
+void FaceOff::clientParseEntities(Snapshot* prev, Snapshot* cur, RakNet::BitStream& bs)
+{
+	int id0 = 0;
+	int id1 = 0;
+
+	while (true)
+	{
+		int flags = 0;
+
+		bs.Read(flags);	
+		if (flags == END_OF_SV_SNAPSHOT_ENTITIES)
+		{
+			break;
+		}
+
+		// bs.Read(id1);
+
+		// cout << "flags is " << flags << endl;
+		// cout << "id1 is " << id1 << endl;
+
+
+		// ObjectId objId(id1);
+		/*
+		cout << "flags is " << flags << endl;
+
+		if (flags & U_DELTA)
+		{
+			cout << "U_DELTA " << endl;
+		}
+		else if (flags & U_ADD)
+		{
+			cout << "U_ADD " << flags << endl;
+		}
+		else if (flags & U_REMOVE)
+		{
+			cout << "U_REMOVE " << flags << endl;
+		}
+
+		cout << "id1 is " << objId.s.index << endl;
+		*/
+		if (flags & U_DELTA)
+		{
+			clientParseDeltaEntity(flags, bs);
+		}
+
+		else if (flags & U_ADD)
+		{
+			clientParseAddEntity(flags, bs);
+		}
+
+		else if (flags & U_REMOVE)
+		{
+			clientParseRemoveEntity(bs);
+		}
+	}
+}
+
+
+void FaceOff::clientParseDeltaEntity(int flags, RakNet::BitStream& bs)
+{
+	int id = 0;
+	bs.Read(id);
+
+	ObjectId objId(id);
+
+	WorldObject* obj = cl_objects.get(objId);
+
+	clientParseEntityData(obj, flags, bs);
+}
+
+
+void FaceOff::clientParseAddEntity(int flags, RakNet::BitStream& bs)
+{
+	if (flags & U_SCENE_OBJECT)
+	{
+		WorldObject* obj = new WorldObject();
+		deserializeEntityAndAddToWorld(obj, bs);
+	}
+	else if (flags & U_WEAPON)
+	{
+		Weapon* obj = new Weapon();
+		deserializeEntityAndAddToWorld(obj, bs);
+	}
+
+	/*
+	if (obj->getObjectType() == WorldObjectType::SCENE_OBJECT)
+	{
+		flags |= U_SCENE_OBJECT;
+	}
+	else if (obj->getObjectType() == WorldObjectType::WEAPON)
+	{
+		flags |= U_WEAPON;
+	}
+	*/
+
+	/*
+	int type = 0;
+	bs.Read(type);
+	WorldObjectType objType = (WorldObjectType)type;
+
+
+	if (objType == SCENE_OBJECT)
+	{
+		WorldObject* obj = new WorldObject();
+		deserializeEntityAndAddToWorld(obj, bs);
+	}
+	else if (objType == WEAPON)
+	{
+		Weapon* obj = new Weapon();
+		deserializeEntityAndAddToWorld(obj, bs);
+	}
+	*/
+}
+
+void FaceOff::clientParseRemoveEntity(RakNet::BitStream& bs)
+{
+	int id = 0;
+	bs.Read(id);
+
+	ObjectId objId(id);
+
+	cl_objects.destroy(objId);
+}
+
+
+void FaceOff::clientParseEntityData(WorldObject* obj, int flags, RakNet::BitStream& bs)
+{
+	if (flags & U_POSITION0)		bs.Read(obj->m_position[0]);
+	if (flags & U_POSITION1)		bs.Read(obj->m_position[1]);
+	if (flags & U_POSITION2)		bs.Read(obj->m_position[2]);
+
+	float tmp = 0;
+
+	if (flags & U_ANGLE0)
+	{
+		bs.Read(tmp);
+	}
+	if (flags & U_ANGLE1)
+	{
+		bs.Read(tmp);
+	}
+	if (flags & U_ANGLE2)
+	{
+		bs.Read(tmp);
+	}
+}
 
 void FaceOff::clientSendCmd()
 {
@@ -1314,12 +2068,14 @@ void FaceOff::clientSendCmd()
 		return;
 	}
 	*/
-
+	RakNet::BitStream bsOut;
+	// bsOut.Write((RakNet::MessageID)CLIENT_INPUT);
+	bsOut.Write(m_defaultPlayerID);
 	cmd.serialize(bsOut);
 
 	bool b = (cmd.buttons == 0);
 
-
+	/*
 	if (cmd.buttons != 0)
 	{
 		cout << "client sending cmd" << endl;
@@ -1343,8 +2099,8 @@ void FaceOff::clientSendCmd()
 			cout << "	pressed RIGHT" << endl;
 		}
 	}
-
-	clientSendPacket();
+	*/
+	clientSendPacket(bsOut);
 
 }
 
@@ -1588,9 +2344,19 @@ void FaceOff::clientHandleDeviceEvents()
 
 
 
-void FaceOff::clientSendPacket()
+void FaceOff::clientSendPacket(RakNet::BitStream& bs)
 {
-	m_client.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_client.serverSystemAddress, false);
+	RakNet::BitStream bsOut;
+
+	bsOut.Write((RakNet::MessageID)CLIENT_INPUT);
+	
+	bsOut.Write(m_client.netchan.outgoingSequence);
+	++m_client.netchan.outgoingSequence;
+
+	// utl::clDebug("m_client.netchan.outgoingSequence", m_client.netchan.outgoingSequence);
+
+	bsOut.Write(bs);
+	m_client.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, m_client.serverSystemAddress, false);
 }
 
 UserCmd FaceOff::clientCreateNewCmd()
@@ -1606,7 +2372,7 @@ UserCmd FaceOff::clientCreateNewCmd()
 	*/
 
 	UserCmd cmd;
-	cmd.playerId = m_defaultPlayerID;
+//	cmd.playerId = m_defaultPlayerID;
 
 	// get buttons
 	SDL_PumpEvents();
@@ -1807,7 +2573,7 @@ void FaceOff::serverSimulationTick(int msec)
 
 	for (int i = 0; i < sv_objects.getIterationEnd(); i++)
 	{
-		WorldObject* object = sv_objects.get(i);
+		WorldObject* object = sv_objects.getByIndex(i);
 		if (object == NULL)
 		{
 			continue;
@@ -1837,6 +2603,12 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
 	p->updateGameStats();
 
 	p->m_position += p->m_velocity;
+
+	if(p->m_velocity.x != 0)
+	{
+		utl::debug("player veloctiy", p->m_velocity);
+	}
+
 	p->updateMidAirVelocity();
 #if NETWORK_FLAG == 0 
 	if (i == 1)
@@ -2001,11 +2773,30 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj)
 	vector<WorldObject*> neighbors;
 	glm::vec3 volNearPoint(obj->getPosition());
 	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
+	
+	/*
+	tree.print(5);
+	tree.print(11);
+	tree.print(12);
+	
 
+	utl::debug("checking neighbors", neighbors.size());
+
+	if (obj->m_name == "player 0")
+	{
+		utl::debug("number of parent nodes are", obj->m_parentNodes.size());
+
+		for (int i = 0; i < obj->m_parentNodes.size(); i++)
+		{
+			utl::debug("	parent node i", obj->m_parentNodes[i]->id);
+		}
+	}
+	*/
 
 	for (int j = 0; j < neighbors.size(); j++)
 	{
 		WorldObject* neighbor = neighbors[j];
+
 		/*
 		// this is for debugging, will render it with "collided color"
 		if (p->isDefaultPlayer())
@@ -2014,12 +2805,17 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj)
 		}
 		*/
 
-
-		if (collisionDetectionTestPairs.alreadyTested(obj->m_instanceId, neighbor->m_instanceId))
+		/*
+		if (collisionDetectionTestPairs.alreadyTested(obj->objectId.id, neighbor->objectId.id))
 			continue;
 		else
-			collisionDetectionTestPairs.addPairs(obj->m_instanceId, neighbor->m_instanceId);
+			collisionDetectionTestPairs.addPairs(obj->objectId.id, neighbor->objectId.id);
+		*/
 
+		if (collisionDetectionTestPairs.alreadyTested(obj->getInstanceId(), neighbor->getInstanceId()))
+			continue;
+		else
+			collisionDetectionTestPairs.addPairs(obj->getInstanceId(), neighbor->getInstanceId());
 
 		if (obj->ignorePhysicsWith(neighbor))
 		{
@@ -2397,7 +3193,7 @@ void FaceOff::render()
 
 		for (int i = 0; i < cl_objects.getIterationEnd(); i++)
 		{
-			WorldObject* object = cl_objects.get(i);
+			WorldObject* object = cl_objects.getByIndex(i);
 
 			if (object == NULL)
 				continue;
@@ -2461,7 +3257,7 @@ void FaceOff::render()
 
 		for (int i = 0; i < cl_objects.getIterationEnd(); i++)
 		{
-			WorldObject* object = cl_objects.get(i);
+			WorldObject* object = cl_objects.getByIndex(i);
 
 			if (object == NULL)
 				continue;
@@ -2668,14 +3464,325 @@ void FaceOff::destroyWorldObjectByIndex(vector<WorldObject*>& objects, int i)
 }
 */
 
+#define MAX_CLIENTS 10
+#define SERVER_PORT 60000
+
+enum GameMessages
+{
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
+};
+
+void RakNetFunction()
+{
+	char str[512];
+
+	RakNet::RakPeerInterface *peer = RakNet::RakPeerInterface::GetInstance();
+	bool isServer;
+	RakNet::Packet *packet;
+
+	printf("(C) or (S)erver?\n");
+	gets(str);
+
+	if ((str[0] == 'c') || (str[0] == 'C'))
+	{
+		RakNet::SocketDescriptor sd;
+		peer->Startup(1, &sd, 1);
+		isServer = false;
+	}
+	else {
+		RakNet::SocketDescriptor sd(SERVER_PORT, 0);
+		peer->Startup(MAX_CLIENTS, &sd, 1);
+		isServer = true;
+	}
+
+	if (isServer)
+	{
+		printf("Starting the server.\n");
+		// We need to let the server accept incoming connections from the clients
+		peer->SetMaximumIncomingConnections(MAX_CLIENTS);
+	}
+	else {
+		printf("Enter server IP or hit enter for 127.0.0.1\n");
+		gets(str);
+		if (str[0] == 0){
+			strcpy(str, "127.0.0.1");
+		}
+		printf("Starting the client.\n");
+		peer->Connect(str, SERVER_PORT, 0, 0);
+
+	}
+
+	while (1)
+	{
+		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+		{
+			switch (packet->data[0])
+			{
+			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+				printf("Another client has disconnected.\n");
+				break;
+			case ID_REMOTE_CONNECTION_LOST:
+				printf("Another client has lost the connection.\n");
+				break;
+			case ID_REMOTE_NEW_INCOMING_CONNECTION:
+				printf("Another client has connected.\n");
+				break;
+			case ID_CONNECTION_REQUEST_ACCEPTED:
+			{
+				printf("Our connection request has been accepted.\n");
+
+				// Use a BitStream to write a custom user message
+				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
+				RakNet::BitStream bsOut;
+				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut.Write("Hello world");
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			}
+			break;
+			case ID_NEW_INCOMING_CONNECTION:
+				printf("A connection is incoming.\n");
+				break;
+			case ID_NO_FREE_INCOMING_CONNECTIONS:
+				printf("The server is full.\n");
+				break;
+			case ID_DISCONNECTION_NOTIFICATION:
+				if (isServer){
+					printf("A client has disconnected.\n");
+				}
+				else {
+					printf("We have been disconnected.\n");
+				}
+				break;
+			case ID_CONNECTION_LOST:
+				if (isServer){
+					printf("A client lost the connection.\n");
+				}
+				else {
+					printf("Connection lost.\n");
+				}
+				break;
+
+			case ID_GAME_MESSAGE_1:
+			{
+				RakNet::RakString rs;
+				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				bsIn.Read(rs);
+				printf("%s\n", rs.C_String());
+
+				RakNet::BitStream bsOut;
+				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut.Write("Hello world");
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			}
+			break;
+
+			default:
+				printf("Message with identifier %i has arrived.\n", packet->data[0]);
+				break;
+			}
+		}
+	}
+
+
+	RakNet::RakPeerInterface::DestroyInstance(peer);
+
+	return;
+
+
+}
+
+
+
+
+void RakNetFunction2()
+{
+	char str[512];
+
+	RakNet::RakPeerInterface *peer1 = RakNet::RakPeerInterface::GetInstance();
+	RakNet::RakPeerInterface *peer2 = RakNet::RakPeerInterface::GetInstance();
+
+	RakNet::Packet *packet1;
+	RakNet::Packet *packet2;
+
+	printf("(C) or (S)erver?\n");
+	gets(str);
+
+
+
+	// server
+	RakNet::SocketDescriptor sd1(SERVER_PORT, 0);
+	peer1->Startup(MAX_CLIENTS, &sd1, 1);
+
+	// client
+	RakNet::SocketDescriptor sd2;
+	peer2->Startup(1, &sd2, 1);
+
+
+
+	printf("Starting the server.\n");
+	// We need to let the server accept incoming connections from the clients
+	peer1->SetMaximumIncomingConnections(MAX_CLIENTS);
+
+
+	
+	printf("						Enter server IP or hit enter for 127.0.0.1\n");
+	gets(str);
+	if (str[0] == 0){
+		strcpy(str, "127.0.0.1");
+	}
+	printf("						Starting the client.\n");
+	peer2->Connect(str, SERVER_PORT, 0, 0);
+
+	int seq1 = 0;
+	int seq2 = 0;
+
+	while (1)
+	{
+		for (packet1 = peer1->Receive(); packet1; peer1->DeallocatePacket(packet1), packet1 = peer1->Receive())
+		{
+//			RakNet::BitStream bsIn(packet1->data, packet1->length, false);
+//			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+			switch (packet1->data[0])
+			{
+			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+				printf("Another client has disconnected.\n");
+				break;
+			case ID_REMOTE_CONNECTION_LOST:
+				printf("Another client has lost the connection.\n");
+				break;
+			case ID_REMOTE_NEW_INCOMING_CONNECTION:
+				printf("Another client has connected.\n");
+				break;
+			case ID_CONNECTION_REQUEST_ACCEPTED:
+			{
+				printf("Our connection request has been accepted.\n");
+
+				// Use a BitStream to write a custom user message
+				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
+				RakNet::BitStream bsOut;
+				bsOut.Write(seq1);
+				seq1++;
+				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut.Write("Hello world");
+				peer1->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet1->systemAddress, false);
+			}
+			break;
+			case ID_NEW_INCOMING_CONNECTION:
+				printf("A connection is incoming.\n");
+				break;
+			case ID_NO_FREE_INCOMING_CONNECTIONS:
+				printf("The server is full.\n");
+				break;
+			case ID_DISCONNECTION_NOTIFICATION:
+				printf("A client has disconnected.\n");
+				break;
+			case ID_CONNECTION_LOST:
+				printf("A client lost the connection.\n");
+				break;
+
+			case ID_GAME_MESSAGE_1:
+			{
+				RakNet::RakString rs;
+				RakNet::BitStream bsIn(packet1->data, packet1->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				bsIn.Read(rs);
+				printf("%s\n", rs.C_String());
+
+				RakNet::BitStream bsOut;
+				bsOut.Write(seq1);
+				seq1++;
+				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut.Write("Hello world");
+				peer1->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet1->systemAddress, false);
+			}
+			break;
+
+			default:
+				printf("Message with identifier %i has arrived.\n", packet1->data[0]);
+				break;
+			}
+		}
 
 
 
 
 
+		for (packet2 = peer2->Receive(); packet2; peer2->DeallocatePacket(packet2), packet2 = peer2->Receive())
+		{
+			switch (packet2->data[0])
+			{
+			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+				printf("Another client has disconnected.\n");
+				break;
+			case ID_REMOTE_CONNECTION_LOST:
+				printf("Another client has lost the connection.\n");
+				break;
+			case ID_REMOTE_NEW_INCOMING_CONNECTION:
+				printf("Another client has connected.\n");
+				break;
+			case ID_CONNECTION_REQUEST_ACCEPTED:
+			{
+				printf("Our connection request has been accepted.\n");
+
+				// Use a BitStream to write a custom user message
+				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
+				RakNet::BitStream bsOut;
+				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut.Write("Hello world");
+				peer2->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet2->systemAddress, false);
+			}
+			break;
+			case ID_NEW_INCOMING_CONNECTION:
+				printf("A connection is incoming.\n");
+				break;
+			case ID_NO_FREE_INCOMING_CONNECTIONS:
+				printf("The server is full.\n");
+				break;
+			case ID_DISCONNECTION_NOTIFICATION:
+				printf("We have been disconnected.\n");
+				break;
+			case ID_CONNECTION_LOST:
+				printf("Connection lost.\n");
+				break;
+
+			case ID_GAME_MESSAGE_1:
+			{
+				RakNet::RakString rs;
+				RakNet::BitStream bsIn(packet2->data, packet2->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				bsIn.Read(rs);
+				printf("						%s\n", rs.C_String());
+
+				RakNet::BitStream bsOut;
+				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut.Write("Hello world");
+				peer2->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet2->systemAddress, false);
+			}
+			break;
+
+			default:
+				printf("Message with identifier %i has arrived.\n", packet2->data[0]);
+				break;
+			}
+		}
+
+	}
+
+
+	RakNet::RakPeerInterface::DestroyInstance(peer1);
+	RakNet::RakPeerInterface::DestroyInstance(peer2);
+	return;
+
+
+}
 
 int main(int argc, char *argv[])
 {
+//	RakNetFunction2();
+//	return 0;
+
 	utl::debug("Game Starting"); 
 	utl::initSDL(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, pDisplaySurface);
 	utl::initGLEW();

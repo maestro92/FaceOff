@@ -104,8 +104,6 @@ struct KDTreeNode
 
 		for (int i = 0; i < objects.size(); i++)
 		{
-			int id = objects[i]->m_instanceId;
-
 			m_objects.push_back(objects[i]);
 			objects[i]->addParentNode(this);
 		}
@@ -125,7 +123,8 @@ struct KDTreeNode
 			if (obj == NULL)
 				continue;
 
-			if (obj->m_instanceId == object->m_instanceId)
+			// if (obj->objectId.id == object->objectId.id)
+			if (obj->getInstanceId() == object->getInstanceId())
 			{
 				index = i;
 				m_objects[i] = NULL;

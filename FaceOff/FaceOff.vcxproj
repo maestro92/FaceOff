@@ -461,6 +461,7 @@
     <ClInclude Include="collision_detection\collision_detection_geometry.h" />
     <ClInclude Include="network\network_protocol.h" />
     <ClInclude Include="renderer\renderer_constants.h" />
+    <ClInclude Include="shared.h" />
     <ClInclude Include="world_object\particle_effect\fire_work_effect.h" />
     <ClInclude Include="world_object\particle_effect\smoke_effect.h" />
     <ClInclude Include="world_object\particle_effect\particle_effect.h" />

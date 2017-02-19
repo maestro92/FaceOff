@@ -361,36 +361,87 @@ struct FOArray
 };
 */
 
+// slot map 32 bit
+// upper 16 bit version
+// lower 16 bit index
+
+
 
 struct FOArray
 {
-	vector<WorldObject*> objects;
+//	vector<WorldObject*> objects;
+
+
+	struct Entry
+	{
+		ObjectId objId;
+		WorldObject* object;
+
+		Entry()
+		{
+			object = NULL;
+		}
+	};
+
+
+	vector<Entry> objects;
 	vector<int> freeList;
 
 	vector<WorldObject*> toBeDestroyed;
 
+
+	// i'm using this to start iterating for situations where I want to skip the static objects
+	// i am making the assumption that all my static objects are put in my array first
+	int preferredIterationStart;
 	int maxSize;
 	int maxUsed;
 	int count;
 
+	// getting only the number of dynamic objects;
+	int getPreferredCount()
+	{
+		return maxSize - preferredIterationStart;
+	}
+
 	void init(int maxSize)
 	{
 		this->maxSize = maxSize;
-		objects.resize(maxSize, NULL);
+		objects.resize(maxSize);
 
 		for (int i = maxSize - 1; i >= 0; i--)
 		{
 			freeList.push_back(i);
 		}
+		
+		for (int i = 0; i < maxSize; i++)
+		{
+			ObjectId id;
+			id.s.tag = 0;
+			id.s.index = i;
+			objects[i].objId = id;
 
+	//		cout << "id is " << id.id << endl;
+	//		cout << "	tag is " << id.u.tag << endl;
+	//		cout << "	index is " << id.u.index << endl;
+		
+		//	printf("%u\n", (unsigned int)id.s.tag);
+		//	printf("%u\n", (unsigned int)id.s.index);
+		}
+		
 		maxUsed = 0;
 		count = 0;
 	}
 
-	WorldObject* get(int id)
+	WorldObject* getByIndex(int index)
 	{
-		return objects[id];
+		return objects[index].object;
+	}
+
+	WorldObject* get(ObjectId objId)
+	{
+//		return objects[id];
 		//		return objects[id]->indexId == -1 ? NULL : objects[id];
+		return objects[objId.s.index].object;
 	}
 
 	void clearFreeList()
@@ -398,50 +449,69 @@ struct FOArray
 		freeList.clear();
 	}
 
-	int create()
+	ObjectId create()
 	{
 		if (!freeList.empty())
 		{
 			int free = freeList.back();
 			freeList.pop_back();
-			objects[free] = new WorldObject();
-			objects[free]->indexId = free;
+
+			ObjectId objId = objects[free].objId;
+			// the new version + index is managed by destroyedObject, so you don't have to
+			// change the id here.
+			objects[free].object = new WorldObject();			
+			objects[free].object->objectId = objId;
 
 			count++;
 			maxUsed = max(maxUsed, free);
 
-			return free;
+			return objId;
 		}
 		else
 		{
-			return -1;
+			ObjectId objId;
+			objId.id = INVALID_OBJECT_ID;
+			return objId;
 		}
 	}
 	
 
-	int add(WorldObject* obj)
+	ObjectId add(WorldObject* obj)
 	{
 		if (!freeList.empty())
 		{
 			int free = freeList.back();
 			freeList.pop_back();
-			objects[free] = obj;
-			objects[free]->indexId = free;
 
+			ObjectId objId = objects[free].objId;
+
+
+
+			// the new version + index is managed by destroyedObject, so you don't have to
+			// change the id here.
+			objects[free].object = obj;
+			objects[free].object->objectId = objId;
+			/*
+			cout << obj->m_name << " objId is " << obj->objectId.id << endl;
+			cout << obj->m_name << "	tag is " << obj->objectId.s.tag << endl;
+			cout << obj->m_name << "	index is " << obj->objectId.s.index << endl;
+			*/
 			count++;
 			maxUsed = max(maxUsed, free);
 
-			return free;
+			return objId;
 		}
 		else
 		{
-			return -1;
+			ObjectId objId;
+			objId.id = INVALID_OBJECT_ID;
+			return objId;
 		}
 	}
 
-	void addToDestroyList(int id)
+	void addToDestroyList(ObjectId objId)
 	{
-		toBeDestroyed.push_back(get(id));
+		toBeDestroyed.push_back(get(objId));
 	}
 
 	void destroyObjects()
@@ -449,53 +519,94 @@ struct FOArray
 		for (int i = 0; i < toBeDestroyed.size(); i++)
 		{
 			WorldObject* obj = toBeDestroyed[i];
-			obj->clearParentNodes();
-			objects[obj->indexId] = NULL;
+			destroy(obj->objectId); 
 		}
 
 		toBeDestroyed.clear();
 	}
 
 	// TODO: need to fix this, de-allocation is expensive
-	void destroy(int id)
+	void destroy(ObjectId objId)
 	{
+		delete get(objId);
+	
+		int index = objId.s.index;
+
+		objects[index].objId.s.tag = objId.s.tag + 1;
+		objects[index].object = NULL;
+
 		count--;
 
-		delete get(id);
-		objects[id] = NULL;
-		freeList.push_back(id);
+		freeList.push_back(index);
 	}
 
-	int nextAvaiableId()
+	ObjectId nextAvaiableIndexId()
 	{
 		if (!freeList.empty())
 		{
 			int free = freeList.back();
-			return free;
+			return objects[free].objId;
 		}
 		else
 		{
-			return -1;
+			ObjectId objId;
+			objId.id = INVALID_OBJECT_ID;
+			return objId;
 		}
 	}
 
 	// only ever used on the client side
 	// do not use this on the server side
-	void set(WorldObject* obj, int id)
+	// becuz the client objects list is only ever changed by snapshot updates from the server
+	// therefore we do not have to worry about freeList
+	void set(WorldObject* obj, ObjectId objId)
 	{
-		if (get(id) != NULL)
+		int index = objId.s.index;
+		WorldObject* obj1 = objects[index].object;
+
+
+		cout << "		## index is " << index << endl;
+
+		if (objects[index].object != NULL)
 		{
-			destroy(id);
+			cout << "		## i want to delete " << (objects[index].object->m_name) << endl;
+			delete objects[index].object;
 		}
-		count++;
-		maxUsed = max(maxUsed, id);
-		objects[id] = obj;
+		else
+		{
+			// should remove index from freeList
+			// but this is only used by the client
+			// so we don't have to care about that
+			count++;
+		}
+
+		objects[index].objId = objId;		
+		objects[index].object = obj;
+		maxUsed = max(maxUsed, index);
+
 	}
 
 	int getIterationEnd()
 	{
 		return maxUsed + 1;
 	}
+
+	void debugIds()
+	{
+		for (int i = 0; i < maxUsed; i++)
+		{
+			cout << i << endl;
+			WorldObject* obj = objects[i].object;
+			if (obj != NULL)
+			{
+				cout << obj->m_name << "	tag is " << obj->objectId.s.tag << endl;
+				cout << obj->m_name << "	index is " << obj->objectId.s.index << endl;
+			}
+			cout << endl;
+		}
+
+	}
+
 };
 
 
@@ -529,6 +640,14 @@ struct FOPlayerArray
 		return objects[id];
 //		return objects[id]->indexId == -1 ? NULL : objects[id];
 	}
+
+
+	Player* getByIndex(int id)
+	{
+		return objects[id];
+//		return objects[id]->indexId == -1 ? NULL : objects[id];
+	}
+
 	void clearFreeList()
 	{
 		freeList.clear();
@@ -541,7 +660,7 @@ struct FOPlayerArray
 			int free = freeList.back();
 			freeList.pop_back();
 			objects[free] = new Player();
-			objects[free]->indexId = free;
+			objects[free]->objectId.id = free;
 
 			count++;
 			maxUsed = max(maxUsed, free);
@@ -561,7 +680,7 @@ struct FOPlayerArray
 			int free = freeList.back();
 			freeList.pop_back();
 			objects[free] = obj;
-			objects[free]->indexId = free;
+			objects[free]->objectId.id = free;
 
 			count++;
 			maxUsed = max(maxUsed, free);
@@ -587,12 +706,12 @@ struct FOPlayerArray
 	}
 
 	// TODO: need to fix this, de-allocation is expensive
-	void destroyObject(int id)
+	void destroy(int id)
 	{
-		count--;
-
 		delete get(id);
 		objects[id] = NULL;
+
+		count--;
 		freeList.push_back(id);
 	}
 
@@ -616,13 +735,16 @@ struct FOPlayerArray
 		}
 
 
-		if (get(id) != NULL)
+		if (objects[id] != NULL)
 		{
-			destroyObject(id);
+			delete objects[id];
 		}
-		count++;
-		maxUsed = max(maxUsed, id);
+		else
+		{
+			count++;
+		}
 		objects[id] = obj;
+		maxUsed = max(maxUsed, id);
 	}
 
 	int getIterationEnd()
@@ -661,7 +783,7 @@ class FaceOff
 
 		bool isRunning;
 
-
+		// float FIXED_UPDATE_TIME;
 
 		FirstPersonCamera m_spectatorCamera;
 
@@ -714,8 +836,10 @@ class FaceOff
 
 
 
-		RakNet::Packet* packet;
-		RakNet::BitStream bsOut;
+		RakNet::Packet* sv_packet;
+		RakNet::Packet* cl_packet;
+
+		// RakNet::BitStream bsOut;
 
 		// RakNet::RakString rs;
 		// RakNet::SystemAddress server_address;
@@ -730,6 +854,7 @@ class FaceOff
 		// keeping two copies
 		// vector<WorldObject*> sv_objects;	
 		// vector<WorldObject*> cl_objects;	// used for client parsing server snapshot and rendering
+
 
 
 		FOArray sv_objects;
@@ -773,7 +898,7 @@ class FaceOff
 		/// init functions
 		void init();
 		void initObjects();
-		void lateInitObjects();
+		// void lateInitObjects();
 		void initRenderers();
 		void initGUI();
 		void initAudio();
@@ -788,10 +913,11 @@ class FaceOff
 		void initNetworkLobby();
 		void startNetworkThread();
 
-		// void serializePlayerAndWeapons(Player* p, RakNet::MessageID msgId, RakNet::BitStream& bs);
-		// void deserializePlayerAndWeapons(RakNet::BitStream& bs, ModelManager* mm);
 
-		void addDeserializedPlayerAndWeaponToWorld(Player* p, RakNet::BitStream& bs, bool curPlayer);
+		void RakNetFunction();
+
+		void deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStream& bs, bool curPlayer);
+		void deserializeEntityAndAddToWorld(WorldObject* obj, RakNet::BitStream& bs);
 
 		void replyBackToNewClient(int playerId, RakNet::BitStream& bs);
 		void broadCastNewClientJoining(int playerId, RakNet::BitStream& bs);
@@ -813,24 +939,35 @@ class FaceOff
 		void serverSimulationTick(int msec);
 		void clientSimulationTick();
 
-		void serverRunClientMoveCmd(UserCmd cmd);
+		void serverRunClientMoveCmd(int clientId, UserCmd cmd);
 		
 		void serverSendClientMessages();
-		void serverSendClientSnapshot();
-		void serverBuildClientSnapshot();
 
+		void serverSendClientSnapshot(Client* client, int clientId);
+		void serverBuildClientSnapshot(Snapshot* from, Snapshot* to, RakNet::BitStream& bs);
+		
+		void serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, RakNet::BitStream& bs);
+		void serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs);
+		
+		void serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStream& bs);
+		void serverWriteNewWorldObject(WorldObjectState* obj1, RakNet::BitStream& bs);
+		void serverWriteWorldObjects(WorldObjectState* obj0, WorldObjectState* obj1, RakNet::BitStream& bs, bool force);
+		void serverWriteRemoveWorldObject(WorldObjectState* obj0, RakNet::BitStream& bs);
 
 		void serverConstructSnapshotToClient();
 
 
-
-		void clientParseServerSnapshot();
-		void clientParsePacketEntities(Snapshot* prev, Snapshot* cur);
-
+		void clientParseServerSnapshot(RakNet::BitStream& bs);
+		void clientParsePlayers(Snapshot* prev, Snapshot* cur, RakNet::BitStream& bs);
+		void clientParseEntities(Snapshot* prev, Snapshot* cur, RakNet::BitStream& bs);
+		void clientParseDeltaEntity(int flags, RakNet::BitStream& bs);
+		void clientParseAddEntity(int flags, RakNet::BitStream& bs);
+		void clientParseRemoveEntity(RakNet::BitStream& bs);
+		void clientParseEntityData(WorldObject* obj, int flags, RakNet::BitStream& bs);
 
 		void clientSendCmd();
-		void clientSendPacket();
-		
+		void clientSendPacket(RakNet::BitStream& bs);
+
 		UserCmd clientCreateNewCmd();
 		void clientCheckForResend();
 
@@ -866,7 +1003,7 @@ class FaceOff
 
 		long long getCurrentTimeMillis();
 
-
+		int noneCounter;
 };
 
 /*

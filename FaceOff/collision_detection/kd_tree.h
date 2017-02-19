@@ -90,6 +90,9 @@ class KDTree
 
 		void print();
 		void print(KDTreeNode* node);
+		void print(int id);
+		void print(KDTreeNode* node, int id);
+
 };
 
 

@@ -92,6 +92,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		root->id = count;
 		count++;
 		
+		utl::debug("root id", root->id);
 		utl::debug("depth", depth);
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
@@ -202,14 +203,16 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	//	utl::debug("max", root->m_aabb.max);
 	//	utl::debug("min", root->m_aabb.min);
 		
+	
+		root->id = count;
+
+
+		utl::debug("root id", root->id);
 		utl::debug("depth", depth);
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
 			utl::debug("obj name", root->m_objects[i]->m_name);
 		}
-
-		
-		root->id = count;
 
 		count++;
 
@@ -567,8 +570,10 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 			if (obj->alreadyFireTested)
 				continue;
 
-			if (obj->m_instanceId == player->m_instanceId)
+//			if (obj->objectId.id == player->objectId.id)
+			if (obj->getInstanceId() == player->getInstanceId())
 				continue;
+
 
 			glm::vec3 tempHitPoint;
 
@@ -680,18 +685,18 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 			if (obj->alreadyFireTested)
 				continue;
 
-			if (obj->m_instanceId == player->m_instanceId)
+			// if (obj->objectId.id == player->objectId.id)
+			if (obj->getInstanceId() == player->getInstanceId())
 				continue;
 
 			glm::vec3 tempHitPoint;
 
 			bool hit = false;
 
-			
-			if (objectsAlreadyTested.find(obj->m_instanceId) != objectsAlreadyTested.end())
+			if (objectsAlreadyTested.find(obj->getInstanceId()) != objectsAlreadyTested.end())
 				continue;
 			else
-				objectsAlreadyTested.insert(obj->m_instanceId);
+				objectsAlreadyTested.insert(obj->getInstanceId());
 
 			if (obj->getGeometryType() == CD_AABB)
 			{
@@ -777,15 +782,26 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 
 		// utl::debug("size is", node->m_objects.size());
 
+		/*
+		utl::debug("node id is", node->id);
+		if (node->id = 5)
+		{
+			int a = 1;
+		}
+		*/
+
 		for (int i = 0; i < node->m_objects.size(); i++)
 		{
 			WorldObject* obj = node->m_objects[i];
-
+	//		utl::debug("object name is", obj->m_name);
 			if (obj == NULL)
 				continue;
 
-			if (obj->m_instanceId == testObject->m_instanceId)
+//			if (obj->objectId.id == testObject->objectId.id)
+			if (obj->getInstanceId() == testObject->getInstanceId())			
 				continue;
+			
+//			utl::debug("object name is", obj->m_name);
 			objects.push_back(obj);
 		}
 
@@ -959,7 +975,7 @@ void KDTree::print(KDTreeNode* node)
 
 	if (node->isLeaf())
 	{
-		cout << "	node has " << node->m_objects.size() << " of objects" << endl;
+		cout << "	node " << node->id << " has " << node->m_objects.size() << " of objects" << endl;
 
 		for (int i = 0; i < node->m_objects.size(); i++)
 		{
@@ -972,4 +988,32 @@ void KDTree::print(KDTreeNode* node)
 
 	print(node->m_child[0]);
 	print(node->m_child[1]);
+}
+
+
+void KDTree::print(int id)
+{
+	print(m_head, id);
+}
+
+void KDTree::print(KDTreeNode* node, int id)
+{
+	if (node == NULL)
+		return;
+
+	if (node->isLeaf() && node->id == id)
+	{
+		cout << "	node " << node->id << " has " << node->m_objects.size() << " of objects" << endl;
+
+		for (int i = 0; i < node->m_objects.size(); i++)
+		{
+			utl::debug("obj name", node->m_objects[i]->m_name);
+		}
+
+		cout << endl << endl << endl;
+
+	}
+
+	print(node->m_child[0], id);
+	print(node->m_child[1], id);
 }
