@@ -2418,6 +2418,12 @@ UserCmd FaceOff::clientCreateNewCmd()
 	if (cmd.angles[YAW] > 360.0)
 		cmd.angles[YAW] -= 360;
 
+
+
+//	pitch = cl_players.get(m_defaultPlayerID)->getCameraPitch();
+//	yaw = cl_players.get(m_defaultPlayerID)->getCameraYaw();
+
+
 	cmd.weapon = m_client.weapon;
 	cmd.serverTime = m_client.serverTime;
 
@@ -2430,6 +2436,16 @@ void FaceOff::clientPrediction()
 {
 	int cmdNum, current;
 	UserCmd oldestCmd, latestCmd;
+
+
+
+	SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
+
+	int cmdIndex = m_client.cmdCounter & CMD_BUFFER_SIZE;
+	UserCmd cmd = m_client.cmds[cmdIndex];
+	
+	cl_players.get(m_defaultPlayerID)->m_camera->setPitch(cmd.angles[PITCH]);
+	cl_players.get(m_defaultPlayerID)->m_camera->setYaw(cmd.angles[YAW]);
 
 
 
@@ -2534,6 +2550,16 @@ void FaceOff::update()
 	// need this for GUI
 	m_mouseState.m_pos = glm::vec2(mx, utl::SCREEN_HEIGHT - my);
 
+
+
+	SDL_PumpEvents();
+	Uint8* state = SDL_GetKeyState(NULL);
+
+
+	if (state[SDLK_ESCAPE])	
+	{ 
+		isRunning = false;
+	}
 }
 
 
