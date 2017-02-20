@@ -53,7 +53,7 @@ class WorldObject
 {
     public:
         WorldObject();
-		~WorldObject();
+		virtual ~WorldObject();
 		string m_name;
 		// uint32_t m_instanceId;
 
@@ -124,6 +124,7 @@ class WorldObject
 
         virtual inline void setRotation(glm::mat4 rot);
 
+		virtual bool shouldRender();
 
 		virtual void renderSingle(Pipeline& p, Renderer* r);
 		virtual void renderGroup(Pipeline& p, Renderer* r);

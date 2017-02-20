@@ -456,7 +456,7 @@ void FaceOff::initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree)
 			continue;
 		}
 
-		if (obj->getObjectType() == WEAPON && ((Weapon*)(obj))->hasOwner == true)
+		if (obj->getObjectType() == WEAPON && ((Weapon*)(obj))->hasOwner())
 		{
 			continue;
 		}
@@ -992,8 +992,36 @@ void FaceOff::deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStre
 void FaceOff::deserializeEntityAndAddToWorld(WorldObject* obj, RakNet::BitStream& bs)
 {
 	obj->deserialize(bs, &m_modelMgr);
-
+	if (obj->objectId.s.index == 27)
+	{
+		int a = 1;
+	}
 	cl_objects.set(obj, obj->objectId);
+
+	if (obj->getObjectType() == WEAPON)
+	{
+		Weapon* weapon = (Weapon*)obj;
+		if (weapon->hasOwner())
+		{
+			cl_players.get(weapon->ownerId)->pickUp(weapon);
+		}
+	}
+
+
+	if (obj->objectId.s.index == 27)
+	{
+		cout << "object address is " << obj << endl;
+		cout << "player weapons addresses are " << endl;
+		for (int i = 0; i < cl_players.get(0)->getWeapons().size(); i++)
+		{
+			Weapon* weapon = cl_players.get(0)->getWeapons()[i];
+			if (weapon != NULL)
+			{
+				cout << "weapon address is " << weapon << endl;
+			}
+		}
+		int a = 1;
+	}
 
 	cl_objectKDtree.insert(obj);
 }
@@ -1978,6 +2006,24 @@ void FaceOff::clientParseAddEntity(int flags, RakNet::BitStream& bs)
 	{
 		Weapon* obj = new Weapon();
 		deserializeEntityAndAddToWorld(obj, bs);
+
+		/*
+		if (obj.objectId.id == 27)
+		{
+			cout << "new weapon address is " << endl;
+			cout << *(obj) << endl;;
+
+
+			cout << endl;
+			Player* p = cl_players.get(0);
+			for (int i = 0; i <p->getWeapons().size(); i++)
+			{
+				Weapon* weapon = cl_players.get(0)->getWeapon(i);
+				cout << "new weapon address is " << endl;
+				cout << *obj << endl;;
+			}
+		}
+		*/
 	}
 
 	/*
@@ -2389,8 +2435,19 @@ UserCmd FaceOff::clientCreateNewCmd()
 	int mx, my;	
 	SDL_GetMouseState(&mx, &my);
 
-	float deltaYaw = TURN_SPEED * (utl::SCREEN_WIDTH_MIDDLE - mx);
-	float deltaPitch = FORWARD_SPEED * (utl::SCREEN_HEIGHT_MIDDLE - my);
+	float deltaYaw = 0;
+	float deltaPitch = 0;
+
+	if (cl_players.get(m_defaultPlayerID)->m_camera->getMouseIn())
+	{
+		deltaYaw = TURN_SPEED * (utl::SCREEN_WIDTH_MIDDLE - mx);
+		deltaPitch = FORWARD_SPEED * (utl::SCREEN_HEIGHT_MIDDLE - my);
+	}
+
+	// float deltaYaw = TURN_SPEED * (utl::SCREEN_WIDTH_MIDDLE - mx);
+	// float deltaPitch = FORWARD_SPEED * (utl::SCREEN_HEIGHT_MIDDLE - my);
+
+
 
 	// rate = sqrt(mx * mx + my * my) / (float)frame_msec;
 
@@ -2438,16 +2495,20 @@ void FaceOff::clientPrediction()
 	UserCmd oldestCmd, latestCmd;
 
 
-
-	SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
+	if (cl_players.get(m_defaultPlayerID)->m_camera->getMouseIn())
+	{
+		SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
+	}
 
 	int cmdIndex = m_client.cmdCounter & CMD_BUFFER_SIZE;
 	UserCmd cmd = m_client.cmds[cmdIndex];
 	
-	cl_players.get(m_defaultPlayerID)->m_camera->setPitch(cmd.angles[PITCH]);
-	cl_players.get(m_defaultPlayerID)->m_camera->setYaw(cmd.angles[YAW]);
+	Player* p = cl_players.get(m_defaultPlayerID);
 
+	p->m_camera->setPitch(cmd.angles[PITCH]);
+	p->m_camera->setYaw(cmd.angles[YAW]);
 
+	p->updateGameStats();
 
 	// run all the commands
 //	for (cmdNum = current - CMD_BUFFER_SIZE + 1; cmdNum <= current; cmdNum++)
@@ -2560,6 +2621,17 @@ void FaceOff::update()
 	{ 
 		isRunning = false;
 	}
+
+	else if (state[SDLK_x])
+	{
+		cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(true);
+	}
+
+	else if (state[SDLK_z])
+	{
+		cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(false);
+	}
+
 }
 
 
@@ -3223,6 +3295,24 @@ void FaceOff::render()
 
 			if (object == NULL)
 				continue;
+
+
+			/*
+			if (object->getObjectType() == WEAPON)
+			{
+				continue;
+			}
+			*/
+			if (object->m_name == "player mainWeapon")
+			{
+				int a = 1;
+			}
+
+
+			if (!object->shouldRender())
+			{
+				continue;
+			}
 
 			if (object->isHit == false)
 			{

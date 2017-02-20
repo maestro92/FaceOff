@@ -4,7 +4,7 @@
 
 Weapon::Weapon()
 {
-	hasOwner = false;
+	ownerId = NO_OWNER;
 	isBeingUsed = false;
 	m_angle = 0.0f;
 	m_dynamicType = DYNAMIC;
@@ -26,13 +26,26 @@ Weapon::Weapon(WeaponData data)
 
 Weapon::~Weapon()
 {
-	delete m_wireFrameModel;
+	if (objectId.s.index == 27)
+	{
+		int a = 1;
+	}
+
+	if (onDelete != NULL)
+	{
+		onDelete(this);
+	}
+
+	if (m_wireFrameModel != NULL)
+	{
+		delete m_wireFrameModel;
+	}
 }
 
 void Weapon::init(WeaponData data)
 {
 	setData(data);
-	hasOwner = false;
+	ownerId = NO_OWNER;
 	isBeingUsed = false;
 	m_angle = 0.0f;
 	m_dynamicType = DYNAMIC;
@@ -78,7 +91,7 @@ void Weapon::updateGameInfo()
 {
 	WorldObject::updateGameInfo();
 
-	if (!hasOwner)
+	if (!hasOwner())
 	{
 		m_rotation *= glm::rotate(m_angle, 0.0f, 1.0f, 0.0f);
 //		m_angle += ROTATION_SPEED;
@@ -124,6 +137,23 @@ void Weapon::startExplodeDelayTimer()
 	m_explodeDelayStartTime = utl::getCurrentTimeMillis();
 }
 
+
+
+bool Weapon::shouldRender()
+{
+	if (hasOwner())
+	{
+		if (isBeingUsed)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
+}
 
 
 WeaponSlotEnum Weapon::getWeaponSlot()
@@ -175,7 +205,7 @@ int Weapon::getGrenadeThrowerId()
 
 void Weapon::renderGroup(Pipeline& p, Renderer* r)
 {
-	if (hasOwner == false || (hasOwner && isBeingUsed))
+	if (hasOwner() == false || (hasOwner() && isBeingUsed))
 	{
 		WorldObject::renderGroup(p, r);
 	}
@@ -184,7 +214,7 @@ void Weapon::renderGroup(Pipeline& p, Renderer* r)
 
 void Weapon::renderWireFrameGroup(Pipeline& p, Renderer* r)
 {
-	if (hasOwner == false || (hasOwner && isBeingUsed))
+	if (hasOwner() == false || (hasOwner() && isBeingUsed))
 	{
 		WorldObject::renderWireFrameGroup(p, r);
 	}
@@ -193,7 +223,7 @@ void Weapon::renderWireFrameGroup(Pipeline& p, Renderer* r)
 
 bool Weapon::ignorePhysics()
 {
-	return (hasOwner == true || m_slotEnum != PROJECTILE);
+	return (hasOwner() || m_slotEnum != PROJECTILE);
 }
 
 
@@ -222,40 +252,42 @@ bool Weapon::ignorePhysicsWith(WorldObject* obj)
 
 void Weapon::serialize(RakNet::BitStream& bs)
 {
-	// cout << "Weapon serializing " << objectId.id << endl;
-	// cout << "	index is " << objectId.s.index << endl;
-
 	bs.Write(objectId.id);
 
-
-	bs.Write(m_name);
+	utl::write(bs, m_name);
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
 	bs.Write(m_nameEnum);
 	bs.Write(m_slotEnum);
-	bs.Write(hasOwner);
+	bs.Write(ownerId);		// need to put these two in bit flags
+	bs.Write(isBeingUsed);
+	
 
 
-	//		Weapon* weapon = new Weapon(mm->getWeaponData((WeaponNameEnum)weaponEnum));
 }
 
-
-void Weapon::deserialize(RakNet::BitStream& bs)
+bool Weapon::hasOwner()
 {
-
+	return ownerId != NO_OWNER;
 }
-
 
 void Weapon::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 {
 	bs.Read(objectId.id);
-	bs.Read(m_name);
-
-	// cout << "Weapon derializing id is " << objectId.id << ", index is " << objectId.s.index << " name is " << m_name << endl;
+	utl::read(bs, m_name);
 
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
+
 	bs.Read(m_nameEnum);
+	// important to run this before the operations below
+	init(mm->getWeaponData((WeaponNameEnum)m_nameEnum));	
+
 	bs.Read(m_slotEnum);
-	bs.Read(hasOwner);
-	init(mm->getWeaponData((WeaponNameEnum)m_nameEnum));
-	//		Weapon* weapon = new Weapon(mm->getWeaponData((WeaponNameEnum)weaponEnum));
+	bs.Read(ownerId);
+	bs.Read(isBeingUsed);
+
+	if (objectId.s.index == 27)
+	{
+		utl::debug("ownerId", ownerId);
+		int a = 1;
+	}
 }

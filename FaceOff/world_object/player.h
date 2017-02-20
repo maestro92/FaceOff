@@ -94,6 +94,9 @@ class Player : public WorldObject
 		virtual void renderGroup(Pipeline& p, Renderer* r);
 		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
 
+
+		// void weaponOnDelete(Weapon* weapon);
+
 		void switchWeapon(WeaponSlotEnum slot);
 		void pickUp(Weapon* weapon);
 		Weapon* drop();
@@ -101,6 +104,8 @@ class Player : public WorldObject
 		Weapon* getCurWeapon();
 
 		vector<Weapon*>& getWeapons();
+
+		Weapon* getWeapon(int index);
 
 		void debug();
 
@@ -146,8 +151,6 @@ class Player : public WorldObject
 //		void spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm);
 		// void deserialize(RakNet::BitStream& bs, ModelManager* mm); , FOArray& objects);
 		void deserialize(RakNet::BitStream& bs, ModelManager* mm);
-		void deserialize(RakNet::BitStream& bs);
-
 
 		// void processInput(Move move);
 		void processUserCmd(UserCmd cmd);

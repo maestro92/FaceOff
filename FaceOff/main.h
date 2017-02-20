@@ -566,6 +566,7 @@ struct FOArray
 
 
 		cout << "		## index is " << index << endl;
+		cout << "		## new object is " << obj->m_name << endl;
 
 		if (objects[index].object != NULL)
 		{
@@ -582,8 +583,8 @@ struct FOArray
 
 		objects[index].objId = objId;		
 		objects[index].object = obj;
-		maxUsed = max(maxUsed, index);
 
+		maxUsed = max(maxUsed, index);
 	}
 
 	int getIterationEnd()
@@ -792,7 +793,7 @@ class FaceOff
 
 		// models
 		Model*          p_model;
-
+		Weapon* mainWeaponPtr;
 		// objects
 		Terrain o_terrain;
 		MultiTextureTerrain o_multiTextureTerrain;

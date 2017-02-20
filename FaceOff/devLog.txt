@@ -261,8 +261,96 @@ I will just have to do everything with IMMEDIATE_PRIORITY + RELIABLE_ORDERED to 
 ####################################### 2017 Feb 16th #######################################
 #############################################################################################
 
+Realized something about RakNet today while implementing the network communication between client and server.
 
-I was looking through RakNet Manual, esepcially on the reliability types part
+This occured when I was implementing the functions ServerSendingSnapshotToClient() and ClientSendUserCmd(). 
+
+Let's just take the example of ServerSendingSnapshotToClient(). I initally intend to clone this functions almost exactly like quake3's.  
+When it came to constructing the actual packet, quake3 calls the following functions to build the snapshot packet
+
+
+						// init header
+						MSG_InitOOB (&send, send_buf, sizeof(send_buf));
+
+						MSG_WriteLong( &send, chan->outgoingSequence );
+
+						MSG_WriteData( &send, data, length );
+						{
+							MSG_WriteByte (msg, svc_snapshot);
+
+							MSG_WriteByte (msg, [snapshot_information: playerstate, entityState, bluh bluh]);
+
+							MSG_WriteByte( msg, svc_EOF );
+						}
+
+
+for the location in the source code, look inside SV_SendClientSnapshot() from sv_snapshot.c. 
+
+
+brief notations are below:
+
+outgoingSequence:
+	outgoing seqeunce number
+
+svc_snapshot:
+	the type of message, so the client will knows what is this message that it just read.
+
+svc_EOF:
+	marks the end of the snapshot, when the client reads this enum, it will know that it has finished reading all the playerStates and entityStates that the server send down
+
+
+
+You can see that the sequence number goes out first, then the type of message comes second. Since I intended to replicate quake3, I first manually added a sequence number for my server and client class.
+Then for the "type", since RakNet offers the flexiblity for the user to add some custom defined RakNet::MessageIDs, I figured i can just add a "SNAPSHOT" RakNet::MessageIDs, and use that as the "type"
+
+so my first attempt was 
+
+						RakNet::BitStream bs;
+
+						bs.write(sequenceNumber)
+						bs.write((RakNet::MessageID)SNAPSHOT)
+
+
+						...
+						...
+
+well apparently this does not work becuz RakNet, by convention expects a RakNet::MessageID to a first byte. If you don't follow so, peer->Receive() will not successfully return a packet for you.
+So to solve this problem, I had to always keep a RakNet::MessageID at front
+
+
+						RakNet::BitStream bs;
+
+						bs.write((RakNet::MessageID)SNAPSHOT)
+						bs.write(sequenceNumber)
+
+
+						...
+						...
+
+
+my understanding is that he sequence number mechanism is already implemented underneath so the users dont have to worry about it. I tried to look into RakNet source code, and I have no idea what is going on
+I figured this will be another why i should learn to write a protocol myself, which will enhance my understanding in this topic 
+
+
+
+
+
+
+#############################################################################################
+####################################### 2017 Feb 20th #######################################
+#############################################################################################
+
+got burned for not declaring my WorldObject class destructor virtual...
+probably took me 20 mins to find out my derived class destructor was not being called...
+
+
+so always make your base class destructor virtual...
+
+
+
+
+[TODO: getting lambda to work]
+
 
 
 

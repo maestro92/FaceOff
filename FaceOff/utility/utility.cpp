@@ -35,3 +35,18 @@ uint32_t utl::createUniqueObjectID()
 	uint32_t temp = counter;
 	return temp;
 }
+
+
+void utl::write(RakNet::BitStream &bitStream, std::string &s)
+{
+	const char *str = s.c_str();
+	RakNet::StringCompressor::Instance()->EncodeString(str, 255, &bitStream);
+}
+
+void utl::read(RakNet::BitStream &bitStream, std::string &s)
+{
+	char str[255];
+	RakNet::StringCompressor::Instance()->DecodeString(str, 255, &bitStream);
+	string new_s(str);
+	s = new_s;
+}

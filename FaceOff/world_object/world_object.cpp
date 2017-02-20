@@ -243,7 +243,19 @@ void WorldObject::clearParentNodes()
 void WorldObject::serialize(RakNet::BitStream& bs)
 {
 	bs.Write(objectId.id);
-	bs.Write(m_name);
+
+	//unsigned char *val = new unsigned char[m_name.length() + 1];
+	//strcpy((char *)val, m_name.c_str());
+
+//	RakNet::RakString rakString("%s", m_name);
+//	bs.Write(rakString);
+
+
+
+//	RakNet::RakString raksName(m_name.c_str());
+//	bs.Write(raksName);
+	utl::write(bs, m_name);
+
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
 //	bs.Write(getCameraPitch());
 //	bs.Write(getCameraYaw());
@@ -261,6 +273,13 @@ void WorldObject::serialize(RakNet::BitStream& bs)
 }
 
 
+
+bool WorldObject::shouldRender()
+{
+	return true;
+}
+
+
 int WorldObject::getInstanceId()
 {
 	return objectId.id;
@@ -271,7 +290,16 @@ void WorldObject::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 {
 	// the message id is already ignored
 	bs.Read(objectId.id);
-	bs.Read(m_name);
+
+	/*
+
+	RakNet::RakString raksName;
+	bs.Read(raksName);
+	string str(raksName.C_String);
+	m_name = str;
+	*/
+	utl::read(bs, m_name);
+
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
 
 	if (m_position.x != 0 || m_position.z != 0)

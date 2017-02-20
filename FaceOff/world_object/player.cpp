@@ -140,37 +140,6 @@ void Player::control()
 
 int counter = 0;
 
-// only used for spawning
-/*
-void Player::processInput(Move move)
-{
-	// glm::vec3 vel;
-	bool canJumpFlag = canJump();
-	glm::vec3 vel(0.0);
-	m_midAirHorVel = glm::vec3(0.0);
-	m_camera->processInput(move, vel, canJumpFlag);
-
-	if (move.input.jump)
-	{
-		inMidAir = true;
-		curJumpCoolDown = 0;
-		jumped = true;
-	}
-
-	if (inMidAir)
-	{
-		vel.x = 0.5 * vel.x;
-		vel.z = 0.5 * vel.z;
-
-		m_midAirHorVel.x = vel.x;
-		m_midAirHorVel.z = vel.z;
-	}
-
-
-	m_velocity += vel;
-	setRotation(move.state.pitch, move.state.yaw);
-}
-*/
 
 // only used for spawning
 void Player::processUserCmd(UserCmd cmd)
@@ -473,7 +442,12 @@ void Player::updateWeaponTransform()
 			// dont need to set scale, that's done at pickUp()
 		}
 
+
 		m_curWeapon->setRotation(m_rotation);
+	
+	//	glm::mat4 rot = glm::rotate(90.0f, 1.0f, 0.0f, 0.0f);
+	//	m_curWeapon->setRotation(rot);
+	//	utl::clDebug("weaponRotation", m_curWeapon->m_rotation);
 //		glm::mat4 rot = m_camera->m_targetRotation * 
 	}
 
@@ -627,6 +601,18 @@ bool Player::hasWeaponAtSlot(WeaponSlotEnum slot)
 
 }
 
+/*
+void Player::weaponOnDelete(Weapon* weapon)
+{
+	if (weapon->ownerId == this->m_id)
+	{
+		WeaponSlotEnum slot = weapon->getWeaponSlot();
+		this->m_weapons[slot] = NULL;
+	}
+}
+*/
+
+
 void Player::pickUp(Weapon* weapon)
 {
 	/*
@@ -640,8 +626,26 @@ void Player::pickUp(Weapon* weapon)
 
 	WeaponSlotEnum slot = weapon->getWeaponSlot();
 
-	weapon->hasOwner = true;
+	weapon->ownerId = m_id;
 	weapon->isBeingUsed = false;
+
+	weapon->onDelete = [=](Weapon* weapon) 
+	{
+		if (weapon->ownerId == this->m_id)
+		{
+			if (m_curWeapon == weapon)
+			{
+				m_curWeapon = NULL;
+			}
+
+			WeaponSlotEnum slot = weapon->getWeaponSlot();
+			this->m_weapons[slot] = NULL;
+		}
+	};
+	// binding the first argument
+//	weapon->onDelete = std::bind(&Player::weaponOnDelete, _1, this);
+
+	//weapon->onDelete = std::function(&Player::weaponOnDelete1);
 
 	m_weapons[slot] = weapon;
 
@@ -650,15 +654,15 @@ void Player::pickUp(Weapon* weapon)
 	if (m_isDefaultPlayer)
 	{
 		weapon->setScale(weapon->m_firstPOVScale);
-	//	utl::debug("Here default");
-	//	utl::debug("w scale is", weapon->m_firstPOVScale);
+		utl::debug("Here default");
+		utl::debug("w scale is", weapon->m_firstPOVScale);
 
 	}
 	else
 	{
 		weapon->setScale(weapon->m_thirdPOVScale);
-	//	utl::debug("Here third");
-	//	utl::debug("w scale is", weapon->m_thirdPOVScale);
+		utl::debug("Here third");
+		utl::debug("w scale is", weapon->m_thirdPOVScale);
 	}
 
 	if (m_curWeapon != NULL)
@@ -677,19 +681,7 @@ void Player::pickUp(Weapon* weapon)
 
 	updateWeaponTransform();
 	// utl::debug("in player pickup, weapon pos is", m_curWeapon->getPosition());
-	/*
-	if (m_curWeapon != NULL)
-	{
-
-
-	}
-	else
-	{
-		m_weapons[weapon->m_slot] = weapon;
-		weapon->setScale(weapon->m_modelScale / 10.0f);
-		m_curWeapon = weapon;
-	}
-	*/
+	
 }
 
 Weapon* Player::throwGrenade()
@@ -723,7 +715,7 @@ Weapon* Player::throwGrenade()
 	*/
 
 
-	grenade->hasOwner = false;
+	grenade->ownerId = NO_OWNER;
 	grenade->isBeingUsed = false;
 	// set it back to world model scale
 	grenade->setScale(grenade->m_modelScale);
@@ -765,7 +757,7 @@ Weapon* Player::drop()
 	Weapon* drop = m_curWeapon;
 	weaponCount--;
 
-	drop->hasOwner = false;
+	drop->ownerId = NO_OWNER;
 	// set it back to world model scale
 	drop->setScale(drop->m_modelScale);
 	drop->setRotation(glm::mat4(1.0));
@@ -810,6 +802,11 @@ void Player::reloadWeapon()
 
 }
 
+
+Weapon* Player::getWeapon(int index)
+{
+	return m_weapons[index];
+}
 
 void Player::fireWeapon()
 {
@@ -1000,83 +997,8 @@ bool Player::ignorePhysicsWith(WorldObject* obj)
 	return false;
 }
 
-/*
-bsOut.Reset();
-bsOut.Write((RakNet::MessageID)PLAYER_UPDATE);
-bsOut.Write(player_id);
-bsOut.WriteVector(pos.x, pos.y, pos.z);
-bsOut.WriteVector(wPos.x, wPos.y, wPos.z);
-bsOut.Write(camPitch);
-bsOut.Write(camYaw);
-*/
 
-// bsOut.Write((RakNet::MessageID)SPAWN_INFORMATION);
 
-/*
-void Player::spawnFromBitStream(RakNet::BitStream& bs)
-{
-	int pitch = 0;
-	int yaw = 0;
-
-	// the message id is already ignored
-	bs.Read(m_id);
-	bs.ReadVector(m_position.x, m_position.y, m_position.z);
-	bs.Read(pitch);
-	bs.Read(yaw);
-
-	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
-	{
-		int weaponEnum = 0;
-		bs.Read(weaponEnum);
-		if (weaponEnum != -1)
-		{
-			utl::debug("weaponEnum is ", weaponEnum);
-		}
-		else
-		{
-			utl::debug("weaponEnum is None");
-		}
-	}
-}
-*/
-
-#if 0
-void Player::serializeSpawnInfo(RakNet::BitStream& bs)
-{
-	bs.Reset();
-	bs.Write(SPAWN_INFORMATION);
-	bs.Write(m_id);
-	bs.WriteVector(m_position.x, m_position.y, m_position.z);
-	bs.Write(getCameraPitch());
-	bs.Write(getCameraYaw());
-	/*
-	bs.WriteVector(m_position.x, m_position.y, m_position.z);
-	bs.WriteVector(m_position.x, m_position.y, m_position.z);
-	bs.WriteVector(m_position.x, m_position.y, m_position.z);
-	bs.WriteVector(m_position.x, m_position.y, m_position.z);
-	*/
-
-	bs.Write(m_modelEnum);
-	bs.Write(getGeometryType());
-	bs.Write(getMass());
-	bs.Write(getMaterialEnergyRestitution());
-	bs.Write(getMaterialSurfaceFrictionToBitStream());
-
-	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
-	{
-		if (m_weapons[i] != NULL)
-		{
-			bs.Write(m_weapons[i]->getWeaponName());
-			utl::debug("weaponEnum is ", m_weapons[i]->getWeaponName());
-		}
-		else
-		{
-			bs.Write(-1);
-			utl::debug("weaponEnum is None");
-		}
-	}
-}
-#endif
 
 // a slight hack, will comeback
 int Player::getInstanceId()

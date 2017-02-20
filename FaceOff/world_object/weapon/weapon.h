@@ -15,6 +15,8 @@ using namespace std;
 
 const float ROTATION_SPEED = 0.0005;
 
+const int NO_OWNER = -1;
+
 struct Magazine
 {
 	int cur;
@@ -59,6 +61,8 @@ class Weapon : public WorldObject
 
 		WorldObjectType getObjectType();
 
+		bool shouldRender();
+
 
 		ParticleEffect* explode();
 
@@ -72,7 +76,6 @@ class Weapon : public WorldObject
 
 
 		void serialize(RakNet::BitStream& bs);
-		void deserialize(RakNet::BitStream& bs);
 		void deserialize(RakNet::BitStream& bs, ModelManager* mm);
 
 
@@ -91,8 +94,11 @@ class Weapon : public WorldObject
 		virtual void renderGroup(Pipeline& p, Renderer* r);
 		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
 		
+		bool hasOwner();
+		int ownerId;
 
-		bool hasOwner;
+		std::function<void(Weapon*)> onDelete;
+
 		bool isBeingUsed;
 	private:
 		long long m_explodeDelayStartTime;

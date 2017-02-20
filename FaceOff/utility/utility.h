@@ -35,6 +35,8 @@
 #include <vector>
 #include "BitStream.h"
 #include "RakNetTypes.h"	// Message ID
+#include "StringCompressor.h"
+//#include "RakNet/StringCompressor.h"
 
 #include "SDL.h"
 #include "SDL_image.h"
@@ -490,6 +492,11 @@ namespace utl
 	uint32_t createUniqueObjectID();
 
 
+
+	void write(RakNet::BitStream &bitStream, std::string &s);
+	void read(RakNet::BitStream &bitStream, std::string &s);
+
+
 	/// utl_SDL.cpp
 	void initSDL(int w, int h, SDL_Surface* & m_displaySurface);
 	void exitSDL(SDL_Surface* & m_displaySurface);
@@ -614,6 +621,9 @@ namespace utl
 	Value readJsonFileToVector(char* file);
 	const mValue& findValue(const mObject& obj, const string& name);
 	glm::vec3 findVec3(const mObject& obj, const string& name);
+
+
+
 
 };
 
