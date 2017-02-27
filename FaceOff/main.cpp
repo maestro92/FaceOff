@@ -1,6 +1,9 @@
 #include "main.h"
 
 #define NETWORK_FLAG 1
+
+#define SINGLE_PLAYER_MODE 1
+
 #define SERVER_RENDER_FLAG 0
 
 
@@ -79,7 +82,7 @@ SDL_Surface* pDisplaySurface = NULL;
 SDL_Event event;
 
 
-
+// const bool SINGLE_PLAYER_MODE
 
 
 
@@ -106,6 +109,8 @@ const int CLIENT_INPUT_SENT_PER_SECOND = 33;
 const int CLIENT_INPUT_SENT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 
 
+const float SPAWN_POSITION_UNIT_OFFSET = 20.0f;
+
 const int INVALID_OBJECT = 0x7FFFFFFF;
 
 RendererManager FaceOff::m_rendererMgr;
@@ -115,7 +120,13 @@ ModelManager	FaceOff::m_modelMgr;
 
 FaceOff::FaceOff()
 {
+	cout << "default ctr" << endl;
+}
 
+FaceOff::FaceOff(int nice)
+{
+	cout << "assginment version" << endl;
+	int a = 1;
 }
 
 FaceOff::~FaceOff()
@@ -132,6 +143,11 @@ void FaceOff::init()
 
 	isRunning = true;
 
+
+	latencyOptions = { 0, 20, 50, 100, 200 };	// millisecond
+	latency = 0; 
+	curLatencyOption = 0;
+
 	containedFlag = false;
 	hitNode = NULL;
 
@@ -139,14 +155,9 @@ void FaceOff::init()
 	initRenderers();
    
 	// initAudio();
-#if NETWORK_FLAG == 1
 	initNetwork();
 	initNetworkLobby();
-#else
-	m_defaultPlayerID = 0;
-#endif
 
-//	lateInitObjects();
 
 	// initGUI depends on the m_defaultPlayerID, so initNetworkLobby needs to run first
 	initGUI();
@@ -605,20 +616,96 @@ void FaceOff::initNetwork()
 void FaceOff::initNetworkLobby()
 {
 	// we're waiting in the lobby
-	bool waitingInLobby = true;
+	// bool waitingInLobby = true;
 
 	// we're gonna settle the player list
 	printf("Waiting in Lobby.\n");
 
 
-	while (waitingInLobby)
+	bool svWaitingInLobby = true;
+	bool clWaitingInLobby = true;
+
+	while ((m_server.isInitalized && svWaitingInLobby) || (m_server.isDedicated == false && clWaitingInLobby))
 	{
 		SDL_PumpEvents();
 		Uint8* state = SDL_GetKeyState(NULL);
 		if (state[SDLK_a] || state[SDLK_SPACE])
 		{ 
-			waitingInLobby = false;
-			break;
+			svWaitingInLobby = false;
+
+			if (m_server.isInitalized)
+			{
+#if SINGLE_PLAYER_MODE == 1
+				// we add a bot if there is only one player
+				if (m_server.clientCount == 1)
+				{
+					int newPlayerId = sv_players.nextAvaiableId();
+					float newSpawnX = 0;
+					float newSpawnY = 5;
+					float newSpawnZ = 25;
+
+					// Add Player
+					Player* p = new Player(newPlayerId);
+					p->m_name = "player " + utl::intToStr(newPlayerId);
+					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
+					p->setRotation(0, 0);
+					p->setModelEnum(ModelEnum::player);
+					p->setModel(m_modelMgr.get(ModelEnum::player));
+					p->setMass(80);
+					p->setCollisionDetectionGeometry(CD_SPHERE);
+
+
+					Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
+					mainWeapon->setCollisionDetectionGeometry(CD_AABB);
+					mainWeapon->m_name = "player1 mainWeapon";
+
+					Weapon* knife = new Weapon(m_modelMgr.getWeaponData(KNIFE));
+					knife->setCollisionDetectionGeometry(CD_AABB);
+					knife->m_name = "player1 knife";
+
+					Weapon* grenade = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
+					grenade->setMass(0.4);
+					grenade->setMaterialEnergyRestitution(0.6);
+					grenade->setMaterialSurfaceFriction(0.3);
+					grenade->setCollisionDetectionGeometry(CD_AABB);
+					grenade->m_name = "player1 grenade";
+
+
+					sv_players.add(p);
+					sv_objects.add(mainWeapon);
+					sv_objects.add(knife);
+					sv_objects.add(grenade);
+
+
+					p->pickUp(mainWeapon);
+					p->pickUp(knife);
+					p->pickUp(grenade);
+
+
+					sv_objectKDtree.insert(p);
+
+					RakNet::BitStream bs;
+					bs.Write((RakNet::MessageID)NEW_CLIENT);
+					p->serialize(bs);
+
+					//	HIGH_PRIORITY, RELIABLE_ORDERED,
+					m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(0).systemAddress, false);
+				}
+#endif
+
+				// send the end termination signal to client
+				for (int i = 0; i < m_server.clients.size(); i++)
+				{
+					Client client = m_server.getClient(i);
+
+					std::cout << "sending each client lobby wait end signal" << i << endl;
+					RakNet::BitStream bsOut;
+					bsOut.Write((RakNet::MessageID)LOBBY_WAIT_END);
+					bsOut.Write(i);
+
+					m_server.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, client.systemAddress, false);
+				}
+			}
 		}
 
 		// running server wait for lobby frame
@@ -660,9 +747,9 @@ void FaceOff::initNetworkLobby()
 						m_server.addClient(sv_packet);
 
 						int newPlayerId = sv_players.nextAvaiableId();
-						float newSpawnX = newPlayerId * 30;
+						float newSpawnX = newPlayerId * SPAWN_POSITION_UNIT_OFFSET;
 						float newSpawnY = 5;
-						float newSpawnZ = newPlayerId * 30;
+						float newSpawnZ = newPlayerId * SPAWN_POSITION_UNIT_OFFSET;
 
 						// Add Player
 						Player* p = new Player(newPlayerId);
@@ -703,20 +790,9 @@ void FaceOff::initNetworkLobby()
 
 
 						sv_objectKDtree.insert(p);
-						// sv_objectKDtree.print();
-						// simulatePlayerPhysics(sv_objectKDtree, p, 0);
 
-						utl::debug("number of parent nodes are", p->m_parentNodes.size());
 
-						for (int i = 0; i < p->m_parentNodes.size(); i++)
-						{
-							utl::debug("	parent node i", p->m_parentNodes[i]->id);
-						}
-
-						// utl::debug("new_player_id", newPlayerId);
-						// utl::debug("player position", sv_players.get(newPlayerId)->getPosition());
-
-						// sv_objectKDtree.print();
+						p->svDebug();
 
 						RakNet::BitStream bsOut;
 						broadCastNewClientJoining(newPlayerId, bsOut);
@@ -787,7 +863,7 @@ void FaceOff::initNetworkLobby()
 						deserializePlayerAndWeaponAndAddToWorld(p, bsIn, true);
 
 		
-						p->debug();
+						p->clDebug();
 
 
 						// existing player
@@ -800,19 +876,6 @@ void FaceOff::initNetworkLobby()
 							deserializePlayerAndWeaponAndAddToWorld(p, bsIn, false);
 						}
 
-						
-						// bsOut.Reset();
-						RakNet::BitStream bsOut1;
-						bsOut1.Write((RakNet::MessageID)NONE);
-						bsOut1.Write("Hello world");
-
-						// std::cout << clientDebugPrefix;
-						// printf("Server said I'm client number %d at %f, %f, %f\n", p->getId(), p->getPosition().x, p->getPosition().y, p->getPosition().z);
-					
-						cout << "client sending information " << endl;
-						m_client.peer->Send(&bsOut1, IMMEDIATE_PRIORITY, RELIABLE, 0, m_client.serverSystemAddress, false);
-//						m_client.peer->Send(&bsOut1, HIGH_PRIORITY, RELIABLE, 0, cl_packet->systemAddress, false);
-
 						break;
 					}
 
@@ -823,11 +886,6 @@ void FaceOff::initNetworkLobby()
 
 						Player* p = new Player();
 						deserializePlayerAndWeaponAndAddToWorld(p, bsIn, false);
-
-						// printf("Received new client info for %d: %f, %f, %f", p->getId(), p->getPosition().x, p->getPosition().y, p->getPosition().z);
-
-						// utl::clDebug("Received info about new client info for");
-						// utl::clDebug("Received info about new client info for");
 
 						cout << "Player List" << endl;
 						for (int i = 0; i < cl_players.getIterationEnd(); i++)
@@ -848,7 +906,7 @@ void FaceOff::initNetworkLobby()
 					}
 
 					case LOBBY_WAIT_END:
-						waitingInLobby = false;
+						clWaitingInLobby = false;
 						break;
 
 					case ID_CONNECTION_REQUEST_ACCEPTED:
@@ -881,43 +939,10 @@ void FaceOff::initNetworkLobby()
 
 
 
-	if (m_server.isInitalized)
-	{
-		// send the end termination signal to client
 
-		for (int i = 0; i < m_server.clients.size(); i++)
-		{
-			Client client = m_server.getClient(i);
 
-			std::cout << "sending each client lobby wait end signal" << i << endl;
-			RakNet::BitStream bsOut;
-			bsOut.Write((RakNet::MessageID)LOBBY_WAIT_END);
-			bsOut.Write(i);
 
-			m_server.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, client.systemAddress, false);
-//			m_server.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, peer->GetSystemAddressFromGuid(m_players[i]->m_guid), false);
-		}
 
-	}
-	/*
-	utl::debug("m_defaultPlayerId", m_defaultPlayerID);
-
-	std::cout << "Player List" << endl;
-	for (int i = 0; i < m_players.size(); i++)
-	{
-
-		if (m_players[i] == NULL)
-		{
-			std::cout << "player " << i << " is null" << endl;
-		}
-		else
-		{
-			std::cout << i << " - " << m_players[i]->getId() << " position " << m_players[i]->m_position.x << " "
-				<< m_players[i]->m_position.y << " "
-				<< m_players[i]->m_position.z << endl;
-		}
-	}
-	*/
 
 	printf("Done waiting in the Lobby.\n");
 
@@ -1027,8 +1052,63 @@ void FaceOff::deserializeEntityAndAddToWorld(WorldObject* obj, RakNet::BitStream
 }
 
 
+void FaceOff::serverToClientSendPacket(RakNet::SystemAddress& address, RakNet::BitStream& bs)
+{
+#if SINGLE_PLAYER_MODE == 1
+	DelayedPacket dp(serverAbsoluteTime + (unsigned int)latency, address, bs);
+	serverToClient.push(dp);
+#else
+	m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, address, false);
+#endif
+}
 
 
+// we should use real time here cuz we are using trying to simulate real latency
+void FaceOff::clientToServerSendPacket(RakNet::SystemAddress& address, RakNet::BitStream& bs)
+{
+#if SINGLE_PLAYER_MODE == 1
+	DelayedPacket dp(clientAbsoluteTime + (unsigned int)latency, address, bs);
+	/*
+	DelayedPacket dp;
+	dp.deliveryTime = clientAbsoluteTime + (unsigned int)latency;
+	dp.address = address;
+	dp.bs.Reset();
+	dp.bs.Write(bs);
+	*/
+	clientToServer.push(dp);
+#else
+	m_client.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, address, false);
+#endif
+}
+
+
+void FaceOff::processPacketQueue(unsigned int curAbsoluteTime, PacketQueue& packetQueue, bool isServerToClient)
+{
+	while (!packetQueue.empty())
+	{
+		// have to call packetQueue.front() without making a copy
+		// cuz making a copy will mess up up the readOffset on the bitstream
+		if (packetQueue.front().deliveryTime <= curAbsoluteTime)
+		{
+			DelayedPacket dp = packetQueue.front();
+
+			if (isServerToClient)
+			{
+				m_server.peer->Send(&dp.bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, dp.address, false);
+			}
+			else
+			{
+				m_client.peer->Send(&dp.bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, dp.address, false);
+			}
+			packetQueue.pop();
+		}
+		else
+		{
+			break;
+		}
+
+	}
+}
 
 
 void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
@@ -1084,7 +1164,7 @@ void FaceOff::serverReadPackets()
 		sv_packet; 
 		m_server.peer->DeallocatePacket(sv_packet), sv_packet = m_server.peer->Receive())
 	{
-		// cout << "here in serverReadPackets" << endl;
+	//	cout << "here in serverReadPackets" << endl;
 
 		// we first initalized bitStream with the packet->data
 		RakNet::BitStream bsIn(sv_packet->data, sv_packet->length, false);
@@ -1114,6 +1194,10 @@ void FaceOff::serverReadPackets()
 				printf("A client lost the connection.\n");
 				break;
 
+			case ID_GAME_MESSAGE_1:
+				std::cout << "ID_GAME_MESSAGE_1" << endl;
+				break;
+
 			case CLIENT_INPUT:
 			{
 				// http://stackoverflow.com/questions/10381144/error-c2361-initialization-of-found-is-skipped-by-default-label
@@ -1124,8 +1208,8 @@ void FaceOff::serverReadPackets()
 				bsIn.Read(sequence);
 
 				// utl::debug("sequence is", sequence);
-				// std::cout << "CLIENT_INPUT" << endl;
-
+			//	std::cout << "CLIENT_INPUT" << endl;
+				
 
 
 				int clientId = 0;
@@ -1202,6 +1286,8 @@ void FaceOff::serverReadPackets()
 void FaceOff::serverFrame()
 {
 
+
+
 	serverReadPackets();
 
 	// allow pause if only the local client is connected
@@ -1256,6 +1342,10 @@ void FaceOff::serverFrame()
 	{
 		serverSendClientMessages();
 	}
+
+
+	processPacketQueue(serverAbsoluteTime, serverToClient, true);
+
 }
 
 
@@ -1266,7 +1356,26 @@ Updates the client ping variables
 */
 void FaceOff::serverCalculatePing()
 {
+#if SINGLE_PLAYER_MODE == 1
 
+
+
+#else
+	/*
+	for (int i = 0; i < m_server.clients.size(); i++)
+	{
+		Client* client = m_server.getClient(i);
+
+		if (client == NULL)
+		{
+			client->ping = INFINITE_PING;
+			return;
+		}
+
+	}
+	*/
+
+#endif
 }
 
 void FaceOff::serverCheckTimeouts()
@@ -1336,7 +1445,10 @@ void FaceOff::serverSendClientSnapshot(Client* client, int clientId)
 
 //	m_server.peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, client.systemAddress, false);
 
-	m_server.peer->Send(&bs1, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(clientId).systemAddress, false);
+
+
+	serverToClientSendPacket(m_server.getClient(clientId).systemAddress, bs1);
+//	m_server.peer->Send(&bs1, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(clientId).systemAddress, false);
 }
 
 void FaceOff::serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, RakNet::BitStream& bs)
@@ -1743,6 +1855,7 @@ void FaceOff::clientFrame()
 	clientSendCmd();
 	clientCheckForResend();
 
+	processPacketQueue(clientAbsoluteTime, clientToServer, false);
 
 	clientPrediction();
 
@@ -1786,6 +1899,10 @@ void FaceOff::clientReadPackets()
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 				break;
 
+			case ID_GAME_MESSAGE_1:
+				utl::clDebug("ID_GAME_MESSAGE_1");
+				break;
+			
 			case SERVER_SNAPSHOT:
 			{
 				// snap shot from server
@@ -2402,7 +2519,23 @@ void FaceOff::clientSendPacket(RakNet::BitStream& bs)
 	// utl::clDebug("m_client.netchan.outgoingSequence", m_client.netchan.outgoingSequence);
 
 	bsOut.Write(bs);
-	m_client.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, m_client.serverSystemAddress, false);
+
+
+//	DelayedPacket dp(0, m_client.serverSystemAddress, bsOut);
+
+//	myDP.address = m_client.serverSystemAddress;
+//	myDP.bs.Reset();
+//	myDP.bs.Write(bsOut);
+
+//	m_client.peer->Send(&dp.bs, IMMEDIATE_PRIORITY, RELIABLE, 0, m_client.serverSystemAddress, false);
+
+//	m_client.peer->Send(&dp.bs, IMMEDIATE_PRIORITY, RELIABLE, 0, dp.address, false);
+	
+//	m_client.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, dp.address, false);
+	
+//	m_client.peer->Send(&bsOut, IMMEDIATE_PRIORITY, RELIABLE, 0, m_client.serverSystemAddress, false);
+//	bsOut.SetReadOffset(0);
+	clientToServerSendPacket(m_client.serverSystemAddress, bsOut);
 }
 
 UserCmd FaceOff::clientCreateNewCmd()
@@ -2520,21 +2653,24 @@ void FaceOff::start()
 {
 	cout << "Start" << endl;
 	Uint32 startTime = SDL_GetTicks();
+	Uint32 curTime = startTime;
 	m_nextGameTick = 0;
 
 	while (isRunning)
 	{
-		startTime = SDL_GetTicks();
+		curTime = SDL_GetTicks();
 
 		update();
 
 		if (m_server.isInitalized == true)
 		{	
+			serverAbsoluteTime = curTime;
 			serverFrame();
 		}
 
 		if (m_server.isDedicated == false)
 		{
+			clientAbsoluteTime = curTime;
 			clientFrame();
 		}
 
@@ -2612,26 +2748,53 @@ void FaceOff::update()
 	m_mouseState.m_pos = glm::vec2(mx, utl::SCREEN_HEIGHT - my);
 
 
+	SDL_Event event;
 
-	SDL_PumpEvents();
-	Uint8* state = SDL_GetKeyState(NULL);
-
-
-	if (state[SDLK_ESCAPE])	
-	{ 
-		isRunning = false;
-	}
-
-	else if (state[SDLK_x])
+	while (SDL_PollEvent(&event))
 	{
-		cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(true);
-	}
+		if (event.type == SDL_KEYDOWN)
+		{
+			switch (event.key.keysym.sym)
+			{
+				case SDLK_ESCAPE:
+					isRunning = false;
+					break;
+				case SDLK_x:
+					cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(true);
+					break;
+				case SDLK_z:
+					cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(false);
+					break;
+				default:
+					break;
+			}
+		}
+		if (event.type == SDL_KEYUP)
+		{
+			switch (event.key.keysym.sym)
+			{
+				case SDLK_F1:		
+					if (SINGLE_PLAYER_MODE)
+					{
+						if (curLatencyOption == latencyOptions.size() - 1)
+						{
+							curLatencyOption = 0;
+						}
+						else
+						{
+							++curLatencyOption;
+						}
+						latency = latencyOptions[curLatencyOption];
 
-	else if (state[SDLK_z])
-	{
-		cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(false);
-	}
+						cout << "New Latency: " << latency << " milliseconds" << endl;
+					}
+					break;
 
+				default:
+					break;
+			}
+		}
+	}
 }
 
 
@@ -2708,47 +2871,48 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
 	}
 
 	p->updateMidAirVelocity();
-#if NETWORK_FLAG == 0 
+#if SINGLE_PLAYER_MODE == 1
 	if (i == 1)
 	{
-		/*
+		
 		float tempDist = 100;
 
 		if (incrFlag)
-		p->m_position.z += 0.05;
+			p->m_position.z += 0.05;
 		else
-		p->m_position.z -= 0.05;
+			p->m_position.z -= 0.05;
 
 		if (p->m_position.z > tempDist)
-		incrFlag = false;
+			incrFlag = false;
+
 		if (p->m_position.z < 20)
-		incrFlag = true;
-		*/
+			incrFlag = true;
+		
 
 
-		/*
+		
 		float tempMaxAngle = 150;
 
 		if (incrAngleFlag)
 		{
-		tempPitch = 0;
-		tempYaw += 1;
+			tempPitch = 0;
+			tempYaw += 1;
 		}
 		else
 		{
-		tempPitch = 0;
-		tempYaw -= 1;
+			tempPitch = 0;
+			tempYaw -= 1;
 		}
 
 		if (tempPitch > tempMaxAngle)
 		{
-		incrAngleFlag = false;
+			incrAngleFlag = false;
 		}
 		if (tempPitch < -tempMaxAngle)
 		{
-		incrAngleFlag = true;
+			incrAngleFlag = true;
 		}
-		*/
+		
 		p->setRotation(tempPitch, tempYaw);
 	}
 
@@ -2943,60 +3107,6 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj)
 }
 
 
-
-/*
-void FaceOff::checkNeighborsAfterClientInput(WorldObject* obj)
-{
-	clientInputCollisionDetectionTestPairs.clear();
-
-	vector<WorldObject*> neighbors;
-	glm::vec3 volNearPoint(obj->getPosition());
-	m_objectKDtree.visitOverlappedNodes(m_objectKDtree.m_head, obj, volNearPoint, neighbors);
-
-
-	for (int j = 0; j < neighbors.size(); j++)
-	{
-		WorldObject* neighbor = neighbors[j];
-
-
-		if (collisionDetectionTestPairs.alreadyTested(obj->m_instanceId, neighbor->m_instanceId) == false)
-		{
-			collisionDetectionTestPairs.addPairs(obj->m_instanceId, neighbor->m_instanceId);
-		}
-
-		if (clientInputCollisionDetectionTestPairs.alreadyTested(obj->m_instanceId, neighbor->m_instanceId))
-			continue;
-		else
-			clientInputCollisionDetectionTestPairs.addPairs(obj->m_instanceId, neighbor->m_instanceId);
-
-
-		if (obj->ignorePhysicsWith(neighbor))
-		{
-			continue;
-		}
-
-
-		ContactData contactData;
-		if (testCollisionDetection(obj, neighbor, contactData))
-		{
-			if (neighbor->getDynamicType() == STATIC)
-			{
-				contactData.pair[0] = obj;
-				contactData.pair[1] = NULL;
-			}
-			else
-			{
-				contactData.pair[0] = obj;
-				contactData.pair[1] = neighbor;
-			}
-
-			contactData.resolveVelocity();
-			contactData.resolveInterpenetration();
-			neighbor->updateCollisionDetectionGeometry();
-		}
-	}
-}
-*/
 
 
 /*
@@ -3583,10 +3693,7 @@ void FaceOff::destroyWorldObjectByIndex(vector<WorldObject*>& objects, int i)
 #define MAX_CLIENTS 10
 #define SERVER_PORT 60000
 
-enum GameMessages
-{
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
-};
+
 
 void RakNetFunction()
 {
@@ -3902,6 +4009,8 @@ int main(int argc, char *argv[])
 	utl::debug("Game Starting"); 
 	utl::initSDL(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT, pDisplaySurface);
 	utl::initGLEW();
+
+	FaceOff Martin1(2);
 	FaceOff Martin;
 
 	/*

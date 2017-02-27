@@ -459,6 +459,7 @@
     <ClInclude Include="model\texture.h" />
     <ClInclude Include="model\vertex_data.h" />
     <ClInclude Include="collision_detection\collision_detection_geometry.h" />
+    <ClInclude Include="network\connection.h" />
     <ClInclude Include="network\network_protocol.h" />
     <ClInclude Include="renderer\renderer_constants.h" />
     <ClInclude Include="shared.h" />

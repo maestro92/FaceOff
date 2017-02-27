@@ -18,7 +18,7 @@ using namespace std;
 #define SERVER_PORT 60000
 #define CLIENT_PORT 60006
 
-
+#define INFINITE_PING 99999
 
 // http://gafferongames.com/game-physics/networked-physics/
 // weapon firing needs to be done server side

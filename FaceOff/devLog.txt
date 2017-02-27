@@ -348,10 +348,25 @@ so always make your base class destructor virtual...
 
 
 
+The 2nd thing I want to mention is that I am starting put lambda function in the code. From googling, the general concept I got from it is that having lambdas makes the code a lot cleaner.
+Using Vinh's work, I can now easiliy employ dependency injection. 
 
-[TODO: getting lambda to work]
+There does not seemed to have any performance benefits though. But still it makes your code neat.
+
+for more details, refer to my "Functor, Lambdas and Callable" article
+
+
+Apparenlty, lambdas are added as a new feature of C++11.
 
 
 
+
+
+#############################################################################################
+####################################### 2017 Feb 26th #######################################
+#############################################################################################
+
+
+TODO: copy constructor for bit stream
 
 

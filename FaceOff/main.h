@@ -365,7 +365,10 @@ struct FOArray
 // upper 16 bit version
 // lower 16 bit index
 
-
+enum GameMessages
+{
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
+};
 
 struct FOArray
 {
@@ -720,22 +723,6 @@ struct FOPlayerArray
 	// do not use this on the server side
 	void set(Player* obj, int id)
 	{
-		cout << "requesting id " << id << endl;
-		for (int i = 0; i < objects.size(); i++)
-		{
-			if (objects[i] == NULL)
-			{
-				cout << "	i " << i << " is null" << endl;
-			}
-			else
-			{
-				cout << "	i " << i << " is not null" << endl;
-
-			}
-
-		}
-
-
 		if (objects[id] != NULL)
 		{
 			delete objects[id];
@@ -754,7 +741,65 @@ struct FOPlayerArray
 	}
 };
 
+struct DelayedPacket
+{
+	unsigned int deliveryTime;
+	RakNet::SystemAddress address;
+	RakNet::BitStream bs;
+//	unsigned char* data;
 
+	// http://www.geeksforgeeks.org/copy-constructor-vs-assignment-operator-in-c/
+	// need to define copy constructer and assignment operator becuz RakNet does not allow BitStream copy by value
+	DelayedPacket()
+	{
+		bs.Reset();
+	}
+
+	DelayedPacket(const DelayedPacket& dp)
+	{
+//		cout << "Packet copy constructor" << endl;
+		this->deliveryTime = dp.deliveryTime;
+		this->address = dp.address;
+
+
+		this->bs.Reset();
+	//	this->bs.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+		this->bs.Write(((RakNet::BitStream*)(&dp.bs)));
+	//	this->bs.SetReadOffset(0);
+//		this->data = dp.data;
+	}
+
+	DelayedPacket& operator = (const DelayedPacket& dp)
+	{
+//		cout << "Packet assignment operator" << endl;
+		this->deliveryTime = dp.deliveryTime;
+		this->address = dp.address;
+
+
+		this->bs.Reset();
+	//	this->bs.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+		this->bs.Write(((RakNet::BitStream*)(&dp.bs)));
+	//	this->bs.SetReadOffset(0);
+		return *this;
+	}
+
+	DelayedPacket(unsigned int time, RakNet::SystemAddress Address, RakNet::BitStream& Bs)
+	{
+//		cout << "member based constructor" << endl;
+		this->deliveryTime = time;
+		this->address = Address;
+
+		// bs.CopyData(data);
+		
+		this->bs.Reset();
+	//	this->bs.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+		this->bs.Write(Bs);
+	//	this->bs.SetReadOffset(0);
+		
+	}
+};
+
+typedef std::queue<DelayedPacket> PacketQueue;
 
 class FaceOff
 {
@@ -772,7 +817,7 @@ class FaceOff
 
 		Pipeline m_pipeline;
 
-		
+		DelayedPacket myDP;
 
 		float m_fps;
 		float m_iterRefreshRate;
@@ -826,7 +871,7 @@ class FaceOff
 
 		GUIManager m_gui;
 
-
+//		bool SINGLE_PLAYER_MODE;
 
 		bool m_zoomedIn;
 		float m_zoomFactor;
@@ -894,6 +939,7 @@ class FaceOff
 		Server m_server;
 
 		FaceOff();
+		FaceOff(int nice);
 		~FaceOff();
 
 		/// init functions
@@ -1000,7 +1046,25 @@ class FaceOff
 
 		void startCB();
 		void resetGameBoardCB();
+		
+		unsigned int serverAbsoluteTime;
+		unsigned int clientAbsoluteTime;
 
+		float latency;
+		float packetLoss;
+
+		vector<float> latencyOptions;
+		int curLatencyOption;
+
+		// this is used to simulate packet loss and packet delay on a single player
+
+		PacketQueue clientToServer;
+		PacketQueue serverToClient;
+		
+		void clientToServerSendPacket(RakNet::SystemAddress& address, RakNet::BitStream& bs);
+		void serverToClientSendPacket(RakNet::SystemAddress& address, RakNet::BitStream& bs);
+		
+		void processPacketQueue(unsigned int curAbsoluteTime, PacketQueue& packetQueue, bool isServerToClient);
 
 		long long getCurrentTimeMillis();
 

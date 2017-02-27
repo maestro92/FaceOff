@@ -615,21 +615,12 @@ void Player::weaponOnDelete(Weapon* weapon)
 
 void Player::pickUp(Weapon* weapon)
 {
-	/*
-	if (m_curWeapon != NULL && m_curWeapon->getType() == weapon->getType())
-	{
-		dropWeapon(m_curWeapon);
-	}
-	*/
-	
-	//utl::debug("		weapon slot", weapon->getWeaponSlot());
-
 	WeaponSlotEnum slot = weapon->getWeaponSlot();
 
 	weapon->ownerId = m_id;
 	weapon->isBeingUsed = false;
 
-	weapon->onDelete = [=](Weapon* weapon) 
+	weapon->onDelete = [this](Weapon* weapon) 
 	{
 		if (weapon->ownerId == this->m_id)
 		{
@@ -642,10 +633,6 @@ void Player::pickUp(Weapon* weapon)
 			this->m_weapons[slot] = NULL;
 		}
 	};
-	// binding the first argument
-//	weapon->onDelete = std::bind(&Player::weaponOnDelete, _1, this);
-
-	//weapon->onDelete = std::function(&Player::weaponOnDelete1);
 
 	m_weapons[slot] = weapon;
 
@@ -654,15 +641,11 @@ void Player::pickUp(Weapon* weapon)
 	if (m_isDefaultPlayer)
 	{
 		weapon->setScale(weapon->m_firstPOVScale);
-		utl::debug("Here default");
-		utl::debug("w scale is", weapon->m_firstPOVScale);
 
 	}
 	else
 	{
 		weapon->setScale(weapon->m_thirdPOVScale);
-		utl::debug("Here third");
-		utl::debug("w scale is", weapon->m_thirdPOVScale);
 	}
 
 	if (m_curWeapon != NULL)
@@ -678,10 +661,7 @@ void Player::pickUp(Weapon* weapon)
 		m_curWeapon = weapon;
 	}
 
-
 	updateWeaponTransform();
-	// utl::debug("in player pickup, weapon pos is", m_curWeapon->getPosition());
-	
 }
 
 Weapon* Player::throwGrenade()
@@ -969,19 +949,6 @@ void Player::adjustWeaponAndBulletPosition()
 	
 }
 
-/*
-glm::vec3 Player::getArmPosition()
-{
-	if (m_isDefaultPlayer)
-	{
-		return m_camera->getEyePoint();
-	}
-	else
-	{
-		return m_position;
-	}
-}
-*/
 
 glm::vec3 Player::getFirePosition()
 {
@@ -1011,8 +978,7 @@ int Player::getInstanceId()
 
 void Player::serialize(RakNet::BitStream& bs)
 {
-	cout << ">>>>>>	Player Serialize " << endl;
-	cout << "m_id id " << m_id << endl;
+
 	bs.Write(m_id);
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
 	bs.Write(getCameraPitch());
@@ -1020,11 +986,6 @@ void Player::serialize(RakNet::BitStream& bs)
 
 	// cout << "			m_modelEnum " << m_modelEnum << endl;
 
-	if (m_position.x != 0 || m_position.z != 0)
-	{
-		cout << ">>>>>>	Player Serialize " << endl;
-		utl::clDebug("position is", m_position);
-	}
 
 	bs.Write(m_modelEnum);
 	bs.Write(getGeometryType());
@@ -1042,70 +1003,16 @@ void Player::serialize(RakNet::BitStream& bs)
 		}
 	}
 
-	/*
-	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
+
+	// if (m_position.x != 0 || m_position.z != 0)
+#if DEBUG
 	{
-		if (m_weapons[i] != NULL)
-		{
-			bs.Write(m_weapons[i]->getWeaponName());
-			utl::debug("weaponEnum is ", m_weapons[i]->getWeaponName());
-		}
-		else
-		{
-			bs.Write(-1);
-			utl::debug("weaponEnum is None");
-		}
+		utl::debug(">>>>>>	Player Serialize ");
+		utl::debug("m_id id ", m_id);
+		utl::debug("position is", m_position);
 	}
-	*/
-
+#endif
 }
-
-/*
-void Player::serialize(RakNet::MessageID msgId, RakNet::BitStream& bs)
-{
-//	bs.Write(msgId);
-	serialize(bs);
-}
-*/
-
-
-
-
-
-
-/*
-void FaceOff::serializePlayerAndWeapons(Player* p, RakNet::BitStream& bs)
-{
-	p->serialize(bs);
-	bs.Write(p->weaponCount);
-	for (int i = 0; i < p->getWeapons().size(); i++)
-	{
-		Weapon* weapon = p->getWeapons()[i];
-		if (weapon != NULL)
-		{
-			weapon->serialize(bs);
-		}
-	}
-}
-
-
-Player* FaceOff::deserializePlayerAndWeapons(RakNet::BitStream& bs, ModelManager* mm)
-{
-	Player* p = new Player();
-	p->deserialize(bs, &m_modelMgr);
-
-	int weaponCount = 0;
-	bs.Read(weaponCount);
-
-	for (int i = 0; i < weaponCount; i++)
-	{
-		Weapon* weapon = new Weapon();
-		weapon->deserialize(bs, &m_modelMgr);
-
-		p->pickUp(weapon);
-	}
-}
-*/
 
 
 
@@ -1116,9 +1023,11 @@ void Player::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 //	utl::clDebug("<<<<<<	Player deserialize ");
 	// the message id is already ignored
 	bs.Read(m_id);
+	objectId.id = m_id;
+
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
 	
-	cout << "deserialize playerId " << m_id << endl;
+	// cout << "deserialize playerId " << m_id << endl;
 
 
 	float pitch, yaw;
@@ -1129,19 +1038,6 @@ void Player::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 	bs.Read(m_modelEnum);		
 	setModel(mm->get(m_modelEnum));
 
-
-	if (m_position.x != 0 || m_position.z != 0)
-	{
-		utl::clDebug("<<<<<<	Player deserialize ");
-		utl::clDebug("position is", m_position);
-	}
-
-	/*
-	utl::clDebug("			position", m_position);
-	utl::clDebug("			pitch", pitch);
-	utl::clDebug("			yaw", yaw);
-	utl::clDebug("			m_modelEnum", m_modelEnum);
-	*/
 
 	bs.Read(m_geometryType);	 
 	setCollisionDetectionGeometry(m_geometryType);
@@ -1168,49 +1064,16 @@ void Player::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 		pickUp(weapon);
 	}
 
-	/*
-	// set the weapon
-	for (int i = 0; i < NUM_WEAPON_SLOTS; i++)
+
+#if DEBUG
 	{
-		int weaponEnum = 0;
-		bs.Read(weaponEnum);
-		if (weaponEnum != -1)
-		{
-	//		Weapon* weapon = new Weapon(mm->getWeaponData((WeaponNameEnum)weaponEnum));
-	//		pickUp(weapon);
-			utl::debug("weaponEnum is ", weaponEnum);
-		}
-		else
-		{
-			utl::debug("weaponEnum is None");
-		}
+		utl::clDebug("<<<<<<	Player deserialize ");
+		utl::clDebug("deserialize playerId ", m_id);
+		utl::clDebug("position is", m_position);
 	}
-	//
-	*/
+#endif
 }
-/*
-// only used for spawning
-void Player::deserialize(RakNet::BitStream& bs)
-{
-	// the message id is already ignored
-	bs.Read(m_id);
-	bs.ReadVector(m_position.x, m_position.y, m_position.z);
-	bs.Read(m_camera->m_pitch);
-	bs.Read(m_camera->m_yaw);
 
-	bs.Read(m_geometryType);	setCollisionDetectionGeometry(m_geometryType);
-	float mass = 0;
-	bs.Read(mass);	setMass(mass);
-
-	float restitution = 0;
-	bs.Read(restitution);		setMaterialEnergyRestitution(restitution);
-
-	float friction = 0;
-	bs.Read(friction);			setMaterialSurfaceFriction(friction);
-
-	// the weapons are read somewhere else
-}
-*/
 
 
 vector<Weapon*>& Player::getWeapons()
@@ -1219,7 +1082,17 @@ vector<Weapon*>& Player::getWeapons()
 }
 
 
-void Player::debug()
+void Player::svDebug()
+{
+	if (m_position.x != 0 || m_position.z != 0)
+	{
+		utl::debug("playerId", objectId.id);
+		utl::debug("	player position", m_position);
+	}
+}
+
+
+void Player::clDebug()
 {
 	if (m_position.x != 0 || m_position.z != 0)
 	{
@@ -1228,15 +1101,6 @@ void Player::debug()
 	}
 }
 
-/*
-
-void Player::addWeapon(Weapon* weapon)
-{
-
-
-}
-
-*/
 
 
 

@@ -35,7 +35,7 @@ using namespace std;
 
 // class KDTree;
 
-
+#define DEBUG 1;
 
 class Player : public WorldObject
 {
@@ -107,7 +107,8 @@ class Player : public WorldObject
 
 		Weapon* getWeapon(int index);
 
-		void debug();
+		void svDebug();
+		void clDebug();
 
 		int getId();
 
