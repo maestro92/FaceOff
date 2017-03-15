@@ -1064,6 +1064,7 @@ void Player::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 		pickUp(weapon);
 	}
 
+	prevState = GetState();
 
 #if DEBUG
 	{

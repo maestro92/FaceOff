@@ -5,6 +5,7 @@ Client::Client()
 {
 	isConnected = false;
 	peer = NULL;
+	curSnapshot = NULL;
 }
 
 Client::Client(RakNet::RakNetGUID guid)
@@ -12,6 +13,7 @@ Client::Client(RakNet::RakNetGUID guid)
 	m_guid = guid;
 	isConnected = false;
 	peer = NULL;
+	curSnapshot = NULL;
 }
 
 Client::~Client()
@@ -41,6 +43,7 @@ void Client::init()
 
 
 	peer->Connect(str, SERVER_PORT, 0, 0);
+	curSnapshot = NULL;
 
 	/*
 	peer = RakNet::RakPeerInterface::GetInstance();

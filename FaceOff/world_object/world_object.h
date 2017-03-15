@@ -164,6 +164,7 @@ class WorldObject
 		virtual WeaponSlotEnum getWeaponSlot();
 		virtual WeaponNameEnum getWeaponName();
 
+		WorldObjectState prevState;
 		inline WorldObjectState GetState();
 
 		void clearParentNodes();

@@ -488,13 +488,16 @@ namespace utl
 
 	float barycentricInterpolation(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec2 coord);
 
+	glm::vec3 interpolateEntityPosition(glm::vec3 pos0, glm::vec3 pos1, float interpFactor);
 
 	uint32_t createUniqueObjectID();
 
-
+	bool chance(float percent);
 
 	void write(RakNet::BitStream &bitStream, std::string &s);
 	void read(RakNet::BitStream &bitStream, std::string &s);
+
+	long long getCurrentTime_ms();
 
 
 	/// utl_SDL.cpp

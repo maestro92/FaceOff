@@ -284,10 +284,12 @@ void Weapon::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 	bs.Read(m_slotEnum);
 	bs.Read(ownerId);
 	bs.Read(isBeingUsed);
-
+	
 	if (objectId.s.index == 27)
 	{
 		utl::debug("ownerId", ownerId);
 		int a = 1;
 	}
+	
+	prevState = GetState();
 }

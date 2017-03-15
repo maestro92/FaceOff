@@ -37,3 +37,17 @@ float utl::barycentricInterpolation(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, gl
 	float l3 = 1.0f - l1 - l2;
 	return l1 * p1.y + l2 * p2.y + l3 * p3.y;
 }
+
+
+bool utl::chance(float percent)
+{
+	const float value = rand() / (float)RAND_MAX * 100;
+	return value <= percent;
+}
+
+glm::vec3 utl::interpolateEntityPosition(glm::vec3 pos0, glm::vec3 pos1, float interpFactor)
+{
+	glm::vec3 pos;
+	pos = pos0 + (pos1 - pos0) * interpFactor;
+	return pos;
+}

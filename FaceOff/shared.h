@@ -106,12 +106,49 @@ struct WorldObjectState
 	glm::vec3 position;
 	glm::vec3 angles;
 
-	int frame;
-
 	WorldObjectState()
 	{
 
 	}
+
+	WorldObjectState(ObjectId objId, glm::vec3 pos, glm::vec3 angles)
+	{
+		this->objectId = objId;
+		this->position = pos;
+		this->angles = angles;
+	}
+};
+
+
+// see quake3 net_chan.c 
+// Netchan_setup
+struct NetChannel
+{
+
+	NetChannel()
+	{
+		incomingSequence = 0;	// in quake3, this is mainly used to check packets are out of order?								
+		outgoingSequence = 1;
+	}
+
+	int incomingSequence;
+	int outgoingSequence;
+};
+
+
+// playerState is mostly used for server sending down the client about information player information
+struct PlayerState
+{
+	int cmdTime;		// cmd->serverTime of last executed command on the server
+
+};
+
+
+
+struct EntityState
+{
+
+
 };
 
 

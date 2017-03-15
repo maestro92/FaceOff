@@ -27,7 +27,7 @@ struct KDTreeNode;
 
 #include "label.h"
 #include "gui_manager.h"
-
+#include <chrono>
 
 #include "imported_model.h"
 #include "pipeline.h"
@@ -568,12 +568,12 @@ struct FOArray
 		WorldObject* obj1 = objects[index].object;
 
 
-		cout << "		## index is " << index << endl;
-		cout << "		## new object is " << obj->m_name << endl;
+		// cout << "		## index is " << index << endl;
+		// cout << "		## new object is " << obj->m_name << endl;
 
 		if (objects[index].object != NULL)
 		{
-			cout << "		## i want to delete " << (objects[index].object->m_name) << endl;
+		//	cout << "		## i want to delete " << (objects[index].object->m_name) << endl;
 			delete objects[index].object;
 		}
 		else
@@ -750,52 +750,36 @@ struct DelayedPacket
 
 	// http://www.geeksforgeeks.org/copy-constructor-vs-assignment-operator-in-c/
 	// need to define copy constructer and assignment operator becuz RakNet does not allow BitStream copy by value
+	
 	DelayedPacket()
 	{
 		bs.Reset();
 	}
-
+	
 	DelayedPacket(const DelayedPacket& dp)
 	{
-//		cout << "Packet copy constructor" << endl;
 		this->deliveryTime = dp.deliveryTime;
 		this->address = dp.address;
-
-
 		this->bs.Reset();
-	//	this->bs.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 		this->bs.Write(((RakNet::BitStream*)(&dp.bs)));
-	//	this->bs.SetReadOffset(0);
-//		this->data = dp.data;
 	}
 
 	DelayedPacket& operator = (const DelayedPacket& dp)
 	{
-//		cout << "Packet assignment operator" << endl;
 		this->deliveryTime = dp.deliveryTime;
 		this->address = dp.address;
-
-
 		this->bs.Reset();
-	//	this->bs.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 		this->bs.Write(((RakNet::BitStream*)(&dp.bs)));
-	//	this->bs.SetReadOffset(0);
 		return *this;
 	}
+	
 
 	DelayedPacket(unsigned int time, RakNet::SystemAddress Address, RakNet::BitStream& Bs)
 	{
-//		cout << "member based constructor" << endl;
 		this->deliveryTime = time;
 		this->address = Address;
-
-		// bs.CopyData(data);
-		
 		this->bs.Reset();
-	//	this->bs.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
-		this->bs.Write(Bs);
-	//	this->bs.SetReadOffset(0);
-		
+		this->bs.Write(Bs);		
 	}
 };
 
@@ -857,7 +841,7 @@ class FaceOff
 		SkyBox          o_skybox;
 		WorldObject		o_sampleBullet;
 
-
+		int debugCurClientId;
 
 		list<Particle> m_bullets;
 		queue<int> m_objectIndexPool;
@@ -879,7 +863,7 @@ class FaceOff
 
 		KDTreeNode* hitNode;
 		long long m_currentTimeMillis;
-
+		bool singlePlayerMode;
 
 
 		RakNet::Packet* sv_packet;
@@ -974,8 +958,10 @@ class FaceOff
 
 		void initMap();
 
-		void serverFrame();
-		void clientFrame();
+		void interpolateEntities();
+
+		void serverFrame(long long dt);
+		void clientFrame(long long dt);
 
 		void serverReadPackets();
 		void clientReadPackets();
@@ -990,7 +976,7 @@ class FaceOff
 		
 		void serverSendClientMessages();
 
-		void serverSendClientSnapshot(Client* client, int clientId);
+		void serverSendClientSnapshot(int clientId);
 		void serverBuildClientSnapshot(Snapshot* from, Snapshot* to, RakNet::BitStream& bs);
 		
 		void serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, RakNet::BitStream& bs);
@@ -1004,13 +990,14 @@ class FaceOff
 		void serverConstructSnapshotToClient();
 
 
-		void clientParseServerSnapshot(RakNet::BitStream& bs);
-		void clientParsePlayers(Snapshot* prev, Snapshot* cur, RakNet::BitStream& bs);
-		void clientParseEntities(Snapshot* prev, Snapshot* cur, RakNet::BitStream& bs);
-		void clientParseDeltaEntity(int flags, RakNet::BitStream& bs);
-		void clientParseAddEntity(int flags, RakNet::BitStream& bs);
-		void clientParseRemoveEntity(RakNet::BitStream& bs);
+		void clientParseSnapshot(RakNet::BitStream& bs);
+		void clientParsePlayers(ClientSnapshot* prev, ClientSnapshot* cur, RakNet::BitStream& bs);
+		void clientParseEntities(ClientSnapshot* prev, ClientSnapshot* cur, RakNet::BitStream& bs);
+		void clientParseDeltaEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
 		void clientParseEntityData(WorldObject* obj, int flags, RakNet::BitStream& bs);
+		void clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
+		void clientParseRemoveEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
+
 
 		void clientSendCmd();
 		void clientSendPacket(RakNet::BitStream& bs);
@@ -1047,14 +1034,25 @@ class FaceOff
 		void startCB();
 		void resetGameBoardCB();
 		
-		unsigned int serverAbsoluteTime;
-		unsigned int clientAbsoluteTime;
+	//	unsigned int serverAbsoluteTime;
+	//	unsigned int clientAbsoluteTime;
 
-		float latency;
-		float packetLoss;
+//		Uint32 serverAbsoluteTime;	// absoluteTime
+//		Uint32 clientAbsoluteTime;	// absoluteTime
+
+//		Uint32 serverRealTime;	// absoluteTime
+//		Uint32 clientRealTime;	// absoluteTime
+
+		float latency;		// each way latency in seconds
+		float packetLoss;	// percentage of packets lost
 
 		vector<float> latencyOptions;
 		int curLatencyOption;
+
+		vector<float> packetLossOptions;
+		int curPacketLossOption;
+
+		
 
 		// this is used to simulate packet loss and packet delay on a single player
 

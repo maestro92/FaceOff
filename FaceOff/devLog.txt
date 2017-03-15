@@ -366,7 +366,155 @@ Apparenlty, lambdas are added as a new feature of C++11.
 ####################################### 2017 Feb 26th #######################################
 #############################################################################################
 
+I had to chance to learn about how the C++ compiler automatically generates a class's "default constructor, copy constructors, cpy assignment operator, and destructor" if you don't define one
 
-TODO: copy constructor for bit stream
+I was reading the "Effective C++ Third Edition" book and that was the summary for "Item 5" in the book.
+
+And luckily I had a chance to learn about it working on this project.
+
+I was working the part where the game emulate latency on the local machine. The way I accomplish this fake latency is that instead of immediately sending the packet, I put them in queue. Then every frame, I check in the queue and see if the packet has reached their delivery time.
+
+So take the example of the server sending the snapshot, the usual server frame loop will look like something below (quake3 style)
+
+				serverFrame
+				{
+					serverReadPackets();
+
+					...
+
+					serverRunSimulation();
+
+					...
+
+					serverSendClientMessages();
+
+					...
+				}
+
+
+and so in the serverSendClientMessages(){} function is where you will send the new snapshot to the clients. Previously, using RackNet,
+I will just call
+
+
+					m_server.peer->Send(&snapshot_bitstream, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, client.address, false);
+
+
+to send it directly to the client. But to emulate latency, I put it in a this "serverToClient" queue, and process it later, so the my loop will look like this
+
+
+					
+					queue<DelayedPacket> serverToClient;
+					...
+					...
+
+
+					serverFrame
+					{
+						serverReadPackets();
+
+						...
+
+						serverRunSimulation();
+
+						...
+
+						serverSendClientMessages();	// instead of sending client messages, I put them in serverToClient
+
+						...
+
+						processPacketQueue(serverAbsoluteTime, serverToClient, true);
+					}
+
+
+
+
+
+Pretty straight forward right? Well the surprised happened when defining the struct DelayedPacket. Initially I had it like this
+
+					struct DelayedPacket
+					{
+						unsigned int deliveryTime;
+						RakNet::SystemAddress address;
+						RakNet::BitStream bs;
+					}
+
+but somehow, I was getting the following compiler error 
+					
+					Error	21	error C2248: 'RakNet::BitStream::BitStream' : cannot access private member declared in class 'RakNet::BitStream'	d:\martin\programming\c_c++\visual studio projects\faceoff\faceoff\main.h	784	1	FaceOff
+
+
+from looking at the internet, apaprently RakNet does not allow RakNet::BitStream to pass by value. So I figured that has to be happening becuz I haven't defined
+the copy construct, and copy assignment operator, and that the compiler generated their own versions of it that copied by value. I would only have known about it becuz I just happened to read "Item 5" that morning.......
+
+So obviously I put it in the fix to fix that.. 
+
+
+
+					struct DelayedPacket
+					{
+						unsigned int deliveryTime;
+						RakNet::SystemAddress address;
+						RakNet::BitStream bs;
+
+						
+						DelayedPacket()
+						{
+							bs.Reset();
+						}
+						
+						DelayedPacket(const DelayedPacket& dp)
+						{
+							this->deliveryTime = dp.deliveryTime;
+							this->address = dp.address;
+							this->bs.Reset();
+							this->bs.Write(((RakNet::BitStream*)(&dp.bs)));
+						}
+
+						DelayedPacket& operator = (const DelayedPacket& dp)
+						{
+							this->deliveryTime = dp.deliveryTime;
+							this->address = dp.address;
+							this->bs.Reset();
+							this->bs.Write(((RakNet::BitStream*)(&dp.bs)));
+							return *this;
+						}
+						
+
+						DelayedPacket(unsigned int time, RakNet::SystemAddress Address, RakNet::BitStream& Bs)
+						{
+							this->deliveryTime = time;
+							this->address = Address;
+							this->bs.Reset();
+							this->bs.Write(Bs);		
+						}
+					};
+
+
+there u go kids. morale of the story:
+1.	reading good stuff always helps
+2.	know what your compilers are doing...
+
+
+
+
+
+
+
+#############################################################################################
+####################################### 2017 march 7th ######################################
+#############################################################################################
+
+want to mention something about organizing utility files. As you might know, I am currently reading the "Effective C++ Third Edition"
+and on the Item 23 (page 101), there is a paragraph describing how C++ manages its std library files
+
+	"
+			Note that this is exaclty how the standard C++ library is organized. Rather than having a single monolithic <C++StandardLibrary
+			header containing everything in the std namespace, there are dozens of headers (e.g. <vector>, <algorithm>, <memory>, etc.), each decalring some of the functionality in std. CLients who use only vector-related functionality aren't required to #include <memory>;
+			clients who won't use list don't have to #include <list>. This allows clinets to be compilation dependent only on the parts of the system they actually use
+	"
+
+well, if c++ std is doing it this way, then I should definition do the same with my utiliity functions... which is right now a single monolithic utility file 
+
+
 
 

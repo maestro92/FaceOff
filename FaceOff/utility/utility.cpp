@@ -50,3 +50,13 @@ void utl::read(RakNet::BitStream &bitStream, std::string &s)
 	string new_s(str);
 	s = new_s;
 }
+
+// https://www.epochconverter.com/
+long long utl::getCurrentTime_ms()
+{
+	using namespace std::chrono;
+	std::chrono::milliseconds ms = duration_cast< std::chrono::milliseconds >(
+		system_clock::now().time_since_epoch()
+		);
+	return ms.count();
+}

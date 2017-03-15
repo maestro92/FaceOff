@@ -1,7 +1,6 @@
 #ifndef NETWORK_SERVER_H_
 #define NETWORK_SERVER_H_
 
-
 #include <stdio.h>
 #include <string.h>
 #include <dos.h>
@@ -19,16 +18,19 @@
 #include "BitStream.h"
 #include "RakNetTypes.h"	// Message ID
 
-#include "network_utility.h"
-#include "client.h"
 #include "game_messages.h"
+#include "network_utility.h"
+#include "utility.h"
+// #include "client.h"
 
 #include "shared.h"
 
-#define NUM_MAX_CLIENTS 10
+const int NUM_MAX_CLIENTS = 10;
+const int NUM_SNAPSHOT_ENTITIES = 128;
 
 
-#define NUM_SNAPSHOT_ENTITIES 256;
+const unsigned int SV_SNAPSHOT_BUFFER_SIZE = 32;
+const unsigned int SV_SNAPSHOT_BUFFER_MASK = (SV_SNAPSHOT_BUFFER_SIZE - 1);
 
 using namespace std;
 
@@ -39,11 +41,45 @@ enum ClientState
 	DISCONNECTED
 };
 
+/*
+// snapshot constructed on the server for the particular client
+class Snapshot
+{
+	public:
+		int	serverTime;
+
+		// since snapshots are sent by server to the client,
+		// the playerState is the info about that client
+		PlayerState	playerState;
+
+		int numEntities;
+
+		int firstEntityIndex;	// first index into the circular curSVSnapshotObjects[]
+								// the entities must be in increasing state number
+};
+*/
+
+
+
+// snapshot constructed on the server for the particular client
+class Snapshot
+{
+	public:
+		int	serverTime;
+
+		// since snapshots are sent by server to the client,
+		// the playerState is the info about that client
+		PlayerState	playerState;
+
+		int numEntities;
+
+		int firstEntityIndex;	// first index into the circular curSVSnapshotObjects[]
+		// the entities must be in increasing state number
+};
 
 
 class Server
 {
-	
 	public:
 		Server();
 		Server(bool dedicatedFlag);
@@ -58,7 +94,7 @@ class Server
 		bool isInitalized;
 		bool isDedicated;
 		int m_fps;
-		int time;
+
 		int timeout;
 
 		int snapshotCounter;	// incremented for each snapshot built
@@ -66,6 +102,8 @@ class Server
 		// the circular objects states used when building snapshot on the server
 		vector<WorldObjectState> snapshotObjectStates;
 		vector<WorldObjectState> snapshotObjectStatesBaselines;
+
+
 
 		int nextSnapshotEntityIndex;
 		int snapshotObjectStatesBufferSize;
@@ -82,15 +120,59 @@ class Server
 
 		int num_entities;		// current number, <= MAX_GENTITIES
 
-		void addClient(RakNet::Packet* packet);
-		Client getClient(int i);
-		vector<Client> clients;
 
-		int clientCount;
+
+		void addClient(RakNet::Packet* packet);
+		RakNet::SystemAddress getClientAddress(int i);
+		bool isClientConnected(int i);
+		void setClientIncomingSequence(int i, int sequence);
+		int getClientOutgoingSequence(int i);
+		void incrementClientOutgoingSequence(int i);
+		int getClientLastUserCmdFrame(int i);
+		void setClientLastUserCmdFrame(int i, int sequence);
+		
+		Snapshot& getClientSnapshot(int i, int si);
+
+		int getNumConnectedClients();
+		int getNumClients();
+
+		int time;
+		long long realTime;
 
 	private:
 
+		// server's representation of client
+		// the main and everywhere else shouldn't be aware of this class
+		class ClientHandle
+		{
+			public:
+				Snapshot snapshots[SV_SNAPSHOT_BUFFER_SIZE];
+				RakNet::SystemAddress systemAddress;
+				bool isConnected;
+				int lastUserCmdFrame;			// the frame that the last client usercmd send over
+				NetChannel netchan;
+				RakNet::RakNetGUID m_guid;
+
+				ClientHandle(RakNet::RakNetGUID guid)
+				{
+					m_guid = guid;
+					isConnected = false;
+				}
+		};
+
+		int numConnectedClient;
+
+		vector<ClientHandle> clients;
 };
+
+
+
+
+
+
+
+
+
 
 
 

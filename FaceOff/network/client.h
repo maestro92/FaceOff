@@ -22,83 +22,126 @@
 #include "network_utility.h"
 #include "utility.h"
 
+#include "shared.h"
 
-
-#define	CMD_BUFFER_SIZE			64	
-#define	CMD_BUFFER_MASK			(CMD_BUFFER_SIZE - 1)
 // allow a lot of command backups for very fast systems
 // multiple commands may be combined into a single packet, so this
 // needs to be larger than PACKET_BACKUP
 
 // must be power of two
-#define	SNAPSHOT_BUFFER_SIZE	16	// copies of Snapshots to keep buffered
-#define	SNAPSHOT_BUFFER_MASK	(SNAPSHOT_BUFFER_SIZE-1)
 
+const unsigned int CMD_BUFFER_SIZE = 64;
+const unsigned int CMD_BUFFER_MASK = (CMD_BUFFER_SIZE - 1);
 
-#define	MAX_ENTITIES_IN_SNAPSHOT	256
+const unsigned int 	CL_SNAPSHOT_BUFFER_SIZE = 32;	// copies of Snapshots to keep buffered
+const unsigned int 	CL_SNAPSHOT_BUFFER_MASK = (CL_SNAPSHOT_BUFFER_SIZE - 1);
+
 
 
 
 #define	PACKET_BACKUP 32	// number of old messages that must be kept on client and
 							// server for delta comrpession and ping estimation
-#define MAX_ENTITIES 1024
-#define MAX_PARSE_ENTITIES 2048
 
+
+const int MAX_ENTITIES_IN_SNAPSHOT = 128;
+const int MAX_PARSE_ENTITIES = 2048;
+// #define MAX_ENTITIES_IN_SNAPSHOT 1024
 
 // playerState_t is a full superset of entityState_t as it is used by players,
 // so if a playerState_t is transmitted, the entityState_t can be fully derived
 // from it.
 
 
-// playerState is mostly used for server sending down the client about information player information
-struct PlayerState
-{
-	int cmdTime;		// cmd->serverTime of last executed command on the server
 
-};
-
-
-
-struct EntityState
-{
-
-
-};
-
-
-
+/*
 struct Snapshot
 {
-	
 
-	int	serverTime;
+
+};
+*/
+
+
+// used to store the snapshot sent down from the server
+// i couldn't get the circular parsed entity to work becuz
+// during the interpolations stage, you will have to access that object in the past snapshot
+// and I cna't think of a constant time method to acess that in a parsed entity
+//
+
+
+
+struct ClientWorldObjectState
+{
+
+	int flags;
+	WorldObjectState state;
+
+	ClientWorldObjectState()
+	{
+
+	}
+
+	ClientWorldObjectState(int flags)
+	{
+		this->flags = flags;
+	}
+
+	ClientWorldObjectState(int flags, const WorldObjectState& state)
+	{
+		this->flags = flags;
+		this->state = state;
+	}
+};
+
+struct ClientSnapshot
+{
+	int ping;
+	long long serverTime;
+
+	int messageSequenceNum;	// copied from netchan->incoming_sequence
 
 	// since snapshots are sent by server to the client,
-	// the playerState is the info about that client
+	// the playerState is the info about this client
 	PlayerState	playerState;
 
 	int numEntities;
+	ClientWorldObjectState entities[MAX_ENTITIES_IN_SNAPSHOT];
+	int start;
+	int end;
 
-	int firstEntityIndex;	// first index into the circular curSVSnapshotObjects[]
-							// the entities must be in increasing state number
+	ClientSnapshot()
+	{
+		serverTime = -1;
+		start = 9999999;
+		end = -1;
+	}
 
+	bool valid()
+	{
+		return serverTime != -1;
+	}
+
+	void set(int index, const ClientWorldObjectState& entityState)
+	{		
+		entities[index] = entityState;
+
+		start = std::min(start, index);
+		end = std::max(end, index);;
+	}
+
+	int getIterationEnd()
+	{
+		return end + 1;
+	}
 
 };
 
 
-// see quake3 net_chan.c 
-// Netchan_setup
-struct NetChannel
+
+class ClientConnection
 {
 
-	NetChannel()
-	{
-		incomingSequence = 0;	// in quake3, this is mainly used to check packets are out of order?								
-		outgoingSequence = 1;
-	}
 
-	int incomingSequence;
-	int outgoingSequence;
 };
 
 class Client
@@ -118,7 +161,10 @@ class Client
 		int framecount;
 		int frametime;		// msec since last frame
 
-		int realtime;
+
+		long long realTime;
+
+//		int realtime;
 		int realFrameTime;	
 
 		int nextSnapshotTime;
@@ -135,20 +181,36 @@ class Client
 		int cmdCounter;				// incremented each frame, because multiple
 									// frames may need to be packed into a single packet
 
-		Snapshot prevSnapshot;		// latest received from server
-		Snapshot snapshots[SNAPSHOT_BUFFER_SIZE];
+		ClientSnapshot* curSnapshot;		// latest received from server
+		ClientSnapshot snapshots[CL_SNAPSHOT_BUFFER_SIZE];
 
-		int lastUserCmdFrame;	// the frame that the last client usercmd send over
+		// index (not anded off) into parseEntities[]
+//		int	parseEntitiesIndex;
+
+	
+//		I have trouble accessing past frames without doing linear time
+	
+
+//		ClientWorldObjectState parseEntities[MAX_PARSE_ENTITIES];
+		//		WorldObjectState entityBaseLines[MAX_ENTITIES];
+		//		WorldObjectState parseEntities[MAX_PARSE_ENTITIES];
+
+		// the circular objects states used when parsing the snapshot from the server
+		// will also be used when the client tries to interpolate across snapshots
+		// vector<WorldObjectState> snapshotObjectStates;	
+
+//		int lastUserCmdFrame;	// the frame that the last client usercmd send over
 		NetChannel netchan;
 
 		RakNet::RakNetGUID m_guid;
 		RakNet::SystemAddress systemAddress;
 		RakNet::SystemAddress serverSystemAddress;
 
-		int id;
-		// EntityState entityBaseLines[MAX_ENTITIES];
-		// EntityState parseEntities[MAX_PARSE_ENTITIES];
 
+		int serverMessageSequence;
+
+		int id;
+		
 };
 
 #endif

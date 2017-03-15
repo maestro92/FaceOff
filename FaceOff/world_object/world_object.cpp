@@ -335,6 +335,8 @@ void WorldObject::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 
 	float friction = 0;
 	bs.Read(friction);			setMaterialSurfaceFriction(friction);
+
+	prevState = GetState();
 }
 
 
