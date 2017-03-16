@@ -142,7 +142,7 @@ int counter = 0;
 
 
 // only used for spawning
-void Player::processUserCmd(UserCmd cmd)
+void Player::processUserCmd(const UserCmd& cmd)
 {
 	// glm::vec3 vel;
 	bool canJumpFlag = canJump();
@@ -1064,7 +1064,7 @@ void Player::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 		pickUp(weapon);
 	}
 
-	prevState = GetState();
+//	prevState = getState();
 
 #if DEBUG
 	{

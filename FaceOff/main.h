@@ -885,7 +885,7 @@ class FaceOff
 		// vector<WorldObject*> sv_objects;	
 		// vector<WorldObject*> cl_objects;	// used for client parsing server snapshot and rendering
 
-
+		bool predictionOn;
 
 		FOArray sv_objects;
 		FOArray cl_objects;	// this never creates, only sets objects
@@ -1013,6 +1013,8 @@ class FaceOff
 		Player* parsePlayer(RakNet::BitStream& bs, bool defaultFlag);
 
 		void simulatePlayerPhysics(KDTree& tree, Player* p, int i);
+		void simulatePlayerPhysics1(KDTree& tree, Player* p, int i);
+
 		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, UserCmd cmd);
 
 		// void simulatePlayerPhysics(Player* p, int i, Move move);

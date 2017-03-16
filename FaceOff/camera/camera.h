@@ -30,8 +30,8 @@ class Camera
 //		virtual void processInput(Move move, glm::vec3 & vel, bool canJump) = 0;
 
 
-		virtual void processUserCmd(UserCmd cmd) = 0;
-		virtual void processUserCmd(UserCmd cmd, glm::vec3 & vel, bool canJump) = 0;
+		virtual void processUserCmd(const UserCmd& cmd) = 0;
+		virtual void processUserCmd(const UserCmd& cmd, glm::vec3 & vel, bool canJump) = 0;
 
 		void setMouseIn(bool b);
 		bool getMouseIn();

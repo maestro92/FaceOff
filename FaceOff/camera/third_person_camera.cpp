@@ -138,12 +138,12 @@ void ThirdPersonCamera::control(glm::vec3& vel, bool canJump)
 
 }
 
-void ThirdPersonCamera::processUserCmd(UserCmd cmd)
+void ThirdPersonCamera::processUserCmd(const UserCmd& cmd)
 {
 
 }
 
-void ThirdPersonCamera::processUserCmd(UserCmd cmd, glm::vec3& vel, bool canJump)
+void ThirdPersonCamera::processUserCmd(const UserCmd& cmd, glm::vec3& vel, bool canJump)
 {
 
 }

@@ -230,7 +230,7 @@ void FirstPersonCamera::control(glm::vec3 & vel, bool canJump)
 }
 
 
-void FirstPersonCamera::processUserCmd(UserCmd cmd)
+void FirstPersonCamera::processUserCmd(const UserCmd& cmd)
 {
 	m_pitch = cmd.angles[PITCH];
 	m_yaw = cmd.angles[YAW];
@@ -267,7 +267,7 @@ void FirstPersonCamera::processUserCmd(UserCmd cmd)
 
 
 
-void FirstPersonCamera::processUserCmd(UserCmd cmd, glm::vec3 & vel, bool canJump)
+void FirstPersonCamera::processUserCmd(const UserCmd& cmd, glm::vec3 & vel, bool canJump)
 {
 	m_pitch = cmd.angles[PITCH];
 	m_yaw = cmd.angles[YAW];

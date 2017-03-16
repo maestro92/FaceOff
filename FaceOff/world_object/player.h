@@ -154,7 +154,7 @@ class Player : public WorldObject
 		void deserialize(RakNet::BitStream& bs, ModelManager* mm);
 
 		// void processInput(Move move);
-		void processUserCmd(UserCmd cmd);
+		void processUserCmd(const UserCmd& cmd);
 
 
 		int weaponCount;

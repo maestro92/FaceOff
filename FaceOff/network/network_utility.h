@@ -56,7 +56,7 @@ const string serverDebugPrefix = "";
 struct UserCmd
 {
 //	int playerId;
-	int serverTime;
+	long long serverTime;		// the time that this cmd was acknowledged by the server
 	float angles[3];	// int angles[3]?
 	uint8_t buttons;
 	uint8_t weapon;

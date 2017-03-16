@@ -165,7 +165,7 @@ class WorldObject
 		virtual WeaponNameEnum getWeaponName();
 
 		WorldObjectState prevState;
-		inline WorldObjectState GetState();
+		inline WorldObjectState getState();
 
 		void clearParentNodes();
 		vector<KDTreeNode*> m_parentNodes;
@@ -355,7 +355,7 @@ inline float WorldObject::getMaterialSurfaceFrictionToBitStream()
 }
 
 
-inline WorldObjectState WorldObject::GetState()
+inline WorldObjectState WorldObject::getState()
 {
 	WorldObjectState state;
 	state.objectId = objectId;

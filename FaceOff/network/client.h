@@ -102,7 +102,7 @@ struct ClientSnapshot
 
 	// since snapshots are sent by server to the client,
 	// the playerState is the info about this client
-	PlayerState	playerState;
+	WorldObjectState playerState;
 
 	int numEntities;
 	ClientWorldObjectState entities[MAX_ENTITIES_IN_SNAPSHOT];
@@ -172,6 +172,9 @@ class Client
 		int	serverTime;			// may be paused during play
 
 		int	weapon;
+
+
+		int lastAckUserCmdIndex;
 
 		// keeping two entries for mouse smoothing
 //		int mouseDx[2];

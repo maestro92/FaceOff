@@ -38,8 +38,8 @@ class ThirdPersonCamera : public Camera
 //		virtual void processInput(Input input);
 //		virtual void processInput(Input input, glm::vec3& vel, bool canJump);
 
-		virtual void processUserCmd(UserCmd cmd);
-		virtual void processUserCmd(UserCmd cmd, glm::vec3& vel, bool canJump);
+		virtual void processUserCmd(const UserCmd& cmd);
+		virtual void processUserCmd(const UserCmd& cmd, glm::vec3& vel, bool canJump);
 
 
         void increaseOffsetDistance();

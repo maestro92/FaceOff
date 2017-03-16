@@ -291,5 +291,5 @@ void Weapon::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 		int a = 1;
 	}
 	
-	prevState = GetState();
+//	prevState = GetState();
 }

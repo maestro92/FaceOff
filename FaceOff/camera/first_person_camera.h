@@ -21,8 +21,8 @@ class FirstPersonCamera : public Camera
 		// virtual void processInput(Move move);
 		// virtual void processInput(Move move, glm::vec3& vel, bool canJump);
 
-		virtual void processUserCmd(UserCmd cmd);
-		virtual void processUserCmd(UserCmd cmd, glm::vec3& vel, bool canJump);
+		virtual void processUserCmd(const UserCmd& cmd);
+		virtual void processUserCmd(const UserCmd& cmd, glm::vec3& vel, bool canJump);
 
 
 	private:

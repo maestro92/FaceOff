@@ -109,6 +109,18 @@ void Server::setClientLastUserCmdFrame(int i, int sequence)
 	clients[i].lastUserCmdFrame = sequence;
 }
 
+
+int Server::getClientLastUserCmdIndex(int i)
+{
+	return clients[i].lastUserCmdIndex;
+}
+
+void Server::setClientLastUserCmdIndex(int i, int index)
+{
+	clients[i].lastUserCmdIndex = index;
+}
+
+
 Snapshot& Server::getClientSnapshot(int i, int si)
 {
 	return clients[i].snapshots[si];

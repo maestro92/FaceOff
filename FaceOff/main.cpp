@@ -153,6 +153,7 @@ void FaceOff::init()
 
 	curLatencyOption = 0;
 
+	predictionOn = true;
 	containedFlag = false;
 	hitNode = NULL;
 
@@ -1173,8 +1174,8 @@ void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
 
 void FaceOff::serverReadPackets()
 {
-	Uint32 lastSnapShotSendTime = 0;
-	Uint32 curTime = 0;
+//	Uint32 lastSnapShotSendTime = 0;
+//	Uint32 curTime = 0;
 
 	// iterate over each message received
 	for (sv_packet = m_server.peer->Receive(); 
@@ -1231,8 +1232,14 @@ void FaceOff::serverReadPackets()
 
 				int clientId = 0;
 				bsIn.Read(clientId);
+
 				m_server.setClientIncomingSequence(clientId, sequence);
 				m_server.setClientLastUserCmdFrame(clientId, sequence);
+
+
+				int cmdIndex = 0;
+				bsIn.Read(cmdIndex);
+				m_server.setClientLastUserCmdIndex(clientId, cmdIndex);
 
 				// get the command
 				UserCmd cmd; 
@@ -1284,7 +1291,7 @@ void FaceOff::serverReadPackets()
 		}
 	}
 
-
+	/*
 	curTime = SDL_GetTicks();
 
 	if (curTime - lastSnapShotSendTime > SERVER_SNAPSHOT_TIME_STEP)
@@ -1293,7 +1300,7 @@ void FaceOff::serverReadPackets()
 
 		lastSnapShotSendTime = curTime;
 	}
-	
+	*/
 }
 
 
@@ -1451,6 +1458,8 @@ void FaceOff::serverSendClientSnapshot(int clientId)
 	bs1.Write(m_server.realTime);
 
 
+	bs1.Write(m_server.getClientLastUserCmdIndex(clientId));
+
 	//	bs1.Write(client->netchan.outgoingSequence);
 	// utl::debug("sending snapshot sequence", client->netchan.outgoingSequence);
 
@@ -1573,7 +1582,7 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 			// recall we are using a circular buffer
 			int index = m_server.nextSnapshotEntityIndex % m_server.snapshotObjectStatesBufferSize;
 
-			m_server.snapshotObjectStates[index] = sv_objects.getByIndex(i)->GetState();
+			m_server.snapshotObjectStates[index] = sv_objects.getByIndex(i)->getState();
 			++(m_server.nextSnapshotEntityIndex);
 
 
@@ -1802,19 +1811,6 @@ void FaceOff::serverRunClientMoveCmd(int playerId, UserCmd cmd)
 	}
 
 	player->processUserCmd(cmd);
-
-
-	if (m_client.curSnapshot == NULL)
-	{
-		//		cout << "curSnapshot NULL" << endl;
-	}
-	else
-	{
-		cout << "		curSnapshot not NULL" << endl;
-		cout << "		" << m_client.curSnapshot << endl;
-
-		cout << "		messageSequenceNum " << m_client.curSnapshot->messageSequenceNum << endl;
-	}
 }
 
 
@@ -1834,56 +1830,18 @@ void FaceOff::clientFrame(long long dt)
 
 	clientReadPackets();
 
-	if (m_client.curSnapshot == NULL)
-	{
-		//		cout << "curSnapshot NULL" << endl;
-	}
-	else
-	{
-		cout << "1curSnapshot not NULL" << endl;
-		cout << m_client.curSnapshot << endl;
-
-		cout << "1messageSequenceNum " << m_client.curSnapshot->messageSequenceNum << endl;
-	}
-
 	clientSendCmd();
 	clientCheckForResend();
-
-	if (m_client.curSnapshot == NULL)
-	{
-		//		cout << "curSnapshot NULL" << endl;
-	}
-	else
-	{
-		cout << "2curSnapshot not NULL" << endl;
-		cout << m_client.curSnapshot << endl;
-
-		cout << "2messageSequenceNum " << m_client.curSnapshot->messageSequenceNum << endl;
-	}
 
 	processPacketQueue(m_client.realTime, clientToServer, false);
 
 	// I opt to do player prediction collision detection on the interpolated objects
 	// so I do this before the clientPrediction
-	// interpolateEntities();
+	interpolateEntities();
 
-	if (m_client.curSnapshot == NULL)
-	{
-//		cout << "curSnapshot NULL" << endl;
-	}
-	else
-	{
-		cout << "3curSnapshot not NULL" << endl;
-		cout << m_client.curSnapshot << endl;
-
-		cout << "3messageSequenceNum " << m_client.curSnapshot->messageSequenceNum << endl;
-	}
 	clientPrediction();
 
-	render();
-
-
-
+	render();	
 }
 
 // interpolate, also add entities to the collision tree
@@ -2106,22 +2064,20 @@ void FaceOff::clientCheckForResend()
 
 void FaceOff::clientParseSnapshot(RakNet::BitStream& bs)
 {
-	cout << "	cur m_client.netchan.incomingSequence1: " << m_client.netchan.incomingSequence << endl;
-
 	ClientSnapshot* prev = NULL;
 	ClientSnapshot* cur = &m_client.snapshots[m_client.netchan.incomingSequence & CL_SNAPSHOT_BUFFER_MASK];
 	
 	bs.Read(cur->serverTime);
-	cout << "	cur serverTime: " << cur->serverTime << endl;
+//	cout << "	cur serverTime: " << cur->serverTime << endl;
 
-	cout << "	cur m_client.netchan.incomingSequence2: " << m_client.netchan.incomingSequence << endl;
 	cur->messageSequenceNum = m_client.netchan.incomingSequence;
+
+	bs.Read(m_client.lastAckUserCmdIndex);
 
 	clientParsePlayers(prev, cur, bs);
 	clientParseEntities(prev, cur, bs);
 
 	m_client.curSnapshot = cur;
-	// m_client.curSnapshot = &m_client.snapshots[m_client.netchan.incomingSequence & CL_SNAPSHOT_BUFFER_MASK];
 }
 
 
@@ -2148,6 +2104,11 @@ void FaceOff::clientParsePlayers(ClientSnapshot* prev, ClientSnapshot* cur, RakN
 		bs.Read(p->m_position[1]);
 		bs.Read(p->m_position[2]);
 		p->updateCollisionDetectionGeometry();
+
+		if (id1 == m_defaultPlayerID)
+		{
+			cur->playerState = p->getState();
+		}
 
 		// cout << "id1 " << id1 << endl;
 		// utl::cldebug("	pos is ", p->m_position);
@@ -2257,7 +2218,7 @@ void FaceOff::clientParseDeltaEntity(ClientSnapshot* cur, int flags, RakNet::Bit
 	clientParseEntityData(obj, flags, bs);
 
 
-	ClientWorldObjectState state(flags, obj->GetState());
+	ClientWorldObjectState state(flags, obj->getState());
 	cur->set((int)objId.s.index, state);
 
 //	cur->entities[objId.s.index].flags = flags;
@@ -2273,7 +2234,7 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 		deserializeEntityAndAddToWorld(obj, bs);
 
 		ObjectId objId = obj->objectId;
-		ClientWorldObjectState state(flags, obj->GetState());
+		ClientWorldObjectState state(flags, obj->getState());
 		cur->set((int)objId.s.index, state);
 	}
 	else if (flags & U_WEAPON)
@@ -2282,7 +2243,7 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 		deserializeEntityAndAddToWorld(obj, bs);
 
 		ObjectId objId = obj->objectId;
-		ClientWorldObjectState state(flags, obj->GetState());
+		ClientWorldObjectState state(flags, obj->getState());
 		cur->set((int)objId.s.index, state);
 
 		if (obj->objectId.s.index == 27)
@@ -2387,30 +2348,14 @@ void FaceOff::clientSendCmd()
 	}
 	UserCmd cmd = clientCreateNewCmd();
 
-	if (m_client.curSnapshot != NULL)
-	{
-		cout << "1.5 " << m_client.curSnapshot << endl;
-	}
-
-	m_client.cmdCounter++;
+	++m_client.cmdCounter;
 	int newCmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
 	
-	
-	if (m_client.curSnapshot != NULL)
-	{
-		cout << "newCmdIndex " << newCmdIndex << endl;
-		cout << "1.55 " << m_client.curSnapshot << endl;
-	}
+
+//	printf("		cl cmdNumber %d \n", m_client.cmdCounter);
+
 
 	m_client.cmds[newCmdIndex] = cmd;
-
-	
-	if (m_client.curSnapshot != NULL)
-	{
-		cout << "1.6 " << m_client.curSnapshot << endl;
-	}
-
-
 
 	// send it off with Raknet
 
@@ -2427,15 +2372,10 @@ void FaceOff::clientSendCmd()
 	// bsOut.Write((RakNet::MessageID)CLIENT_INPUT);
 	// utl::clDebug("m_defaultPlayerID", m_defaultPlayerID);
 	bsOut.Write(m_defaultPlayerID);
+	bsOut.Write(newCmdIndex);
 	cmd.serialize(bsOut);
 
 	bool b = (cmd.buttons == 0);
-
-	if (m_client.curSnapshot != NULL)
-	{
-		cout << "1.7 " << m_client.curSnapshot << endl;
-	}
-
 
 	/*
 	if (cmd.buttons != 0)
@@ -2463,12 +2403,6 @@ void FaceOff::clientSendCmd()
 	}
 	*/
 	clientSendPacket(bsOut);
-
-	if (m_client.curSnapshot != NULL)
-	{
-		cout << "1.8 " << m_client.curSnapshot << endl;
-	}
-
 }
 
 
@@ -2760,10 +2694,7 @@ UserCmd FaceOff::clientCreateNewCmd()
 	// get buttons
 	SDL_PumpEvents();
 	Uint8* state = SDL_GetKeyState(NULL);
-	if (state[SDLK_w])	
-	{
-		cmd.buttons |= FORWARD;
-	}
+	if (state[SDLK_w])	{cmd.buttons |= FORWARD;}
 	if (state[SDLK_s])	{cmd.buttons |= BACK;}
 	if (state[SDLK_a])	{cmd.buttons |= LEFT;}
 	if (state[SDLK_d])	{cmd.buttons |= RIGHT;}
@@ -2831,7 +2762,6 @@ UserCmd FaceOff::clientCreateNewCmd()
 
 void FaceOff::clientPrediction()
 {
-	int cmdNum, current;
 	UserCmd oldestCmd, latestCmd;
 
 
@@ -2840,17 +2770,61 @@ void FaceOff::clientPrediction()
 		SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
 	}
 
-	int cmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
-	UserCmd cmd = m_client.cmds[cmdIndex];
-	
+	int currentCmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
 	Player* p = cl_players.get(m_defaultPlayerID);
 
-	p->m_camera->setPitch(cmd.angles[PITCH]);
-	p->m_camera->setYaw(cmd.angles[YAW]);
+
 
 	p->updateGameStats();
 
-	// run all the commands
+
+	UserCmd cmd;
+
+	if (predictionOn)
+	{
+		if (m_client.curSnapshot != NULL)
+		{
+			int cmdIndex = m_client.lastAckUserCmdIndex + 1;
+			WorldObjectState playerState = m_client.curSnapshot->playerState;
+			long long latestSnapshotTime = m_client.curSnapshot->serverTime;
+
+			p->setPosition(playerState.position);
+			p->updateCollisionDetectionGeometry();
+			cl_objectKDtree.reInsert(p);
+
+			while (cmdIndex <= currentCmdIndex)
+			{
+				cmd = m_client.cmds[cmdIndex];
+				p->processUserCmd(cmd);
+				collisionDetectionTestPairs.clear();
+				simulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID);
+				++cmdIndex;
+			}
+
+			/*
+			UserCmd oldestCmd;
+			UserCmd latestCmd;
+
+			for (int cmdNum = currentCmdIndex - CMD_BUFFER_SIZE + 1; cmdNum <= currentCmdIndex; cmdNum++)
+			{
+			UserCmd& cmd = m_client.cmds[cmdNum & CMD_BUFFER_MASK];
+
+			if (cmd.serverTime <= latestSnapshotTime)
+			{
+			continue;
+			}
+
+			}
+			*/
+		}
+	}
+
+	cmd = m_client.cmds[currentCmdIndex];
+	p->m_camera->setPitch(cmd.angles[PITCH]);
+	p->m_camera->setYaw(cmd.angles[YAW]);
+
+
+// run all the commands
 //	for (cmdNum = current - CMD_BUFFER_SIZE + 1; cmdNum <= current; cmdNum++)
 
 }
@@ -3022,6 +2996,10 @@ void FaceOff::update()
 					}
 					break;
 
+				case SDLK_F3:
+					predictionOn = !predictionOn;
+					break;
+
 				default:
 					break;
 			}
@@ -3097,10 +3075,12 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
 
 	p->m_position += p->m_velocity;
 
+	/*
 	if(p->m_velocity.x != 0)
 	{
 		utl::debug("player veloctiy", p->m_velocity);
 	}
+	*/
 
 	p->updateMidAirVelocity();
 
@@ -3211,6 +3191,225 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
 	p->updateWeaponTransform();
 
 }
+
+
+
+
+
+
+
+#if 0
+void FaceOff::simulatePlayerPhysics1(KDTree& tree, Player* p, int i)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+
+	p->updateGameInfo();
+
+	p->m_velocity += utl::BIASED_HALF_GRAVITY;
+
+	p->updateGameStats();
+
+	p->m_position += p->m_velocity;
+
+	if (p->m_velocity.x != 0)
+	{
+		utl::debug("player veloctiy", p->m_velocity);
+	}
+
+	p->updateMidAirVelocity();
+
+	if (singlePlayerMode)
+	{
+		if (i == 1)
+		{
+
+			float tempDist = 100;
+
+			if (incrFlag)
+				p->m_position.z += 0.05;
+			else
+				p->m_position.z -= 0.05;
+
+			if (p->m_position.z > tempDist)
+				incrFlag = false;
+
+			if (p->m_position.z < 20)
+				incrFlag = true;
+
+
+
+
+			float tempMaxAngle = 150;
+
+			if (incrAngleFlag)
+			{
+				tempPitch = 0;
+				tempYaw += 1;
+			}
+			else
+			{
+				tempPitch = 0;
+				tempYaw -= 1;
+			}
+
+			if (tempPitch > tempMaxAngle)
+			{
+				incrAngleFlag = false;
+			}
+			if (tempPitch < -tempMaxAngle)
+			{
+				incrAngleFlag = true;
+			}
+
+			p->setRotation(tempPitch, tempYaw);
+		}
+
+		else if (i == 2)
+		{
+			/*
+			float tempDist = 15;
+
+			if (incrFlag2)
+			p->m_position.x += 0.05;
+			else
+			p->m_position.x -= 0.05;
+
+
+			if (p->m_position.x > tempDist)
+			incrFlag2 = false;
+			if (p->m_position.x < -tempDist)
+			incrFlag2 = true;
+			*/
+
+
+			/*
+			float tempMaxAngle = 150;
+
+			if (incrAngleFlag2)
+			{
+			tempPitch2 += 0.05;
+			tempYaw2 += 1;
+			}
+			else
+			{
+			tempPitch2 += 0.05;
+			tempYaw2 -= 1;
+			}
+
+			if (tempPitch2 > tempMaxAngle)
+			{
+			incrAngleFlag2 = false;
+			}
+			if (tempPitch2 < -tempMaxAngle)
+			{
+			incrAngleFlag2 = true;
+			}
+			*/
+			//	tempPitch2 = 0;
+			//	tempYaw2 = 0;
+
+			p->setRotation(tempPitch2, tempYaw2);
+		}
+
+	}
+
+
+
+	p->updateCollisionDetectionGeometry();
+
+	checkNeighbors1(tree, p);
+
+	p->updateCollisionDetectionGeometry();
+	tree.reInsert(p);
+
+	p->updateWeaponTransform();
+
+}
+
+void FaceOff::checkNeighbors1(KDTree& tree, WorldObject* obj)
+{
+	obj->inMidAir = true;
+
+	vector<WorldObject*> neighbors;
+	glm::vec3 volNearPoint(obj->getPosition());
+	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
+
+	/*
+	tree.print(5);
+	tree.print(11);
+	tree.print(12);
+
+
+	utl::debug("checking neighbors", neighbors.size());
+
+	if (obj->m_name == "player 0")
+	{
+	utl::debug("number of parent nodes are", obj->m_parentNodes.size());
+
+	for (int i = 0; i < obj->m_parentNodes.size(); i++)
+	{
+	utl::debug("	parent node i", obj->m_parentNodes[i]->id);
+	}
+	}
+	*/
+
+	for (int j = 0; j < neighbors.size(); j++)
+	{
+		WorldObject* neighbor = neighbors[j];
+
+		/*
+		// this is for debugging, will render it with "collided color"
+		if (p->isDefaultPlayer())
+		{
+		neighbor->isTested = true;
+		}
+		*/
+
+		/*
+		if (collisionDetectionTestPairs.alreadyTested(obj->objectId.id, neighbor->objectId.id))
+		continue;
+		else
+		collisionDetectionTestPairs.addPairs(obj->objectId.id, neighbor->objectId.id);
+		*/
+
+		if (collisionDetectionTestPairs.alreadyTested(obj->getInstanceId(), neighbor->getInstanceId()))
+			continue;
+		else
+			collisionDetectionTestPairs.addPairs(obj->getInstanceId(), neighbor->getInstanceId());
+
+		if (obj->ignorePhysicsWith(neighbor))
+		{
+			continue;
+		}
+
+
+		ContactData contactData;
+		if (testCollisionDetection(obj, neighbor, contactData))
+		{
+			if (neighbor->getDynamicType() == STATIC)
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = NULL;
+			}
+			else
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = neighbor;
+			}
+
+			contactData.resolveVelocity();
+			contactData.resolveInterpenetration();
+			neighbor->updateCollisionDetectionGeometry();
+		}
+	}
+}
+
+#endif
+
+
 
 
 
