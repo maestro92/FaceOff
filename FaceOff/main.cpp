@@ -157,6 +157,9 @@ void FaceOff::init()
 	containedFlag = false;
 	hitNode = NULL;
 
+
+	timeProfilerIndex = 0;
+
 	initObjects();
 	initRenderers();
    
@@ -1237,9 +1240,10 @@ void FaceOff::serverReadPackets()
 				m_server.setClientLastUserCmdFrame(clientId, sequence);
 
 
-				int cmdIndex = 0;
-				bsIn.Read(cmdIndex);
-				m_server.setClientLastUserCmdIndex(clientId, cmdIndex);
+				int cmdNum = 0;
+				bsIn.Read(cmdNum);
+			//	utl::debug("server read cmdNum", cmdNum);
+				m_server.setClientLastUserCmdNum(clientId, cmdNum);
 
 				// get the command
 				UserCmd cmd; 
@@ -1353,6 +1357,8 @@ void FaceOff::serverFrame(long long dt)
 
 	//	m_server.timeResidual += msec;
 
+	bool runServerFrame = false;
+
 	m_server.m_deltaTimeAccumulatorMS += dt;
 	while (m_server.m_deltaTimeAccumulatorMS >= msPerFrame)
 	{
@@ -1360,11 +1366,14 @@ void FaceOff::serverFrame(long long dt)
 		m_server.m_deltaTimeAccumulatorMS -= msPerFrame;
 		m_server.time += dt;
 //		m_server.realTime += dt;
+		runServerFrame = true;
 	}
 
-
-	serverSendClientMessages();
-
+	// we only want to send it at a rate that the server is ticking
+	if (runServerFrame)
+	{
+		serverSendClientMessages();
+	}
 
 	processPacketQueue(m_server.realTime, serverToClient, true);
 
@@ -1458,7 +1467,7 @@ void FaceOff::serverSendClientSnapshot(int clientId)
 	bs1.Write(m_server.realTime);
 
 
-	bs1.Write(m_server.getClientLastUserCmdIndex(clientId));
+	bs1.Write(m_server.getClientLastUserCmdNum(clientId));
 
 	//	bs1.Write(client->netchan.outgoingSequence);
 	// utl::debug("sending snapshot sequence", client->netchan.outgoingSequence);
@@ -1789,7 +1798,7 @@ void FaceOff::serverWriteWorldObjects(WorldObjectState* obj0, WorldObjectState* 
 void FaceOff::serverRunClientMoveCmd(int playerId, UserCmd cmd)
 {
 	Player* player = sv_players.get(playerId);
-
+	/*
 	if (cmd.buttons & FORWARD)
 	{
 		utl::clDebug("pressed forward");
@@ -1809,7 +1818,7 @@ void FaceOff::serverRunClientMoveCmd(int playerId, UserCmd cmd)
 	{
 		utl::clDebug("pressed RIGHT");
 	}
-
+	*/
 	player->processUserCmd(cmd);
 }
 
@@ -1856,24 +1865,38 @@ void FaceOff::interpolateEntities()
 	ClientSnapshot* from = NULL;
 	ClientSnapshot* to = NULL;
 
+
 	if (m_client.curSnapshot != NULL)
 	{
+		std::cout << "## cursnapshot serverTime " << m_client.curSnapshot->serverTime << endl;
+		std::cout << "## cur renderTime " << curClientRenderTime << endl;
+
 		int start = m_client.curSnapshot->messageSequenceNum;
-		int end = std::max(start - 4, 0);
+		int end = std::max(start - 20, 0);
 		for (int i = start; i >= end; i--)
 		{
+
+
 			int snapshotIndex = i & CL_SNAPSHOT_BUFFER_MASK;
+
+
 
 			ClientSnapshot* temp = &m_client.snapshots[snapshotIndex];
 
-			if (temp->valid() && temp->serverTime >= curClientRenderTime);
+			std::cout << "	snapshotIndex " << i << ", temp snapshot serverTime " << temp->serverTime << endl;
+		//	std::cout << "	temp serverTime" << i << endl;
+
+			if (temp->valid() && temp->serverTime > curClientRenderTime);
 			{
 				to = temp;
 			}
 
 			if (temp->valid() && temp->serverTime <= curClientRenderTime)
 			{
-				from = temp;
+				if (from != NULL && temp->serverTime < from->serverTime)
+				{
+					from = temp;
+				}
 			}
 
 			if (to && from)
@@ -1887,10 +1910,19 @@ void FaceOff::interpolateEntities()
 			from = to;
 		}
 
+		std::cout << "to snapshot serverTime " << to->serverTime << endl;
+		std::cout << "from snapshot serverTime " << from->serverTime << endl;
 
-		float interpFactor = curClientRenderTime - from->serverTime;
 
-		interpFactor = interpFactor / (to->serverTime - from->serverTime);
+		long long numer = curClientRenderTime - from->serverTime;
+		long long denom = to->serverTime - from->serverTime;
+
+		std::cout << "numer " << numer << endl;
+		std::cout << "denom " << denom << endl;
+
+		double interpFactor = (double)numer / (double)denom;
+
+		std::cout << interpFactor << endl;
 
 		ClientWorldObjectState cState0;
 		ClientWorldObjectState cState1;
@@ -2068,11 +2100,13 @@ void FaceOff::clientParseSnapshot(RakNet::BitStream& bs)
 	ClientSnapshot* cur = &m_client.snapshots[m_client.netchan.incomingSequence & CL_SNAPSHOT_BUFFER_MASK];
 	
 	bs.Read(cur->serverTime);
-//	cout << "	cur serverTime: " << cur->serverTime << endl;
+	cout << "	cur serverTime: " << cur->serverTime << endl;
 
 	cur->messageSequenceNum = m_client.netchan.incomingSequence;
 
-	bs.Read(m_client.lastAckUserCmdIndex);
+	bs.Read(m_client.lastAckCmdNum);
+
+//	utl::clDebug("lastAckCmdNum", m_client.lastAckCmdNum);
 
 	clientParsePlayers(prev, cur, bs);
 	clientParseEntities(prev, cur, bs);
@@ -2348,11 +2382,11 @@ void FaceOff::clientSendCmd()
 	}
 	UserCmd cmd = clientCreateNewCmd();
 
-	++m_client.cmdCounter;
-	int newCmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
+	++m_client.cmdNum;
+	int newCmdIndex = m_client.cmdNum & CMD_BUFFER_MASK;
 	
 
-//	printf("		cl cmdNumber %d \n", m_client.cmdCounter);
+	// sprintf("		cl cmdNumber %d \n", m_client.cmdNum);
 
 
 	m_client.cmds[newCmdIndex] = cmd;
@@ -2372,7 +2406,7 @@ void FaceOff::clientSendCmd()
 	// bsOut.Write((RakNet::MessageID)CLIENT_INPUT);
 	// utl::clDebug("m_defaultPlayerID", m_defaultPlayerID);
 	bsOut.Write(m_defaultPlayerID);
-	bsOut.Write(newCmdIndex);
+	bsOut.Write(m_client.cmdNum);
 	cmd.serialize(bsOut);
 
 	bool b = (cmd.buttons == 0);
@@ -2770,7 +2804,7 @@ void FaceOff::clientPrediction()
 		SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
 	}
 
-	int currentCmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
+	// int currentCmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
 	Player* p = cl_players.get(m_defaultPlayerID);
 
 
@@ -2784,23 +2818,52 @@ void FaceOff::clientPrediction()
 	{
 		if (m_client.curSnapshot != NULL)
 		{
-			int cmdIndex = m_client.lastAckUserCmdIndex + 1;
+
+			
+			int cmdNum = m_client.lastAckCmdNum + 1;
 			WorldObjectState playerState = m_client.curSnapshot->playerState;
 			long long latestSnapshotTime = m_client.curSnapshot->serverTime;
+
+
+
 
 			p->setPosition(playerState.position);
 			p->updateCollisionDetectionGeometry();
 			cl_objectKDtree.reInsert(p);
+	//		utl::clDebug("m_client current cmdNum", m_client.cmdNum);
+		
+	//		cout << "m_client.cmdNum " << m_client.cmdNum << ", m_client.lastAckCmdNum " << m_client.lastAckCmdNum << endl;
 
-			while (cmdIndex <= currentCmdIndex)
+			long long time0 = utl::getCurrentTime_ms();
+			// uint64 time0 = utl::GetTimeMs64();
+			while (cmdNum <= m_client.cmdNum)
 			{
+				int cmdIndex = cmdNum & CMD_BUFFER_MASK;
+			//	utl::clDebug("	cmdIndex", cmdIndex);
 				cmd = m_client.cmds[cmdIndex];
 				p->processUserCmd(cmd);
+	
+
+		//		clientSimulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID, (cmdNum == m_client.lastAckCmdNum + 1));
+
 				collisionDetectionTestPairs.clear();
 				simulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID);
-				++cmdIndex;
+				++cmdNum;
 			}
+			long long time1 = utl::getCurrentTime_ms();
+			// uint64 time1 = utl::GetTimeMs64();
 
+			/*
+			if (timeProfilerIndex == TIME_PROFILER_BUFFER)
+			{
+				timeProfilerIndex = 0;
+			}	
+			cout << time0 << " " << time1 << endl;
+			cout << timeProfilerIndex << endl;
+			timeProfiler[timeProfilerIndex++] = time1 - time0;
+			GetTimeProfilerAverages();
+			*/
+			
 			/*
 			UserCmd oldestCmd;
 			UserCmd latestCmd;
@@ -2819,7 +2882,7 @@ void FaceOff::clientPrediction()
 		}
 	}
 
-	cmd = m_client.cmds[currentCmdIndex];
+	cmd = m_client.cmds[m_client.cmdNum & CMD_BUFFER_MASK];
 	p->m_camera->setPitch(cmd.angles[PITCH]);
 	p->m_camera->setYaw(cmd.angles[YAW]);
 
@@ -2827,6 +2890,33 @@ void FaceOff::clientPrediction()
 // run all the commands
 //	for (cmdNum = current - CMD_BUFFER_SIZE + 1; cmdNum <= current; cmdNum++)
 
+}
+
+
+void FaceOff::GetTimeProfilerAverages()
+{
+	
+	long long total = 0;
+
+	for (int i = 0; i < TIME_PROFILER_BUFFER; i++)
+	{
+		total += timeProfiler[i];
+	}
+
+	cout << "average is " << total / TIME_PROFILER_BUFFER << endl;
+	
+	/*
+	uint64 total = 0;
+
+	for (int i = 0; i < TIME_PROFILER_BUFFER; i++)
+	{
+		total += timeProfiler[i];
+	}
+
+	cout << "average is " << total / TIME_PROFILER_BUFFER << endl;
+	*/
+	
+	//	utl::debug()
 }
 
 
@@ -3196,6 +3286,121 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
 
 
 
+void FaceOff::clientSimulatePlayerPhysics(KDTree& tree, Player* p, int i, bool first)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+
+	p->updateGameInfo();
+
+	p->m_velocity += utl::BIASED_HALF_GRAVITY;
+
+	p->updateGameStats();
+
+	p->m_position += p->m_velocity;
+
+	p->updateMidAirVelocity();
+
+	p->updateCollisionDetectionGeometry();
+
+//	if (first == true)
+//	{
+		tree.reInsert(p);
+//	}
+
+	clientCheckNeighbors(tree, p);
+
+//	p->updateCollisionDetectionGeometry();
+//	tree.reInsert(p);
+
+	p->updateWeaponTransform();
+
+}
+
+
+
+void FaceOff::clientCheckNeighbors(KDTree& tree, WorldObject* obj)
+{
+	obj->inMidAir = true;
+
+	vector<WorldObject*> neighbors;
+//	glm::vec3 volNearPoint(obj->getPosition());
+//	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
+
+	for (int i = 0; i < obj->m_parentNodes.size(); i++)
+	{
+		KDTreeNode* node = obj->m_parentNodes[i];
+
+		if (node == NULL)
+		{
+			continue;
+		}
+
+		for (int j = 0; j < node->m_objects.size(); j++)
+		{
+			WorldObject* neighbor = node->m_objects[i];
+			//		utl::debug("object name is", obj->m_name);
+			if (neighbor == NULL)
+				continue;
+
+			//			if (obj->objectId.id == testObject->objectId.id)
+			if (neighbor->getInstanceId() == obj->getInstanceId())
+				continue;
+
+			//			utl::debug("object name is", obj->m_name);
+			neighbors.push_back(neighbor);
+		}
+
+	}
+
+
+	for (int j = 0; j < neighbors.size(); j++)
+	{
+		WorldObject* neighbor = neighbors[j];
+
+		/*
+		// this is for debugging, will render it with "collided color"
+		if (p->isDefaultPlayer())
+		{
+		neighbor->isTested = true;
+		}
+		*/
+
+		/*
+		if (collisionDetectionTestPairs.alreadyTested(obj->objectId.id, neighbor->objectId.id))
+		continue;
+		else
+		collisionDetectionTestPairs.addPairs(obj->objectId.id, neighbor->objectId.id);
+		*/
+
+		if (obj->ignorePhysicsWith(neighbor))
+		{
+			continue;
+		}
+
+
+		ContactData contactData;
+		if (testCollisionDetection(obj, neighbor, contactData))
+		{
+			if (neighbor->getDynamicType() == STATIC)
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = NULL;
+			}
+			else
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = neighbor;
+			}
+
+			contactData.resolveVelocity();
+			contactData.resolveInterpenetration();
+			neighbor->updateCollisionDetectionGeometry();
+		}
+	}
+}
 
 
 #if 0

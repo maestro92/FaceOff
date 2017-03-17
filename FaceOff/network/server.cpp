@@ -110,14 +110,14 @@ void Server::setClientLastUserCmdFrame(int i, int sequence)
 }
 
 
-int Server::getClientLastUserCmdIndex(int i)
+int Server::getClientLastUserCmdNum(int i)
 {
-	return clients[i].lastUserCmdIndex;
+	return clients[i].lastUserCmdNum;
 }
 
-void Server::setClientLastUserCmdIndex(int i, int index)
+void Server::setClientLastUserCmdNum(int i, int cmdNum)
 {
-	clients[i].lastUserCmdIndex = index;
+	clients[i].lastUserCmdNum = cmdNum;
 }
 
 

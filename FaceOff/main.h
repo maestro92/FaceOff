@@ -231,7 +231,6 @@ throw gun animation
 
 
 
-
 /*
 https://github.com/id-Software/DOOM-3
 
@@ -783,6 +782,8 @@ struct DelayedPacket
 	}
 };
 
+const int TIME_PROFILER_BUFFER = 10;
+
 typedef std::queue<DelayedPacket> PacketQueue;
 
 class FaceOff
@@ -884,6 +885,11 @@ class FaceOff
 		// keeping two copies
 		// vector<WorldObject*> sv_objects;	
 		// vector<WorldObject*> cl_objects;	// used for client parsing server snapshot and rendering
+
+		int timeProfilerIndex;
+		long long timeProfiler[TIME_PROFILER_BUFFER];
+//		uint64 timeProfiler[TIME_PROFILER_BUFFER];
+
 
 		bool predictionOn;
 
@@ -1012,6 +1018,11 @@ class FaceOff
 
 		Player* parsePlayer(RakNet::BitStream& bs, bool defaultFlag);
 
+
+		void clientSimulatePlayerPhysics(KDTree& tree, Player* p, int i, bool first);
+		void clientCheckNeighbors(KDTree& tree, WorldObject* obj);
+
+
 		void simulatePlayerPhysics(KDTree& tree, Player* p, int i);
 		void simulatePlayerPhysics1(KDTree& tree, Player* p, int i);
 
@@ -1030,6 +1041,10 @@ class FaceOff
 		void checkNeighbors(KDTree& tree, WorldObject* obj);
 //		void checkNeighborsAfterClientInput(WorldObject* obj);
 		// void simulatePhysics();
+
+		void GetTimeProfilerAverages();
+
+
 
 		void renderGUI();
 

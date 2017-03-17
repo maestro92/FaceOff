@@ -130,8 +130,9 @@ class Server
 		void incrementClientOutgoingSequence(int i);
 		int getClientLastUserCmdFrame(int i);
 		void setClientLastUserCmdFrame(int i, int sequence);
-		int getClientLastUserCmdIndex(int i);
-		void setClientLastUserCmdIndex(int i, int index);
+
+		int getClientLastUserCmdNum(int i);
+		void setClientLastUserCmdNum(int i, int index);
 
 		Snapshot& getClientSnapshot(int i, int si);
 
@@ -152,7 +153,7 @@ class Server
 				RakNet::SystemAddress systemAddress;
 				bool isConnected;
 				int lastUserCmdFrame;			// the frame that the last client usercmd send over
-				int lastUserCmdIndex;
+				int lastUserCmdNum;
 				NetChannel netchan;
 				RakNet::RakNetGUID m_guid;
 

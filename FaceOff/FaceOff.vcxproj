@@ -65,6 +65,7 @@
       <AdditionalLibraryDirectories>libraries\glew\lib;libraries\freetype\lib;libraries\assimp\lib;libraries\SDL\lib;libraries\SDL_image\lib\x86;C:\Program Files %28x86%29\OpenAL 1.1 SDK\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <StackReserveSize>
       </StackReserveSize>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

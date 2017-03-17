@@ -838,24 +838,6 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 
 
 
-
-
-
-
-/*
-void KDTree::copyObjects(KDTreeNode* & node, vector<WorldObject*> & objects)
-{
-	for (int i = 0; i < objects.size(); i++)
-	{
-		int id = objects[i]->m_instanceId;
-//		node->m_objects2[id] = objects[i];
-		node->m_objects2[id] = objects[i];
-	}
-}
-*/
-
-
-
 void KDTree::renderSingle(Pipeline& p, Renderer* r)
 {
 	r->enableShader();

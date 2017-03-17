@@ -174,15 +174,15 @@ class Client
 		int	weapon;
 
 
-		int lastAckUserCmdIndex;
+		int lastAckCmdNum;
 
 		// keeping two entries for mouse smoothing
 //		int mouseDx[2];
 //		int mouseDy[2];
 //		int mouseIndex;
 		UserCmd cmds[CMD_BUFFER_SIZE];	// each message will send several old cmds
-		int cmdCounter;				// incremented each frame, because multiple
-									// frames may need to be packed into a single packet
+		int cmdNum;				// incremented each frame, because multiple
+								// frames may need to be packed into a single packet
 
 		ClientSnapshot* curSnapshot;		// latest received from server
 		ClientSnapshot snapshots[CL_SNAPSHOT_BUFFER_SIZE];

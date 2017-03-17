@@ -83,6 +83,21 @@ using namespace std;
 typedef long long UniqueId;
 
 
+
+
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <sys/time.h>
+#include <ctime>
+#endif
+
+/* Remove if already defined */
+typedef long long int64; typedef unsigned long long uint64;
+
+
+
+
 struct MouseState
 {
     bool m_leftButtonDown;
@@ -498,6 +513,9 @@ namespace utl
 	void read(RakNet::BitStream &bitStream, std::string &s);
 
 	long long getCurrentTime_ms();
+	
+	// http://stackoverflow.com/questions/1861294/how-to-calculate-execution-time-of-a-code-snippet-in-c
+	uint64 GetTimeMs64();
 
 
 	/// utl_SDL.cpp
