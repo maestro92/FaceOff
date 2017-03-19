@@ -998,13 +998,22 @@ class FaceOff
 
 		void clientParseSnapshot(RakNet::BitStream& bs);
 		void clientParsePlayers(ClientSnapshot* prev, ClientSnapshot* cur, RakNet::BitStream& bs);
+		void clientParseDeltaPlayer(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
+		
 		void clientParseEntities(ClientSnapshot* prev, ClientSnapshot* cur, RakNet::BitStream& bs);
 		void clientParseDeltaEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
 		void clientParseEntityData(WorldObject* obj, int flags, RakNet::BitStream& bs);
 		void clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
 		void clientParseRemoveEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
 
-
+		/*
+		1	CLIENT_INPUT						bsOut.Write((RakNet::MessageID)CLIENT_INPUT);
+		4	sequence number						bsOut.Write(m_client.netchan.outgoingSequence);
+		4	m_defaultPlayerID					bsOut.Write(m_defaultPlayerID);
+		4	m_client.lastServerMsgSequence		bsOut.Write(m_client.lastServerMsgSequence);
+		1	m_client.cmdNum						bsOut.Write(m_client.cmdNum);
+		?	cmd									cmd.serialize(bsOut);
+		*/
 		void clientSendCmd();
 		void clientSendPacket(RakNet::BitStream& bs);
 
@@ -1060,13 +1069,13 @@ class FaceOff
 //		Uint32 serverRealTime;	// absoluteTime
 //		Uint32 clientRealTime;	// absoluteTime
 
-		float latency;		// each way latency in seconds
-		float packetLoss;	// percentage of packets lost
 
-		vector<float> latencyOptions;
+		vector<int> latencyOptions;		// round trip
+		int latency;					// rount trip latency in milliseconds
 		int curLatencyOption;
 
 		vector<float> packetLossOptions;
+		float packetLoss;	// percentage of packets lost
 		int curPacketLossOption;
 
 		

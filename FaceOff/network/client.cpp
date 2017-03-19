@@ -6,6 +6,7 @@ Client::Client()
 	isConnected = false;
 	peer = NULL;
 	curSnapshot = NULL;
+
 }
 
 Client::Client(RakNet::RakNetGUID guid)
@@ -24,7 +25,7 @@ Client::~Client()
 	}
 }
 
-void Client::init()
+void Client::init(int cmdSampleRate)
 {
 	peer = RakNet::RakPeerInterface::GetInstance();
 
@@ -45,6 +46,16 @@ void Client::init()
 	peer->Connect(str, SERVER_PORT, 0, 0);
 	curSnapshot = NULL;
 
+	cmdRate = 60;
+	CL_FIXED_CMD_SAMPLE_TIME_ms = 1000 / cmdRate;
+//	CL_FIXED_CMD_SAMPLE_TIME_ms = CL_FIXED_CMD_SAMPLE_TIME_s * 1000;
+
+	cout << "cmdRate " << cmdRate << endl;
+//	cout << "CL_FIXED_CMD_SAMPLE_TIME_s " << CL_FIXED_CMD_SAMPLE_TIME_s << endl;
+	cout << "CL_FIXED_CMD_SAMPLE_TIME_ms " << CL_FIXED_CMD_SAMPLE_TIME_ms << endl;
+
+	lastServerMsgSequence = -1;
+	lastAckCmdNum = -1;
 	/*
 	peer = RakNet::RakPeerInterface::GetInstance();
 
@@ -61,6 +72,16 @@ void Client::init()
 	printf("Starting the client.\n");
 	peer->Connect(str, SERVER_PORT, 0, 0);
 	*/
+}
+
+
+bool Client::timeToSampleUserCmd(long long nowTime_ms)
+{
+	if (nowTime_ms - lastSampleTime > CL_FIXED_CMD_SAMPLE_TIME_ms)
+	{
+		return true;
+	}
+	return false;
 }
 
 /*

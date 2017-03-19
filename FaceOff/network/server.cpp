@@ -99,14 +99,15 @@ void Server::setClientIncomingSequence(int i, int sequence)
 	clients[i].netchan.incomingSequence = sequence;
 }
 
-int Server::getClientLastUserCmdFrame(int i)
+
+int Server::getClientLastAckMessageSequence(int i)
 {
-	return clients[i].lastUserCmdFrame;
+	return clients[i].lastAckMessageSequence;
 }
 
-void Server::setClientLastUserCmdFrame(int i, int sequence)
+void Server::setClientLastAckMessageSequence(int i, int ackMsgSequence)
 {
-	clients[i].lastUserCmdFrame = sequence;
+	clients[i].lastAckMessageSequence = ackMsgSequence;
 }
 
 

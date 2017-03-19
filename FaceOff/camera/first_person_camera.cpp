@@ -2,8 +2,8 @@
 
 #include "utility.h"
 
-const float CAMERA_ROTATION_SPEED = 0.5;
-const float CAMERA_FORWARD_SPEED = 0.8;
+const float CAMERA_ROTATION_SPEED = 3.0;
+const float CAMERA_FORWARD_SPEED = 1.0;
 
 FirstPersonCamera::FirstPersonCamera() : FirstPersonCamera(glm::vec3(0.0, 5.0, 0.0))
 { }

@@ -94,10 +94,21 @@ const float FIXED_UPDATE_TIME_ms = FIXED_UPDATE_TIME_s * 1000;
 //const float _FIXED_UPDATE_TIME_s = 
 
 
+/*
 const float SV_FRAMES_PER_SECOND = 20;
 const float SV_FIXED_UPATE_TIME_s = 1 / SV_FRAMES_PER_SECOND;
+const float SV_FIXED_UPATE_TIME_ms = 1000 / SV_FRAMES_PER_SECOND;
 
-const float CLIENT_INTERP_DELAY = FIXED_UPDATE_TIME_ms * 2;
+const float CLIENT_INTERP_DELAY = SV_FIXED_UPATE_TIME_s * 2;
+*/
+
+const int SV_FRAMES_PER_SECOND = 20;
+const float SV_FIXED_UPATE_TIME_s = 1 / SV_FRAMES_PER_SECOND;
+const long long SV_FIXED_UPATE_TIME_ms = 1000 / SV_FRAMES_PER_SECOND;
+
+const long long CLIENT_INTERP_DELAY_ms = SV_FIXED_UPATE_TIME_ms * 2;
+
+
 
 // 15 ms, 66.6 ticks per sec are simulated
 const int SERVER_SIMLUATION_FRAMES_PER_SECOND = 66;
@@ -146,7 +157,8 @@ void FaceOff::init()
 	singlePlayerMode = true;
 
 	latencyOptions = { 0, 20, 50, 100, 200 };	// millisecond
-	latency = 0; 
+	curLatencyOption = 4;
+	latency = latencyOptions[curLatencyOption] / 2;
 
 	packetLossOptions = { 0, 5, 10, 50 };
 	packetLoss = 0;
@@ -616,7 +628,7 @@ void FaceOff::initNetwork()
 		m_server.init(SV_FRAMES_PER_SECOND);
 	}
 
-	m_client.init();
+	m_client.init(SV_FRAMES_PER_SECOND);
 
 
 	// cout << "client address " <<  RakNet::SystemAddress::ToInteger(m_client.systemAddress) << endl;
@@ -1080,7 +1092,7 @@ void FaceOff::serverToClientSendPacket(RakNet::SystemAddress& address, RakNet::B
 #if EMULATE_LATENCY == 1
 	if (!utl::chance(packetLoss))
 	{
-		DelayedPacket dp(m_server.realTime + (unsigned int)latency, address, bs);
+		DelayedPacket dp(m_server.realTime + (long long)latency, address, bs);
 		serverToClient.push(dp);
 	}
 #else
@@ -1095,7 +1107,7 @@ void FaceOff::clientToServerSendPacket(RakNet::SystemAddress& address, RakNet::B
 #if EMULATE_LATENCY == 1
 	if (!utl::chance(packetLoss))
 	{
-		DelayedPacket dp(m_client.realTime + (unsigned int)latency, address, bs);
+		DelayedPacket dp(m_client.realTime + (long long)latency, address, bs);
 		clientToServer.push(dp);
 	}
 #else
@@ -1235,14 +1247,15 @@ void FaceOff::serverReadPackets()
 
 				int clientId = 0;
 				bsIn.Read(clientId);
-
 				m_server.setClientIncomingSequence(clientId, sequence);
-				m_server.setClientLastUserCmdFrame(clientId, sequence);
+
+				int msgAck = 0;
+				bsIn.Read(msgAck);
+				m_server.setClientLastAckMessageSequence(clientId, msgAck);
 
 
 				int cmdNum = 0;
 				bsIn.Read(cmdNum);
-			//	utl::debug("server read cmdNum", cmdNum);
 				m_server.setClientLastUserCmdNum(clientId, cmdNum);
 
 				// get the command
@@ -1250,6 +1263,8 @@ void FaceOff::serverReadPackets()
 				cmd.deserialize(bsIn);
 				// run the command
 				serverRunClientMoveCmd(clientId, cmd);
+				
+				// run player physics here
 
 				break;
 			}
@@ -1439,7 +1454,8 @@ void FaceOff::serverSendClientMessages()
 void FaceOff::serverSendClientSnapshot(int clientId)
 {
 	// this is the snapshot we are creating
-	Snapshot *to, *from;
+	Snapshot *to = NULL;
+	Snapshot *from = NULL;
 	int toIndex = m_server.getClientOutgoingSequence(clientId) & SV_SNAPSHOT_BUFFER_MASK;
 	to = &m_server.getClientSnapshot(clientId, toIndex);
 
@@ -1450,8 +1466,13 @@ void FaceOff::serverSendClientSnapshot(int clientId)
 	//
 	//
 
-	int fromIndex = m_server.getClientLastUserCmdFrame(clientId) & SV_SNAPSHOT_BUFFER_MASK;
-	from = &m_server.getClientSnapshot(clientId, fromIndex);
+//	int fromIndex = m_server.getClientLastUserCmdFrame(clientId) & SV_SNAPSHOT_BUFFER_MASK;
+	int lastAckMesgSeq = m_server.getClientLastAckMessageSequence(clientId);
+	if (lastAckMesgSeq > 0)
+	{
+		int fromIndex = lastAckMesgSeq & SV_SNAPSHOT_BUFFER_MASK;
+		from = &m_server.getClientSnapshot(clientId, fromIndex);
+	}
 
 
 	RakNet::BitStream bs;
@@ -1497,6 +1518,7 @@ void FaceOff::serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, Rak
 {
 	for (int i = 0; i < sv_players.getIterationEnd(); i++)
 	{
+		cout << "writing player " << i << endl;
 		Player* player = sv_players.getByIndex(i);
 		if (player != NULL)
 		{
@@ -1521,6 +1543,7 @@ void FaceOff::serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs)
 	int flags;
 
 	// positions
+	flags |= U_DELTA;
 	flags |= U_POSITION0;
 	flags |= U_POSITION1;
 	flags |= U_POSITION2;
@@ -1607,7 +1630,7 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 
 
 
-	int firstIndex0 = from->firstEntityIndex;
+	int firstIndex0 = (from == NULL) ? 0 : from->firstEntityIndex;
 	int firstIndex1 = to->firstEntityIndex;
 
 	int numEntities0 = (from == NULL) ? 0 : from->numEntities; 
@@ -1755,7 +1778,7 @@ void FaceOff::serverWriteNewWorldObject(WorldObjectState* obj1, RakNet::BitStrea
 	if (obj1->objectId.s.index == 27)
 	{
 		utl::debug("debugCurClientId", debugCurClientId);
-		utl::debug("last client Cmd", m_server.getClientLastUserCmdFrame(debugCurClientId));
+//		utl::debug("last client Cmd", m_server.getClientLastUserCmdFrame(debugCurClientId));
 		utl::debug("	writing 27 new new mainWeapon"); 
 	}
 }
@@ -1859,7 +1882,10 @@ void FaceOff::interpolateEntities()
 	// https://developer.valvesoftware.com/wiki/Source_Multpiplayer_Networking
 
 	// cur ClientTime
-	long long curClientRenderTime = m_client.realTime - CLIENT_INTERP_DELAY;
+//	long long curClientRenderTime = m_client.realTime - CLIENT_INTERP_DELAY_ms;
+
+	long long REALclientRealTime = utl::getCurrentTime_ms();
+	long long curClientRenderTime = REALclientRealTime - CLIENT_INTERP_DELAY_ms;
 
 	
 	ClientSnapshot* from = NULL;
@@ -1868,33 +1894,38 @@ void FaceOff::interpolateEntities()
 
 	if (m_client.curSnapshot != NULL)
 	{
-		std::cout << "## cursnapshot serverTime " << m_client.curSnapshot->serverTime << endl;
-		std::cout << "## cur renderTime " << curClientRenderTime << endl;
+		/*
+		std::cout << "## cur clientTime         " << REALclientRealTime << endl;
+
+//		std::cout << "## cursnapshot serverTime " << m_client.curSnapshot->clientReceivedAckTime << endl;
+		std::cout << "## cursnapshot clientTime " << m_client.curSnapshot->clientReceivedAckTime << endl;
+		std::cout << "## cur renderTime         " << curClientRenderTime << endl;
+
+		std::cout << "## CLIENT_INTERP_DELAY " << CLIENT_INTERP_DELAY_ms << endl;
+		*/
+
 
 		int start = m_client.curSnapshot->messageSequenceNum;
 		int end = std::max(start - 20, 0);
 		for (int i = start; i >= end; i--)
 		{
-
-
 			int snapshotIndex = i & CL_SNAPSHOT_BUFFER_MASK;
-
-
 
 			ClientSnapshot* temp = &m_client.snapshots[snapshotIndex];
 
-			std::cout << "	snapshotIndex " << i << ", temp snapshot serverTime " << temp->serverTime << endl;
-		//	std::cout << "	temp serverTime" << i << endl;
-
-			if (temp->valid() && temp->serverTime > curClientRenderTime);
+	//		std::cout << "	snapshotIndex " << i << ", temp snapshot clientReceivedAckTime " << temp->clientReceivedAckTime << endl;
+		
+			if (temp->valid() && temp->clientReceivedAckTime > curClientRenderTime)
 			{
+	//			std::cout << "		snapshotIndex " << i << ", setting to" << endl;
 				to = temp;
 			}
 
-			if (temp->valid() && temp->serverTime <= curClientRenderTime)
+			if (temp->valid() && temp->clientReceivedAckTime <= curClientRenderTime)
 			{
-				if (from != NULL && temp->serverTime < from->serverTime)
+				if (from == NULL)
 				{
+	//				std::cout << "		snapshotIndex " << i << ", setting from" << endl;
 					from = temp;
 				}
 			}
@@ -1905,34 +1936,114 @@ void FaceOff::interpolateEntities()
 			}
 		}
 
+		if (to == NULL)
+		{
+			to = m_client.curSnapshot;
+		}
+
 		if (from == NULL)
 		{
 			from = to;
 		}
 
-		std::cout << "to snapshot serverTime " << to->serverTime << endl;
-		std::cout << "from snapshot serverTime " << from->serverTime << endl;
+//		std::cout << "to snapshot clientReceivedAckTime " << to->clientReceivedAckTime << endl;
+//		std::cout << "from snapshot clientReceivedAckTime " << from->clientReceivedAckTime << endl;
 
+		double interpFactor = 0; 
+		if (to != from)
+		{
+			long long numer = curClientRenderTime - from->clientReceivedAckTime;
+			long long denom = to->clientReceivedAckTime - from->clientReceivedAckTime;
 
-		long long numer = curClientRenderTime - from->serverTime;
-		long long denom = to->serverTime - from->serverTime;
+//			std::cout << "numer " << numer << endl;
+//			std::cout << "denom " << denom << endl;
 
-		std::cout << "numer " << numer << endl;
-		std::cout << "denom " << denom << endl;
+			if (denom == 0)
+			{
+				int a = 1;
+			}
 
-		double interpFactor = (double)numer / (double)denom;
+			interpFactor = (double)numer / (double)denom;
+//			cout << interpFactor << endl;
+		}
 
-		std::cout << interpFactor << endl;
+	//	std::cout << interpFactor << endl;
 
 		ClientWorldObjectState cState0;
 		ClientWorldObjectState cState1;
 
-		for (int i = to->start; i < to->getIterationEnd(); i++)
+
+
+	//	utl::clDebug("iterating players");
+
+		// go through the players
+		for (int i = to->getPlayerIterStart(); i < to->getPlayerIterEnd(); i++)
+		{
+		//	cout << "	" << i << endl;
+
+			cState1 = to->players[i];
+			ObjectId pId1 = cState1.state.objectId;
+
+	//		utl::clDebug("	pId1", pId1.id);
+	//		utl::clDebug("	m_defaultPlayerID", m_defaultPlayerID);
+
+
+			if (pId1.id == m_defaultPlayerID)
+			{
+				continue;
+			}
+
+	//		utl::clDebug("	passed");
+
+			if (cState1.flags & U_DELTA)
+			{
+	//			utl::clDebug("	U_DELTA");
+
+				cState0 = from->players[i];
+				ObjectId pId0 = cState0.state.objectId;
+				Player* p = cl_players.getByIndex(pId1.id);
+
+	//			cout << "pId1 " << pId1.id << endl;
+	//			cout << "pId0 " << pId0.id << endl;
+
+				if (pId1.id == pId0.id)
+				{
+					// interpolate position
+					// interpolate angle
+
+					//	obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+
+					cout << "player interpFactor" << interpFactor;
+					utl::clDebug("state1 pos", cState1.state.position);
+					
+					p->m_position = cState1.state.position;
+					utl::clDebug("state0 pos", cState0.state.position);
+
+
+				}
+				else
+				{
+					p->m_position = cState1.state.position;
+				}
+
+				cl_objectKDtree.insert(p);
+			}
+			else
+			{
+				utl::clDebug("	not U_DELTA");
+			}
+		}
+
+
+
+
+		// go through the entities
+		for (int i = to->getEntityIterStart(); i < to->getEntityIterEnd(); i++)
 		{
 			cState1 = to->entities[i];
 			ObjectId objId1 = cState1.state.objectId;
 
-			if (cState1.flags && U_DELTA)
+			if (cState1.flags & U_DELTA)
 			{
 				cState0 = from->entities[i];
 				ObjectId objId0 = cState0.state.objectId;
@@ -1942,7 +2053,8 @@ void FaceOff::interpolateEntities()
 					// interpolate position
 					// interpolate angle
 
-					obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+				//	obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+					obj->m_position = cState1.state.position;
 				}
 				else
 				{
@@ -1987,8 +2099,8 @@ interpolate
 
 void FaceOff::clientReadPackets()
 {
-	Uint32 lastSnapShotSendTime = 0;
-	Uint32 curTime = 0;
+//	Uint32 lastSnapShotSendTime = 0;
+//	Uint32 curTime = 0;
 
 	for (cl_packet = m_client.peer->Receive(); 
 		cl_packet; 
@@ -2031,6 +2143,7 @@ void FaceOff::clientReadPackets()
 				m_client.netchan.incomingSequence = sequence;
 			//	utl::clDebug("sequence", sequence);
 
+				m_client.lastServerMsgSequence = sequence;
 
 				clientParseSnapshot(bsIn);
 				break;
@@ -2070,8 +2183,8 @@ void FaceOff::clientReadPackets()
 		*/
 	}
 
-	// sending server my inputs
-	curTime = SDL_GetTicks();
+	// sending server my inputss
+//	curTime = SDL_GetTicks();
 
 	/*
 	if (curTime - lastSnapShotSendTime > CLIENT_INPUT_SENT_TIME_STEP)
@@ -2096,22 +2209,30 @@ void FaceOff::clientCheckForResend()
 
 void FaceOff::clientParseSnapshot(RakNet::BitStream& bs)
 {
+//	cout << "clientParseSnapshot" << endl;
+
 	ClientSnapshot* prev = NULL;
 	ClientSnapshot* cur = &m_client.snapshots[m_client.netchan.incomingSequence & CL_SNAPSHOT_BUFFER_MASK];
 	
 	bs.Read(cur->serverTime);
-	cout << "	cur serverTime: " << cur->serverTime << endl;
+//	cout << "	cur serverTime: " << cur->serverTime << endl;
 
 	cur->messageSequenceNum = m_client.netchan.incomingSequence;
 
 	bs.Read(m_client.lastAckCmdNum);
 
+	cur->clientReceivedAckTime = m_client.realTime;
 //	utl::clDebug("lastAckCmdNum", m_client.lastAckCmdNum);
 
 	clientParsePlayers(prev, cur, bs);
 	clientParseEntities(prev, cur, bs);
 
 	m_client.curSnapshot = cur;
+	/*
+	cout << "ClientParsingSnapsoht" << endl;
+	cout << "	" << cur->clientReceivedAckTime << endl;
+	cout << "	" << cur->serverTime << endl;
+	*/
 }
 
 
@@ -2129,7 +2250,7 @@ void FaceOff::clientParsePlayers(ClientSnapshot* prev, ClientSnapshot* cur, RakN
 		{
 			break;
 		}
-
+		/*
 		bs.Read(id1);
 
 		Player* p = cl_players.getByIndex(id1);
@@ -2138,38 +2259,51 @@ void FaceOff::clientParsePlayers(ClientSnapshot* prev, ClientSnapshot* cur, RakN
 		bs.Read(p->m_position[1]);
 		bs.Read(p->m_position[2]);
 		p->updateCollisionDetectionGeometry();
+		
 
 		if (id1 == m_defaultPlayerID)
 		{
 			cur->playerState = p->getState();
 		}
-
-		// cout << "id1 " << id1 << endl;
-		// utl::cldebug("	pos is ", p->m_position);
-
-		// p->debug();
-
-		/*
-		ObjectId objId(id1);
-
-		if (flags & U_DELTA)
-		{
-			clientParseDeltaEntity(flags, objId, bs);
-		}
-
-		else if (flags & U_ADD)
-		{
-			clientParseAddEntity(objId, bs);
-		}
-
-		else if (flags & U_REMOVE)
-		{
-			clientParseRemoveEntity(objId, bs);
-		}
 		*/
+
+		clientParseDeltaPlayer(cur, flags, bs);
 	}
 }
 
+
+void FaceOff::clientParseDeltaPlayer(ClientSnapshot* cur, int flags, RakNet::BitStream& bs)
+{
+	int playerId = 0;
+	bs.Read(playerId);
+
+	ObjectId pId(playerId);
+
+	
+	utl::clDebug("playerId", playerId);
+
+	if (flags & U_DELTA)
+	{
+		utl::clDebug("U_DELTA");
+	}
+	
+
+	Player* p = cl_players.getByIndex(pId.id);
+	utl::clDebug("playerId", p->objectId.id);
+	bs.Read(p->m_position[0]);
+	bs.Read(p->m_position[1]);
+	bs.Read(p->m_position[2]);
+	p->updateCollisionDetectionGeometry();
+
+	ClientWorldObjectState state(flags, p->getState());
+	cur->setPlayer(playerId, state);
+
+
+	if (playerId == m_defaultPlayerID)
+	{
+		cur->playerState = p->getState();
+	}
+}
 
 
 // we use the brute force way for now, 
@@ -2253,7 +2387,7 @@ void FaceOff::clientParseDeltaEntity(ClientSnapshot* cur, int flags, RakNet::Bit
 
 
 	ClientWorldObjectState state(flags, obj->getState());
-	cur->set((int)objId.s.index, state);
+	cur->setEntity((int)objId.s.index, state);
 
 //	cur->entities[objId.s.index].flags = flags;
 //	cur->entities[objId.s.index].state = obj->GetState();
@@ -2269,7 +2403,7 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 
 		ObjectId objId = obj->objectId;
 		ClientWorldObjectState state(flags, obj->getState());
-		cur->set((int)objId.s.index, state);
+		cur->setEntity((int)objId.s.index, state);
 	}
 	else if (flags & U_WEAPON)
 	{
@@ -2278,7 +2412,7 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 
 		ObjectId objId = obj->objectId;
 		ClientWorldObjectState state(flags, obj->getState());
-		cur->set((int)objId.s.index, state);
+		cur->setEntity((int)objId.s.index, state);
 
 		if (obj->objectId.s.index == 27)
 		{
@@ -2347,7 +2481,7 @@ void FaceOff::clientParseRemoveEntity(ClientSnapshot* cur, int flags, RakNet::Bi
 	cl_objects.destroy(objId);
 
 	ClientWorldObjectState state(flags);
-	cur->set((int)objId.s.index, state);
+	cur->setEntity((int)objId.s.index, state);
 }
 
 
@@ -2371,7 +2505,15 @@ void FaceOff::clientParseEntityData(WorldObject* obj, int flags, RakNet::BitStre
 	{
 		bs.Read(tmp);
 	}
+
+	obj->updateCollisionDetectionGeometry();
 }
+
+
+
+
+
+
 
 void FaceOff::clientSendCmd()
 {
@@ -2380,6 +2522,15 @@ void FaceOff::clientSendCmd()
 	{
 		return;
 	}
+
+
+	if (!m_client.timeToSampleUserCmd(m_client.realTime))
+	{
+		return;
+	}
+
+	m_client.lastSampleTime = m_client.realTime;
+
 	UserCmd cmd = clientCreateNewCmd();
 
 	++m_client.cmdNum;
@@ -2391,21 +2542,10 @@ void FaceOff::clientSendCmd()
 
 	m_client.cmds[newCmdIndex] = cmd;
 
-	// send it off with Raknet
-
-	/*
-	// don't send a packet if the last packet was sent too recently
-	if (!CL_ReadyToSendPacket()) {
-		if (cl_showSend->integer) {
-			Com_Printf(". ");
-		}s
-		return;
-	}
-	*/
 	RakNet::BitStream bsOut;
 	// bsOut.Write((RakNet::MessageID)CLIENT_INPUT);
 	// utl::clDebug("m_defaultPlayerID", m_defaultPlayerID);
-	bsOut.Write(m_defaultPlayerID);
+
 	bsOut.Write(m_client.cmdNum);
 	cmd.serialize(bsOut);
 
@@ -2441,244 +2581,6 @@ void FaceOff::clientSendCmd()
 
 
 
-
-
-
-
-
-void FaceOff::clientHandleDeviceEvents()
-{
-	while (SDL_PollEvent(&event))
-	{
-		int tmpx, tmpy;
-		switch (event.type)
-		{
-		case SDL_QUIT:
-			isRunning = false;
-			break;
-
-		case SDL_MOUSEBUTTONUP:
-			/*
-			switch (event.button.button)
-			{
-			case SDL_BUTTON_LEFT:
-				m_mouseState.m_leftButtonDown = false;
-				SDL_GetMouseState(&tmpx, &tmpy);
-
-				if (m_players[m_defaultPlayerID]->inGrenadeGatherMode())
-				{
-					utl::debug("here in Grenade gather mode");
-					Weapon* grenade = m_players[m_defaultPlayerID]->throwGrenade();
-				}
-
-				hitNode = NULL;
-
-				break;
-
-			case SDL_BUTTON_RIGHT:
-				m_mouseState.m_rightButtonDown = false;
-				SDL_GetMouseState(&tmpx, &tmpy);
-				break;
-			}
-			*/
-			break;
-			
-		case SDL_MOUSEBUTTONDOWN:
-
-			switch (event.button.button)
-			{
-				int tmpx, tmpy;
-			case SDL_BUTTON_LEFT:
-				SDL_GetMouseState(&tmpx, &tmpy);
-				m_mouseState.m_leftButtonDown = true;
-				/*
-				if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
-				{
-
-					m_players[m_defaultPlayerID]->fireWeapon();
-
-					if (m_players[m_defaultPlayerID]->isUsingLongRangedWeapon())
-					{
-
-						WorldObject* hitObject = NULL;
-
-						glm::vec3 lineStart = m_players[m_defaultPlayerID]->getFirePosition();
-						glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
-
-
-						utl::debug("lineStart", lineStart);
-						utl::debug("lineDir", lineDir);
-
-						// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
-
-						float hitObjectSqDist = FLT_MAX;
-						glm::vec3 hitPoint;
-
-						unordered_set<int> objectsAlreadyTested;
-
-						m_objectKDtree.visitNodes(m_objecretKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
-
-						//	utl::debug("player pos", lineStart);
-						//	utl::debug("target z", lineDir);
-
-						if (hitObject != NULL)
-						{
-							utl::debug("name", hitObject->m_name);
-							hitObject->isHit = true;
-
-							WorldObject* hitPointMark = new WorldObject();
-							hitPointMark->setPosition(hitPoint);
-							hitPointMark->setScale(1.0, 1.0, 1.0);
-							hitPointMark->setModelEnum(ModelEnum::cube);
-							hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
-							hitPointMark->m_name = "hitMark";
-							//								m_hitPointMarks.push_back(hitPointMark);
-						}
-						else
-							utl::debug("hitObject is NULL");
-						// VisitNodes
-
-					}
-
-				}
-				*/
-				cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(true);
-
-
-
-
-
-				break;
-
-
-			case SDL_BUTTON_RIGHT:
-				cout << "clicking right" << endl;
-				SDL_GetMouseState(&tmpx, &tmpy);
-				m_mouseState.m_rightButtonDown = true;
-
-				m_zoomedIn = !m_zoomedIn;
-				m_gui.setSniperZoomMode(m_zoomedIn);
-
-				if (m_zoomedIn)
-				{
-					m_zoomFactor = 0.2f;
-					m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
-				}
-				else
-				{
-					m_zoomFactor = 1.0f;
-					m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
-				}
-				break;
-			}
-			break;
-
-		case SDL_KEYUP:
-			switch (event.key.keysym.sym)
-			{
-			}
-			break;
-
-		case SDL_KEYDOWN:
-			switch (event.key.keysym.sym)
-			{
-			case SDLK_ESCAPE:
-				isRunning = false;
-				break;
-
-			case SDLK_0:
-				containedFlag = !containedFlag;
-				break;
-				/*
-				// main gun
-			case SDLK_1:
-				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MAIN);
-				break;
-
-				// pistol
-			case SDLK_2:
-				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PISTOL);
-				break;
-
-				// MELEE
-			case SDLK_3:
-				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MELEE);
-				break;
-
-				// GRENADES
-			case SDLK_4:
-				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
-				break;
-				*/
-
-			case SDLK_8:
-			{
-
-
-			}
-
-			break;
-
-
-
-			case SDLK_9:
-				//	if (m_players[m_defaultPlayerID]->has
-				break;
-
-
-			case SDLK_r:
-			{
-				utl::debug("Reloading Weapon");
-				//m_players[m_defaultPlayerID]->reloadWeapon();
-			}
-			break;
-
-			case SDLK_g:
-			{
-
-				utl::debug("Dropping Weapon");
-				/*
-				Weapon* droppedWeapon = m_players[m_defaultPlayerID]->drop();
-				if (droppedWeapon != NULL)
-				{
-					m_objectKDtree.insert(droppedWeapon);
-				}
-				*/
-			}
-			break;
-
-
-
-
-			case SDLK_SPACE:
-				//		if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
-				//		utl::debug(">>>> Just Jumped");
-				//		utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
-
-				//		if (m_players[m_defaultPlayerID]->isNotJumping())
-				//			m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 150.0, 0.0) * utl::GRAVITY_CONSTANT;
-
-				break;
-
-			case SDLK_z:
-				/*
-				if (m_isServer)
-					m_serverCamera.setMouseIn(false);
-				else
-					m_players[m_defaultPlayerID]->m_camera->setMouseIn(false);
-				|*/
-				break;
-			}
-			break;
-		}
-	}
-
-}
-
-
-
-
-
 void FaceOff::clientSendPacket(RakNet::BitStream& bs)
 {
 	RakNet::BitStream bsOut;
@@ -2688,6 +2590,8 @@ void FaceOff::clientSendPacket(RakNet::BitStream& bs)
 	bsOut.Write(m_client.netchan.outgoingSequence);
 	++m_client.netchan.outgoingSequence;
 
+	bsOut.Write(m_defaultPlayerID);
+	bsOut.Write(m_client.lastServerMsgSequence);
 	// utl::clDebug("m_client.netchan.outgoingSequence", m_client.netchan.outgoingSequence);
 
 	bsOut.Write(bs);
@@ -2833,21 +2737,27 @@ void FaceOff::clientPrediction()
 	//		utl::clDebug("m_client current cmdNum", m_client.cmdNum);
 		
 	//		cout << "m_client.cmdNum " << m_client.cmdNum << ", m_client.lastAckCmdNum " << m_client.lastAckCmdNum << endl;
-
+	//		utl::clDebug("m_client.cmdNum", m_client.cmdNum);
 			long long time0 = utl::getCurrentTime_ms();
 			// uint64 time0 = utl::GetTimeMs64();
 			while (cmdNum <= m_client.cmdNum)
 			{
+			//	utl::clDebug("	m_client.cmdNum", m_client.cmdNum);
+			//	utl::clDebug("	cmdNum", cmdNum);
+
 				int cmdIndex = cmdNum & CMD_BUFFER_MASK;
-			//	utl::clDebug("	cmdIndex", cmdIndex);
+
 				cmd = m_client.cmds[cmdIndex];
-				p->processUserCmd(cmd);
-	
+			//	if (cmd.isValid())
+				{
+					p->processUserCmd(cmd);
 
-		//		clientSimulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID, (cmdNum == m_client.lastAckCmdNum + 1));
 
-				collisionDetectionTestPairs.clear();
-				simulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID);
+					//		clientSimulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID, (cmdNum == m_client.lastAckCmdNum + 1));
+
+					collisionDetectionTestPairs.clear();
+					simulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID);
+				}
 				++cmdNum;
 			}
 			long long time1 = utl::getCurrentTime_ms();
@@ -3062,9 +2972,12 @@ void FaceOff::update()
 						{
 							++curLatencyOption;
 						}
-						latency = latencyOptions[curLatencyOption];
 
-						cout << "New Latency: " << latency << " milliseconds" << endl;
+						cout << "New Latency (Round Trip): " << latencyOptions[curLatencyOption] << " milliseconds" << endl;
+
+						latency = latencyOptions[curLatencyOption] / 2;
+
+
 					}
 					break;
 
@@ -4934,6 +4847,236 @@ void FaceOff::renderGUI()
 }
 
 
+
+
+void FaceOff::clientHandleDeviceEvents()
+{
+	while (SDL_PollEvent(&event))
+	{
+		int tmpx, tmpy;
+		switch (event.type)
+		{
+		case SDL_QUIT:
+			isRunning = false;
+			break;
+
+		case SDL_MOUSEBUTTONUP:
+			/*
+			switch (event.button.button)
+			{
+			case SDL_BUTTON_LEFT:
+			m_mouseState.m_leftButtonDown = false;
+			SDL_GetMouseState(&tmpx, &tmpy);
+
+			if (m_players[m_defaultPlayerID]->inGrenadeGatherMode())
+			{
+			utl::debug("here in Grenade gather mode");
+			Weapon* grenade = m_players[m_defaultPlayerID]->throwGrenade();
+			}
+
+			hitNode = NULL;
+
+			break;
+
+			case SDL_BUTTON_RIGHT:
+			m_mouseState.m_rightButtonDown = false;
+			SDL_GetMouseState(&tmpx, &tmpy);
+			break;
+			}
+			*/
+			break;
+
+		case SDL_MOUSEBUTTONDOWN:
+
+			switch (event.button.button)
+			{
+				int tmpx, tmpy;
+			case SDL_BUTTON_LEFT:
+				SDL_GetMouseState(&tmpx, &tmpy);
+				m_mouseState.m_leftButtonDown = true;
+				/*
+				if (m_players[m_defaultPlayerID]->m_camera->getMouseIn())
+				{
+
+				m_players[m_defaultPlayerID]->fireWeapon();
+
+				if (m_players[m_defaultPlayerID]->isUsingLongRangedWeapon())
+				{
+
+				WorldObject* hitObject = NULL;
+
+				glm::vec3 lineStart = m_players[m_defaultPlayerID]->getFirePosition();
+				glm::vec3 lineDir = -m_players[m_defaultPlayerID]->m_camera->m_targetZAxis;
+
+
+				utl::debug("lineStart", lineStart);
+				utl::debug("lineDir", lineDir);
+
+				// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
+
+				float hitObjectSqDist = FLT_MAX;
+				glm::vec3 hitPoint;
+
+				unordered_set<int> objectsAlreadyTested;
+
+				m_objectKDtree.visitNodes(m_objecretKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+
+				//	utl::debug("player pos", lineStart);
+				//	utl::debug("target z", lineDir);
+
+				if (hitObject != NULL)
+				{
+				utl::debug("name", hitObject->m_name);
+				hitObject->isHit = true;
+
+				WorldObject* hitPointMark = new WorldObject();
+				hitPointMark->setPosition(hitPoint);
+				hitPointMark->setScale(1.0, 1.0, 1.0);
+				hitPointMark->setModelEnum(ModelEnum::cube);
+				hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
+				hitPointMark->m_name = "hitMark";
+				//								m_hitPointMarks.push_back(hitPointMark);
+				}
+				else
+				utl::debug("hitObject is NULL");
+				// VisitNodes
+
+				}
+
+				}
+				*/
+				cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(true);
+
+
+
+
+
+				break;
+
+
+			case SDL_BUTTON_RIGHT:
+				cout << "clicking right" << endl;
+				SDL_GetMouseState(&tmpx, &tmpy);
+				m_mouseState.m_rightButtonDown = true;
+
+				m_zoomedIn = !m_zoomedIn;
+				m_gui.setSniperZoomMode(m_zoomedIn);
+
+				if (m_zoomedIn)
+				{
+					m_zoomFactor = 0.2f;
+					m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+				}
+				else
+				{
+					m_zoomFactor = 1.0f;
+					m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+				}
+				break;
+			}
+			break;
+
+		case SDL_KEYUP:
+			switch (event.key.keysym.sym)
+			{
+			}
+			break;
+
+		case SDL_KEYDOWN:
+			switch (event.key.keysym.sym)
+			{
+			case SDLK_ESCAPE:
+				isRunning = false;
+				break;
+
+			case SDLK_0:
+				containedFlag = !containedFlag;
+				break;
+				/*
+				// main gun
+				case SDLK_1:
+				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MAIN);
+				break;
+
+				// pistol
+				case SDLK_2:
+				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PISTOL);
+				break;
+
+				// MELEE
+				case SDLK_3:
+				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::MELEE);
+				break;
+
+				// GRENADES
+				case SDLK_4:
+				m_players[m_defaultPlayerID]->switchWeapon(WeaponSlotEnum::PROJECTILE);
+				break;
+				*/
+
+			case SDLK_8:
+			{
+
+
+			}
+
+			break;
+
+
+
+			case SDLK_9:
+				//	if (m_players[m_defaultPlayerID]->has
+				break;
+
+
+			case SDLK_r:
+			{
+				utl::debug("Reloading Weapon");
+				//m_players[m_defaultPlayerID]->reloadWeapon();
+			}
+			break;
+
+			case SDLK_g:
+			{
+
+				utl::debug("Dropping Weapon");
+				/*
+				Weapon* droppedWeapon = m_players[m_defaultPlayerID]->drop();
+				if (droppedWeapon != NULL)
+				{
+				m_objectKDtree.insert(droppedWeapon);
+				}
+				*/
+			}
+			break;
+
+
+
+
+			case SDLK_SPACE:
+				//		if (m_players[m_defaultPlayerID]->m_velocity.y == 0.0)
+				//		utl::debug(">>>> Just Jumped");
+				//		utl::debug("m_players[m_defaultPlayerID]->m_velocity", m_players[m_defaultPlayerID]->m_velocity);
+
+				//		if (m_players[m_defaultPlayerID]->isNotJumping())
+				//			m_players[m_defaultPlayerID]->m_velocity += glm::vec3(0.0, 150.0, 0.0) * utl::GRAVITY_CONSTANT;
+
+				break;
+
+			case SDLK_z:
+				/*
+				if (m_isServer)
+				m_serverCamera.setMouseIn(false);
+				else
+				m_players[m_defaultPlayerID]->m_camera->setMouseIn(false);
+				|*/
+				break;
+			}
+			break;
+		}
+	}
+
+}
 
 
 

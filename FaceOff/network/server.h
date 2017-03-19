@@ -128,8 +128,9 @@ class Server
 		void setClientIncomingSequence(int i, int sequence);
 		int getClientOutgoingSequence(int i);
 		void incrementClientOutgoingSequence(int i);
-		int getClientLastUserCmdFrame(int i);
-		void setClientLastUserCmdFrame(int i, int sequence);
+
+		int getClientLastAckMessageSequence(int i);						// currently, mainly used as lastAckSnapshotSequence
+		void setClientLastAckMessageSequence(int i, int ackMsgSequence);
 
 		int getClientLastUserCmdNum(int i);
 		void setClientLastUserCmdNum(int i, int index);
@@ -152,7 +153,7 @@ class Server
 				Snapshot snapshots[SV_SNAPSHOT_BUFFER_SIZE];
 				RakNet::SystemAddress systemAddress;
 				bool isConnected;
-				int lastUserCmdFrame;			// the frame that the last client usercmd send over
+				int lastAckMessageSequence;			// the frame that the last client usercmd send over
 				int lastUserCmdNum;
 				NetChannel netchan;
 				RakNet::RakNetGUID m_guid;
@@ -161,6 +162,8 @@ class Server
 				{
 					m_guid = guid;
 					isConnected = false;
+
+					lastUserCmdNum = -1;
 				}
 		};
 

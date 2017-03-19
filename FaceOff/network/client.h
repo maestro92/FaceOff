@@ -42,7 +42,7 @@ const unsigned int 	CL_SNAPSHOT_BUFFER_MASK = (CL_SNAPSHOT_BUFFER_SIZE - 1);
 #define	PACKET_BACKUP 32	// number of old messages that must be kept on client and
 							// server for delta comrpession and ping estimation
 
-
+const int MAX_PLAYERS_IN_SNAPSHOT = 8;
 const int MAX_ENTITIES_IN_SNAPSHOT = 128;
 const int MAX_PARSE_ENTITIES = 2048;
 // #define MAX_ENTITIES_IN_SNAPSHOT 1024
@@ -97,6 +97,7 @@ struct ClientSnapshot
 {
 	int ping;
 	long long serverTime;
+	long long clientReceivedAckTime;
 
 	int messageSequenceNum;	// copied from netchan->incoming_sequence
 
@@ -105,34 +106,69 @@ struct ClientSnapshot
 	WorldObjectState playerState;
 
 	int numEntities;
+	ClientWorldObjectState players[MAX_PLAYERS_IN_SNAPSHOT];
 	ClientWorldObjectState entities[MAX_ENTITIES_IN_SNAPSHOT];
-	int start;
-	int end;
+	int entityStart;
+	int entityEnd;
+
+	int playerStart;
+	int playerEnd;
 
 	ClientSnapshot()
 	{
 		serverTime = -1;
-		start = 9999999;
-		end = -1;
+		clientReceivedAckTime = -1;
+
+		playerStart = 9999999;
+		playerEnd = -1;
+
+		entityStart = 9999999;
+		entityEnd = -1;
 	}
 
 	bool valid()
 	{
-		return serverTime != -1;
+		return serverTime != -1 && clientReceivedAckTime != -1;
 	}
 
-	void set(int index, const ClientWorldObjectState& entityState)
+
+	void setPlayer(int index, const ClientWorldObjectState& entityState)
+	{
+		players[index] = entityState;
+
+		playerStart = std::min(playerStart, index);
+		playerEnd = std::max(playerEnd, index);;
+	}
+
+
+	void setEntity(int index, const ClientWorldObjectState& entityState)
 	{		
 		entities[index] = entityState;
 
-		start = std::min(start, index);
-		end = std::max(end, index);;
+		entityStart = std::min(entityStart, index);
+		entityEnd = std::max(entityEnd, index);;
 	}
 
-	int getIterationEnd()
+	int getPlayerIterStart()
 	{
-		return end + 1;
+		return playerStart;
 	}
+
+	int getPlayerIterEnd()
+	{
+		return playerEnd + 1;
+	}
+
+	int getEntityIterStart()
+	{
+		return entityStart;
+	}
+
+	int getEntityIterEnd()
+	{
+		return entityEnd + 1;
+	}
+
 
 };
 
@@ -151,8 +187,10 @@ class Client
 		Client(RakNet::RakNetGUID guid);
 		~Client();
 
-		void init();
+		void init(int cmdSampleRate);
 		void run();
+
+		bool timeToSampleUserCmd(long long nowTime_m);
 
 		RakNet::RakPeerInterface* peer;
 		bool isConnected;
@@ -161,6 +199,13 @@ class Client
 		int framecount;
 		int frametime;		// msec since last frame
 
+
+		// the rate the client is sampling usercmd
+		// https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
+		// this article says, I should sample it at the same rate the server is ticking
+		int cmdRate;	
+		int CL_FIXED_CMD_SAMPLE_TIME_ms;
+		long long lastSampleTime;
 
 		long long realTime;
 
@@ -173,7 +218,7 @@ class Client
 
 		int	weapon;
 
-
+		int lastServerMsgSequence;	// the message the server will delta from	
 		int lastAckCmdNum;
 
 		// keeping two entries for mouse smoothing
