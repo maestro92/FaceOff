@@ -38,6 +38,8 @@ class GUIManager
 		void setHorAimIndex(int index);
 		void setVerAimIndex(int index);
 		void setSniperZoomMode(bool b);
+		void setFPSLabel(Label* fps);
+		void setFPS(int fps);
 
 		void initRenderer(const Array arr, Renderer* r, string name);
 		Object findRendererObject(const Array arr, string name);
@@ -52,6 +54,7 @@ class GUIManager
 		Renderer r_texturedRect;
 		Renderer r_listBoxItemHighlight;
 		Renderer r_sniperScopeView;
+		Renderer r_text;
 
 		GLuint m_sniperScopeViewTextureId;
 
@@ -59,6 +62,8 @@ class GUIManager
         void renderGUIComponents();
         void addGUIComponent(Control* control);
 		int getNumGUIComponent();
+
+		void setFPS();
 
     private:
         int m_GUIComponentsID;
@@ -68,6 +73,8 @@ class GUIManager
 		bool m_sniperZoomMode;
 		int m_horAimIndex;
 		int m_verAimIndex;
+
+		Label* m_fpsLabel;
 
         QuadModel m_textureQuad;
         Pipeline m_GUIPipeline;

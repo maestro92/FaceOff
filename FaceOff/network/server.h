@@ -75,6 +75,13 @@ class Snapshot
 
 		int firstEntityIndex;	// first index into the circular curSVSnapshotObjects[]
 		// the entities must be in increasing state number
+
+		Snapshot()
+		{
+			serverTime = -1;
+			numEntities = 0;
+			firstEntityIndex = 0;
+		}
 };
 
 

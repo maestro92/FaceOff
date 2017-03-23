@@ -9,7 +9,7 @@
 #include "quad_model.h"
 #include "renderer.h"
 
-
+#include "gui_renderer_constants.h"
 
 /// Holds all state information relevant to a character as loaded using FreeType
 struct Character
@@ -79,6 +79,8 @@ class TextEngine
 
         int m_initFontPixelSize;
 
+		Renderer r_textRenderer;
+
     private:
         float m_maxDescenderHeight;
         QuadModel m_quad;
@@ -87,7 +89,7 @@ class TextEngine
         int m_screenWidth;
         int m_screenHeight;
 
-        Renderer r_textRenderer;
+
 
 };
 

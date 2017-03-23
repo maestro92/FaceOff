@@ -96,16 +96,6 @@ TextEngine::TextEngine(string font, int fontPixelSize, int screenWidth, int scre
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 
-    /// set shader
-    Shader* s;
-
-	/*
-    /// r_TextRenderer
-    s = new Shader("/gui_shaders/text.vs", "/gui_shaders/text.fs");
-    r_textRenderer.addShader(s);
-    r_textRenderer.addDataPair(RENDER_PASS1, "u_texture",   DP_INT);
-    r_textRenderer.addDataPair(RENDER_PASS1, "u_color",     DP_VEC3);
-	*/
 }
 
 
@@ -147,9 +137,11 @@ void TextEngine::render(string text, float x, float y, float fontPixelSize, glm:
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-#if 0
+#if 1
     r_textRenderer.enableShader();
-        r_textRenderer.setData(RENDER_PASS1, "u_color", color);
+
+	//	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+        r_textRenderer.setData(R_TEXT::u_color, color);
 
         for (int i=0; i<text.size(); i++)
         {
@@ -167,8 +159,13 @@ void TextEngine::render(string text, float x, float y, float fontPixelSize, glm:
                 m_pipeline.translate(xpos, ypos, 0);
                 m_pipeline.scale(w, h, 0);
 
-                r_textRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, ch.textureID);
-                r_textRenderer.setUniLocs(m_pipeline, RENDER_PASS1);
+
+				r_textRenderer.setData(R_TEXT::u_texture, 0, GL_TEXTURE_2D, ch.textureID);
+				r_textRenderer.setUniLocs(m_pipeline);
+				
+				// r_textRenderer.setData(RENDER_PASS1, "u_texture", 0, GL_TEXTURE_2D, ch.textureID);
+		//		r_textRenderer.setData(RENDER_PASS1, R_TEXT::u_texture, 0, GL_TEXTURE_2D, ch.textureID);
+		//		r_textRenderer.setUniLocs(m_pipeline, RENDER_PASS1);
 
                 m_quad.render();
 

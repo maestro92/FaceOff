@@ -119,6 +119,11 @@ void utl::debug(string s, float f)
     cout << s << " " << f << endl;
 }
 
+void utl::debug(string s, double d)
+{
+	cout << s << " " << d << endl;
+}
+
 void utl::debug(string s, glm::vec2 v)
 {
     cout << s << " " << v.x << " " << v.y << endl << endl;
@@ -199,6 +204,12 @@ void utl::clDebug(string s, float f)
 {
 	s = clientDebugPrefix + s;
 	utl::debug(s, f);
+}
+
+void utl::clDebug(string s, double d)
+{
+	s = clientDebugPrefix + s;
+	utl::debug(s, d);
 }
 
 void utl::clDebug(string s, glm::vec2 v)

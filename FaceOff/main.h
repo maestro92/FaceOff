@@ -783,6 +783,7 @@ struct DelayedPacket
 };
 
 const int TIME_PROFILER_BUFFER = 10;
+const int FPS_PROFILER_BUFFER = 20;
 
 typedef std::queue<DelayedPacket> PacketQueue;
 
@@ -890,6 +891,9 @@ class FaceOff
 		long long timeProfiler[TIME_PROFILER_BUFFER];
 //		uint64 timeProfiler[TIME_PROFILER_BUFFER];
 
+		int fpsProfilerIndex;
+		int fpsProfiler[FPS_PROFILER_BUFFER];
+
 
 		bool predictionOn;
 
@@ -963,6 +967,8 @@ class FaceOff
 		void update();
 
 		void initMap();
+
+		int getAverageFPS();
 
 		void interpolateEntities();
 

@@ -52,5 +52,16 @@
 			"u_sniperScopeViewTexture":	"DP_INT",
 			"u_sceneTexture":			"DP_INT"
 		}
+	},
+
+	{
+		"r": 			"r_text",
+		"vs":			"text.vs",
+		"fs":			"text.fs",
+		"data":
+		{
+			"u_texture":	"DP_INT",
+			"u_color":		"DP_VEC3"
+		}
 	}
 ]

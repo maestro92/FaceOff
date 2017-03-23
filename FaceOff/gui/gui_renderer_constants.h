@@ -48,4 +48,13 @@ namespace R_SNIPER_SCOPE_VIEW
 	};
 }
 
+namespace R_TEXT
+{
+	enum E
+	{
+		u_texture = 0,
+		u_color
+	};
+}
+
 #endif

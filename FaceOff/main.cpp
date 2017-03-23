@@ -171,6 +171,7 @@ void FaceOff::init()
 
 
 	timeProfilerIndex = 0;
+	fpsProfilerIndex = 0;
 
 	initObjects();
 	initRenderers();
@@ -182,6 +183,11 @@ void FaceOff::init()
 
 	// initGUI depends on the m_defaultPlayerID, so initNetworkLobby needs to run first
 	initGUI();
+
+	for (int i = 0; i < FPS_PROFILER_BUFFER; i++)
+	{
+		fpsProfiler[i] = 0;
+	}
 
 
 	//Initialize clear color
@@ -1328,9 +1334,6 @@ void FaceOff::serverReadPackets()
 // i'm making things simple. Im just sending 
 void FaceOff::serverFrame(long long dt)
 {
-
-
-	
 	serverReadPackets();
 
 	// allow pause if only the local client is connected
@@ -1476,6 +1479,7 @@ void FaceOff::serverSendClientSnapshot(int clientId)
 
 
 	RakNet::BitStream bs;
+
 	serverWritePlayers(from, to, clientId, bs);
 	serverWriteEntities(from, to, bs);
 
@@ -1518,7 +1522,6 @@ void FaceOff::serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, Rak
 {
 	for (int i = 0; i < sv_players.getIterationEnd(); i++)
 	{
-		cout << "writing player " << i << endl;
 		Player* player = sv_players.getByIndex(i);
 		if (player != NULL)
 		{
@@ -1859,21 +1862,30 @@ https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
 void FaceOff::clientFrame(long long dt)
 {
 	//clientHandleDeviceEvents(); 
-
+//	cout << "clientReadPackets" << endl;
 	clientReadPackets();
 
 	clientSendCmd();
 	clientCheckForResend();
 
+//	cout << "processPacketQueue" << endl;
+
 	processPacketQueue(m_client.realTime, clientToServer, false);
 
 	// I opt to do player prediction collision detection on the interpolated objects
 	// so I do this before the clientPrediction
+
+//	cout << "interpolateEntities" << endl;
 	interpolateEntities();
 
+//	cout << "clientPrediction" << endl;
 	clientPrediction();
 
+//	cout << "render" << endl;
 	render();	
+
+//	cout << "clientframe end" << endl;
+
 }
 
 // interpolate, also add entities to the collision tree
@@ -2013,11 +2025,11 @@ void FaceOff::interpolateEntities()
 
 					//	obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
 
-					cout << "player interpFactor" << interpFactor;
-					utl::clDebug("state1 pos", cState1.state.position);
+			//		utl::clDebug("player interpFactor", interpFactor);
+			//		utl::clDebug("state1 pos", cState1.state.position);
 					
 					p->m_position = cState1.state.position;
-					utl::clDebug("state0 pos", cState0.state.position);
+			//		utl::clDebug("state0 pos", cState0.state.position);
 
 
 				}
@@ -2279,17 +2291,7 @@ void FaceOff::clientParseDeltaPlayer(ClientSnapshot* cur, int flags, RakNet::Bit
 
 	ObjectId pId(playerId);
 
-	
-	utl::clDebug("playerId", playerId);
-
-	if (flags & U_DELTA)
-	{
-		utl::clDebug("U_DELTA");
-	}
-	
-
 	Player* p = cl_players.getByIndex(pId.id);
-	utl::clDebug("playerId", p->objectId.id);
 	bs.Read(p->m_position[0]);
 	bs.Read(p->m_position[1]);
 	bs.Read(p->m_position[2]);
@@ -2840,34 +2842,89 @@ void FaceOff::start()
 	long long dt = 0;
 	long long oldTime = utl::getCurrentTime_ms(); 
 	long long newTime = 0;
+	
+	Uint32 time0 = 0;
+	Uint32 time1 = 0;
+	
 	while (isRunning)
 	{
-		// curTime = SDL_GetTicks();
+		// cout << "frame" << endl;
+		time0 = SDL_GetTicks();
 
 		newTime = utl::getCurrentTime_ms();
 
 		dt = newTime - oldTime;
-		
+		// cout << "update" << endl;
 		update();
+
+		
 
 		if (m_server.isInitalized == true)
 		{	
+		//	cout << "serverFrame" << endl;
 			m_server.realTime = newTime;
 			serverFrame(dt);
 		}
 
 		if (m_server.isDedicated == false)
 		{
+		//	cout << "clientFrame" << endl;
 			m_client.realTime = newTime;
 			clientFrame(dt);
 		}
 
-		// render();
 		oldTime = newTime;
+		
+		time1 = SDL_GetTicks();
+		
+		
+		// cout << fpsProfilerIndex << endl;
+		if (fpsProfilerIndex == FPS_PROFILER_BUFFER)
+		{
+			fpsProfilerIndex = 0;
+		}
+		fpsProfiler[fpsProfilerIndex] = (int)(time1 - time0);
+		++fpsProfilerIndex;
+		
+		int fps = getAverageFPS();
+		// cout << fps << endl;
+		
+		/*
+		++fpsProfilerIndex;
+		if (fpsProfilerIndex > 1000)
+		{
+			fpsProfilerIndex = 0;
+		}
+		*/
+		
+		// fpsProfilerIndex = 1;
+		m_gui.setFPS(fps);
 	}
 }
 
 
+int FaceOff::getAverageFPS()
+{
+	float averageFrameTime = 0;
+	for (int i = 0; i < FPS_PROFILER_BUFFER; i++)
+	{
+		averageFrameTime += fpsProfiler[i];
+	}
+
+	if (averageFrameTime == 0)
+	{
+		return 0;
+	}
+	else
+	{
+		averageFrameTime = averageFrameTime / FPS_PROFILER_BUFFER;
+
+		int fps = 1000 / averageFrameTime;
+
+	//	cout << averageFrameTime << " " << fps << endl;
+		return fps;
+	}
+}
 
 
 
@@ -4127,7 +4184,7 @@ void FaceOff::render()
 
 	// smoke effects
 
-	
+	/*
 	if (m_smokeEffects.size() > 0)
 	{
 		p_renderer = &m_rendererMgr.r_smokeEffectUpdate;
@@ -4159,7 +4216,7 @@ void FaceOff::render()
 		}
 		p_renderer->disableShader();
 	}
-	
+	*/
 	glDisable(GL_BLEND);
 
 	if (m_zoomedIn)
@@ -4779,9 +4836,11 @@ void FaceOff::initAudio()
 
 void FaceOff::initGUI()
 {
-
-	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+	// run this before m_gui.init, so the textEngine is initialized
+	// need to comeback and re-organize the gui the minimize dependencies
 	Control::init("", 25, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+
 //	if (!m_isServer)
 	{
 		int xOffset = 55;
@@ -4800,6 +4859,9 @@ void FaceOff::initGUI()
 		xOffset = 700;
 		Control* ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
 		cl_players.get(m_defaultPlayerID)->m_ammoBarGUI = (Bar*)ammoBar;
+
+		xOffset = 0; yOffset = 0;
+		Label* fpsLabel = new Label("90", xOffset, yOffset, 50, 50, GRAY);
 
 		int aimWidth = 20;
 		int aimHeight = 20;
@@ -4822,11 +4884,17 @@ void FaceOff::initGUI()
 		m_gui.addGUIComponent(HPBar);
 		m_gui.addGUIComponent(armorBar);
 		m_gui.addGUIComponent(ammoBar);
+
+		m_gui.addGUIComponent(fpsLabel);
+		m_gui.setFPSLabel(fpsLabel);
+
 		m_gui.addGUIComponent(horiAim);
 		m_gui.setHorAimIndex(m_gui.getNumGUIComponent() - 1);
 
 		m_gui.addGUIComponent(vertAim);
 		m_gui.setVerAimIndex(m_gui.getNumGUIComponent() - 1);
+
+
 	}
 }
 

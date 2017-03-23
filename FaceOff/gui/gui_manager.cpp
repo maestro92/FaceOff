@@ -3,6 +3,7 @@
 
 void GUIManager::init(int screenWidth, int screenHeight)
 {
+	m_fpsLabel = NULL;
     m_GUIComponentsFlags = 0;
 
     m_screenWidth = screenWidth;
@@ -32,12 +33,12 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	Renderer::initRendererWrapper(vArray, &r_coloredRect, "r_coloredRect", path);
 	Renderer::initRendererWrapper(vArray, &r_texturedRect, "r_texturedRect", path);
 	Renderer::initRendererWrapper(vArray, &r_listBoxItemHighlight, "r_listBoxItemHighlight", path);
+	Renderer::initRendererWrapper(vArray, &r_text, "r_text", path);
 
 	Control::r_coloredRect = r_coloredRect;
 	Control::r_texturedRect = r_texturedRect;
 	Control::r_listBoxItemHighlight = r_listBoxItemHighlight;
-
-
+	Control::m_textEngine.r_textRenderer = r_text;
 
 	Renderer::initRendererWrapper(vArray, &r_sniperScopeView, "r_sniperScopeView", path);
 
@@ -54,6 +55,27 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	Control::r_texturedRect.printDataPairs();
 	Control::r_listBoxItemHighlight.printDataPairs();
 	r_sniperScopeView.printDataPairs();
+
+
+
+
+
+
+
+
+
+	/// set shader
+	Shader* s;
+
+	/// r_TextRenderer
+	s = new Shader("/gui_shaders/text.vs", "/gui_shaders/text.fs");
+	r_textRenderer.addShader(s);
+	r_textRenderer.addDataPair(RENDER_PASS1, "u_texture",   DP_INT);
+	r_textRenderer.addDataPair(RENDER_PASS1, "u_color",     DP_VEC3);
+
+
+
+
 	*/
 
 	utl::debug("GUI manager initing");
@@ -177,6 +199,28 @@ void GUIManager::setVerAimIndex(int index)
 {
 	m_verAimIndex = index;
 }
+
+void GUIManager::setFPS(int fps)
+{
+	if (m_fpsLabel != NULL)
+	{
+		m_fpsLabel->setText(utl::intToStr(fps));
+	}
+}
+
+void GUIManager::setFPSLabel(Label* label)
+{
+	if (label != NULL)
+	{
+		if (m_fpsLabel != NULL)
+		{
+			delete m_fpsLabel;
+		}
+
+		m_fpsLabel = label;
+	}
+}
+
 
 
 /*

@@ -590,6 +590,7 @@ namespace utl
 	void debug(string s, unsigned int i);
 	void debug(string s, int i);
 	void debug(string s, float f);
+	void debug(string s, double d);
 	void debug(string s, glm::vec2 v);
 	void debug(string s, glm::vec3 v);
 	void debug(string s, glm::vec4 v);
@@ -611,6 +612,7 @@ namespace utl
 	void clDebug(string s, unsigned int i);
 	void clDebug(string s, int i);
 	void clDebug(string s, float f);
+	void clDebug(string s, double d);
 	void clDebug(string s, glm::vec2 v);
 	void clDebug(string s, glm::vec3 v);
 	void clDebug(string s, glm::vec4 v);

@@ -8,6 +8,7 @@
 #include "terrain/terrain.h"
 using namespace std;
 
+
 enum CameraType
 {
 	FIRST_PERSON_CAMERA,
