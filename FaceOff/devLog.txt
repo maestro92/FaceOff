@@ -518,3 +518,99 @@ well, if c++ std is doing it this way, then I should definition do the same with
 
 
 
+
+
+
+
+#############################################################################################
+####################################### 2017 march 18th #####################################
+#############################################################################################
+
+encountered an interesting problem on client frame rate while working on client prediction
+
+usually the client frame loop is 
+
+
+				clientReadPacket();
+
+				clientSendCmd();
+
+				interpolateEntities();
+
+				clientPrediction();
+
+
+and in the clentPrediction step, depending how much latency you have, the workload in the clientPrediction function will vary.
+the higher the latency, the more client UserCmd that has to predict. Hence that slows down the entire client loop. I found out about this issue
+when I was testing with 0 latency cs 200ms latency. Under 0 latency, the game was generating a lot more UserCmd becuz the clientLoop runs faster. Hence
+telling me about the need to address the client frame rate issue.
+
+
+And that essentially addresses a more general problem in game development, which is client frame rate. 
+if you insert any type of control of frame rate, then  your game will run at different speed on different machines
+
+After looking into valve's article, especially the part under "Basic Architecture of a Client / Server Game"
+
+https://developer.valvesoftware.com/wiki/Latency_Compensating_Methods_in_Client/Server_In-game_Protocol_Design_and_Optimization
+
+it says
+				1.	Sample clock to find start time
+				2.	...
+				3.	...
+				4.	...
+				5.	...
+				6.	...
+				7.	...			
+				8.	End time minus start time is the simulation time for the next frame
+
+in the top and bottom
+
+
+
+
+
+#############################################################################################
+####################################### 2017 march 26th #####################################
+#############################################################################################
+
+
+v-table vs if else branching
+
+
+
+consider using switch as well
+
+
+
+
+http://softwareengineering.stackexchange.com/questions/301510/in-general-is-it-worth-using-virtual-functions-to-avoid-branching
+
+
+
+
+
+
+
+
+
+
+
+
+
+WorldObject GetOne() vs constructor
+
+
+
+
+
+
+
+profiling
+get rid of unordered_map
+
+
+trying to remove virtual functions
+
+	"ignore Physics With"
+
+

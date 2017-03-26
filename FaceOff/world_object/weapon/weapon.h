@@ -32,7 +32,6 @@ class Weapon : public WorldObject
 		~Weapon();
 
 
-
 		void init(WeaponData data);
 
 		int m_damage;
@@ -51,15 +50,13 @@ class Weapon : public WorldObject
 		glm::vec3 m_thirdPOVOffset;
 		float m_thirdPOVScale;
 
-		void setData(WeaponData data);
+
 
 		// void setType(WeaponTypeEnum type);
 		int getType();
 
 		void setName(WeaponNameEnum type);
 		int getName();
-
-		WorldObjectType getObjectType();
 
 		bool shouldRender();
 
@@ -99,8 +96,14 @@ class Weapon : public WorldObject
 
 		std::function<void(Weapon*)> onDelete;
 
-		bool isBeingUsed;
+		void setBeingUsed(bool flag);
+		bool isBeingUsed();
+
+
 	private:
+		void setData(WeaponData data);
+
+
 		long long m_explodeDelayStartTime;
 		long long m_explodeDelayTime;
 
@@ -111,7 +114,7 @@ class Weapon : public WorldObject
 
 		float m_angle;
 
-
+		bool isBeingUsedFlag;
 
 		int m_grenadeThrowerInstanceId;
 

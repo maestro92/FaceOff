@@ -37,7 +37,7 @@ enum DynamicType
 };
 
 
-enum WorldObjectType
+enum EntityType
 {
 	SCENE_OBJECT = 0,
 	PLAYER,
@@ -45,14 +45,13 @@ enum WorldObjectType
 	PARTICLE_EFFECT
 };
 
-
-
-
-
 class WorldObject
 {
     public:
         WorldObject();
+
+		static WorldObject* getOne();
+
 		virtual ~WorldObject();
 		string m_name;
 		// uint32_t m_instanceId;
@@ -65,6 +64,7 @@ class WorldObject
 		bool alreadyFireTested;
 
 		int isHitCounter;
+
 
 
 		glm::vec3 m_position;
@@ -86,9 +86,9 @@ class WorldObject
 		
 		Model* m_model;
 
-		DynamicType m_dynamicType;
 
-		virtual WorldObjectType getObjectType();
+
+		EntityType getEntityType();
 		DynamicType getDynamicType();
 		CDEnum getGeometryType();
 
@@ -96,7 +96,12 @@ class WorldObject
 		inline void setName(string s);
 		inline string getName();
 
-		virtual int getInstanceId();
+//		virtual int getInstanceId();
+		int getCollisionFlagIndex();
+		void resetCollisionFlags();
+		void registerCollsionFlag(int i);
+
+
         inline void setScale(float s);
         inline void setScale(glm::vec3 scale);
         inline void setScale(float x, float y, float z);
@@ -161,6 +166,8 @@ class WorldObject
 		// check if we ignore physics testing with the object with the instanceId
 		virtual bool ignorePhysicsWith(WorldObject* obj);
 		
+		bool alreadyTestedPhysicsWith(WorldObject* obj);
+
 		virtual WeaponSlotEnum getWeaponSlot();
 		virtual WeaponNameEnum getWeaponName();
 
@@ -175,8 +182,15 @@ class WorldObject
 
 		virtual void serialize(RakNet::BitStream& bs);
 		virtual void deserialize(RakNet::BitStream& bs, ModelManager* mm);
-
+		void print_uint8_t(uint8_t n);
+		uint8_t collisionFlags[ENTITY_COLLISION_FLAG_SIZE];
 	protected:
+
+//		uint8_t collisionFlags[ENTITY_COLLISION_FLAG_SIZE];
+
+		DynamicType m_dynamicType;
+		EntityType m_entityType;
+
 		int m_modelEnum;
 		float m_mass;
 		float m_invMass;

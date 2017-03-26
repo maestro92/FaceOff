@@ -45,7 +45,6 @@ class ParticleEffect : public WorldObject
 		GLuint m_currTFB;
 		GLuint m_particleBuffer[2];
 		GLuint m_transformFeedback[2];
-		virtual WorldObjectType getObjectType();
 		virtual ParticleEffectType getParticleEffectType() = 0;
 
 };

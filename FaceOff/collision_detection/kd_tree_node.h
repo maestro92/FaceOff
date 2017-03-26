@@ -123,8 +123,9 @@ struct KDTreeNode
 			if (obj == NULL)
 				continue;
 
-			// if (obj->objectId.id == object->objectId.id)
-			if (obj->getInstanceId() == object->getInstanceId())
+			// can't use objectId.id, cuz player and objects are not combined together
+			// so player and objects might have the same id
+			if (obj->getCollisionFlagIndex() == object->getCollisionFlagIndex())
 			{
 				index = i;
 				m_objects[i] = NULL;

@@ -60,14 +60,20 @@ class KDTree
 
 		// void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object);
 		// void visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & object, int depth, KDTreeNode*& hitNode);
-		void visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint);
-		void visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, 
-						WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, unordered_set<int>& objectsAlreadyTested);
+
+	//	void visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, 
+	//					WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint);
+	//	void visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, 
+	//					WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, unordered_set<int>& objectsAlreadyTested);
+
+		void visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax,
+						WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, vector<WorldObject*>& objectsAlreadyTested);
 
 		// void visitOverlappedNodes(KDTreeNode* node, Player* player, glm::vec3& volNearPt);
 		// void visitOverlappedNodes(Player* player, glm::vec3& volNearPt, vector<WorldObject*>& objects);
-		void visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects);
+	//	void visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects);
 
+		void visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects, bool setCollsionFlagsBothWays);
 
 
 		void renderWireFrame(Pipeline& p, Renderer* r);

@@ -15,6 +15,7 @@ ParticleEffect::ParticleEffect()
 	m_textureId = NULL;
 	m_time = 0;
 
+	m_entityType = PARTICLE_EFFECT;
 //	m_geometry = new Sphere();
 }
 
@@ -55,7 +56,3 @@ void ParticleEffect::render(Pipeline& p, Renderer* r)
 }
 */
 
-WorldObjectType ParticleEffect::getObjectType()
-{
-	return PARTICLE_EFFECT;
-}

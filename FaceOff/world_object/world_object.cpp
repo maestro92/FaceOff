@@ -28,10 +28,21 @@ WorldObject::WorldObject()
 	setMaterialEnergyRestitution(0.0f);
 	setMaterialSurfaceFriction(1);
 
+	m_entityType = SCENE_OBJECT;
 	m_dynamicType = STATIC;
+
+	resetCollisionFlags();
 
 	m_modelEnum = -1;
 }
+
+
+WorldObject* WorldObject::getOne()
+{
+	WorldObject* obj = new WorldObject();
+	return obj;
+}
+
 
 
 WorldObject::~WorldObject()
@@ -68,9 +79,9 @@ void WorldObject::renderGroup(Pipeline& p, Renderer* r)
 }
 
 
-WorldObjectType WorldObject::getObjectType()
+EntityType WorldObject::getEntityType()
 {
-	return SCENE_OBJECT;
+	return m_entityType;
 }
 
 DynamicType WorldObject::getDynamicType()
@@ -206,8 +217,62 @@ bool WorldObject::ignorePhysics()
 
 bool WorldObject::ignorePhysicsWith(WorldObject* obj)
 {
+	if (getCollisionFlagIndex() == obj->getCollisionFlagIndex())
+	{
+		return true;
+	}
+
 	return false;
 }
+
+bool WorldObject::alreadyTestedPhysicsWith(WorldObject* obj)
+{
+	int objIndex = obj->getCollisionFlagIndex();
+
+	int arrayIndex = objIndex / ENTITY_COLLISION_ENTRY_SIZE;
+	int intIndex = objIndex - arrayIndex * ENTITY_COLLISION_ENTRY_SIZE;
+	return (collisionFlags[arrayIndex] >> intIndex) & 1;
+}
+
+
+void WorldObject::resetCollisionFlags()
+{
+	for (int i = 0; i < ENTITY_COLLISION_FLAG_SIZE; i++)
+	{
+		collisionFlags[i] = 0;
+	}
+}
+
+void WorldObject::print_uint8_t(uint8_t n)
+{
+	int i;
+	for (i = 8; i >= 0; i--)
+		printf("%d", (n & (1 << i)) >> i);
+	putchar('\n');
+}
+
+void WorldObject::registerCollsionFlag(int objIndex)
+{
+	int arrayIndex = objIndex / ENTITY_COLLISION_ENTRY_SIZE;
+	int intIndex = objIndex - arrayIndex * ENTITY_COLLISION_ENTRY_SIZE;
+
+	
+	collisionFlags[arrayIndex] |= 1 << intIndex;
+
+	/*
+	if (m_name == "player 0")
+	{
+		cout << "	size " << ENTITY_COLLISION_ENTRY_SIZE << endl;
+		cout << "	arrayIndex " << arrayIndex << endl;
+		cout << "	intIndex " << intIndex << endl;
+		cout << "	value is " << unsigned(collisionFlags[arrayIndex]) << endl;
+		
+		print_uint8_t(collisionFlags[arrayIndex]);
+	}
+	*/
+
+}
+
 
 WeaponSlotEnum WorldObject::getWeaponSlot()
 {
@@ -279,12 +344,25 @@ bool WorldObject::shouldRender()
 	return true;
 }
 
-
+/*
 int WorldObject::getInstanceId()
 {
 	return objectId.id;
 }
+*/
 
+
+int WorldObject::getCollisionFlagIndex()
+{
+	if (m_entityType == PLAYER)
+	{
+		return objectId.s.index;
+	}
+	else
+	{
+		return objectId.s.index + NUM_MAX_CLIENTS;
+	}
+}
 
 void WorldObject::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 {

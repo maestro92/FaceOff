@@ -166,6 +166,8 @@ void FaceOff::init()
 	curLatencyOption = 0;
 
 	predictionOn = true;
+	interpolateFlag = true;
+
 	containedFlag = false;
 	hitNode = NULL;
 
@@ -494,7 +496,7 @@ void FaceOff::initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree)
 			continue;
 		}
 
-		if (obj->getObjectType() == WEAPON && ((Weapon*)(obj))->hasOwner())
+		if (obj->getEntityType() == WEAPON && ((Weapon*)(obj))->hasOwner())
 		{
 			continue;
 		}
@@ -1064,7 +1066,7 @@ void FaceOff::deserializeEntityAndAddToWorld(WorldObject* obj, RakNet::BitStream
 	*/
 	cl_objects.set(obj, obj->objectId);
 
-	if (obj->getObjectType() == WEAPON)
+	if (obj->getEntityType() == WEAPON)
 	{
 		Weapon* weapon = (Weapon*)obj;
 		if (weapon->hasOwner())
@@ -1525,6 +1527,8 @@ void FaceOff::serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, Rak
 		Player* player = sv_players.getByIndex(i);
 		if (player != NULL)
 		{
+			// cout << "writing player " << i << endl;
+
 			if (i == clientId)
 			{
 				serverWriteDefaultPlayer(player, bs);
@@ -1557,6 +1561,8 @@ void FaceOff::serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs)
 	if (flags & U_POSITION0)		bs.Write(p->m_position[0]);
 	if (flags & U_POSITION1)		bs.Write(p->m_position[1]);
 	if (flags & U_POSITION2)		bs.Write(p->m_position[2]);
+
+//	utl::debug("sv writing pos", p->m_position);
 }
 
 /*
@@ -1767,11 +1773,11 @@ void FaceOff::serverWriteNewWorldObject(WorldObjectState* obj1, RakNet::BitStrea
 
 	WorldObject* obj = sv_objects.get(obj1->objectId.id);
 
-	if (obj->getObjectType() == WorldObjectType::SCENE_OBJECT)
+	if (obj->getEntityType() == EntityType::SCENE_OBJECT)
 	{
 		flags |= U_SCENE_OBJECT;
 	}
-	else if (obj->getObjectType() == WorldObjectType::WEAPON)
+	else if (obj->getEntityType() == EntityType::WEAPON)
 	{
 		flags |= U_WEAPON;
 	}
@@ -1883,7 +1889,8 @@ void FaceOff::clientFrame(long long dt)
 
 //	cout << "render" << endl;
 	render();	
-
+	
+	int a = 1;
 //	cout << "clientframe end" << endl;
 
 }
@@ -2027,9 +2034,16 @@ void FaceOff::interpolateEntities()
 
 			//		utl::clDebug("player interpFactor", interpFactor);
 			//		utl::clDebug("state1 pos", cState1.state.position);
+					if (interpolateFlag)
+					{
+						p->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+					}
+					else
+					{
+						p->m_position = cState1.state.position;
+					}
 					
-					p->m_position = cState1.state.position;
-			//		utl::clDebug("state0 pos", cState0.state.position);
+					//		utl::clDebug("state0 pos", cState0.state.position);
 
 
 				}
@@ -2064,9 +2078,14 @@ void FaceOff::interpolateEntities()
 				{
 					// interpolate position
 					// interpolate angle
-
-				//	obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
-					obj->m_position = cState1.state.position;
+					if (interpolateFlag)
+					{
+						obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+					}
+					else
+					{
+						obj->m_position = cState1.state.position;
+					}
 				}
 				else
 				{
@@ -2292,9 +2311,11 @@ void FaceOff::clientParseDeltaPlayer(ClientSnapshot* cur, int flags, RakNet::Bit
 	ObjectId pId(playerId);
 
 	Player* p = cl_players.getByIndex(pId.id);
+
 	bs.Read(p->m_position[0]);
 	bs.Read(p->m_position[1]);
 	bs.Read(p->m_position[2]);
+
 	p->updateCollisionDetectionGeometry();
 
 	ClientWorldObjectState state(flags, p->getState());
@@ -2732,7 +2753,7 @@ void FaceOff::clientPrediction()
 
 
 
-
+			p->resetCollisionFlags();
 			p->setPosition(playerState.position);
 			p->updateCollisionDetectionGeometry();
 			cl_objectKDtree.reInsert(p);
@@ -2753,12 +2774,14 @@ void FaceOff::clientPrediction()
 			//	if (cmd.isValid())
 				{
 					p->processUserCmd(cmd);
+					p->resetCollisionFlags();
 
+					// utl::clDebug("pos before ", cl_players.get(m_defaultPlayerID)->m_position);
 
-					//		clientSimulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID, (cmdNum == m_client.lastAckCmdNum + 1));
+					simulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID, false);
 
-					collisionDetectionTestPairs.clear();
-					simulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID);
+					// utl::clDebug("pos after ", cl_players.get(m_defaultPlayerID)->m_position);
+					
 				}
 				++cmdNum;
 			}
@@ -3058,6 +3081,25 @@ void FaceOff::update()
 
 				case SDLK_F3:
 					predictionOn = !predictionOn;
+					if (predictionOn)
+					{
+						cout << "client Prediction is On" << endl;
+					}
+					else
+					{
+						cout << "client Prediction is Off" << endl;
+					}
+					break;
+				case SDLK_F4:
+					interpolateFlag = !interpolateFlag;
+					if (interpolateFlag)
+					{
+						cout << "interpolation is On" << endl;
+					}
+					else
+					{
+						cout << "interpolation is Off" << endl;
+					}
 					break;
 
 				default:
@@ -3082,14 +3124,8 @@ Frame
 	update camera
 */
 
-
-void FaceOff::serverSimulationTick(int msec)
+void FaceOff::clearCollisionDetectionFlags()
 {
-	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
-	// then deallocating memory
-	collisionDetectionTestPairs.clear();
-	// CollisionDetectionTestPairs collisionDetectionTestPairs;
-
 	for (int i = 0; i < sv_players.getIterationEnd(); i++)
 	{
 		Player* p = sv_players.get(i);
@@ -3098,7 +3134,7 @@ void FaceOff::serverSimulationTick(int msec)
 			continue;
 		}
 
-		simulatePlayerPhysics(sv_objectKDtree, p, i);
+		p->resetCollisionFlags();
 	}
 
 
@@ -3110,8 +3146,46 @@ void FaceOff::serverSimulationTick(int msec)
 			continue;
 		}
 
-		simulateObjectPhysics(sv_objectKDtree, sv_objects, object, i);
+		object->resetCollisionFlags();
 	}
+}
+
+
+void FaceOff::serverSimulationTick(int msec)
+{
+	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
+	// then deallocating memory
+	// collisionDetectionTestPairs.clear();
+	// CollisionDetectionTestPairs collisionDetectionTestPairs;
+
+	clearCollisionDetectionFlags();
+
+//	utl::debug("pos before", sv_players.get(m_defaultPlayerID)->m_position);
+	for (int i = 0; i < sv_players.getIterationEnd(); i++)
+	{
+		Player* p = sv_players.get(i);
+		if (p == NULL)
+		{
+			continue;
+		}
+
+		simulatePlayerPhysics(sv_objectKDtree, p, i, true);
+	}
+	// utl::debug("pos after", sv_players.get(m_defaultPlayerID)->m_position);
+
+
+	for (int i = 0; i < sv_objects.getIterationEnd(); i++)
+	{
+		WorldObject* object = sv_objects.getByIndex(i);
+		if (object == NULL)
+		{
+			continue;
+		}
+
+		simulateObjectPhysics(sv_objectKDtree, sv_objects, object, i, true);
+	}
+
+	int a = 1;
 
 	sv_objects.destroyObjects();
 }
@@ -3120,7 +3194,7 @@ void FaceOff::serverSimulationTick(int msec)
 
 
 
-void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
+void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setCollsionFlagsBothWays)
 {
 	if (p == NULL)
 	{
@@ -3242,12 +3316,13 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
 
 
 	p->updateCollisionDetectionGeometry();
-
-	checkNeighbors(tree, p);
+//	utl::debug("player pos0", p->m_position);
+	checkNeighbors(tree, p, setCollsionFlagsBothWays);
+//	utl::debug("player pos1", p->m_position);
 
 	p->updateCollisionDetectionGeometry();
+	
 	tree.reInsert(p);
-
 	p->updateWeaponTransform();
 
 }
@@ -3256,339 +3331,11 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i)
 
 
 
-void FaceOff::clientSimulatePlayerPhysics(KDTree& tree, Player* p, int i, bool first)
-{
-	if (p == NULL)
-	{
-		return;
-	}
 
-	p->updateGameInfo();
 
-	p->m_velocity += utl::BIASED_HALF_GRAVITY;
 
-	p->updateGameStats();
 
-	p->m_position += p->m_velocity;
-
-	p->updateMidAirVelocity();
-
-	p->updateCollisionDetectionGeometry();
-
-//	if (first == true)
-//	{
-		tree.reInsert(p);
-//	}
-
-	clientCheckNeighbors(tree, p);
-
-//	p->updateCollisionDetectionGeometry();
-//	tree.reInsert(p);
-
-	p->updateWeaponTransform();
-
-}
-
-
-
-void FaceOff::clientCheckNeighbors(KDTree& tree, WorldObject* obj)
-{
-	obj->inMidAir = true;
-
-	vector<WorldObject*> neighbors;
-//	glm::vec3 volNearPoint(obj->getPosition());
-//	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
-
-	for (int i = 0; i < obj->m_parentNodes.size(); i++)
-	{
-		KDTreeNode* node = obj->m_parentNodes[i];
-
-		if (node == NULL)
-		{
-			continue;
-		}
-
-		for (int j = 0; j < node->m_objects.size(); j++)
-		{
-			WorldObject* neighbor = node->m_objects[i];
-			//		utl::debug("object name is", obj->m_name);
-			if (neighbor == NULL)
-				continue;
-
-			//			if (obj->objectId.id == testObject->objectId.id)
-			if (neighbor->getInstanceId() == obj->getInstanceId())
-				continue;
-
-			//			utl::debug("object name is", obj->m_name);
-			neighbors.push_back(neighbor);
-		}
-
-	}
-
-
-	for (int j = 0; j < neighbors.size(); j++)
-	{
-		WorldObject* neighbor = neighbors[j];
-
-		/*
-		// this is for debugging, will render it with "collided color"
-		if (p->isDefaultPlayer())
-		{
-		neighbor->isTested = true;
-		}
-		*/
-
-		/*
-		if (collisionDetectionTestPairs.alreadyTested(obj->objectId.id, neighbor->objectId.id))
-		continue;
-		else
-		collisionDetectionTestPairs.addPairs(obj->objectId.id, neighbor->objectId.id);
-		*/
-
-		if (obj->ignorePhysicsWith(neighbor))
-		{
-			continue;
-		}
-
-
-		ContactData contactData;
-		if (testCollisionDetection(obj, neighbor, contactData))
-		{
-			if (neighbor->getDynamicType() == STATIC)
-			{
-				contactData.pair[0] = obj;
-				contactData.pair[1] = NULL;
-			}
-			else
-			{
-				contactData.pair[0] = obj;
-				contactData.pair[1] = neighbor;
-			}
-
-			contactData.resolveVelocity();
-			contactData.resolveInterpenetration();
-			neighbor->updateCollisionDetectionGeometry();
-		}
-	}
-}
-
-
-#if 0
-void FaceOff::simulatePlayerPhysics1(KDTree& tree, Player* p, int i)
-{
-	if (p == NULL)
-	{
-		return;
-	}
-
-	p->updateGameInfo();
-
-	p->m_velocity += utl::BIASED_HALF_GRAVITY;
-
-	p->updateGameStats();
-
-	p->m_position += p->m_velocity;
-
-	if (p->m_velocity.x != 0)
-	{
-		utl::debug("player veloctiy", p->m_velocity);
-	}
-
-	p->updateMidAirVelocity();
-
-	if (singlePlayerMode)
-	{
-		if (i == 1)
-		{
-
-			float tempDist = 100;
-
-			if (incrFlag)
-				p->m_position.z += 0.05;
-			else
-				p->m_position.z -= 0.05;
-
-			if (p->m_position.z > tempDist)
-				incrFlag = false;
-
-			if (p->m_position.z < 20)
-				incrFlag = true;
-
-
-
-
-			float tempMaxAngle = 150;
-
-			if (incrAngleFlag)
-			{
-				tempPitch = 0;
-				tempYaw += 1;
-			}
-			else
-			{
-				tempPitch = 0;
-				tempYaw -= 1;
-			}
-
-			if (tempPitch > tempMaxAngle)
-			{
-				incrAngleFlag = false;
-			}
-			if (tempPitch < -tempMaxAngle)
-			{
-				incrAngleFlag = true;
-			}
-
-			p->setRotation(tempPitch, tempYaw);
-		}
-
-		else if (i == 2)
-		{
-			/*
-			float tempDist = 15;
-
-			if (incrFlag2)
-			p->m_position.x += 0.05;
-			else
-			p->m_position.x -= 0.05;
-
-
-			if (p->m_position.x > tempDist)
-			incrFlag2 = false;
-			if (p->m_position.x < -tempDist)
-			incrFlag2 = true;
-			*/
-
-
-			/*
-			float tempMaxAngle = 150;
-
-			if (incrAngleFlag2)
-			{
-			tempPitch2 += 0.05;
-			tempYaw2 += 1;
-			}
-			else
-			{
-			tempPitch2 += 0.05;
-			tempYaw2 -= 1;
-			}
-
-			if (tempPitch2 > tempMaxAngle)
-			{
-			incrAngleFlag2 = false;
-			}
-			if (tempPitch2 < -tempMaxAngle)
-			{
-			incrAngleFlag2 = true;
-			}
-			*/
-			//	tempPitch2 = 0;
-			//	tempYaw2 = 0;
-
-			p->setRotation(tempPitch2, tempYaw2);
-		}
-
-	}
-
-
-
-	p->updateCollisionDetectionGeometry();
-
-	checkNeighbors1(tree, p);
-
-	p->updateCollisionDetectionGeometry();
-	tree.reInsert(p);
-
-	p->updateWeaponTransform();
-
-}
-
-void FaceOff::checkNeighbors1(KDTree& tree, WorldObject* obj)
-{
-	obj->inMidAir = true;
-
-	vector<WorldObject*> neighbors;
-	glm::vec3 volNearPoint(obj->getPosition());
-	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
-
-	/*
-	tree.print(5);
-	tree.print(11);
-	tree.print(12);
-
-
-	utl::debug("checking neighbors", neighbors.size());
-
-	if (obj->m_name == "player 0")
-	{
-	utl::debug("number of parent nodes are", obj->m_parentNodes.size());
-
-	for (int i = 0; i < obj->m_parentNodes.size(); i++)
-	{
-	utl::debug("	parent node i", obj->m_parentNodes[i]->id);
-	}
-	}
-	*/
-
-	for (int j = 0; j < neighbors.size(); j++)
-	{
-		WorldObject* neighbor = neighbors[j];
-
-		/*
-		// this is for debugging, will render it with "collided color"
-		if (p->isDefaultPlayer())
-		{
-		neighbor->isTested = true;
-		}
-		*/
-
-		/*
-		if (collisionDetectionTestPairs.alreadyTested(obj->objectId.id, neighbor->objectId.id))
-		continue;
-		else
-		collisionDetectionTestPairs.addPairs(obj->objectId.id, neighbor->objectId.id);
-		*/
-
-		if (collisionDetectionTestPairs.alreadyTested(obj->getInstanceId(), neighbor->getInstanceId()))
-			continue;
-		else
-			collisionDetectionTestPairs.addPairs(obj->getInstanceId(), neighbor->getInstanceId());
-
-		if (obj->ignorePhysicsWith(neighbor))
-		{
-			continue;
-		}
-
-
-		ContactData contactData;
-		if (testCollisionDetection(obj, neighbor, contactData))
-		{
-			if (neighbor->getDynamicType() == STATIC)
-			{
-				contactData.pair[0] = obj;
-				contactData.pair[1] = NULL;
-			}
-			else
-			{
-				contactData.pair[0] = obj;
-				contactData.pair[1] = neighbor;
-			}
-
-			contactData.resolveVelocity();
-			contactData.resolveInterpenetration();
-			neighbor->updateCollisionDetectionGeometry();
-		}
-	}
-}
-
-#endif
-
-
-
-
-
-void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject* object, int i)
+void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject* object, int i, bool setCollsionFlagsBothWays)
 {
 	if (object == NULL)
 	{
@@ -3602,7 +3349,7 @@ void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject*
 		return;
 	}
 
-	if (object->getObjectType() == WEAPON)
+	if (object->getEntityType() == WEAPON)
 	{
 		Weapon* wObject = (Weapon*)object;
 
@@ -3626,7 +3373,7 @@ void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject*
 	// object->m_position += object->m_velocity;
 	object->updateCollisionDetectionGeometry();
 
-	checkNeighbors(tree, object);
+	checkNeighbors(tree, object, setCollsionFlagsBothWays);
 
 	object->updateCollisionDetectionGeometry();
 	tree.reInsert(object);
@@ -3636,19 +3383,52 @@ void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject*
 
 
 
-void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj)
+void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj, bool setCollsionFlagsBothWays)
 {
 	obj->inMidAir = true;
 
-	vector<WorldObject*> neighbors;
+	neighbors.clear();
 	glm::vec3 volNearPoint(obj->getPosition());
-	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
+	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors, setCollsionFlagsBothWays);
 	
+
+	// utl::debug("checking neighbors", neighbors.size());
+#if 0
+	if (obj->m_name == "player 0")
+	{
+		int count = 0;
+
+		for (int i = 0; i < obj->m_parentNodes.size(); i++)
+		{
+			if (obj->m_parentNodes[i] != NULL)
+			{
+				count++;
+			}
+		}
+
+		cout << count << endl;
+
+		/*
+		for (int i = 0; i < obj->m_parentNodes.size(); i++)
+		{
+			if (obj->m_parentNodes[i] != NULL)
+			{
+				utl::debug("	parent node i", obj->m_parentNodes[i]->id);
+			}
+			else
+			{
+				utl::debug("	parent node i is NULL");
+			}
+		}
+		*/
+	}
+#endif
+
 	/*
 	tree.print(5);
 	tree.print(11);
 	tree.print(12);
-	
+
 
 	utl::debug("checking neighbors", neighbors.size());
 
@@ -3658,14 +3438,36 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj)
 
 		for (int i = 0; i < obj->m_parentNodes.size(); i++)
 		{
-			utl::debug("	parent node i", obj->m_parentNodes[i]->id);
+			if (obj->m_parentNodes[i] != NULL)
+			{
+				utl::debug("	parent node i", obj->m_parentNodes[i]->id);
+			}
+			else
+			{
+				utl::debug("	parent node i is NULL");
+			}
 		}
 	}
 	*/
 
+
+
 	for (int j = 0; j < neighbors.size(); j++)
 	{
 		WorldObject* neighbor = neighbors[j];
+
+		// cout << neighbor->m_name << endl;
+		/*
+		if (obj->m_name == "player 0" && neighbor->m_name == "ground")
+		{
+			int a = 1;
+		}
+		
+		if (obj->m_name == "player 0")
+		{
+			cout << neighbor->m_name << endl;
+		}
+		*/
 
 		/*
 		// this is for debugging, will render it with "collided color"
@@ -3675,23 +3477,21 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj)
 		}
 		*/
 
-		/*
-		if (collisionDetectionTestPairs.alreadyTested(obj->objectId.id, neighbor->objectId.id))
-			continue;
-		else
-			collisionDetectionTestPairs.addPairs(obj->objectId.id, neighbor->objectId.id);
-		*/
-
-		if (collisionDetectionTestPairs.alreadyTested(obj->getInstanceId(), neighbor->getInstanceId()))
-			continue;
-		else
-			collisionDetectionTestPairs.addPairs(obj->getInstanceId(), neighbor->getInstanceId());
-
-		if (obj->ignorePhysicsWith(neighbor))
+/*
+		if (obj->alreadyTestedPhysicsWith(neighbor))
 		{
 			continue;
 		}
+		else
+		{
+			obj->registerCollsionFlag(neighbor->getCollisionFlagIndex());
+			neighbor->registerCollsionFlag(obj->getCollisionFlagIndex());
+		}
+*/
 
+
+
+	//	utl::debug("player pos 1", obj->m_position);
 
 		ContactData contactData;
 		if (testCollisionDetection(obj, neighbor, contactData))
@@ -3710,35 +3510,17 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj)
 			contactData.resolveVelocity();
 			contactData.resolveInterpenetration();
 			neighbor->updateCollisionDetectionGeometry();
+		//	utl::debug("player pos 2", obj->m_position);
 		}
 	}
+
+	
+//	utl::debug("player pos 3", obj->m_position);
 }
 
 
 
 
-/*
-void FaceOff::simulatePhysics()
-{
-	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
-	// then deallocating memory
-	collisionDetectionTestPairs.clear();
-	// CollisionDetectionTestPairs collisionDetectionTestPairs;
-
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		Player* p = m_players[i];
-		simulatePlayerPhysics(p, i, m_isServer);
-	}
-
-
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-		simulateObjectPhysics(object, i);
-	}
-}
-*/
 
 
 void FaceOff::render()
@@ -3768,7 +3550,7 @@ void FaceOff::render()
 
 
 	
-	
+	// utl::clDebug("camera pos ", cl_players.get(m_defaultPlayerID)->m_position);
 	
 	cl_players.get(m_defaultPlayerID)->updateCamera(m_pipeline);
 
@@ -4079,7 +3861,7 @@ void FaceOff::render()
 				continue;
 			}
 
-			p->alreadyFireTested = false;
+		//	p->alreadyFireTested = false;
 
 			if (p->isHit)
 			{
@@ -4096,9 +3878,9 @@ void FaceOff::render()
 			if (object == NULL)
 				continue;
 
-			object->alreadyFireTested = false;
+		//	object->alreadyFireTested = false;
 
-			if (object->getObjectType() == WEAPON)
+			if (object->getEntityType() == WEAPON)
 			{
 				continue;
 			}
@@ -4985,9 +4767,16 @@ void FaceOff::clientHandleDeviceEvents()
 				float hitObjectSqDist = FLT_MAX;
 				glm::vec3 hitPoint;
 
-				unordered_set<int> objectsAlreadyTested;
+	//			vector<WorldObject*> objectsAlreadyTestedForFire;
 
-				m_objectKDtree.visitNodes(m_objecretKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+				m_objectKDtree.visitNodes(m_objecretKDtree.m_head, m_players[m_defaultPlayerID], lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTestedForFire);
+
+				for(int i=0; i<objectsAlreadyTestedForFire.size(); i++)
+				{
+					objectsAlreadyTestedForFire[i]->alreadyFireTested = true;
+				}
+
+				objectsAlreadyTestedForFire.Clear();
 
 				//	utl::debug("player pos", lineStart);
 				//	utl::debug("target z", lineDir);
@@ -6020,4 +5809,364 @@ void FaceOff::simulatePlayerPhysics(Player* p, int i)
 }
 #endif
 
+
+
+
+
+
+
+
+
+
+
+
+
 #endif
+
+
+
+
+
+
+#if 0
+void FaceOff::simulatePlayerPhysics1(KDTree& tree, Player* p, int i)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+
+	p->updateGameInfo();
+
+	p->m_velocity += utl::BIASED_HALF_GRAVITY;
+
+	p->updateGameStats();
+
+	p->m_position += p->m_velocity;
+
+	if (p->m_velocity.x != 0)
+	{
+		utl::debug("player veloctiy", p->m_velocity);
+	}
+
+	p->updateMidAirVelocity();
+
+	if (singlePlayerMode)
+	{
+		if (i == 1)
+		{
+
+			float tempDist = 100;
+
+			if (incrFlag)
+				p->m_position.z += 0.05;
+			else
+				p->m_position.z -= 0.05;
+
+			if (p->m_position.z > tempDist)
+				incrFlag = false;
+
+			if (p->m_position.z < 20)
+				incrFlag = true;
+
+
+
+
+			float tempMaxAngle = 150;
+
+			if (incrAngleFlag)
+			{
+				tempPitch = 0;
+				tempYaw += 1;
+			}
+			else
+			{
+				tempPitch = 0;
+				tempYaw -= 1;
+			}
+
+			if (tempPitch > tempMaxAngle)
+			{
+				incrAngleFlag = false;
+			}
+			if (tempPitch < -tempMaxAngle)
+			{
+				incrAngleFlag = true;
+			}
+
+			p->setRotation(tempPitch, tempYaw);
+		}
+
+		else if (i == 2)
+		{
+			/*
+			float tempDist = 15;
+
+			if (incrFlag2)
+			p->m_position.x += 0.05;
+			else
+			p->m_position.x -= 0.05;
+
+
+			if (p->m_position.x > tempDist)
+			incrFlag2 = false;
+			if (p->m_position.x < -tempDist)
+			incrFlag2 = true;
+			*/
+
+
+			/*
+			float tempMaxAngle = 150;
+
+			if (incrAngleFlag2)
+			{
+			tempPitch2 += 0.05;
+			tempYaw2 += 1;
+			}
+			else
+			{
+			tempPitch2 += 0.05;
+			tempYaw2 -= 1;
+			}
+
+			if (tempPitch2 > tempMaxAngle)
+			{
+			incrAngleFlag2 = false;
+			}
+			if (tempPitch2 < -tempMaxAngle)
+			{
+			incrAngleFlag2 = true;
+			}
+			*/
+			//	tempPitch2 = 0;
+			//	tempYaw2 = 0;
+
+			p->setRotation(tempPitch2, tempYaw2);
+		}
+
+	}
+
+
+
+	p->updateCollisionDetectionGeometry();
+
+	checkNeighbors1(tree, p);
+
+	p->updateCollisionDetectionGeometry();
+	tree.reInsert(p);
+
+	p->updateWeaponTransform();
+
+}
+
+void FaceOff::checkNeighbors1(KDTree& tree, WorldObject* obj)
+{
+	obj->inMidAir = true;
+
+	vector<WorldObject*> neighbors;
+	glm::vec3 volNearPoint(obj->getPosition());
+	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
+
+	/*
+	tree.print(5);
+	tree.print(11);
+	tree.print(12);
+
+
+	utl::debug("checking neighbors", neighbors.size());
+
+	if (obj->m_name == "player 0")
+	{
+	utl::debug("number of parent nodes are", obj->m_parentNodes.size());
+
+	for (int i = 0; i < obj->m_parentNodes.size(); i++)
+	{
+	utl::debug("	parent node i", obj->m_parentNodes[i]->id);
+	}
+	}
+	*/
+
+	for (int j = 0; j < neighbors.size(); j++)
+	{
+		WorldObject* neighbor = neighbors[j];
+
+		/*
+		// this is for debugging, will render it with "collided color"
+		if (p->isDefaultPlayer())
+		{
+		neighbor->isTested = true;
+		}
+		*/
+
+		/*
+		if (collisionDetectionTestPairs.alreadyTested(obj->objectId.id, neighbor->objectId.id))
+		continue;
+		else
+		collisionDetectionTestPairs.addPairs(obj->objectId.id, neighbor->objectId.id);
+		*/
+
+		if (collisionDetectionTestPairs.alreadyTested(obj->getInstanceId(), neighbor->getInstanceId()))
+			continue;
+		else
+			collisionDetectionTestPairs.addPairs(obj->getInstanceId(), neighbor->getInstanceId());
+
+		if (obj->ignorePhysicsWith(neighbor))
+		{
+			continue;
+		}
+
+
+		ContactData contactData;
+		if (testCollisionDetection(obj, neighbor, contactData))
+		{
+			if (neighbor->getDynamicType() == STATIC)
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = NULL;
+			}
+			else
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = neighbor;
+			}
+
+			contactData.resolveVelocity();
+			contactData.resolveInterpenetration();
+			neighbor->updateCollisionDetectionGeometry();
+		}
+	}
+}
+
+#endif
+
+
+
+/*
+void FaceOff::clientSimulatePlayerPhysics(KDTree& tree, Player* p, int i, bool first)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+
+	p->updateGameInfo();
+
+	p->m_velocity += utl::BIASED_HALF_GRAVITY;
+
+	p->updateGameStats();
+
+	p->m_position += p->m_velocity;
+
+	p->updateMidAirVelocity();
+
+	p->updateCollisionDetectionGeometry();
+
+//	if (first == true)
+//	{
+		tree.reInsert(p);
+//	}
+
+	clientCheckNeighbors(tree, p);
+
+//	p->updateCollisionDetectionGeometry();
+//	tree.reInsert(p);
+
+	p->updateWeaponTransform();
+
+}
+
+
+
+void FaceOff::clientCheckNeighbors(KDTree& tree, WorldObject* obj)
+{
+	obj->inMidAir = true;
+
+	vector<WorldObject*> neighbors;
+//	glm::vec3 volNearPoint(obj->getPosition());
+//	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors);
+
+	for (int i = 0; i < obj->m_parentNodes.size(); i++)
+	{
+		KDTreeNode* node = obj->m_parentNodes[i];
+
+		if (node == NULL)
+		{
+			continue;
+		}
+
+		for (int j = 0; j < node->m_objects.size(); j++)
+		{
+			WorldObject* neighbor = node->m_objects[i];
+			//		utl::debug("object name is", obj->m_name);
+			if (neighbor == NULL)
+				continue;
+
+			//			if (obj->objectId.id == testObject->objectId.id)
+			if (neighbor->getInstanceId() == obj->getInstanceId())
+				continue;
+
+			//			utl::debug("object name is", obj->m_name);
+			neighbors.push_back(neighbor);
+		}
+
+	}
+
+
+	for (int j = 0; j < neighbors.size(); j++)
+	{
+		WorldObject* neighbor = neighbors[j];
+
+
+		if (obj->ignorePhysicsWith(neighbor))
+		{
+			continue;
+		}
+
+
+		ContactData contactData;
+		if (testCollisionDetection(obj, neighbor, contactData))
+		{
+			if (neighbor->getDynamicType() == STATIC)
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = NULL;
+			}
+			else
+			{
+				contactData.pair[0] = obj;
+				contactData.pair[1] = neighbor;
+			}
+
+			contactData.resolveVelocity();
+			contactData.resolveInterpenetration();
+			neighbor->updateCollisionDetectionGeometry();
+		}
+	}
+}
+*/
+
+
+/*
+void FaceOff::simulatePhysics()
+{
+	// it's possible that unodered_set.clear() retains memory, so it may be slightly faster
+	// then deallocating memory
+	collisionDetectionTestPairs.clear();
+	// CollisionDetectionTestPairs collisionDetectionTestPairs;
+
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		Player* p = m_players[i];
+		simulatePlayerPhysics(p, i, m_isServer);
+	}
+
+
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+		simulateObjectPhysics(object, i);
+	}
+}
+*/
+
+

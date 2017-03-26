@@ -45,8 +45,9 @@ Player::Player(int id)
 
 	m_healthBarGUI = NULL;
 
+	m_entityType = PLAYER;
 	m_dynamicType = DYNAMIC;
-
+	
 
 	jumpCoolDown = 30;
 	curJumpCoolDown = 0;
@@ -477,12 +478,6 @@ void Player::updateWeaponTransform()
 }
 
 
-WorldObjectType Player::getObjectType()
-{
-	return PLAYER; 
-}
-
-
 void Player::updateBulletTransform()
 {
 	/*
@@ -577,13 +572,13 @@ void Player::switchWeapon(WeaponSlotEnum slot)
 
 	if (m_curWeapon != NULL)
 	{
-		m_curWeapon->isBeingUsed = false;
+		m_curWeapon->setBeingUsed(false);
 	}
 
 	if (m_weapons[slot] != NULL)
 	{	
 		m_curWeapon = m_weapons[slot];
-		m_curWeapon->isBeingUsed = true;
+		m_curWeapon->setBeingUsed(true);
 		utl::debug("m_curWeapon slot", m_curWeapon->getWeaponSlot());
 	}
 	else
@@ -618,7 +613,7 @@ void Player::pickUp(Weapon* weapon)
 	WeaponSlotEnum slot = weapon->getWeaponSlot();
 
 	weapon->ownerId = m_id;
-	weapon->isBeingUsed = false;
+	weapon->setBeingUsed(false);
 
 	weapon->onDelete = [this](Weapon* weapon) 
 	{
@@ -657,7 +652,7 @@ void Player::pickUp(Weapon* weapon)
 	}
 	else
 	{
-		weapon->isBeingUsed = true;
+		weapon->setBeingUsed(true);
 		m_curWeapon = weapon;
 	}
 
@@ -696,7 +691,7 @@ Weapon* Player::throwGrenade()
 
 
 	grenade->ownerId = NO_OWNER;
-	grenade->isBeingUsed = false;
+	grenade->setBeingUsed(false);
 	// set it back to world model scale
 	grenade->setScale(grenade->m_modelScale);
 	grenade->setRotation(glm::mat4(1.0));
@@ -957,22 +952,28 @@ glm::vec3 Player::getFirePosition()
 
 bool Player::ignorePhysicsWith(WorldObject* obj)
 {
+	if (getCollisionFlagIndex() == obj->getCollisionFlagIndex())
+	{
+		return true;
+	}
+
 	if (obj->getWeaponSlot() == PROJECTILE)
 	{
 		return (obj->ignorePhysicsWith(this));
 	}
+
 	return false;
 }
 
 
 
-
+/*
 // a slight hack, will comeback
 int Player::getInstanceId()
 {
 	return objectId.id + NUM_MAX_OBJECTS;
-
 }
+*/
 
 
 

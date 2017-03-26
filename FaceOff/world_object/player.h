@@ -113,10 +113,7 @@ class Player : public WorldObject
 		int getId();
 
 		bool hasWeaponAtSlot(WeaponSlotEnum slot);
-
-
-
-		int getInstanceId();
+//		int getInstanceId();
 
 		void setRotation(float pitch, float yaw);
 
@@ -129,8 +126,6 @@ class Player : public WorldObject
 		Bar* m_healthBarGUI;
 		Bar* m_armorBarGUI;
 		Bar* m_ammoBarGUI;
-
-		WorldObjectType getObjectType();
 
 		bool inGrenadeGatherMode();
 		bool isUsingLongRangedWeapon();

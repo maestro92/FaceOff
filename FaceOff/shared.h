@@ -5,6 +5,10 @@
 
 
 #define NUM_MAX_OBJECTS 256
+const int NUM_MAX_CLIENTS = 10;
+
+const int ENTITY_COLLISION_ENTRY_SIZE = 8; // number of bits in uint8_t
+const int ENTITY_COLLISION_FLAG_SIZE = NUM_MAX_OBJECTS / ENTITY_COLLISION_ENTRY_SIZE;
 
 const int INVALID_OBJECT_ID = -1;
 

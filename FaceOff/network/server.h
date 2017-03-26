@@ -25,7 +25,7 @@
 
 #include "shared.h"
 
-const int NUM_MAX_CLIENTS = 10;
+
 const int NUM_SNAPSHOT_ENTITIES = 128;
 
 

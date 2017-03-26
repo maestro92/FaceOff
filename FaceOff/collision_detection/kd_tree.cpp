@@ -553,6 +553,7 @@ void KDTree::visitNodes(KDTreeNode* node, glm::vec3 lineStart, glm::vec3 lineDir
 
 // ray interesecting an AABB
 // Real Time Collision Detection page 179 - 181
+#if 0
 void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint)
 {
 	if (node == NULL)
@@ -758,9 +759,108 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 	}
 }
 
+#endif
+
+
+void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, 
+	WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, vector<WorldObject*>& objectsAlreadyTested)
+{
+	if (node == NULL)
+		return;
+
+	if (node->isLeaf())
+	{
+		for (int i = 0; i < node->m_objects.size(); i++)
+		{
+			WorldObject* obj = node->m_objects[i];
+
+			if (obj == NULL)
+				continue;
+
+			if (obj->alreadyFireTested)
+				continue;
+
+			if (obj->getCollisionFlagIndex() == player->getCollisionFlagIndex())
+				continue;
+
+			glm::vec3 tempHitPoint;
+
+			bool hit = false;
+
+			objectsAlreadyTested.push_back(obj);
+			obj->alreadyFireTested = true;
+
+			if (obj->getGeometryType() == CD_AABB)
+			{
+				hit = CollisionDetection::testRayAABB(lineStart, lineDir, *(obj->m_aabb), tempHitPoint);
+			}
+			else if (obj->getGeometryType() == CD_SPHERE)
+			{
+				cout << "obj name is" << obj->m_name << endl;
+				hit = CollisionDetection::testRaySphere(lineStart, lineDir, *(obj->m_sphere), tempHitPoint);
+				if (hit == true)
+					cout << "true" << endl;
+				else
+					cout << "false" << endl;
+			}
+
+			if (hit)
+			{
+				float sqDist = glm::length2(player->m_position - tempHitPoint);
+				if (sqDist < hitObjectSqDist)
+				{
+					hitObjectSqDist = sqDist;
+					hitObject = obj;
+					hitPoint = tempHitPoint;
+				}
+			}
+		}
+
+		return;
+	}
+
+
+	int dim = node->m_splitDirection;
+	int val = node->m_splitValue;
+
+	int first = lineStart[dim] > node->m_splitValue;
+
+	if (lineDir[dim] == 0.0f)
+	{
+		visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+	}
+	else
+	{
+		float t = (node->m_splitValue - lineStart[dim]) / lineDir[dim];
+
+		if (0.0f <= t && t < tmax)
+		{
+			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+			//	if (hitObject != NULL)
+			//	return;
+
+			visitNodes(node->m_child[first ^ 1], player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+		}
+		else
+		{
+			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
 
 // Real Time Collision Detection page 321
-void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects)
+void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects, bool setCollsionFlagsBothWays)
 {
 	if (node == NULL)
 		return;
@@ -793,16 +893,59 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 		for (int i = 0; i < node->m_objects.size(); i++)
 		{
 			WorldObject* obj = node->m_objects[i];
-	//		utl::debug("object name is", obj->m_name);
-			if (obj == NULL)
-				continue;
 
-//			if (obj->objectId.id == testObject->objectId.id)
-			if (obj->getInstanceId() == testObject->getInstanceId())			
+			if (obj == NULL)
+			{
 				continue;
+			}
+			
+			/*
+			if (testObject->m_name == "player 0")
+			{
+				utl::debug("		object name is", obj->m_name);
+			}
+			
+			if (testObject->m_name == "player 0" && obj->m_name == "ground")
+			{
+				int a = 1;
+			}
+			*/
+
+			if (testObject->ignorePhysicsWith(obj))
+			{
+				continue;
+			}
+
+			if (testObject->alreadyTestedPhysicsWith(obj))
+			{
+				continue;
+			}
+//			if (obj->objectId.id == testObject->objectId.id)
+//			if (obj->getInstanceId() == testObject->getInstanceId())			
+//				continue;
 			
 //			utl::debug("object name is", obj->m_name);
 			objects.push_back(obj);
+
+			testObject->registerCollsionFlag(obj->getCollisionFlagIndex());
+			if (setCollsionFlagsBothWays)
+			{
+				obj->registerCollsionFlag(testObject->getCollisionFlagIndex());
+			}
+
+
+			/*
+			if (testObject->m_name == "player 0")
+			{				
+				int objIndex = obj->getCollisionFlagIndex();
+				int arrayIndex = objIndex / ENTITY_COLLISION_ENTRY_SIZE;
+				int intIndex = objIndex - arrayIndex * ENTITY_COLLISION_ENTRY_SIZE;
+
+				cout << "		value is " << unsigned(testObject->collisionFlags[arrayIndex]) << endl;
+				int a = 1;
+			}
+			*/
+
 		}
 
 		return;
@@ -810,7 +953,7 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 
 	int first = testObject->m_position[dir] > val;
 
-	visitOverlappedNodes(node->m_child[first], testObject, volNearPt, objects);
+	visitOverlappedNodes(node->m_child[first], testObject, volNearPt, objects, setCollsionFlagsBothWays);
 
 
 	float oldValue = volNearPt[dir];
@@ -822,7 +965,7 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 	{
 		if (CollisionDetection::testAABBAABB(*(testObject->m_aabb), node->m_child[first ^ 1]->m_aabb))
 		{
-			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects);
+			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects, setCollsionFlagsBothWays);
 		}
 	}
 
@@ -830,7 +973,7 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 	{
 		if (glm::length2(volNearPt - testObject->m_sphere->center) < (testObject->m_sphere->radius * testObject->m_sphere->radius))
 		{
-			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects);
+			visitOverlappedNodes(node->m_child[first ^ 1], testObject, volNearPt, objects, setCollsionFlagsBothWays);
 		}
 	}
 	volNearPt[dir] = oldValue;

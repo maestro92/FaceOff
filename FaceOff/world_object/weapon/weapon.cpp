@@ -4,6 +4,7 @@
 
 Weapon::Weapon()
 {
+/*
 	ownerId = NO_OWNER;
 	isBeingUsed = false;
 	m_angle = 0.0f;
@@ -16,6 +17,7 @@ Weapon::Weapon()
 	m_explodeDelayMode = false;
 	m_readyToExplode = false;
 	m_grenadeThrowerInstanceId = -1;
+*/
 }
 
 Weapon::Weapon(WeaponData data)
@@ -46,8 +48,10 @@ void Weapon::init(WeaponData data)
 {
 	setData(data);
 	ownerId = NO_OWNER;
-	isBeingUsed = false;
+	setBeingUsed(false);
 	m_angle = 0.0f;
+
+	m_entityType = WEAPON;
 	m_dynamicType = DYNAMIC;
 
 	m_explodeDelayStartTime = 0;
@@ -125,12 +129,6 @@ void Weapon::updateGameInfo()
 }
 
 
-WorldObjectType Weapon::getObjectType()
-{
-	return WEAPON;
-}
-
-
 void Weapon::startExplodeDelayTimer()
 {
 	m_explodeDelayMode = true;
@@ -143,7 +141,7 @@ bool Weapon::shouldRender()
 {
 	if (hasOwner())
 	{
-		if (isBeingUsed)
+		if (isBeingUsed())
 		{
 			return true;
 		}
@@ -205,7 +203,7 @@ int Weapon::getGrenadeThrowerId()
 
 void Weapon::renderGroup(Pipeline& p, Renderer* r)
 {
-	if (hasOwner() == false || (hasOwner() && isBeingUsed))
+	if (hasOwner() == false || (hasOwner() && isBeingUsed()))
 	{
 		WorldObject::renderGroup(p, r);
 	}
@@ -214,7 +212,7 @@ void Weapon::renderGroup(Pipeline& p, Renderer* r)
 
 void Weapon::renderWireFrameGroup(Pipeline& p, Renderer* r)
 {
-	if (hasOwner() == false || (hasOwner() && isBeingUsed))
+	if (hasOwner() == false || (hasOwner() && isBeingUsed()))
 	{
 		WorldObject::renderWireFrameGroup(p, r);
 	}
@@ -226,6 +224,17 @@ bool Weapon::ignorePhysics()
 	return (hasOwner() || m_slotEnum != PROJECTILE);
 }
 
+
+
+void Weapon::setBeingUsed(bool flag)
+{
+	isBeingUsedFlag = flag;
+}
+
+bool Weapon::isBeingUsed()
+{
+	return isBeingUsedFlag;
+}
 
 bool Weapon::ignorePhysicsWith(WorldObject* obj)
 {
@@ -259,9 +268,9 @@ void Weapon::serialize(RakNet::BitStream& bs)
 	bs.Write(m_nameEnum);
 	bs.Write(m_slotEnum);
 	bs.Write(ownerId);		// need to put these two in bit flags
-	bs.Write(isBeingUsed);
 	
-
+	bool b = isBeingUsed();
+	bs.Write(b);
 
 }
 
@@ -283,7 +292,10 @@ void Weapon::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 
 	bs.Read(m_slotEnum);
 	bs.Read(ownerId);
-	bs.Read(isBeingUsed);
+
+	bool b = isBeingUsed();
+	bs.Read(b);
+	setBeingUsed(b);
 	
 	if (objectId.s.index == 27)
 	{

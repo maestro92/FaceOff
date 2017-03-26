@@ -877,7 +877,7 @@ class FaceOff
 		// RakNet::SystemAddress server_address;
 
 
-
+		vector<WorldObject*> objectsAlreadyTestedForFire;
 
 		void destroyWorldObjectByIndex(vector<WorldObject*>& objects, int i);
 		// void destroyWorldObjectByIndex(int i);
@@ -894,7 +894,7 @@ class FaceOff
 		int fpsProfilerIndex;
 		int fpsProfiler[FPS_PROFILER_BUFFER];
 
-
+		bool interpolateFlag;
 		bool predictionOn;
 
 		FOArray sv_objects;
@@ -924,8 +924,8 @@ class FaceOff
 		// vector<WorldObject*> m_hitPointMarks;
 		// vector<FireWorkEffect*> m_fireWorkEffects;
 
-		CollisionDetectionTestPairs collisionDetectionTestPairs;
-		CollisionDetectionTestPairs clientInputCollisionDetectionTestPairs;
+	//	CollisionDetectionTestPairs collisionDetectionTestPairs;
+	//	CollisionDetectionTestPairs clientInputCollisionDetectionTestPairs;
 
 
 		// networking portion
@@ -953,7 +953,6 @@ class FaceOff
 		void initNetwork();
 		void initNetworkLobby();
 		void startNetworkThread();
-
 
 		void RakNetFunction();
 
@@ -1031,32 +1030,14 @@ class FaceOff
 
 		void render();
 
-		Player* parsePlayer(RakNet::BitStream& bs, bool defaultFlag);
 
+		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setCollsionFlagsBothWays);
+		void simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject* object, int i, bool setCollsionFlagsBothWays);
+		void checkNeighbors(KDTree& tree, WorldObject* obj, bool setCollsionFlagsBothWays);
 
-		void clientSimulatePlayerPhysics(KDTree& tree, Player* p, int i, bool first);
-		void clientCheckNeighbors(KDTree& tree, WorldObject* obj);
-
-
-		void simulatePlayerPhysics(KDTree& tree, Player* p, int i);
-		void simulatePlayerPhysics1(KDTree& tree, Player* p, int i);
-
-		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, UserCmd cmd);
-
-		// void simulatePlayerPhysics(Player* p, int i, Move move);
-		// void simulatePlayerPhysics(Player* p, int i);
-
-		// void simulateObjectPhysics(KDTree& tree, vector<WorldObject*>& objects, WorldObject* obj, int i);
-		void simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject* object, int i);
-
+		void clearCollisionDetectionFlags();
 		bool testCollisionDetection(WorldObject* a, WorldObject* b, ContactData& contactData);
 		
-		
-//		void checkNeighbors(WorldObject* obj);
-		void checkNeighbors(KDTree& tree, WorldObject* obj);
-//		void checkNeighborsAfterClientInput(WorldObject* obj);
-		// void simulatePhysics();
-
 		void GetTimeProfilerAverages();
 
 
@@ -1099,6 +1080,10 @@ class FaceOff
 		long long getCurrentTimeMillis();
 
 		int noneCounter;
+
+
+		// used for collision detection
+		vector<WorldObject*> neighbors;
 };
 
 /*
