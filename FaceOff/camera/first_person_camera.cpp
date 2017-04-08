@@ -230,6 +230,8 @@ void FirstPersonCamera::control(glm::vec3 & vel, bool canJump)
 }
 
 
+
+
 void FirstPersonCamera::processUserCmd(const UserCmd& cmd)
 {
 	m_pitch = cmd.angles[PITCH];
@@ -304,6 +306,20 @@ void FirstPersonCamera::processUserCmd(const UserCmd& cmd, glm::vec3 & vel, bool
 	{
 		vel += glm::vec3(0.0, 175.0, 0.0) * utl::GRAVITY_CONSTANT;
 	}
+
+	/*
+	glm::mat4 mat = glm::mat4(1.0);
+	mat *= glm::rotate(m_pitch, 1.0f, 0.0f, 0.0f);
+	mat *= glm::rotate(m_yaw, 0.0f, 1.0f, 0.0f);
+	
+	m_xAxis = glm::vec3(m_viewMatrix[0][0], m_viewMatrix[1][0], m_viewMatrix[2][0]);
+	m_yAxis = glm::vec3(m_viewMatrix[0][1], m_viewMatrix[1][1], m_viewMatrix[2][1]);
+	m_zAxis = glm::vec3(m_viewMatrix[0][2], m_viewMatrix[1][2], m_viewMatrix[2][2]);
+
+	m_targetXAxis = m_xAxis;
+	m_targetYAxis = m_yAxis;
+	m_targetZAxis = m_zAxis;
+	*/
 }
 
 

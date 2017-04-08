@@ -1830,28 +1830,63 @@ void FaceOff::serverWriteWorldObjects(WorldObjectState* obj0, WorldObjectState* 
 void FaceOff::serverRunClientMoveCmd(int playerId, UserCmd cmd)
 {
 	Player* player = sv_players.get(playerId);
-	/*
-	if (cmd.buttons & FORWARD)
-	{
-		utl::clDebug("pressed forward");
-	}
 
-	if (cmd.buttons & BACK)
-	{
-		utl::clDebug("pressed BACK");
-	}
-
-	if (cmd.buttons & LEFT)
-	{
-		utl::clDebug("pressed LEFT");
-	}
-
-	if (cmd.buttons & RIGHT)
-	{
-		utl::clDebug("pressed RIGHT");
-	}
-	*/
 	player->processUserCmd(cmd);
+
+	processUserFireWeapon(player);
+
+}
+
+
+void FaceOff::processUserFireWeapon(Player* p)
+{
+
+	p->fireWeapon();
+
+	if (p->isUsingLongRangedWeapon())
+	{
+		WorldObject* hitObject = NULL;
+
+		glm::vec3 lineStart = p->getFirePosition();
+//		glm::vec3 lineDir = -p->m_camera->m_targetZAxis;
+
+		glm::vec3 lineDir = -p->getZAxis();
+
+
+		utl::debug("lineStart", lineStart);
+		utl::debug("lineDir", lineDir);
+
+		// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
+
+		float hitObjectSqDist = FLT_MAX;
+		glm::vec3 hitPoint;
+
+		// unordered_set<int> objectsAlreadyTested;
+		memset(svFireWeaponCollisionFlags, 0, sizeof(svFireWeaponCollisionFlags));
+		sv_objectKDtree.visitNodes(p, lineStart, lineDir, 500.0f, hitObject, hitObjectSqDist, hitPoint, svFireWeaponCollisionFlags);
+
+		//	utl::debug("player pos", lineStart);
+		//	utl::debug("target z", lineDir);
+
+		if (hitObject != NULL)
+		{
+			utl::debug("name", hitObject->m_name);
+			hitObject->isHit = true;
+
+			WorldObject* hitPointMark = new WorldObject();
+			hitPointMark->setPosition(hitPoint);
+			hitPointMark->setScale(1.0, 1.0, 1.0);
+			hitPointMark->setModelEnum(ModelEnum::cube);
+			hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
+			hitPointMark->m_name = "hitMark";
+			//								m_hitPointMarks.push_back(hitPointMark);
+		}
+		else
+		{
+			utl::debug("hitObject is NULL");
+		}
+		// VisitNodes
+	}
 }
 
 
@@ -2556,6 +2591,8 @@ void FaceOff::clientSendCmd()
 
 	UserCmd cmd = clientCreateNewCmd();
 
+
+
 	++m_client.cmdNum;
 	int newCmdIndex = m_client.cmdNum & CMD_BUFFER_MASK;
 	
@@ -2667,6 +2704,11 @@ UserCmd FaceOff::clientCreateNewCmd()
 	int mx, my;	
 	SDL_GetMouseState(&mx, &my);
 
+	if (cl_players.get(m_defaultPlayerID)->m_camera->getMouseIn())
+	{
+		SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
+	}
+
 	float deltaYaw = 0;
 	float deltaPitch = 0;
 
@@ -2725,11 +2767,12 @@ void FaceOff::clientPrediction()
 {
 	UserCmd oldestCmd, latestCmd;
 
-
+	
 	if (cl_players.get(m_defaultPlayerID)->m_camera->getMouseIn())
 	{
-		SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
+	//	SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
 	}
+	
 
 	// int currentCmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
 	Player* p = cl_players.get(m_defaultPlayerID);
@@ -3041,7 +3084,7 @@ void FaceOff::update()
 		{
 			switch (event.key.keysym.sym)
 			{
-				case SDLK_F1:		
+				case SDLK_F1:				
 					if (EMULATE_LATENCY)
 					{
 						if (curLatencyOption == latencyOptions.size() - 1)
@@ -3389,7 +3432,7 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj, bool setCollsionFla
 
 	neighbors.clear();
 	glm::vec3 volNearPoint(obj->getPosition());
-	tree.visitOverlappedNodes(tree.m_head, obj, volNearPoint, neighbors, setCollsionFlagsBothWays);
+	tree.visitOverlappedNodes(obj, volNearPoint, neighbors, setCollsionFlagsBothWays);
 	
 
 	// utl::debug("checking neighbors", neighbors.size());

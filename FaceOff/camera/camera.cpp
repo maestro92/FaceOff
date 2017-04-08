@@ -12,7 +12,7 @@ Camera::Camera()
 	m_mouseIn = false;
 	m_targetRotation = glm::mat4(1.0);
 
-	m_moved = false;
+//	m_moved = false;
 }
 
 Camera::~Camera()

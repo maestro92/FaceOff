@@ -22,7 +22,7 @@ WorldObject::WorldObject()
 	m_aabb = NULL;
 	m_sphere = NULL;
 
-	isTested = isCollided = isHit = alreadyFireTested = false;
+	isTested = isCollided = isHit = false;
 	isHitCounter = 0;
 
 	setMaterialEnergyRestitution(0.0f);
@@ -237,10 +237,7 @@ bool WorldObject::alreadyTestedPhysicsWith(WorldObject* obj)
 
 void WorldObject::resetCollisionFlags()
 {
-	for (int i = 0; i < ENTITY_COLLISION_FLAG_SIZE; i++)
-	{
-		collisionFlags[i] = 0;
-	}
+	memset(collisionFlags, 0, sizeof(collisionFlags));
 }
 
 void WorldObject::print_uint8_t(uint8_t n)
@@ -325,6 +322,8 @@ void WorldObject::serialize(RakNet::BitStream& bs)
 //	bs.Write(getCameraPitch());
 //	bs.Write(getCameraYaw());
 
+
+
 	bs.Write(m_modelEnum);
 
 	// cout << "objectId.id " << objectId.id << endl;
@@ -335,6 +334,8 @@ void WorldObject::serialize(RakNet::BitStream& bs)
 	bs.Write(getMaterialEnergyRestitution());
 	bs.Write(getMaterialSurfaceFrictionToBitStream());
 
+
+	bs.Write(isHit);
 }
 
 
@@ -414,6 +415,7 @@ void WorldObject::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 	float friction = 0;
 	bs.Read(friction);			setMaterialSurfaceFriction(friction);
 
+	bs.Read(isHit);
 //	prevState = GetState();
 }
 

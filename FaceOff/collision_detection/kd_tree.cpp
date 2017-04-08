@@ -761,9 +761,14 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 #endif
 
+void KDTree::visitNodes(WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax,
+	WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, uint8_t* collisionFlags)
+{
+	visitNodes(m_head, player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, collisionFlags);
+}
 
 void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineStart, glm::vec3 lineDir, float tmax, 
-	WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, vector<WorldObject*>& objectsAlreadyTested)
+	WorldObject* & hitObject, float& hitObjectSqDist, glm::vec3& hitPoint, uint8_t* collisionFlags)
 {
 	if (node == NULL)
 		return;
@@ -774,21 +779,30 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 		{
 			WorldObject* obj = node->m_objects[i];
 
-			if (obj == NULL)
+			if (obj == NULL)	
+			{	
 				continue;
+			}
 
-			if (obj->alreadyFireTested)
+			if (obj->getCollisionFlagIndex() == player->getCollisionFlagIndex()) 
+			{ 
+				continue; 
+			}
+					
+			int objIndex = obj->getCollisionFlagIndex();
+			int arrayIndex = objIndex / ENTITY_COLLISION_ENTRY_SIZE;
+			int intIndex = objIndex - arrayIndex * ENTITY_COLLISION_ENTRY_SIZE;
+						
+			if ( ((collisionFlags[arrayIndex] >> intIndex) & 1) )
+			{
 				continue;
-
-			if (obj->getCollisionFlagIndex() == player->getCollisionFlagIndex())
-				continue;
-
+			}
+			
+			collisionFlags[arrayIndex] |= 1 << intIndex;
+						
 			glm::vec3 tempHitPoint;
 
 			bool hit = false;
-
-			objectsAlreadyTested.push_back(obj);
-			obj->alreadyFireTested = true;
 
 			if (obj->getGeometryType() == CD_AABB)
 			{
@@ -827,7 +841,7 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 	if (lineDir[dim] == 0.0f)
 	{
-		visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+		visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, collisionFlags);
 	}
 	else
 	{
@@ -835,15 +849,15 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 		if (0.0f <= t && t < tmax)
 		{
-			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, collisionFlags);
 			//	if (hitObject != NULL)
 			//	return;
 
-			visitNodes(node->m_child[first ^ 1], player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+			visitNodes(node->m_child[first ^ 1], player, lineStart + lineDir * t, lineDir, tmax - t, hitObject, hitObjectSqDist, hitPoint, collisionFlags);
 		}
 		else
 		{
-			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, objectsAlreadyTested);
+			visitNodes(node->m_child[first], player, lineStart, lineDir, tmax, hitObject, hitObjectSqDist, hitPoint, collisionFlags);
 		}
 	}
 }
@@ -852,14 +866,12 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 
 
-
-
-
-
-
-
-
 // Real Time Collision Detection page 321
+void KDTree::visitOverlappedNodes(WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects, bool setCollsionFlagsBothWays)
+{
+	visitOverlappedNodes(m_head, testObject, volNearPt, objects, setCollsionFlagsBothWays);
+}
+
 void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm::vec3& volNearPt, vector<WorldObject*>& objects, bool setCollsionFlagsBothWays)
 {
 	if (node == NULL)

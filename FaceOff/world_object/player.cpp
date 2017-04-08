@@ -102,7 +102,7 @@ void Player::control()
 //	jumpCoolDown = 1000;
 //	curJumpCoolDown = 0;
 
-
+/*
 void Player::control()
 {
 	bool canJumpFlag = canJump();
@@ -137,6 +137,54 @@ void Player::control()
 	m_velocity += vel;
 	m_rotation = m_camera->m_targetRotation;
 }
+*/
+
+
+
+void Player::control()
+{
+	bool canJumpFlag = canJump();
+	glm::vec3 vel(0.0);
+	m_midAirHorVel = glm::vec3(0.0);
+
+
+	// update the PLayer
+
+
+	// update camera
+	
+
+
+	m_camera->control(vel, canJumpFlag);
+
+	Input input = m_camera->m_moveState.input;
+
+	if (input.jump)
+	{
+		inMidAir = true;
+		curJumpCoolDown = 0;
+		jumped = true;
+	}
+
+	if (inMidAir)
+	{
+		vel.x = 0.5 * vel.x;
+		vel.z = 0.5 * vel.z;
+
+		m_midAirHorVel.x = vel.x;
+		m_midAirHorVel.z = vel.z;
+	}
+
+	if (hasMoved())
+	{
+		utl::debug("before vel", m_velocity);
+		utl::debug("control vel", vel);
+	}
+
+	m_velocity += vel;
+	m_rotation = m_camera->m_targetRotation;
+}
+
 
 
 int counter = 0;
@@ -966,6 +1014,21 @@ bool Player::ignorePhysicsWith(WorldObject* obj)
 }
 
 
+
+glm::vec3 Player::getXAxis()
+{
+	return m_xAxis;
+}
+
+glm::vec3 Player::getYAxis()
+{
+	return m_yAxis;
+}
+
+glm::vec3 Player::getZAxis()
+{
+	return m_zAxis;
+}
 
 /*
 // a slight hack, will comeback

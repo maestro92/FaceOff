@@ -1027,7 +1027,8 @@ class FaceOff
 
 		void clientPrediction();
 
-
+		uint8_t svFireWeaponCollisionFlags[ENTITY_COLLISION_FLAG_SIZE];
+		void processUserFireWeapon(Player* p);
 		void render();
 
 

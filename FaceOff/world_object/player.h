@@ -166,6 +166,12 @@ class Player : public WorldObject
 
 		virtual void updateGameInfo();
 
+
+		glm::vec3 getXAxis();
+		glm::vec3 getYAxis();
+		glm::vec3 getZAxis();
+
+
 	private:
 		int m_id;
 

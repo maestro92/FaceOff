@@ -61,7 +61,7 @@ class WorldObject
 		bool isHit;
 		
 		bool alreadyTested;
-		bool alreadyFireTested;
+		// bool alreadyFireTested;
 
 		int isHitCounter;
 
