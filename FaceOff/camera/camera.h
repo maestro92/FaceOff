@@ -22,8 +22,8 @@ class Camera
 		inline glm::vec3 getTargetPoint();
 		
 
-		virtual void control() = 0;
-		virtual void control(glm::vec3& vel, bool canJump) = 0;
+//		virtual void control() = 0;
+//		virtual void control(glm::vec3& vel, bool canJump) = 0;
 
 		virtual void updateViewMatrix(Pipeline& p) = 0;
 
@@ -31,13 +31,14 @@ class Camera
 //		virtual void processInput(Move move, glm::vec3 & vel, bool canJump) = 0;
 
 
-		virtual void processUserCmd(const UserCmd& cmd) = 0;
-		virtual void processUserCmd(const UserCmd& cmd, glm::vec3 & vel, bool canJump) = 0;
+//		virtual void processUserCmd(const UserCmd& cmd) = 0;
+//		virtual void processUserCmd(const UserCmd& cmd, glm::vec3 & vel, bool canJump) = 0;
 
 		void setMouseIn(bool b);
 		bool getMouseIn();
 
 		void setEyePoint(glm::vec3 eye);
+		void setTargetPosition(glm::vec3 pos);
 
 		void setPitch(float pitch);
 		void setYaw(float yaw);
@@ -93,7 +94,7 @@ class Camera
         float m_yaw;	
 		float m_roll;
 
-		glm::vec3 getFirePosition();
+	//	glm::vec3 getFirePosition();
 
 	protected:
 		bool m_mouseIn;
@@ -130,6 +131,10 @@ inline bool Camera::getMouseIn()
 	return m_mouseIn;
 }
 
+inline void Camera::setTargetPosition(glm::vec3 pos)
+{
+	m_target = pos;
+}
 
 inline void Camera::setPitch(float pitch)
 {

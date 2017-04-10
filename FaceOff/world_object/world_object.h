@@ -74,6 +74,9 @@ class WorldObject
 		glm::mat4 m_modelMatrix;
 
 
+
+
+
 		ObjectId objectId;
 
 		bool active;
@@ -96,7 +99,6 @@ class WorldObject
 		inline void setName(string s);
 		inline string getName();
 
-//		virtual int getInstanceId();
 		int getCollisionFlagIndex();
 		void resetCollisionFlags();
 		void registerCollsionFlag(int i);
@@ -127,7 +129,16 @@ class WorldObject
 		inline float getMass();
 		inline float getInvMass();
 
-        virtual inline void setRotation(glm::mat4 rot);
+		glm::vec3 m_xAxis;
+		glm::vec3 m_yAxis;
+		glm::vec3 m_zAxis;
+        inline void setRotation(glm::mat4 rot);
+		inline void setRotation(float pitch, float yaw);
+		inline void updateRotation();
+
+		inline float getPitch();
+		inline float getYaw();
+		inline float getRoll();
 
 		virtual bool shouldRender();
 
@@ -180,13 +191,27 @@ class WorldObject
 		
 		bool inMidAir;
 
-		virtual void serialize(RakNet::BitStream& bs);
-		virtual void deserialize(RakNet::BitStream& bs, ModelManager* mm);
+
+		virtual void serialize_New(RakNet::BitStream& bs);
+		virtual void deserialize_New(RakNet::BitStream& bs, ModelManager* mm);
+
+		void serialize_Delta(int flags, RakNet::BitStream& bs);
+		void deserialize_Delta(int flags, RakNet::BitStream& bs);
+
+
 		void print_uint8_t(uint8_t n);
+
+		void printParentTrees();
+
 		uint8_t collisionFlags[ENTITY_COLLISION_FLAG_SIZE];
 	protected:
 
 //		uint8_t collisionFlags[ENTITY_COLLISION_FLAG_SIZE];
+		
+		/// expressed in degrees
+		float m_pitch;
+		float m_yaw;
+		float m_roll;
 
 		DynamicType m_dynamicType;
 		EntityType m_entityType;
@@ -242,11 +267,79 @@ inline void WorldObject::setScale(float x, float y, float z)
 
 inline void WorldObject::setRotation(glm::mat4 rot)
 {
-    float temp[16] = {rot[0][0], rot[0][1], rot[0][2], 0.0,
+	m_xAxis = glm::vec3(rot[0][0], rot[0][1], rot[0][2]);
+	m_yAxis = glm::vec3(rot[1][0], rot[1][1], rot[1][2]);
+	m_zAxis = glm::vec3(rot[2][0], rot[2][1], rot[2][2]);
+
+	float temp[16] = {rot[0][0], rot[0][1], rot[0][2], 0.0,
                       rot[1][0], rot[1][1], rot[1][2], 0.0,
                       rot[2][0], rot[2][1], rot[2][2], 0.0,
                       0.0,       0.0,       0.0,       1.0};
     m_rotation = glm::make_mat4(temp);
+}
+
+
+
+void WorldObject::setRotation(float pitch, float yaw)
+{
+	m_pitch = pitch;
+	m_yaw = yaw;
+
+	glm::mat4 rot = glm::mat4(1.0);
+
+	/*
+	if (roll != 0)
+	{
+		rot = rot * glm::rotoate(roll, 0.0f, 0.0f, 1.0f);
+	}
+	*/
+
+	if (m_yaw != 0)
+	{
+		rot = rot * glm::rotate(m_yaw, 0.0f, 1.0f, 0.0f);
+	}
+
+	if (m_pitch != 0)
+	{
+		rot = rot * glm::rotate(m_pitch, 1.0f, 0.0f, 0.0f);
+	}
+
+
+	m_xAxis = glm::vec3(rot[0][0], rot[0][1], rot[0][2]);
+	m_yAxis = glm::vec3(rot[1][0], rot[1][1], rot[1][2]);
+	m_zAxis = glm::vec3(rot[2][0], rot[2][1], rot[2][2]);
+
+
+	/*
+	float temp[16] = { rot[0][0], rot[1][0], rot[2][0], 0,
+	rot[0][1], rot[1][1], rot[2][1], 0,
+	rot[0][2], rot[1][2], rot[2][2], 0,
+	0, 0, 0, 1 };
+	*/
+	/*
+	float temp[16] = { m_xAxis[0], m_yAxis[0], m_zAxis[0], 0,
+	m_xAxis[1], m_yAxis[1], m_zAxis[1], 0,
+	m_xAxis[2], m_yAxis[2], m_zAxis[2], 0,
+	0, 0, 0, 1 };
+	*/
+	m_rotation = rot;
+
+}
+
+
+inline float WorldObject::getPitch()
+{
+	return m_pitch;
+}
+
+inline float WorldObject::getYaw()
+{
+	return m_yaw;
+}
+
+inline float WorldObject::getRoll()
+{
+	return m_roll;
 }
 
 inline void WorldObject::setVelocity(glm::vec3 vel)
@@ -374,11 +467,12 @@ inline WorldObjectState WorldObject::getState()
 	WorldObjectState state;
 	state.objectId = objectId;
 	state.position = m_position;
-	/*
-	state.angles[PITCH] = 
-	state.angles[YAW] = 
-	state.angles[ROLL|] = 
-	*/
+	
+	state.angles[PITCH] = m_pitch;
+	state.angles[YAW] = m_yaw;
+	state.angles[ROLL] = m_roll;
+	
+	state.isHit = isHit;
 	return state;
 }
 

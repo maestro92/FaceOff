@@ -43,11 +43,12 @@ glm::vec3 Camera::getViewDirection()
 	return -m_zAxis;
 }
 
-
+/*
 glm::vec3 Camera::getFirePosition()
 {
 	return m_eye;
 }
+*/
 
 bool Camera::hasMoved()
 {

@@ -37,19 +37,20 @@ uint32_t utl::createUniqueObjectID()
 }
 
 
-void utl::write(RakNet::BitStream &bitStream, std::string &s)
+void utl::write(RakNet::BitStream &bs, std::string &s)
 {
 	const char *str = s.c_str();
-	RakNet::StringCompressor::Instance()->EncodeString(str, 255, &bitStream);
+	RakNet::StringCompressor::Instance()->EncodeString(str, 255, &bs);
 }
 
-void utl::read(RakNet::BitStream &bitStream, std::string &s)
+void utl::read(RakNet::BitStream &bs, std::string &s)
 {
 	char str[255];
-	RakNet::StringCompressor::Instance()->DecodeString(str, 255, &bitStream);
+	RakNet::StringCompressor::Instance()->DecodeString(str, 255, &bs);
 	string new_s(str);
 	s = new_s;
 }
+
 
 // https://www.epochconverter.com/
 long long utl::getCurrentTime_ms()

@@ -2,6 +2,7 @@
 #include "weapon.h"
 
 
+
 Weapon::Weapon()
 {
 /*
@@ -28,11 +29,6 @@ Weapon::Weapon(WeaponData data)
 
 Weapon::~Weapon()
 {
-	if (objectId.s.index == 27)
-	{
-		int a = 1;
-	}
-
 	if (onDelete != NULL)
 	{
 		onDelete(this);
@@ -47,7 +43,8 @@ Weapon::~Weapon()
 void Weapon::init(WeaponData data)
 {
 	setData(data);
-	ownerId = NO_OWNER;
+	ownerId = ObjectId::NO_OWNER;
+
 	setBeingUsed(false);
 	m_angle = 0.0f;
 
@@ -60,7 +57,7 @@ void Weapon::init(WeaponData data)
 
 	m_explodeDelayMode = false;
 	m_readyToExplode = false;
-	m_grenadeThrowerInstanceId = -1;
+//	m_grenadeThrowerId = -1;
 }
 
 void Weapon::setData(WeaponData data)
@@ -190,16 +187,17 @@ ParticleEffect* Weapon::explode()
 	return effect;
 }
 
-void Weapon::setGrenadeThrowerId(int id)
+/*
+void Weapon::setGrenadeThrowerId(ObjectId id)
 {
-	m_grenadeThrowerInstanceId = id;
+	m_grenadeThrowerId = id;
 }
 
 int Weapon::getGrenadeThrowerId()
 {
-	return m_grenadeThrowerInstanceId;
+	return m_grenadeThrowerId;
 }
-
+*/
 
 void Weapon::renderGroup(Pipeline& p, Renderer* r)
 {
@@ -238,9 +236,9 @@ bool Weapon::isBeingUsed()
 
 bool Weapon::ignorePhysicsWith(WorldObject* obj)
 {
-	int id = obj->objectId.id;
+	ObjectId id = obj->objectId;
 
-	if (id != m_grenadeThrowerInstanceId)
+	if (id != ownerId)
 	{
 		return false;
 	}
@@ -257,33 +255,52 @@ bool Weapon::ignorePhysicsWith(WorldObject* obj)
 	return false;
 }
 
-
-
-void Weapon::serialize(RakNet::BitStream& bs)
+bool Weapon::hasOwner()
 {
-	bs.Write(objectId.id);
+	return ownerId != ObjectId::NO_OWNER;
+}
+
+void Weapon::serialize_New(RakNet::BitStream& bs)
+{
+//	bs.Write(objectId.getId());
+
+	bs.Write(objectId.getTag());
+	bs.Write(objectId.getIndex());
+
 
 	utl::write(bs, m_name);
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
 	bs.Write(m_nameEnum);
 	bs.Write(m_slotEnum);
-	bs.Write(ownerId);		// need to put these two in bit flags
-	
+
+//	bs.Write(ownerId.getId());		// need to put these two in bit flags	
+	ownerId.serialize(bs);
+
 	bool b = isBeingUsed();
 	bs.Write(b);
 
+#if DEBUG 
+	{
+		utl::debug(">>>>>>	weapon Serialize ");
+		utl::debug("Serialize weapon tag ", objectId.getTag());
+		utl::debug("Serialize weapon Index ", objectId.getIndex());
+		int a = 1;
+	}
+#endif // DEBUG 
 }
 
-bool Weapon::hasOwner()
+void Weapon::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 {
-	return ownerId != NO_OWNER;
-}
+	uint16_t tag = 0;
+	uint16_t index = 0;
+	
+	bs.Read(tag);
+	bs.Read(index);
 
-void Weapon::deserialize(RakNet::BitStream& bs, ModelManager* mm)
-{
-	bs.Read(objectId.id);
+	objectId.setTag(tag);
+	objectId.setIndex(index);
+
 	utl::read(bs, m_name);
-
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
 
 	bs.Read(m_nameEnum);
@@ -291,17 +308,47 @@ void Weapon::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 	init(mm->getWeaponData((WeaponNameEnum)m_nameEnum));	
 
 	bs.Read(m_slotEnum);
-	bs.Read(ownerId);
+
+//	bs.Read(id);
+//	ownerId.setId(id);
+
+	ownerId.deserialize(bs);
 
 	bool b = isBeingUsed();
 	bs.Read(b);
 	setBeingUsed(b);
 	
+#if DEBUG 
+	{
+		utl::clDebug("<<<<<<	weapon deserialize ");
+		utl::clDebug("deserialize weapon tag ", objectId.getTag());
+		utl::clDebug("deserialize weapon Index ", objectId.getIndex());
+		int a = 1;
+	}
+#endif // DEBUG 
+
+
+
+	/*
 	if (objectId.s.index == 27)
 	{
 		utl::debug("ownerId", ownerId);
 		int a = 1;
 	}
-	
+	*/
+
 //	prevState = GetState();
 }
+
+/*
+void Weapon::serialize_Delta(RakNet::BitStream& bs)
+{
+
+}
+
+void Weapon::deserialize_Delta(RakNet::BitStream& bs)
+{
+
+}
+*/
+

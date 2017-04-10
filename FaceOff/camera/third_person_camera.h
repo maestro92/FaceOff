@@ -24,8 +24,8 @@ class ThirdPersonCamera : public Camera
         void lookAt(glm::vec3& eye, glm::vec3& target, glm::vec3& up);
 
         // void control(Pipeline& p);
-		virtual void control();
-		virtual void control(glm::vec3& vel, bool canJump);
+	//	virtual void control();
+	//	virtual void control(glm::vec3& vel, bool canJump);
 		// void computeNewTargetTransform(glm::vec3& pos, glm::mat4& rot);
 
 
@@ -38,8 +38,8 @@ class ThirdPersonCamera : public Camera
 //		virtual void processInput(Input input);
 //		virtual void processInput(Input input, glm::vec3& vel, bool canJump);
 
-		virtual void processUserCmd(const UserCmd& cmd);
-		virtual void processUserCmd(const UserCmd& cmd, glm::vec3& vel, bool canJump);
+	//	virtual void processUserCmd(const UserCmd& cmd);
+	//	virtual void processUserCmd(const UserCmd& cmd, glm::vec3& vel, bool canJump);
 
 
         void increaseOffsetDistance();

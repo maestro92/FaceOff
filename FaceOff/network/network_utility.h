@@ -10,6 +10,8 @@
 #include "BitStream.h"
 #include "RakNetTypes.h"	// Message ID
 
+#include "shared.h"
+
 using namespace std;
 
 #define MAX_CLIENTS 10
@@ -34,17 +36,7 @@ that owns it
 
 
 
-// angle indexes
-#define	PITCH	0		// up / down
-#define	YAW		1		// left / right
-#define	ROLL	2		// fall over
 
-#define FORWARD	(1<<0)
-#define BACK	(1<<1)
-#define LEFT	(1<<2)
-#define RIGHT	(1<<3)
-#define JUMP	(1<<4)
-#define ATTACK	(1<<5)	// left mouse
 
 const float TURN_SPEED = 0.5;
 const float FORWARD_SPEED = 0.4;

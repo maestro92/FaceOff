@@ -48,6 +48,7 @@
 #include <fstream>
 #include <mutex>
 
+
 #ifndef JSON_SPIRIT_MVALUE_ENABLED
 #error Please define JSON_SPIRIT_MVALUE_ENABLED for the mValue type to be enabled 
 #endif
@@ -509,8 +510,9 @@ namespace utl
 
 	bool chance(float percent);
 
-	void write(RakNet::BitStream &bitStream, std::string &s);
-	void read(RakNet::BitStream &bitStream, std::string &s);
+	void write(RakNet::BitStream& bs, std::string& s);
+	void read(RakNet::BitStream& bs, std::string& s);
+
 
 	long long getCurrentTime_ms();
 	

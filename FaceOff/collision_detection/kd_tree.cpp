@@ -775,6 +775,12 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 	if (node->isLeaf())
 	{
+
+		if (player->m_name == "player 0" && (node->id == 6 || node->id == 12))
+		{
+			int a = 1;
+		}
+
 		for (int i = 0; i < node->m_objects.size(); i++)
 		{
 			WorldObject* obj = node->m_objects[i];
@@ -783,6 +789,23 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 			{	
 				continue;
 			}
+
+			/*
+			if (player->m_name == "player 0" && (node->id == 6 || node->id == 12))
+			{
+				utl::clDebug("obj name is ", obj->m_name);
+				utl::clDebug("	obj objectId ", obj->objectId.getId());
+				utl::clDebug("	obj objectId index", obj->objectId.getIndex());
+				utl::clDebug("	obj collisionIndex ", obj->getCollisionFlagIndex());
+
+				if (obj->m_name == "player 1")
+				{
+					int b = 1;
+				}
+
+
+			}
+			*/
 
 			if (obj->getCollisionFlagIndex() == player->getCollisionFlagIndex()) 
 			{ 
@@ -911,17 +934,17 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 				continue;
 			}
 			
-			/*
+			
 			if (testObject->m_name == "player 0")
 			{
-				utl::debug("		object name is", obj->m_name);
+//				utl::debug("		object name is", obj->m_name);
 			}
 			
 			if (testObject->m_name == "player 0" && obj->m_name == "ground")
 			{
 				int a = 1;
 			}
-			*/
+			
 
 			if (testObject->ignorePhysicsWith(obj))
 			{

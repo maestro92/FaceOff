@@ -37,23 +37,26 @@ using namespace std;
 
 #define DEBUG 1;
 
+
+const float PLAYER_ROTATION_SPEED = 3.0;
+const float PLAYER_FORWARD_SPEED = 1.5;
+
 class Player : public WorldObject
 {
     public:
         Player();
-		Player(int id);
+		Player(ObjectId id);
+//		Player(int id);
 		~Player();
 
-
-		string name;
 		// RakNet::RakNetGUID m_guid;
-
+		glm::vec3 headPositionOffset;
         Camera* m_camera;
 
 		static glm::vec3 firstPOVWeaponOffset;
 		static glm::vec3 thirdPOVWeaponOffset;
 		
-		void setId(int id);
+	//	void setId(int id);
 
 		void setPosition(glm::vec3 position);
 		void setPosition(float x, float y, float z);
@@ -77,10 +80,12 @@ class Player : public WorldObject
 		void update(glm::vec3 xAxis, glm::vec3 yAxis, glm::vec3 zAxis);
 		void update(glm::vec3 wPos, float pitch, float yaw);
 
-		void control();
+//		void control();
 
 		void updateGameStats();
-		void updateCamera(Pipeline& p);
+		// void updateCamera(Pipeline& p);
+		// void updateCamera(Pipeline& p);
+		void updateCameraViewMatrix(Pipeline& p);
 
 		void updateModel();
 
@@ -110,12 +115,16 @@ class Player : public WorldObject
 		void svDebug();
 		void clDebug();
 
-		int getId();
+//		int getId();
+
+//		int getPlayerId();
+
+		int getClientId();
 
 		bool hasWeaponAtSlot(WeaponSlotEnum slot);
 //		int getInstanceId();
 
-		void setRotation(float pitch, float yaw);
+//		void setRotation(float pitch, float yaw);
 
 		void fireWeapon();
 		Weapon* throwGrenade();
@@ -139,14 +148,12 @@ class Player : public WorldObject
 		void setFromBitStream(RakNet::BitStream& bs);
 		*/
 
-//		void spawnInfoToBitStream(RakNet::BitStream& bs);
-//		void serializeSpawnInfo(RakNet::BitStream& bs);
-		void serialize(RakNet::BitStream& bs);
-		// void serialize(RakNet::MessageID msgId, RakNet::BitStream& bs);
+		virtual void serialize_New(RakNet::BitStream& bs);
+		virtual void deserialize_New(RakNet::BitStream& bs, ModelManager* mm);
 
-//		void spawnInfoFromBitStream(RakNet::BitStream& bs, ModelManager* mm);
-		// void deserialize(RakNet::BitStream& bs, ModelManager* mm); , FOArray& objects);
-		void deserialize(RakNet::BitStream& bs, ModelManager* mm);
+//		virtual void serialize_Delta(int flags, RakNet::BitStream& bs);
+//		virtual void deserialize_Delta(int flags, RakNet::BitStream& bs);
+
 
 		// void processInput(Move move);
 		void processUserCmd(const UserCmd& cmd);
@@ -167,13 +174,18 @@ class Player : public WorldObject
 		virtual void updateGameInfo();
 
 
+		void updateVelXZ(float dir);
+		void updateVelY(float dir);
+
+
+
 		glm::vec3 getXAxis();
 		glm::vec3 getYAxis();
 		glm::vec3 getZAxis();
 
 
 	private:
-		int m_id;
+//		int m_id;
 
 		int m_maxHP;
 		int m_curHP;
@@ -181,9 +193,7 @@ class Player : public WorldObject
 		int m_maxArmor;
 		int m_curArmor;
 
-		glm::vec3 m_xAxis;
-		glm::vec3 m_yAxis;
-		glm::vec3 m_zAxis;
+
 
 		glm::vec3 m_midAirHorVel;
 		vector<Weapon*> m_weapons;

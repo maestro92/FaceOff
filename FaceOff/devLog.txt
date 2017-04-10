@@ -632,3 +632,33 @@ memset vs looping
 
 
 http://stackoverflow.com/questions/7367677/is-memset-more-efficient-than-for-loop-in-c
+
+
+
+
+
+
+
+c++ union and endianess
+
+
+
+
+
+
+
+#############################################################################################
+####################################### 2017 April 9th ######################################
+#############################################################################################
+
+
+
+http://stackoverflow.com/questions/4117002/why-can-i-access-private-variables-in-the-copy-constructor
+
+
+The access modifiers work on class level, and not on object level.
+
+That is, two objects of the same class can access each others private members.
+
+
+

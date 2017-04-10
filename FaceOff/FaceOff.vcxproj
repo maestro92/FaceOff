@@ -238,6 +238,7 @@
     <ClCompile Include="renderer\renderer_manager.cpp" />
     <ClCompile Include="renderer\scene_renderer.cpp" />
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="shared.cpp" />
     <ClCompile Include="utility\utility.cpp" />
     <ClCompile Include="utility\utility_assimp.cpp" />
     <ClCompile Include="utility\utility_debug.cpp" />

@@ -2,7 +2,7 @@
 #define SHARED_H_
 
 #include "define.h"
-
+#include "utility.h"
 
 #define NUM_MAX_OBJECTS 256
 const int NUM_MAX_CLIENTS = 10;
@@ -10,7 +10,7 @@ const int NUM_MAX_CLIENTS = 10;
 const int ENTITY_COLLISION_ENTRY_SIZE = 8; // number of bits in uint8_t
 const int ENTITY_COLLISION_FLAG_SIZE = NUM_MAX_OBJECTS / ENTITY_COLLISION_ENTRY_SIZE;
 
-const int INVALID_OBJECT_ID = -1;
+// const int INVALID_OBJECT_ID = -1;
 
 const int END_OF_SV_SNAPSHOT_PLAYERS = -9999;
 const int END_OF_SV_SNAPSHOT_ENTITIES = -9999;
@@ -82,25 +82,222 @@ const int END_OF_SV_SNAPSHOT_ENTITIES = -9999;
 #define U_PLAYER	(1<<30)
 #define U_WEAPON	(1<<31)
 
+
+// angle indexes
+#define	PITCH	0		// up / down
+#define	YAW		1		// left / right
+#define	ROLL	2		// fall over
+
+#define FORWARD	(1<<0)
+#define BACK	(1<<1)
+#define LEFT	(1<<2)
+#define RIGHT	(1<<3)
+#define JUMP	(1<<4)
+#define ATTACK	(1<<5)	// left mouse
+
+#define LITTLE_ENDIAN 1	// need to make this portable
+
+#if 0
 union ObjectId
 {
-	int id;
-	struct 
-	{
+	static ObjectId NO_OWNER;
+
+	private:
+	//	bool padding;
+		int id;
+
+		struct 
+		{
+			// little endian?
+
+
+		#ifdef LITTLE_ENDIAN
+			uint16_t index;
+			uint16_t tag;
+		#else
+			uint16_t tag;
+			uint16_t index;
+		#endif
+
+	//		uint16_t tag;
+	//		uint16_t index;
+
+	//		uint16_t tag;
+	//		uint16_t index;
+		} s;
+
+	public:
+		ObjectId()
+		{
+
+		}
+
+		/*
+		ObjectId(int Id)
+		{
+			setId(Id);
+		}
+
+		// had to do it this way instead, cuz of endianess
+		void setId(int Id)
+		{
+			id = Id;
+		//	s.tag = Id >> 16;
+		//	s.index = Id & 0x0000FFFF;
+		}
+		*/
+		// http://stackoverflow.com/questions/4117002/why-can-i-access-private-variables-in-the-copy-constructor
+		ObjectId(const ObjectId& other)
+		{
+			s.tag = other.s.tag;
+			s.index = other.s.index;
+		}
+
+		ObjectId(uint16_t tagIn, uint16_t indexIn)
+		{
+			setId(tagIn, indexIn);
+		}
+
+		void setId(uint16_t tagIn, uint16_t indexIn)
+		{
+			setTag(tagIn);
+			setIndex(indexIn);
+		}
+
+		void setTag(uint16_t tagIn)
+		{
+			s.tag = tagIn;
+		}
+
+		void setIndex(uint16_t indexIn)
+		{
+			s.index = indexIn;
+		}
+		/*
+		int getId()
+		{
+			return id;
+		}
+		*/
+
+		int getTag()
+		{
+			return s.tag;
+		}
+
+		int getIndex()
+		{
+			return s.index;
+		}
+
+		void serialize(RakNet::BitStream& bs)
+		{
+			bs.Write(s.tag);
+			bs.Write(s.index);
+		}
+
+		void deserialize(RakNet::BitStream& bs)
+		{
+			bs.Read(s.tag);
+			bs.Read(s.index);
+		}
+
+		bool operator==(const ObjectId &other) const 
+		{
+			return s.tag == other.s.tag && s.index == other.s.index;
+		}
+
+		bool operator!=(const ObjectId &other) const
+		{
+			return s.tag != other.s.tag || s.index != other.s.index;
+		}
+};
+
+ObjectId ObjectId::NO_OWNER(-1, -1);
+#endif 
+
+
+
+
+
+
+
+
+
+struct ObjectId
+{
+	private:
 		uint16_t tag;
 		uint16_t index;
-	} s;
 
-	ObjectId()
-	{
+	public:
+		static ObjectId NO_OWNER;
+		static ObjectId INVALID_OBJECT_ID;
 
-	}
+		ObjectId() {}
 
-	ObjectId(int Id)
-	{
-		id = Id;
-	}
+		// http://stackoverflow.com/questions/4117002/why-can-i-access-private-variables-in-the-copy-constructor
+		ObjectId(const ObjectId& other)
+		{
+			tag = other.tag;
+			index = other.index;
+		}
+
+		ObjectId(uint16_t tagIn, uint16_t indexIn)
+		{
+			setId(tagIn, indexIn);
+		}
+
+		void setId(uint16_t tagIn, uint16_t indexIn)
+		{
+			setTag(tagIn);
+			setIndex(indexIn);
+		}
+
+		void setTag(uint16_t tagIn)
+		{
+			tag = tagIn;
+		}
+
+		void setIndex(uint16_t indexIn)
+		{
+			index = indexIn;
+		}
+
+		uint16_t getTag()
+		{
+			return tag;
+		}
+
+		uint16_t getIndex()
+		{
+			return index;
+		}
+
+		void serialize(RakNet::BitStream& bs)
+		{
+			bs.Write(tag);
+			bs.Write(index);
+		}
+
+		void deserialize(RakNet::BitStream& bs)
+		{
+			bs.Read(tag);
+			bs.Read(index);
+		}
+
+		bool operator==(const ObjectId &other) const
+		{
+			return tag == other.tag && index == other.index;
+		}
+
+		bool operator!=(const ObjectId &other) const
+		{
+			return tag != other.tag || index != other.index;
+		}
 };
+
+
 
 // mainly used in building the snapshot
 // we need to keep a deep copy of WorldObjectStates in the curSVSnapshotObjects
@@ -109,17 +306,16 @@ struct WorldObjectState
 	ObjectId objectId;
 	glm::vec3 position;
 	glm::vec3 angles;
+	bool isHit;
 
-	WorldObjectState()
-	{
+	WorldObjectState() {}
 
-	}
-
-	WorldObjectState(ObjectId objId, glm::vec3 pos, glm::vec3 angles)
+	WorldObjectState(ObjectId objId, glm::vec3 pos, glm::vec3 angles, bool isHit)
 	{
 		this->objectId = objId;
 		this->position = pos;
 		this->angles = angles;
+		this->isHit = isHit;
 	}
 };
 

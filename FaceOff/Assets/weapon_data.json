@@ -137,9 +137,9 @@
 		"firstPOVOffset":
 		{
 			"type":			"vec3",
-			"x":			0.33,
-			"y":			-0.35,
-			"z":			1.66
+			"x":			0.32,
+			"y":			-0.34,
+			"z":			-1.39
 		},
 		"thirdPOVScale":	0.05,
 		"thirdPOVOffset":

@@ -15,7 +15,7 @@ using namespace std;
 
 const float ROTATION_SPEED = 0.0005;
 
-const int NO_OWNER = -1;
+// const int NO_OWNER = -1;
 
 struct Magazine
 {
@@ -26,6 +26,8 @@ struct Magazine
 
 class Weapon : public WorldObject
 {
+
+
 	public:
 		Weapon();
 		Weapon(WeaponData data);
@@ -72,13 +74,19 @@ class Weapon : public WorldObject
 
 
 
-		void serialize(RakNet::BitStream& bs);
-		void deserialize(RakNet::BitStream& bs, ModelManager* mm);
+//		void serialize(RakNet::BitStream& bs);
+//		void deserialize(RakNet::BitStream& bs, ModelManager* mm);
+
+
+		virtual void serialize_New(RakNet::BitStream& bs);
+		virtual void deserialize_New(RakNet::BitStream& bs, ModelManager* mm);
+
+//		virtual void serialize_Delta(RakNet::BitStream& bs);
+//		virtual void deserialize_Delta(RakNet::BitStream& bs);
 
 
 
-
-		void setGrenadeThrowerId(int id);
+//		void setGrenadeThrowerId(ObjectId id);
 		int getGrenadeThrowerId();
 
 
@@ -92,7 +100,7 @@ class Weapon : public WorldObject
 		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
 		
 		bool hasOwner();
-		int ownerId;
+		ObjectId ownerId;
 
 		std::function<void(Weapon*)> onDelete;
 
@@ -116,7 +124,7 @@ class Weapon : public WorldObject
 
 		bool isBeingUsedFlag;
 
-		int m_grenadeThrowerInstanceId;
+	//	ObjectId m_grenadeThrowerId;
 
 		WeaponNameEnum m_nameEnum;
 		WeaponSlotEnum m_slotEnum;

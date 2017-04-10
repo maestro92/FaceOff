@@ -1,7 +1,7 @@
 #include "player.h"
 
 #define TESTING_FIRST_POV_WEAPON_OFFSET_FLAG 0
-#define TESTING_THIRD_POV_WEAPON_OFFSET_FLAG 1
+#define TESTING_THIRD_POV_WEAPON_OFFSET_FLAG 0
 
 // glm::vec3 Player::firstPOVWeaponOffset = glm::vec3(0.35, -0.64, 1.26);
 
@@ -13,23 +13,24 @@ glm::vec3 Player::thirdPOVWeaponOffset = glm::vec3(3.59, 2.27, 4.43);
 // glm::vec3 Player::firstPOVWeaponOffset = glm::vec3(0.33, -0.35, 1.66);
 
 
-Player::Player() : Player(0)
-{
+Player::Player() : Player(ObjectId(0,0))
+{}
 
-}
-
-Player::Player(int id)
+Player::Player(ObjectId objIdIn)
 {
-	setId(id);
-	objectId.id = id;
-//
+	objectId = objIdIn;
+
+	utl::clDebug("	objectId tag", objectId.getTag());
+	utl::clDebug("	objectId index", objectId.getIndex());
+
 	m_camera = new FirstPersonCamera();
-//	((FirstPersonCamera*)m_camera)->setFreeMode(true);
-//	m_camera = new ThirdPersonCamera();
+	//	((FirstPersonCamera*)m_camera)->setFreeMode(true);
+	//	m_camera = new ThirdPersonCamera();
 
 	setPosition(0.0, 5.0, 0.0);
 	setScale(5.0);
 
+	headPositionOffset = glm::vec3(0.0, 5.0, 0.0);
 
 	m_camera->m_target = m_position;
 
@@ -47,7 +48,7 @@ Player::Player(int id)
 
 	m_entityType = PLAYER;
 	m_dynamicType = DYNAMIC;
-	
+
 
 	jumpCoolDown = 30;
 	curJumpCoolDown = 0;
@@ -56,32 +57,45 @@ Player::Player(int id)
 	inMidAir = false;
 	testedForNotInMidAir = false;
 
-	jumped = false; 
+	jumped = false;
 	weaponCount = 0;
 }
+
+/*
+Player::init(ObjectId objIdIn)
+{
+
+}
+*/
 
 Player::~Player()
 {
 
 }
 
-
+/*
 int Player::getId()
 {
 	return m_id;
 }
+*/
 
+int Player::getClientId()
+{
+	return objectId.getIndex();
+}
 
+/*
 void Player::setId(int id)
 {
 	m_id = id;
 }
-
+*/
 
 void Player::setPosition(glm::vec3 position)
 {
 	WorldObject::setPosition(position);
-	m_camera->setEyePoint(position);
+//	m_camera->setEyePoint(position);
 }
 
 void Player::setPosition(float x, float y, float z)
@@ -140,24 +154,12 @@ void Player::control()
 */
 
 
-
+/*
 void Player::control()
 {
 	bool canJumpFlag = canJump();
 	glm::vec3 vel(0.0);
 	m_midAirHorVel = glm::vec3(0.0);
-
-
-	// update the PLayer
-
-
-	// update camera
-	
-
-
-	m_camera->control(vel, canJumpFlag);
-
-	Input input = m_camera->m_moveState.input;
 
 	if (input.jump)
 	{
@@ -184,12 +186,12 @@ void Player::control()
 	m_velocity += vel;
 	m_rotation = m_camera->m_targetRotation;
 }
-
+*/
 
 
 int counter = 0;
 
-
+/*
 // only used for spawning
 void Player::processUserCmd(const UserCmd& cmd)
 {
@@ -222,6 +224,85 @@ void Player::processUserCmd(const UserCmd& cmd)
 	m_velocity += vel;
 	setRotation(cmd.angles[PITCH], cmd.angles[YAW]);
 }
+*/
+
+
+
+
+void Player::updateVelXZ(float dir)
+{
+	float rad = (m_yaw + dir) * utl::DEGREE_TO_RADIAN;
+
+	m_velocity.x -= sin(rad) * PLAYER_FORWARD_SPEED;
+	m_velocity.z -= cos(rad) * PLAYER_FORWARD_SPEED;
+}
+
+void Player::updateVelY(float dir)
+{
+	float rad = (m_pitch + dir) * utl::DEGREE_TO_RADIAN;
+
+	m_velocity.y += sin(rad) * PLAYER_FORWARD_SPEED;
+}
+
+
+// only used for spawning
+void Player::processUserCmd(const UserCmd& cmd)
+{
+	// glm::vec3 vel;
+	bool canJumpFlag = canJump();
+	// m_midAirHorVel = glm::vec3(0.0);
+
+	m_pitch = cmd.angles[PITCH];
+	m_yaw = cmd.angles[YAW];
+
+	if (cmd.buttons & FORWARD)
+	{
+		updateVelXZ(0.0);
+	}
+
+	if (cmd.buttons & BACK)
+	{
+		updateVelXZ(180.0);
+	}
+
+	if (cmd.buttons & LEFT)
+	{
+		updateVelXZ(90.0);
+	}
+
+	if (cmd.buttons & RIGHT)
+	{
+		updateVelXZ(270);
+	}
+
+
+	// update the player
+	if (cmd.buttons & JUMP)
+	{
+		inMidAir = true;
+		curJumpCoolDown = 0;
+		jumped = true;
+	}
+
+	if (inMidAir)
+	{
+	//	vel.x = 0.5 * vel.x;
+	//	vel.z = 0.5 * vel.z;
+
+	//	m_midAirHorVel.x = vel.x;
+	//	m_midAirHorVel.z = vel.z;
+	}
+
+	setRotation(cmd.angles[PITCH], cmd.angles[YAW]);
+
+	updateCollisionDetectionGeometry();
+
+
+	// update the camera attached to it
+//	m_camera->processUserCmd(cmd, vel, canJumpFlag);
+}
+
+
 
 
 
@@ -229,13 +310,14 @@ bool Player::hasMoved()
 {
 	return m_camera->hasMoved();
 }
-
+/*
 Move Player::getMoveState()
 {
 	Move move = (m_camera->getMoveState());
 	move.playerId = m_id;
 	return move;
 }
+*/
 
 void Player::setDefaultPlayerFlag(bool b)
 {
@@ -323,7 +405,7 @@ void Player::updateGameStats()
 	}
 }
 
-
+/*
 void Player::updateCamera(Pipeline& p)
 {
 	m_camera->m_target = m_position;
@@ -339,6 +421,14 @@ void Player::updateCamera(Pipeline& p)
 	updateCollisionDetectionGeometry();
 	updateWeaponTransform();
 }
+*/
+
+
+void Player::updateCameraViewMatrix(Pipeline& p)
+{
+	m_camera->updateViewMatrix(p);
+}
+
 
 
 void Player::updateGameInfo()
@@ -353,7 +443,7 @@ void Player::updateGameInfo()
 
 }
 
-
+#if 0
 void Player::setRotation(float pitch, float yaw)
 {
 	glm::mat4 rot = glm::mat4(1.0);
@@ -395,7 +485,7 @@ void Player::setRotation(float pitch, float yaw)
 	*/				
 	m_rotation = rot;
 }
-
+#endif
 
 void Player::updateContactNormalInfo(glm::vec3 normal)
 {
@@ -435,7 +525,7 @@ void Player::updateContactNormalInfo(glm::vec3 normal)
 
 void Player::updateWeaponTransform()
 {
-	// adjustWeaponAndBulletPosition();
+	adjustWeaponAndBulletPosition();
 	glm::vec3 xOffset;
 	glm::vec3 yOffset;
 	glm::vec3 zOffset;
@@ -444,7 +534,15 @@ void Player::updateWeaponTransform()
 	{
 		if (m_isDefaultPlayer)
 		{
-			glm::vec3 wOffset = m_curWeapon->m_firstPOVOffset;
+			
+			glm::vec3 wOffset;
+#if TESTING_FIRST_POV_WEAPON_OFFSET_FLAG == 1
+			wOffset = firstPOVWeaponOffset;
+#elif TESTING_THIRD_POV_WEAPON_OFFSET_FLAG == 1
+			wOffset = thirdPOVWeaponOffset;
+#else
+			wOffset = m_curWeapon->m_firstPOVOffset;
+#endif
 
 			glm::vec3 pos;
 			if (m_grenadeGatherMode)
@@ -460,8 +558,26 @@ void Player::updateWeaponTransform()
 				zOffset = m_zAxis * wOffset.z;
 			}
 
-			pos = m_camera->getEyePoint() + xOffset + yOffset + zOffset;
+//			pos = m_camera->getEyePoint() + xOffset + yOffset + zOffset;
+//			pos = m_position + headPositionOffset + xOffset + yOffset + zOffset;
+
+			pos = m_position + headPositionOffset + xOffset + yOffset + zOffset;
+
+//			pos = m_position + glm::vec3(0.0, 0.0, -5.0);
+
 			m_curWeapon->setPosition(pos);
+/*
+			utl::clDebug("weapon pos", pos);
+		//	utl::clDebug("m_xAxis", m_xAxis);
+		//	utl::clDebug("m_yAxis", m_yAxis);
+		//	utl::clDebug("m_zAxis", m_zAxis);
+
+			utl::clDebug("wOffset", wOffset);
+			utl::clDebug("xOffset", xOffset);
+			utl::clDebug("yOffset", yOffset);
+			utl::clDebug("zOffset", zOffset);
+			*/
+
 			// dont need to set scale, that's done at pickUp()
 		}
 		else
@@ -499,6 +615,8 @@ void Player::updateWeaponTransform()
 	//	utl::clDebug("weaponRotation", m_curWeapon->m_rotation);
 //		glm::mat4 rot = m_camera->m_targetRotation * 
 	}
+
+
 
 	/*
 	glm::vec3 xAxis = m_camera->m_targetXAxis;
@@ -610,8 +728,6 @@ bool Player::isUsingLongRangedWeapon()
 
 
 
-
-
 void Player::switchWeapon(WeaponSlotEnum slot)
 {
 	utl::debug("weapon slot", slot);
@@ -660,12 +776,12 @@ void Player::pickUp(Weapon* weapon)
 {
 	WeaponSlotEnum slot = weapon->getWeaponSlot();
 
-	weapon->ownerId = m_id;
+	weapon->ownerId = objectId;
 	weapon->setBeingUsed(false);
 
 	weapon->onDelete = [this](Weapon* weapon) 
 	{
-		if (weapon->ownerId == this->m_id)
+		if (weapon->ownerId == this->objectId)
 		{
 			if (m_curWeapon == weapon)
 			{
@@ -677,14 +793,14 @@ void Player::pickUp(Weapon* weapon)
 		}
 	};
 
-	m_weapons[slot] = weapon;
+	m_weapons[(int)slot] = weapon;
 
 	weaponCount++;
 
 	if (m_isDefaultPlayer)
 	{
 		weapon->setScale(weapon->m_firstPOVScale);
-
+	//	weapon->setScale(weapon->m_thirdPOVScale);
 	}
 	else
 	{
@@ -703,6 +819,10 @@ void Player::pickUp(Weapon* weapon)
 		weapon->setBeingUsed(true);
 		m_curWeapon = weapon;
 	}
+
+
+	firstPOVWeaponOffset = m_curWeapon->m_firstPOVOffset;
+	thirdPOVWeaponOffset = m_curWeapon->m_thirdPOVOffset;
 
 	updateWeaponTransform();
 }
@@ -738,7 +858,7 @@ Weapon* Player::throwGrenade()
 	*/
 
 
-	grenade->ownerId = NO_OWNER;
+//	grenade->ownerId = (NO_OWNER);
 	grenade->setBeingUsed(false);
 	// set it back to world model scale
 	grenade->setScale(grenade->m_modelScale);
@@ -761,7 +881,7 @@ Weapon* Player::throwGrenade()
 	grenade->setVelocity(dir);
 
 	grenade->startExplodeDelayTimer();
-	grenade->setGrenadeThrowerId(objectId.id);
+//	grenade->setGrenadeThrowerId(objectId);
 
 	utl::debug("ThrowGrenade pos is", this->getFirePosition());
 	utl::debug("ThrowGrenade dir is", dir);
@@ -780,7 +900,7 @@ Weapon* Player::drop()
 	Weapon* drop = m_curWeapon;
 	weaponCount--;
 
-	drop->ownerId = NO_OWNER;
+	drop->ownerId = ObjectId::NO_OWNER;
 	// set it back to world model scale
 	drop->setScale(drop->m_modelScale);
 	drop->setRotation(glm::mat4(1.0));
@@ -942,10 +1062,12 @@ void Player::adjustWeaponAndBulletPosition()
 	
 
 
+
+
 	glm::vec3 offset;
 #if TESTING_FIRST_POV_WEAPON_OFFSET_FLAG == 1
 	offset = firstPOVWeaponOffset;
-#else if TESTING_THIRD_POV_WEAPON_OFFSET_FLAG == 1
+#elif TESTING_THIRD_POV_WEAPON_OFFSET_FLAG == 1
 	offset = thirdPOVWeaponOffset;
 #endif 
 
@@ -954,36 +1076,79 @@ void Player::adjustWeaponAndBulletPosition()
 		if (state[SDLK_i])
 		{
 			offset.z += step;
+			utl::clDebug("SDLK_i");
+			utl::clDebug("firstPOVWeaponOffset", firstPOVWeaponOffset);
+			if (m_curWeapon != NULL)
+			{
+				utl::clDebug("m_curWeapon", m_curWeapon->m_position);
+			}
 		}
 		else if (state[SDLK_k])
 		{
+
 			offset.z -= step;
+			utl::clDebug("SDLK_k");
+			utl::clDebug("firstPOVWeaponOffset", firstPOVWeaponOffset);
+			if (m_curWeapon != NULL)
+			{
+				utl::clDebug("m_curWeapon", m_curWeapon->m_position);
+			}
+
 		}
 
 
 		if (state[SDLK_j])
 		{
+
 			offset.x -= step;
+			utl::clDebug("SDLK_j");
+			utl::clDebug("firstPOVWeaponOffset", firstPOVWeaponOffset);
+			if (m_curWeapon != NULL)
+			{
+				utl::clDebug("m_curWeapon", m_curWeapon->m_position);
+			}
+
 		}
 		else if (state[SDLK_l])
 		{
 			offset.x += step;
+			utl::clDebug("SDLK_l");
+			utl::clDebug("firstPOVWeaponOffset", firstPOVWeaponOffset);
+			if (m_curWeapon != NULL)
+			{
+				utl::clDebug("m_curWeapon", m_curWeapon->m_position);
+			}
+
 		}
 
 
 		if (state[SDLK_n])
 		{
 			offset.y += step;
+			utl::clDebug("SDLK_n");
+			utl::clDebug("firstPOVWeaponOffset", firstPOVWeaponOffset);
+			if (m_curWeapon != NULL)
+			{
+				utl::clDebug("m_curWeapon", m_curWeapon->m_position);
+			}
+
 		}
 		else if (state[SDLK_m])
 		{
 			offset.y -= step;
+			utl::clDebug("SDLK_m");
+			utl::clDebug("firstPOVWeaponOffset", firstPOVWeaponOffset);
+			if (m_curWeapon != NULL)
+			{
+				utl::clDebug("m_curWeapon", m_curWeapon->m_position);
+			}
+
 		}
 //		utl::debug("x y z", offset);
 
 #if TESTING_FIRST_POV_WEAPON_OFFSET_FLAG == 1
 		firstPOVWeaponOffset = offset;
-#else if TESTING_THIRD_POV_WEAPON_OFFSET_FLAG == 1
+#elif TESTING_THIRD_POV_WEAPON_OFFSET_FLAG == 1
 		thirdPOVWeaponOffset = offset;
 #endif 
 	//	if (m_id == 1)
@@ -995,7 +1160,7 @@ void Player::adjustWeaponAndBulletPosition()
 
 glm::vec3 Player::getFirePosition()
 {
-	return m_camera->getFirePosition();
+	return m_position + headPositionOffset; // m_camera->getFirePosition();
 }
 
 bool Player::ignorePhysicsWith(WorldObject* obj)
@@ -1040,15 +1205,21 @@ int Player::getInstanceId()
 
 
 
-void Player::serialize(RakNet::BitStream& bs)
+void Player::serialize_New(RakNet::BitStream& bs)
 {
+//	bs.Write(m_id);
 
-	bs.Write(m_id);
+//	bs.Write(objectId.getId());
+
+	bs.Write(objectId.getTag());
+	bs.Write(objectId.getIndex());
+
+	utl::write(bs, m_name);
+	
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
-	bs.Write(getCameraPitch());
-	bs.Write(getCameraYaw());
-
-	// cout << "			m_modelEnum " << m_modelEnum << endl;
+	
+	bs.Write(m_pitch);
+	bs.Write(m_yaw);
 
 
 	bs.Write(m_modelEnum);
@@ -1063,7 +1234,7 @@ void Player::serialize(RakNet::BitStream& bs)
 		Weapon* weapon = m_weapons[i];
 		if (weapon != NULL)
 		{
-			weapon->serialize(bs);
+			weapon->serialize_New(bs);
 		}
 	}
 
@@ -1072,32 +1243,36 @@ void Player::serialize(RakNet::BitStream& bs)
 #if DEBUG
 	{
 		utl::debug(">>>>>>	Player Serialize ");
-		utl::debug("m_id id ", m_id);
+		utl::debug("m_id client id ", getClientId());
 		utl::debug("position is", m_position);
 	}
 #endif
 }
 
-
-
-
 // Note we still have to add this Player to the world if we haven't done that yet
-void Player::deserialize(RakNet::BitStream& bs, ModelManager* mm)
+void Player::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 {
-//	utl::clDebug("<<<<<<	Player deserialize ");
 	// the message id is already ignored
-	bs.Read(m_id);
-	objectId.id = m_id;
+//	int id = 0;
+//	bs.Read(id);
+//	objectId.setId(id);
+
+	uint16_t tag = 0;
+	uint16_t index = 0;
+
+	bs.Read(tag);
+	bs.Read(index);
+
+	objectId.setTag(tag);
+	objectId.setIndex(index);
+
+	utl::read(bs, m_name);
 
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
 	
-	// cout << "deserialize playerId " << m_id << endl;
-
-
-	float pitch, yaw;
-	bs.Read(pitch);					bs.Read(yaw);
-	m_camera->m_pitch = pitch;		m_camera->m_yaw = yaw;
-	setRotation(pitch, yaw);
+	bs.Read(m_pitch);
+	bs.Read(m_yaw);	
+	setRotation(m_pitch, m_yaw);
 
 	bs.Read(m_modelEnum);		
 	setModel(mm->get(m_modelEnum));
@@ -1123,23 +1298,51 @@ void Player::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 	for (int i = 0; i < weaponCount; i++)
 	{
 		Weapon* weapon = new Weapon();
-		weapon->deserialize(bs, mm);
+		weapon->deserialize_New(bs, mm);
 
 		pickUp(weapon);
 	}
 
-//	prevState = getState();
-
 #if DEBUG
 	{
 		utl::clDebug("<<<<<<	Player deserialize ");
-		utl::clDebug("deserialize playerId ", m_id);
+		utl::clDebug("deserialize playerId Index ", objectId.getIndex());
 		utl::clDebug("position is", m_position);
 	}
 #endif
 }
 
 
+/*
+void Player::serialize_Delta(int flags, RakNet::BitStream& bs)
+{
+	if (flags & U_POSITION0)		bs.Write(m_position[0]);
+	if (flags & U_POSITION1)		bs.Write(m_position[1]);
+	if (flags & U_POSITION2)		bs.Write(m_position[2]);
+
+	if (flags & U_ANGLE0)		bs.Write(m_pitch);
+	if (flags & U_ANGLE1)		bs.Write(m_yaw);
+	if (flags & U_ANGLE2)		bs.Write(m_roll);
+
+	// this will overwritten by client prediction if you are the default player
+	setRotation(m_pitch, m_yaw);
+	updateCollisionDetectionGeometry();
+}
+
+void Player::deserialize_Delta(int flags, RakNet::BitStream& bs)
+{
+	if (flags & U_POSITION0)		bs.Read(m_position[0]);
+	if (flags & U_POSITION1)		bs.Read(m_position[1]);
+	if (flags & U_POSITION2)		bs.Read(m_position[2]);
+
+	if (flags & U_ANGLE0)		bs.Read(m_pitch);
+	if (flags & U_ANGLE1)		bs.Read(m_yaw);
+	if (flags & U_ANGLE2)		bs.Read(m_roll);
+
+	setRotation(m_pitch, m_yaw);
+	updateCollisionDetectionGeometry();
+}
+*/
 
 vector<Weapon*>& Player::getWeapons()
 {
@@ -1151,7 +1354,7 @@ void Player::svDebug()
 {
 	if (m_position.x != 0 || m_position.z != 0)
 	{
-		utl::debug("playerId", objectId.id);
+		utl::debug("playerId", getClientId());
 		utl::debug("	player position", m_position);
 	}
 }
@@ -1161,7 +1364,7 @@ void Player::clDebug()
 {
 	if (m_position.x != 0 || m_position.z != 0)
 	{
-		utl::clDebug("playerId", objectId.id);
+		utl::clDebug("playerId", getClientId());
 		utl::clDebug("	player position", m_position);
 	}
 }

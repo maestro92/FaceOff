@@ -369,6 +369,261 @@ enum GameMessages
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
 };
 
+
+// this class assumes T is pointer
+template <class T>
+struct FOArray
+{
+	struct Entry
+	{
+		ObjectId objId;
+		T object;
+
+		Entry()
+		{
+			object = NULL;
+		}
+	};
+
+
+	vector<Entry> objects;
+	vector<int> freeList;
+
+	vector<T> toBeDestroyed;
+
+
+	// i'm using this to start iterating for situations where I want to skip the static objects
+	// i am making the assumption that all my static objects are put in my array first
+	int preferredIterationStart;
+	int maxSize;
+	int maxUsed;
+	int count;
+
+	// getting only the number of dynamic objects;
+	int getPreferredCount()
+	{
+		return maxSize - preferredIterationStart;
+	}
+
+	void init(int maxSize)
+	{
+		this->maxSize = maxSize;
+		objects.resize(maxSize);
+
+		for (int i = maxSize - 1; i >= 0; i--)
+		{
+			freeList.push_back(i);
+		}
+
+		for (int i = 0; i < maxSize; i++)
+		{
+			/*
+			ObjectId id;
+			id.s.tag = 0;
+			id.s.index = i;
+			objects[i].objId = id;
+			*/
+			objects[i].objId.setTag(0);
+			objects[i].objId.setIndex(i);
+
+
+			//			objects[i].objId.id = i;
+
+			//			objects[i].objId.setId(i);
+
+			/*
+			cout << "id is " << objects[i].objId.id << endl;
+			cout << "	tag is " << objects[i].objId.s.tag << endl;
+			cout << "	index is " << objects[i].objId.s.index << endl;
+			*/
+
+			int a = 1;
+			//	printf("%u\n", (unsigned int)id.s.tag);
+			//	printf("%u\n", (unsigned int)id.s.index);
+		}
+
+		maxUsed = 0;
+		count = 0;
+	}
+
+	T getByIndex(int index)
+	{
+		return objects[index].object;
+	}
+
+	T get(ObjectId objId)
+	{
+		//		return objects[id];
+		//		return objects[id]->indexId == -1 ? NULL : objects[id];
+		return objects[objId.getIndex()].object;
+	}
+
+	void clearFreeList()
+	{
+		freeList.clear();
+	}
+
+	ObjectId create()
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			freeList.pop_back();
+
+			ObjectId objId = objects[free].objId;
+			// the new version + index is managed by destroyedObject, so you don't have to
+			// change the id here.
+			objects[free].object = new WorldObject();
+			objects[free].object->objectId = objId;
+
+			count++;
+			maxUsed = max(maxUsed, free);
+
+			return objId;
+		}
+		else
+		{
+			ObjectId objId;
+			objId.setId(INVALID_OBJECT_ID);
+			return objId;
+		}
+	}
+
+
+	ObjectId add(T obj)
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			freeList.pop_back();
+
+			ObjectId objId = objects[free].objId;
+
+
+
+			// the new version + index is managed by destroyedObject, so you don't have to
+			// change the id here.
+			objects[free].object = obj;
+			objects[free].object->objectId = objId;
+
+			cout << obj->m_name << "	tag is " << obj->objectId.getTag() << endl;
+			cout << obj->m_name << "	index is " << obj->objectId.getIndex() << endl;
+
+			count++;
+			maxUsed = max(maxUsed, free);
+
+			return objId;
+		}
+		else
+		{
+			ObjectId objId(ObjectId::INVALID_OBJECT_ID);
+			return objId;
+		}
+	}
+
+	void addToDestroyList(ObjectId objId)
+	{
+		toBeDestroyed.push_back(get(objId));
+	}
+
+	void destroyObjects()
+	{
+		for (int i = 0; i < toBeDestroyed.size(); i++)
+		{
+			WorldObject* obj = toBeDestroyed[i];
+			destroy(obj->objectId);
+		}
+
+		toBeDestroyed.clear();
+	}
+
+	// TODO: need to fix this, de-allocation is expensive
+	void destroy(ObjectId objId)
+	{
+		delete get(objId);
+
+		int tag = objId.getTag();
+		int index = objId.getIndex();
+
+		objects[index].objId.setTag(tag + 1);
+		objects[index].object = NULL;
+
+		count--;
+
+		freeList.push_back(index);
+	}
+
+	//	ObjectId nextAvaiableIndexId()
+	ObjectId nextAvailableId()
+	{
+		if (!freeList.empty())
+		{
+			int free = freeList.back();
+			return objects[free].objId;
+		}
+		else
+		{
+			ObjectId objId(ObjectId::INVALID_OBJECT_ID);
+			return objId;
+		}
+	}
+
+	// only ever used on the client side
+	// do not use this on the server side
+	// becuz the client objects list is only ever changed by snapshot updates from the server
+	// therefore we do not have to worry about freeList
+	void set(T obj, ObjectId objId)
+	{
+		int index = objId.getIndex();
+
+		//		WorldObject* obj1 = objects[index].object;
+		// cout << "		## index is " << index << endl;
+		// cout << "		## new object is " << obj->m_name << endl;
+
+		if (objects[index].object != NULL)
+		{
+			//	cout << "		## i want to delete " << (objects[index].object->m_name) << endl;
+			delete objects[index].object;
+		}
+		else
+		{
+			// should remove index from freeList
+			// but this is only used by the client
+			// so we don't have to care about that
+			count++;
+		}
+
+		objects[index].objId = objId;
+		objects[index].object = obj;
+
+		maxUsed = max(maxUsed, index);
+	}
+
+	int getIterationEnd()
+	{
+		return maxUsed + 1;
+	}
+
+	void debugIds()
+	{
+		for (int i = 0; i < maxUsed; i++)
+		{
+			cout << i << endl;
+			T* obj = objects[i].object;
+			if (obj != NULL)
+			{
+				cout << obj->m_name << "	tag is " << obj->objectId.getTag() << endl;
+				cout << obj->m_name << "	index is " << obj->objectId.getIndex() << endl;
+			}
+			cout << endl;
+		}
+
+	}
+
+};
+
+
+#if 0
 struct FOArray
 {
 //	vector<WorldObject*> objects;
@@ -417,15 +672,27 @@ struct FOArray
 		
 		for (int i = 0; i < maxSize; i++)
 		{
+/*			
 			ObjectId id;
 			id.s.tag = 0;
 			id.s.index = i;
 			objects[i].objId = id;
+*/			
+			objects[i].objId.setTag(0);
+			objects[i].objId.setIndex(i);
 
-	//		cout << "id is " << id.id << endl;
-	//		cout << "	tag is " << id.u.tag << endl;
-	//		cout << "	index is " << id.u.index << endl;
-		
+
+//			objects[i].objId.id = i;
+
+//			objects[i].objId.setId(i);
+
+			/*
+			cout << "id is " << objects[i].objId.id << endl;
+			cout << "	tag is " << objects[i].objId.s.tag << endl;
+			cout << "	index is " << objects[i].objId.s.index << endl;
+			*/
+
+			int a = 1;
 		//	printf("%u\n", (unsigned int)id.s.tag);
 		//	printf("%u\n", (unsigned int)id.s.index);
 		}
@@ -443,7 +710,7 @@ struct FOArray
 	{
 //		return objects[id];
 		//		return objects[id]->indexId == -1 ? NULL : objects[id];
-		return objects[objId.s.index].object;
+		return objects[objId.getIndex()].object;
 	}
 
 	void clearFreeList()
@@ -472,7 +739,7 @@ struct FOArray
 		else
 		{
 			ObjectId objId;
-			objId.id = INVALID_OBJECT_ID;
+			objId.setId(INVALID_OBJECT_ID);
 			return objId;
 		}
 	}
@@ -493,11 +760,11 @@ struct FOArray
 			// change the id here.
 			objects[free].object = obj;
 			objects[free].object->objectId = objId;
-			/*
-			cout << obj->m_name << " objId is " << obj->objectId.id << endl;
-			cout << obj->m_name << "	tag is " << obj->objectId.s.tag << endl;
-			cout << obj->m_name << "	index is " << obj->objectId.s.index << endl;
-			*/
+			
+			cout << obj->m_name << " objId is " << obj->objectId.getId() << endl;
+			cout << obj->m_name << "	tag is " << obj->objectId.getTag() << endl;
+			cout << obj->m_name << "	index is " << obj->objectId.getIndex() << endl;
+			
 			count++;
 			maxUsed = max(maxUsed, free);
 
@@ -506,7 +773,7 @@ struct FOArray
 		else
 		{
 			ObjectId objId;
-			objId.id = INVALID_OBJECT_ID;
+			objId.setId(INVALID_OBJECT_ID);
 			return objId;
 		}
 	}
@@ -532,9 +799,10 @@ struct FOArray
 	{
 		delete get(objId);
 	
-		int index = objId.s.index;
+		int tag = objId.getTag();
+		int index = objId.getIndex();
 
-		objects[index].objId.s.tag = objId.s.tag + 1;
+		objects[index].objId.setTag(tag + 1);
 		objects[index].object = NULL;
 
 		count--;
@@ -542,7 +810,8 @@ struct FOArray
 		freeList.push_back(index);
 	}
 
-	ObjectId nextAvaiableIndexId()
+//	ObjectId nextAvaiableIndexId()
+	ObjectId nextAvailableId()
 	{
 		if (!freeList.empty())
 		{
@@ -552,7 +821,7 @@ struct FOArray
 		else
 		{
 			ObjectId objId;
-			objId.id = INVALID_OBJECT_ID;
+			objId.setId(INVALID_OBJECT_ID);
 			return objId;
 		}
 	}
@@ -563,10 +832,9 @@ struct FOArray
 	// therefore we do not have to worry about freeList
 	void set(WorldObject* obj, ObjectId objId)
 	{
-		int index = objId.s.index;
-		WorldObject* obj1 = objects[index].object;
+		int index = objId.getIndex();
 
-
+		//		WorldObject* obj1 = objects[index].object;
 		// cout << "		## index is " << index << endl;
 		// cout << "		## new object is " << obj->m_name << endl;
 
@@ -602,8 +870,8 @@ struct FOArray
 			WorldObject* obj = objects[i].object;
 			if (obj != NULL)
 			{
-				cout << obj->m_name << "	tag is " << obj->objectId.s.tag << endl;
-				cout << obj->m_name << "	index is " << obj->objectId.s.index << endl;
+				cout << obj->m_name << "	tag is " << obj->objectId.getTag() << endl;
+				cout << obj->m_name << "	index is " << obj->objectId.getIndex() << endl;
 			}
 			cout << endl;
 		}
@@ -611,9 +879,9 @@ struct FOArray
 	}
 
 };
+#endif
 
-
-
+#if 0
 // TODO: Need to srsly fix this, ether use template, or combine the two
 struct FOPlayerArray
 {
@@ -638,6 +906,7 @@ struct FOPlayerArray
 		count = 0;
 	}
 
+	/*
 	Player* get(int id)
 	{
 		return objects[id];
@@ -650,6 +919,21 @@ struct FOPlayerArray
 		return objects[id];
 //		return objects[id]->indexId == -1 ? NULL : objects[id];
 	}
+	*/
+
+	Player* get(int id)
+	{
+		return objects[id];
+		//		return objects[id]->indexId == -1 ? NULL : objects[id];
+	}
+
+
+	Player* getByIndex(int id)
+	{
+		return objects[id];
+		//		return objects[id]->indexId == -1 ? NULL : objects[id];
+	}
+
 
 	void clearFreeList()
 	{
@@ -663,7 +947,7 @@ struct FOPlayerArray
 			int free = freeList.back();
 			freeList.pop_back();
 			objects[free] = new Player();
-			objects[free]->objectId.id = free;
+			objects[free]->objectId.setId(free);
 
 			count++;
 			maxUsed = max(maxUsed, free);
@@ -683,7 +967,7 @@ struct FOPlayerArray
 			int free = freeList.back();
 			freeList.pop_back();
 			objects[free] = obj;
-			objects[free]->objectId.id = free;
+			objects[free]->objectId.setId(free);
 
 			count++;
 			maxUsed = max(maxUsed, free);
@@ -708,6 +992,7 @@ struct FOPlayerArray
 		}
 	}
 
+/*
 	// TODO: need to fix this, de-allocation is expensive
 	void destroy(int id)
 	{
@@ -717,21 +1002,36 @@ struct FOPlayerArray
 		count--;
 		freeList.push_back(id);
 	}
+*/
+	// TODO: need to fix this, de-allocation is expensive
+	void destroy(ObjectId objId)
+	{
+		delete get(objId);
+		objects[objId.getIndex()] = NULL;
+
+		count--;
+		freeList.push_back(id);
+	}
+
+
 
 	// only ever used on the client side
 	// do not use this on the server side
-	void set(Player* obj, int id)
+
+//	void set(Player* obj, int id)
+	void set(Player* obj, ObjectId objId)
 	{
-		if (objects[id] != NULL)
+		int index = objId.getIndex();
+		if (objects[index] != NULL)
 		{
-			delete objects[id];
+			delete objects[index];
 		}
 		else
 		{
 			count++;
 		}
-		objects[id] = obj;
-		maxUsed = max(maxUsed, id);
+		objects[index] = obj;
+		maxUsed = max(maxUsed, index);
 	}
 
 	int getIterationEnd()
@@ -739,6 +1039,8 @@ struct FOPlayerArray
 		return maxUsed + 1;
 	}
 };
+#endif
+
 
 struct DelayedPacket
 {
@@ -848,10 +1150,11 @@ class FaceOff
 		list<Particle> m_bullets;
 		queue<int> m_objectIndexPool;
 
-		int m_defaultPlayerID;
+//		int m_defaultPlayerID;
+		ObjectId m_defaultPlayerObjectId;
+		int getDefaultPlayerId();
 
-
-		void initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree);
+		void initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players, KDTree& tree);
 
 
 
@@ -897,11 +1200,17 @@ class FaceOff
 		bool interpolateFlag;
 		bool predictionOn;
 
-		FOArray sv_objects;
-		FOArray cl_objects;	// this never creates, only sets objects
+		bool serverRunPhysicsOnReadPacketsFlag;
 
-		FOPlayerArray sv_players;
-		FOPlayerArray cl_players;
+		
+		FOArray<WorldObject*> sv_objects;
+		FOArray<WorldObject*> cl_objects;	// this never creates, only sets objects
+
+//		FOPlayerArray sv_players;
+//		FOPlayerArray cl_players;
+
+		FOArray<Player*> sv_players;
+		FOArray<Player*> cl_players;
 
 		KDTree sv_objectKDtree;
 		KDTree cl_objectKDtree;
@@ -956,11 +1265,11 @@ class FaceOff
 
 		void RakNetFunction();
 
-		void deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStream& bs, bool curPlayer);
+		void deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStream& bs, bool curPlayerFlag);
 		void deserializeEntityAndAddToWorld(WorldObject* obj, RakNet::BitStream& bs);
 
-		void replyBackToNewClient(int playerId, RakNet::BitStream& bs);
-		void broadCastNewClientJoining(int playerId, RakNet::BitStream& bs);
+		void replyBackToNewClient(ObjectId playerId, RakNet::BitStream& bs);
+		void broadCastNewClientJoining(ObjectId playerId, RakNet::BitStream& bs);
 
 		void start();
 		void update();
@@ -983,8 +1292,9 @@ class FaceOff
 		void serverSimulationTick(int msec);
 		void clientSimulationTick();
 
-		void serverRunClientMoveCmd(int clientId, UserCmd cmd);
-		
+//		void serverRunClientMoveCmd(int clientId, UserCmd cmd);
+		void serverRunClientMoveCmd(ObjectId playerId, UserCmd cmd);
+
 		void serverSendClientMessages();
 
 		void serverSendClientSnapshot(int clientId);
@@ -992,10 +1302,11 @@ class FaceOff
 		
 		void serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, RakNet::BitStream& bs);
 		void serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs);
-		
+		void serverWriteOtherPlayer(Player* p, RakNet::BitStream& bs);
+
 		void serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStream& bs);
 		void serverWriteNewWorldObject(WorldObjectState* obj1, RakNet::BitStream& bs);
-		void serverWriteWorldObjects(WorldObjectState* obj0, WorldObjectState* obj1, RakNet::BitStream& bs, bool force);
+		void serverWriteDeltaWorldObject(WorldObjectState* obj0, WorldObjectState* obj1, RakNet::BitStream& bs, bool force);
 		void serverWriteRemoveWorldObject(WorldObjectState* obj0, RakNet::BitStream& bs);
 
 		void serverConstructSnapshotToClient();
@@ -1003,8 +1314,10 @@ class FaceOff
 
 		void clientParseSnapshot(RakNet::BitStream& bs);
 		void clientParsePlayers(ClientSnapshot* prev, ClientSnapshot* cur, RakNet::BitStream& bs);
-		void clientParseDeltaPlayer(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
-		
+		void clientParsePlayer(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
+		void clientParseDefaultPlayer(ClientSnapshot* cur, int flags, ObjectId playerId, RakNet::BitStream& bs);
+		void clientParseOtherPlayer(ClientSnapshot* cur, int flags, ObjectId playerId, RakNet::BitStream& bs);
+
 		void clientParseEntities(ClientSnapshot* prev, ClientSnapshot* cur, RakNet::BitStream& bs);
 		void clientParseDeltaEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs);
 		void clientParseEntityData(WorldObject* obj, int flags, RakNet::BitStream& bs);
@@ -1032,8 +1345,11 @@ class FaceOff
 		void render();
 
 
-		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setCollsionFlagsBothWays);
-		void simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject* object, int i, bool setCollsionFlagsBothWays);
+//		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setCollsionFlagsBothWays);
+//		void simulateObjectPhysics(KDTree& tree, FOArray<WorldObject*>& objects, WorldObject* object, int i, bool setCollsionFlagsBothWays);
+	
+		void simulatePlayerPhysics(KDTree& tree, Player* p, bool setCollsionFlagsBothWays);
+		void simulateObjectPhysics(KDTree& tree, FOArray<WorldObject*>& objects, WorldObject* object, bool setCollsionFlagsBothWays);
 		void checkNeighbors(KDTree& tree, WorldObject* obj, bool setCollsionFlagsBothWays);
 
 		void clearCollisionDetectionFlags();

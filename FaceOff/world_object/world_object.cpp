@@ -300,107 +300,76 @@ void WorldObject::clearParentNodes()
 }
 
 
-
-#if 1
-void WorldObject::serialize(RakNet::BitStream& bs)
+bool WorldObject::shouldRender()
 {
-	bs.Write(objectId.id);
+	return true;
+}
 
-	//unsigned char *val = new unsigned char[m_name.length() + 1];
-	//strcpy((char *)val, m_name.c_str());
+int WorldObject::getCollisionFlagIndex()
+{
+	if (m_entityType == PLAYER)
+	{
+		return objectId.getIndex();
+	}
+	else
+	{
+		return objectId.getIndex() + NUM_MAX_CLIENTS;
+	}
+}
 
-//	RakNet::RakString rakString("%s", m_name);
-//	bs.Write(rakString);
 
 
+void WorldObject::serialize_New(RakNet::BitStream& bs)
+{
+	bs.Write(objectId.getTag());
+	bs.Write(objectId.getIndex());
 
-//	RakNet::RakString raksName(m_name.c_str());
-//	bs.Write(raksName);
 	utl::write(bs, m_name);
 
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
-//	bs.Write(getCameraPitch());
-//	bs.Write(getCameraYaw());
-
-
-
 	bs.Write(m_modelEnum);
-
-	// cout << "objectId.id " << objectId.id << endl;
-	// cout << "	m_modelEnum " << m_modelEnum << endl << endl;
 
 	bs.Write(getGeometryType());
 	bs.Write(getMass());
 	bs.Write(getMaterialEnergyRestitution());
 	bs.Write(getMaterialSurfaceFrictionToBitStream());
 
-
 	bs.Write(isHit);
 }
 
 
-
-bool WorldObject::shouldRender()
+void WorldObject::printParentTrees()
 {
-	return true;
-}
-
-/*
-int WorldObject::getInstanceId()
-{
-	return objectId.id;
-}
-*/
-
-
-int WorldObject::getCollisionFlagIndex()
-{
-	if (m_entityType == PLAYER)
+	utl::clDebug("parent node size", m_parentNodes.size());
+	for (int i = 0; i < m_parentNodes.size(); i++)
 	{
-		return objectId.s.index;
-	}
-	else
-	{
-		return objectId.s.index + NUM_MAX_CLIENTS;
+		KDTreeNode* node = m_parentNodes[i];
+		if (node != NULL)
+		{
+			utl::clDebug("	in tree node", node->id);
+		}
+
 	}
 }
 
-void WorldObject::deserialize(RakNet::BitStream& bs, ModelManager* mm)
+
+void WorldObject::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 {
 	// the message id is already ignored
-	bs.Read(objectId.id);
+	uint16_t tag = 0;
+	uint16_t index = 0;
 
-	/*
+	bs.Read(tag);
+	bs.Read(index);
 
-	RakNet::RakString raksName;
-	bs.Read(raksName);
-	string str(raksName.C_String);
-	m_name = str;
-	*/
+	objectId.setTag(tag);
+	objectId.setIndex(index);
+
 	utl::read(bs, m_name);
 
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
-
-	if (m_position.x != 0 || m_position.z != 0)
-	{
-		utl::clDebug("position is", m_position);
-	}
-
-	/*
-	float pitch, yaw;
-	bs.Read(pitch);					bs.Read(yaw);
-	m_camera->m_pitch = pitch;		m_camera->m_yaw = yaw;
-	setRotation(pitch, yaw);
-	*/
-	
-
-	/*
-	cout << "	objectId id " << objectId.id << endl;
-	cout << "	tag " << objectId.s.tag << endl;
-	cout << "	index " << objectId.s.index << endl;
-	*/
 	bs.Read(m_modelEnum);
-	// cout << "	m_modelEnum " << m_modelEnum << endl;
+
 	setModel(mm->get(m_modelEnum));
 
 	bs.Read(m_geometryType);
@@ -416,11 +385,62 @@ void WorldObject::deserialize(RakNet::BitStream& bs, ModelManager* mm)
 	bs.Read(friction);			setMaterialSurfaceFriction(friction);
 
 	bs.Read(isHit);
-//	prevState = GetState();
+
+
 }
 
 
 
+void WorldObject::serialize_Delta(int flags, RakNet::BitStream& bs)
+{
+	if (flags & U_POSITION0)		bs.Write(m_position[0]);
+	if (flags & U_POSITION1)		bs.Write(m_position[1]);
+	if (flags & U_POSITION2)		bs.Write(m_position[2]);
 
+	if (flags & U_ANGLE0)		bs.Write(m_pitch);
+	if (flags & U_ANGLE1)		bs.Write(m_yaw);
+	if (flags & U_ANGLE2)		bs.Write(m_roll);
 
-#endif
+	bs.Write(isHit);
+}
+
+void WorldObject::deserialize_Delta(int flags, RakNet::BitStream& bs)
+{
+	if (flags & U_POSITION0)		bs.Read(m_position[0]);
+	if (flags & U_POSITION1)		bs.Read(m_position[1]);
+	if (flags & U_POSITION2)		bs.Read(m_position[2]);
+
+	if (flags & U_ANGLE0)
+	{
+		bs.Read(m_pitch);
+		if (m_name == "player 0")
+		{
+			cout << "player 0, pitch" << endl;
+		}
+	}
+
+	if (flags & U_ANGLE1)
+	{
+		bs.Read(m_yaw);
+		if (m_name == "player 0")
+		{
+			cout << "player 0, yaw" << endl;
+		}
+	}
+
+	if (flags & U_ANGLE2)
+	{
+		bs.Read(m_roll);
+		if (m_name == "player 0")
+		{
+			cout << "player 0, roll" << endl;
+		}
+	}
+
+	bs.Read(isHit);
+
+	// this will overwritten by client prediction if you are the default player
+	setRotation(m_pitch, m_yaw);
+	updateCollisionDetectionGeometry();
+}
+

@@ -76,7 +76,7 @@ void ThirdPersonCamera::lookAt(glm::vec3& eye, glm::vec3& target, glm::vec3& up)
 }
 
 
-
+/*
 void ThirdPersonCamera::control()
 {
 	float pitchChange = 0.0f;
@@ -147,7 +147,7 @@ void ThirdPersonCamera::processUserCmd(const UserCmd& cmd, glm::vec3& vel, bool 
 {
 
 }
-
+*/
 
 
 void ThirdPersonCamera::updateTarget()

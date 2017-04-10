@@ -156,6 +156,8 @@ void FaceOff::init()
 	isRunning = true;
 	singlePlayerMode = true;
 
+	serverRunPhysicsOnReadPacketsFlag = true;
+
 	latencyOptions = { 0, 20, 50, 100, 200 };	// millisecond
 	curLatencyOption = 4;
 	latency = latencyOptions[curLatencyOption] / 2;
@@ -170,6 +172,8 @@ void FaceOff::init()
 
 	containedFlag = false;
 	hitNode = NULL;
+
+
 
 
 	timeProfilerIndex = 0;
@@ -215,7 +219,9 @@ GLuint tempTexture;
 
 
 
-void FaceOff::initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree)
+//void FaceOff::initMap(FOArray& objects, FOPlayerArray& players, KDTree& tree)
+
+void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players, KDTree& tree)
 {
 	objects.init(NUM_MAX_OBJECTS);
 	players.init(NUM_MAX_CLIENTS);
@@ -544,9 +550,7 @@ void FaceOff::initObjects()
 
 
 	initMap(sv_objects, sv_players, sv_objectKDtree);
-
 	initMap(cl_objects, cl_players, cl_objectKDtree);
-
 
 	// Grenade particle effect
 	FireWorkEffect* fwEffect = new FireWorkEffect();
@@ -661,22 +665,25 @@ void FaceOff::initNetworkLobby()
 		if (state[SDLK_a] || state[SDLK_SPACE])
 		{ 
 			svWaitingInLobby = false;
-
+			
 			if (m_server.isInitalized)
 			{
-			
+				
 				// we add a bot if there is only one player
 				if (m_server.getNumConnectedClients() == 1)
 				{
 					singlePlayerMode = true;
-					int newPlayerId = sv_players.nextAvaiableId();
+//					int newPlayerId = sv_players.nextAvaiableId();
+					ObjectId newPlayerId = sv_players.nextAvailableId();
 					float newSpawnX = 0;
 					float newSpawnY = 5;
 					float newSpawnZ = 25;
 
 					// Add Player
 					Player* p = new Player(newPlayerId);
-					p->m_name = "player " + utl::intToStr(newPlayerId);
+					int newPlayerIndex = newPlayerId.getIndex();
+					
+					p->m_name = "player " + utl::intToStr(newPlayerIndex);
 					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
 					p->setRotation(0, 0);
 					p->setModelEnum(ModelEnum::player);
@@ -684,21 +691,23 @@ void FaceOff::initNetworkLobby()
 					p->setMass(80);
 					p->setCollisionDetectionGeometry(CD_SPHERE);
 
+					utl::clDebug("	player objectId tag", p->objectId.getTag());
+					utl::clDebug("	player objectId index", p->objectId.getIndex());
 
 					Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
 					mainWeapon->setCollisionDetectionGeometry(CD_AABB);
-					mainWeapon->m_name = "player1 mainWeapon";
+					mainWeapon->m_name = "player " + utl::intToStr(newPlayerIndex) + " mainWeapon";
 
 					Weapon* knife = new Weapon(m_modelMgr.getWeaponData(KNIFE));
 					knife->setCollisionDetectionGeometry(CD_AABB);
-					knife->m_name = "player1 knife";
+					knife->m_name = "player " + utl::intToStr(newPlayerIndex) + " knife";
 
 					Weapon* grenade = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
 					grenade->setMass(0.4);
 					grenade->setMaterialEnergyRestitution(0.6);
 					grenade->setMaterialSurfaceFriction(0.3);
 					grenade->setCollisionDetectionGeometry(CD_AABB);
-					grenade->m_name = "player1 grenade";
+					grenade->m_name = "player " + utl::intToStr(newPlayerIndex) + " grenade";
 
 
 					sv_players.add(p);
@@ -714,9 +723,11 @@ void FaceOff::initNetworkLobby()
 
 					sv_objectKDtree.insert(p);
 
+					p->printParentTrees();
+
 					RakNet::BitStream bs;
 					bs.Write((RakNet::MessageID)NEW_CLIENT);
-					p->serialize(bs);
+					p->serialize_New(bs);
 
 					//	HIGH_PRIORITY, RELIABLE_ORDERED,
 					m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClientAddress(0), false);
@@ -725,7 +736,7 @@ void FaceOff::initNetworkLobby()
 				{
 					singlePlayerMode = false;
 				}
-
+				
 
 				// send the end termination signal to client
 //				for (int i = 0; i < m_server.clients.size(); i++)
@@ -781,14 +792,17 @@ void FaceOff::initNetworkLobby()
 						printf("A connection is incoming.\n");
 						m_server.addClient(sv_packet);
 
-						int newPlayerId = sv_players.nextAvaiableId();
-						float newSpawnX = newPlayerId * SPAWN_POSITION_UNIT_OFFSET;
+//						int newPlayerId = sv_players.nextAvaiableId();
+
+						ObjectId newPlayerId = sv_players.nextAvailableId();
+						int newPlayerIndex = newPlayerId.getIndex();
+						float newSpawnX = newPlayerIndex * SPAWN_POSITION_UNIT_OFFSET;
 						float newSpawnY = 5;
-						float newSpawnZ = newPlayerId * SPAWN_POSITION_UNIT_OFFSET;
+						float newSpawnZ = newPlayerIndex * SPAWN_POSITION_UNIT_OFFSET;
 
 						// Add Player
 						Player* p = new Player(newPlayerId);
-						p->m_name = "player " + utl::intToStr(newPlayerId);
+						p->m_name = "player " + utl::intToStr(newPlayerId.getIndex());
 						p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
 						p->setRotation(0, 0);
 						p->setModelEnum(ModelEnum::player);
@@ -796,6 +810,8 @@ void FaceOff::initNetworkLobby()
 						p->setMass(80);
 						p->setCollisionDetectionGeometry(CD_SPHERE);
 
+						utl::clDebug("	player objectId tag", p->objectId.getTag());
+						utl::clDebug("	player objectId index", p->objectId.getIndex());
 
 						Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
 						mainWeapon->setCollisionDetectionGeometry(CD_AABB);
@@ -827,11 +843,21 @@ void FaceOff::initNetworkLobby()
 						sv_objectKDtree.insert(p);
 
 
+
 						p->svDebug();
+
+						p->printParentTrees();
+						sv_objectKDtree.print(5);
+						sv_objectKDtree.print(11);
+						sv_objectKDtree.print(12);
+
 
 						RakNet::BitStream bsOut;
 						broadCastNewClientJoining(newPlayerId, bsOut);
 						replyBackToNewClient(newPlayerId, bsOut);
+
+		//				utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
+		//				int a = 1;
 						break;
 					}
 
@@ -895,12 +921,19 @@ void FaceOff::initNetworkLobby()
 
 						utl::clDebug("Server gave me Spawn Information");
 
+						utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
+						int a = 1;
+
 						// the new player
 						Player* p = new Player();
 						deserializePlayerAndWeaponAndAddToWorld(p, bsIn, true);
 						cl_objectKDtree.insert(p);
 		
 						p->clDebug();
+
+
+						utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
+						a = 1;
 
 
 						// existing player
@@ -914,6 +947,9 @@ void FaceOff::initNetworkLobby()
 							cl_objectKDtree.insert(p);
 						}
 
+
+						utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
+						a = 1;
 						break;
 					}
 
@@ -929,7 +965,7 @@ void FaceOff::initNetworkLobby()
 						cout << "Player List" << endl;
 						for (int i = 0; i < cl_players.getIterationEnd(); i++)
 						{
-							Player* p = cl_players.get(i);
+							Player* p = cl_players.getByIndex(i);
 
 							if (p == NULL)
 							{
@@ -937,10 +973,13 @@ void FaceOff::initNetworkLobby()
 							}
 							else
 							{
-								cout << i << " - " << p->objectId.id << endl;  utl::debug("position ", p->m_position);
+								cout << i << " - " << p->objectId.getIndex() << endl;  utl::debug("position ", p->m_position);
 							}
 						}
 					
+						utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
+						int a = 1;
+
 						break;
 					}
 
@@ -988,7 +1027,7 @@ void FaceOff::initNetworkLobby()
 }
 
 
-void FaceOff::broadCastNewClientJoining(int playerId, RakNet::BitStream& bs)
+void FaceOff::broadCastNewClientJoining(ObjectId playerId, RakNet::BitStream& bs)
 {
 	bs.Reset();	// Very important!!
 
@@ -1000,12 +1039,12 @@ void FaceOff::broadCastNewClientJoining(int playerId, RakNet::BitStream& bs)
 		std::cout << "Signaling arrival of new clients, Sending new client's spaw position to each client" << endl;
 
 		bs.Write((RakNet::MessageID)NEW_CLIENT);
-		p->serialize(bs);
+		p->serialize_New(bs);
 
 
 		for (int i = 0; i < m_server.getNumClients(); i++)
 		{
-			if (i == playerId)
+			if (i == playerId.getIndex())
 				continue;
 
 			m_server.peer->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClientAddress(i), false);
@@ -1014,29 +1053,38 @@ void FaceOff::broadCastNewClientJoining(int playerId, RakNet::BitStream& bs)
 }
 
 
-void FaceOff::deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStream& bs, bool curPlayer)
+void FaceOff::deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStream& bs, bool curPlayerFlag)
 {
-	p->deserialize(bs, &m_modelMgr);
+	p->deserialize_New(bs, &m_modelMgr);
 
-	if (curPlayer == true)
+	int a = 1;
+
+	if (curPlayerFlag == true)
 	{
-		m_defaultPlayerID = p->getId();
-		p->setDefaultPlayerFlag(curPlayer);
+		m_defaultPlayerObjectId = p->objectId;
+		p->setDefaultPlayerFlag(curPlayerFlag);
 	}
 
-
-	
-	cl_players.set(p, p->objectId.id);
+	cl_players.set(p, p->objectId);
 	cl_objectKDtree.insert(p);
+
+	a = 1;
 
 	for (int i = 0; i < p->getWeapons().size(); i++)
 	{
 		Weapon* weapon = p->getWeapons()[i];
+		utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
+		a = 1;
 		if (weapon != NULL)
 		{
 			cl_objects.set(weapon, weapon->objectId);
+			utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
+			a = 1;
 		}
 	}
+
+	utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
+	a = 1;
 
 	/*
 	int weaponCount = 0;
@@ -1057,7 +1105,7 @@ void FaceOff::deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStre
 
 void FaceOff::deserializeEntityAndAddToWorld(WorldObject* obj, RakNet::BitStream& bs)
 {
-	obj->deserialize(bs, &m_modelMgr);
+	obj->deserialize_New(bs, &m_modelMgr);
 	/*
 	if (obj->objectId.s.index == 27)
 	{
@@ -1153,13 +1201,13 @@ void FaceOff::processPacketQueue(unsigned int curRealTime, PacketQueue& packetQu
 }
 
 
-void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
+void FaceOff::replyBackToNewClient(ObjectId playerId, RakNet::BitStream& bs)
 {
 	bs.Reset();	// Very important!!
 	
 	bs.Write((RakNet::MessageID)SPAWN_INFORMATION);
 	Player* p = sv_players.get(playerId);
-	p->serialize(bs);
+	p->serialize_New(bs);
 
 	// Sending each client's position to new client
 	utl::debug("m_players size", sv_players.count);
@@ -1173,15 +1221,15 @@ void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
 	{
 		cout << "in reply, looking at player " << i << endl;
 
-		if (i == playerId)
+		if (i == playerId.getIndex())
 			continue;
 
 		if (m_server.isClientConnected(i))
 		{
-			p = sv_players.get(i);
+			p = sv_players.getByIndex(i);
 
 			std::cout << "sending for " << i << endl;
-			p->serialize(bs);
+			p->serialize_New(bs);
 		}
 	}
 
@@ -1189,7 +1237,7 @@ void FaceOff::replyBackToNewClient(int playerId, RakNet::BitStream& bs)
 //	cout << "client address " << RakNet::SystemAddress::ToInteger(m_server.getClient(playerId).systemAddress) << endl;
 
 //	HIGH_PRIORITY, RELIABLE_ORDERED,
-	m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClientAddress(playerId), false);
+	m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClientAddress(playerId.getIndex()), false);
 
 	// m_server.peer->Send(&bs, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(playerId).systemAddress, false);
 }
@@ -1251,10 +1299,11 @@ void FaceOff::serverReadPackets()
 				// utl::debug("sequence is", sequence);
 			//	std::cout << "CLIENT_INPUT" << einndl;
 				
+				ObjectId playerId;
+				playerId.deserialize(bsIn);
 
-
-				int clientId = 0;
-				bsIn.Read(clientId);
+				int clientId = playerId.getIndex();
+			//	bsIn.Read(clientId);
 				m_server.setClientIncomingSequence(clientId, sequence);
 
 				int msgAck = 0;
@@ -1270,7 +1319,7 @@ void FaceOff::serverReadPackets()
 				UserCmd cmd; 
 				cmd.deserialize(bsIn);
 				// run the command
-				serverRunClientMoveCmd(clientId, cmd);
+				serverRunClientMoveCmd(playerId, cmd);
 				
 				// run player physics here
 
@@ -1535,7 +1584,7 @@ void FaceOff::serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, Rak
 			}
 			else
 			{
-				serverWriteDefaultPlayer(player, bs);
+				serverWriteOtherPlayer(player, bs);
 			}
 		}
 	}
@@ -1547,51 +1596,41 @@ void FaceOff::serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, Rak
 
 void FaceOff::serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs)
 {
-	int flags;
+	int flags = 0;
 
-	// positions
 	flags |= U_DELTA;
 	flags |= U_POSITION0;
 	flags |= U_POSITION1;
 	flags |= U_POSITION2;
 
 	bs.Write(flags);
-	bs.Write(p->objectId.id);
+//	bs.Write(p->objectId.getId());
+	p->objectId.serialize(bs);
 
-	if (flags & U_POSITION0)		bs.Write(p->m_position[0]);
-	if (flags & U_POSITION1)		bs.Write(p->m_position[1]);
-	if (flags & U_POSITION2)		bs.Write(p->m_position[2]);
-
-//	utl::debug("sv writing pos", p->m_position);
+	p->serialize_Delta(flags, bs);
 }
 
-/*
+
 void FaceOff::serverWriteOtherPlayer(Player* p, RakNet::BitStream& bs)
 {
 	int flags = 0;
 
+	flags |= U_DELTA;
+	flags |= U_POSITION0;
+	flags |= U_POSITION1;
+	flags |= U_POSITION2;
+
+	flags |= U_ANGLE0;
+	flags |= U_ANGLE1;
+	flags |= U_ANGLE2;
+
 	bs.Write(flags);
-	bs.Write(obj1->objectId.id);
+//	bs.Write(p->objectId.getId());
+	p->objectId.serialize(bs);
 
-	// positions
-	if (0.0 != obj1->position[0])		flags |= U_POSITION0;
-	if (0.0 != obj1->position[1])		flags |= U_POSITION1;
-	if (0.0 != obj1->position[2])		flags |= U_POSITION2;
-
-	// angles
-	if (0.0 != obj1->angles[0])		flags |= U_ANGLE0;
-	if (0.0 != obj1->angles[1])		flags |= U_ANGLE1;
-	if (0.0 != obj1->angles[2])		flags |= U_ANGLE2;
-
-	if (flags & U_POSITION0)		bs.Write(obj1->position[0]);
-	if (flags & U_POSITION1)		bs.Write(obj1->position[1]);
-	if (flags & U_POSITION2)		bs.Write(obj1->position[2]);
-
-	if (flags & U_ANGLE0)		bs.Write(obj1->angles[0]);
-	if (flags & U_ANGLE1)		bs.Write(obj1->angles[0]);
-	if (flags & U_ANGLE2)		bs.Write(obj1->angles[0]);
+	p->serialize_Delta(flags, bs);
 }
-*/
+
 
 void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStream& bs)
 {
@@ -1657,8 +1696,8 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 	ObjectId id0;
 	ObjectId id1;
 
-	id0.id = -1;
-	id1.id = -1;
+	id0.setId(-1, -1);
+	id1.setId(-1, -1);
 
 	// cout << "iterating"  << endl;
 
@@ -1668,7 +1707,7 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 	{
 		if (i1 >= numEntities1)
 		{
-			id1.id = INVALID_OBJECT;
+			id1.setId(INVALID_OBJECT, INVALID_OBJECT);
 		}
 		else
 		{
@@ -1679,7 +1718,7 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 
 		if (i0 >= numEntities0)
 		{
-			id0.id = INVALID_OBJECT;
+			id0.setId(INVALID_OBJECT, INVALID_OBJECT);
 		}
 		else
 		{
@@ -1699,11 +1738,11 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 		*/
 
 		// writing objects
-		if (id1.s.index == id0.s.index)
+		if (id1.getIndex() == id0.getIndex())
 		{
-			if (id1.s.tag == id0.s.tag)
+			if (id1.getTag() == id0.getTag())
 			{
-				serverWriteWorldObjects(obj0, obj1, bs, false);
+				serverWriteDeltaWorldObject(obj0, obj1, bs, false);
 				++i0;
 				++i1;
 				continue;
@@ -1722,7 +1761,7 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 		}
 
 		// adding new entity
-		if (id1.s.index < id0.s.index)
+		if (id1.getIndex() < id0.getIndex())
 		{
 			serverWriteNewWorldObject(obj1, bs);
 			++i1;
@@ -1732,7 +1771,7 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 
 		// the old entity isn't present in the new message
 		// removing entity
-		if (id1.s.index > id0.s.index)
+		if (id1.getIndex() > id0.getIndex())
 		{
 			serverWriteRemoveWorldObject(obj0, bs);
 			++i0;
@@ -1760,7 +1799,8 @@ void FaceOff::serverWriteRemoveWorldObject(WorldObjectState* obj0, RakNet::BitSt
 	flags |= U_REMOVE;
 
 	bs.Write(flags);
-	bs.Write(obj0->objectId.id);
+//	bs.Write(obj0->objectId.getId());
+	obj0->objectId.serialize(bs);
 }
 
 
@@ -1771,7 +1811,8 @@ void FaceOff::serverWriteNewWorldObject(WorldObjectState* obj1, RakNet::BitStrea
 
 	flags |= U_ADD;
 
-	WorldObject* obj = sv_objects.get(obj1->objectId.id);
+//	WorldObject* obj = sv_objects.get(obj1->objectId.getId());
+	WorldObject* obj = sv_objects.get(obj1->objectId);
 
 	if (obj->getEntityType() == EntityType::SCENE_OBJECT)
 	{
@@ -1783,16 +1824,11 @@ void FaceOff::serverWriteNewWorldObject(WorldObjectState* obj1, RakNet::BitStrea
 	}
 
 	bs.Write(flags);
-	sv_objects.get(obj1->objectId.id)->serialize(bs);
-	if (obj1->objectId.s.index == 27)
-	{
-		utl::debug("debugCurClientId", debugCurClientId);
-//		utl::debug("last client Cmd", m_server.getClientLastUserCmdFrame(debugCurClientId));
-		utl::debug("	writing 27 new new mainWeapon"); 
-	}
+//	sv_objects.get(obj1->objectId.getId())->serialize_New(bs);
+	sv_objects.get(obj1->objectId)->serialize_New(bs);
 }
 
-void FaceOff::serverWriteWorldObjects(WorldObjectState* obj0, WorldObjectState* obj1, RakNet::BitStream& bs, bool force)
+void FaceOff::serverWriteDeltaWorldObject(WorldObjectState* obj0, WorldObjectState* obj1, RakNet::BitStream& bs, bool force)
 {
 	int flags = 0;
 
@@ -1815,8 +1851,12 @@ void FaceOff::serverWriteWorldObjects(WorldObjectState* obj0, WorldObjectState* 
 
 	flags |= U_DELTA;
 
+//	bs.Write(obj0->objectId.getId());
+
 	bs.Write(flags);
-	bs.Write(obj0->objectId.id);
+	obj0->objectId.serialize(bs);
+	sv_objects.get(obj1->objectId)->serialize_Delta(flags, bs);
+	/*
 	if (flags & U_POSITION0)		bs.Write(obj1->position[0]);
 	if (flags & U_POSITION1)		bs.Write(obj1->position[1]);
 	if (flags & U_POSITION2)		bs.Write(obj1->position[2]);
@@ -1824,17 +1864,29 @@ void FaceOff::serverWriteWorldObjects(WorldObjectState* obj0, WorldObjectState* 
 	if (flags & U_ANGLE0)		bs.Write(obj1->angles[0]);
 	if (flags & U_ANGLE1)		bs.Write(obj1->angles[0]);
 	if (flags & U_ANGLE2)		bs.Write(obj1->angles[0]);
+
+	bs.Write(obj1->isHit);
+	*/
 }
 
 
-void FaceOff::serverRunClientMoveCmd(int playerId, UserCmd cmd)
+void FaceOff::serverRunClientMoveCmd(ObjectId playerId, UserCmd cmd)
 {
 	Player* player = sv_players.get(playerId);
 
 	player->processUserCmd(cmd);
+	sv_objectKDtree.reInsert(player);
 
-	processUserFireWeapon(player);
+	player->resetCollisionFlags();
+	if (serverRunPhysicsOnReadPacketsFlag)
+	{
+		simulatePlayerPhysics(sv_objectKDtree, player, false);
+	}
 
+	if (cmd.buttons & ATTACK)
+	{
+		processUserFireWeapon(player);
+	}
 }
 
 
@@ -1904,14 +1956,18 @@ void FaceOff::clientFrame(long long dt)
 {
 	//clientHandleDeviceEvents(); 
 //	cout << "clientReadPackets" << endl;
+
 	clientReadPackets();
+
 
 	clientSendCmd();
 	clientCheckForResend();
 
-//	cout << "processPacketQueue" << endl;
+
 
 	processPacketQueue(m_client.realTime, clientToServer, false);
+
+
 
 	// I opt to do player prediction collision detection on the interpolated objects
 	// so I do this before the clientPrediction
@@ -1919,10 +1975,8 @@ void FaceOff::clientFrame(long long dt)
 //	cout << "interpolateEntities" << endl;
 	interpolateEntities();
 
-//	cout << "clientPrediction" << endl;
 	clientPrediction();
 
-//	cout << "render" << endl;
 	render();	
 	
 	int a = 1;
@@ -2042,7 +2096,9 @@ void FaceOff::interpolateEntities()
 	//		utl::clDebug("	m_defaultPlayerID", m_defaultPlayerID);
 
 
-			if (pId1.id == m_defaultPlayerID)
+//			if (pId1.getId() == m_defaultPlayerID)
+//			if (pId1.getId() == m_defaultPlayerObjectId.getId())
+			if (pId1 == m_defaultPlayerObjectId)
 			{
 				continue;
 			}
@@ -2055,12 +2111,13 @@ void FaceOff::interpolateEntities()
 
 				cState0 = from->players[i];
 				ObjectId pId0 = cState0.state.objectId;
-				Player* p = cl_players.getByIndex(pId1.id);
+			//	Player* p = cl_players.getByIndex(pId1.getId());
+				Player* p = cl_players.get(pId1);
 
 	//			cout << "pId1 " << pId1.id << endl;
 	//			cout << "pId0 " << pId0.id << endl;
 
-				if (pId1.id == pId0.id)
+				if (pId1 == pId0)
 				{
 					// interpolate position
 					// interpolate angle
@@ -2088,6 +2145,13 @@ void FaceOff::interpolateEntities()
 				}
 
 				cl_objectKDtree.insert(p);
+
+				/*
+				if (p->objectId.id == 1)
+				{
+					p->printParentTrees();
+				}
+				*/
 			}
 			else
 			{
@@ -2109,7 +2173,8 @@ void FaceOff::interpolateEntities()
 				cState0 = from->entities[i];
 				ObjectId objId0 = cState0.state.objectId;
 				WorldObject* obj = cl_objects.get(objId1);
-				if (objId0.id == objId1.id)
+//				if (objId0.getId() == objId1.getId())
+				if (objId0 == objId1)
 				{
 					// interpolate position
 					// interpolate angle
@@ -2333,34 +2398,54 @@ void FaceOff::clientParsePlayers(ClientSnapshot* prev, ClientSnapshot* cur, RakN
 		}
 		*/
 
-		clientParseDeltaPlayer(cur, flags, bs);
+		clientParsePlayer(cur, flags, bs);
 	}
 }
 
 
-void FaceOff::clientParseDeltaPlayer(ClientSnapshot* cur, int flags, RakNet::BitStream& bs)
+void FaceOff::clientParsePlayer(ClientSnapshot* cur, int flags, RakNet::BitStream& bs)
 {
-	int playerId = 0;
-	bs.Read(playerId);
+//	int id = 0;
+//	bs.Read(id);
+//	ObjectId playerId(id);
+	
+	ObjectId playerId;
+	playerId.deserialize(bs);
 
-	ObjectId pId(playerId);
+	if (playerId == m_defaultPlayerObjectId)
+	{
+		clientParseDefaultPlayer(cur, flags, playerId, bs);
+	}
+	else
+	{
+		clientParseOtherPlayer(cur, flags, playerId, bs);
+	}
 
-	Player* p = cl_players.getByIndex(pId.id);
+}
 
-	bs.Read(p->m_position[0]);
-	bs.Read(p->m_position[1]);
-	bs.Read(p->m_position[2]);
+//void FaceOff::clientParseDefaultPlayer(ClientSnapshot* cur, int flags, int playerId, RakNet::BitStream& bs)
+void FaceOff::clientParseDefaultPlayer(ClientSnapshot* cur, int flags, ObjectId playerId, RakNet::BitStream& bs)
+{
+	Player* p = cl_players.get(playerId);
 
-	p->updateCollisionDetectionGeometry();
+	p->deserialize_Delta(flags, bs);
 
 	ClientWorldObjectState state(flags, p->getState());
-	cur->setPlayer(playerId, state);
+	cur->setPlayer(playerId.getIndex(), state);
+
+	cur->playerState = p->getState();
+}
 
 
-	if (playerId == m_defaultPlayerID)
-	{
-		cur->playerState = p->getState();
-	}
+//void FaceOff::clientParseOtherPlayer(ClientSnapshot* cur, int flags, int playerId, RakNet::BitStream& bs)
+void FaceOff::clientParseOtherPlayer(ClientSnapshot* cur, int flags, ObjectId playerId, RakNet::BitStream& bs)
+{
+	Player* p = cl_players.get(playerId);
+
+	p->deserialize_Delta(flags, bs);
+
+	ClientWorldObjectState state(flags, p->getState());
+	cur->setPlayer(playerId.getIndex(), state);
 }
 
 
@@ -2434,21 +2519,19 @@ void FaceOff::clientParseEntities(ClientSnapshot* prev, ClientSnapshot* cur, Rak
 
 void FaceOff::clientParseDeltaEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs)
 {
-	int id = 0;
-	bs.Read(id);
+//	int id = 0;
+//	bs.Read(id);
+//	ObjectId objId(id);
 
-	ObjectId objId(id);
-	
+	ObjectId objId;
+	objId.deserialize(bs);
+
 	WorldObject* obj = cl_objects.get(objId);
 
-	clientParseEntityData(obj, flags, bs);
-
+	obj->deserialize_Delta(flags, bs);
 
 	ClientWorldObjectState state(flags, obj->getState());
-	cur->setEntity((int)objId.s.index, state);
-
-//	cur->entities[objId.s.index].flags = flags;
-//	cur->entities[objId.s.index].state = obj->GetState();
+	cur->setEntity(objId.getIndex(), state);
 }
 
 
@@ -2461,7 +2544,7 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 
 		ObjectId objId = obj->objectId;
 		ClientWorldObjectState state(flags, obj->getState());
-		cur->setEntity((int)objId.s.index, state);
+		cur->setEntity(objId.getIndex(), state);
 	}
 	else if (flags & U_WEAPON)
 	{
@@ -2470,12 +2553,7 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 
 		ObjectId objId = obj->objectId;
 		ClientWorldObjectState state(flags, obj->getState());
-		cur->setEntity((int)objId.s.index, state);
-
-		if (obj->objectId.s.index == 27)
-		{
-			utl::clDebug("reading 27 new new mainWeapon");
-		}
+		cur->setEntity(objId.getIndex(), state);
 
 		/*
 		if (obj.objectId.id == 27)
@@ -2531,18 +2609,20 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 
 void FaceOff::clientParseRemoveEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs)
 {
-	int id = 0;
-	bs.Read(id);
+//	int id = 0;
+//	bs.Read(id);
+//	ObjectId objId(id);
 
-	ObjectId objId(id);
+	ObjectId objId;
+	objId.deserialize(bs);
 
 	cl_objects.destroy(objId);
 
 	ClientWorldObjectState state(flags);
-	cur->setEntity((int)objId.s.index, state);
+	cur->setEntity(objId.getIndex(), state);
 }
 
-
+/*
 void FaceOff::clientParseEntityData(WorldObject* obj, int flags, RakNet::BitStream& bs)
 {
 	if (flags & U_POSITION0)		bs.Read(obj->m_position[0]);
@@ -2563,19 +2643,16 @@ void FaceOff::clientParseEntityData(WorldObject* obj, int flags, RakNet::BitStre
 	{
 		bs.Read(tmp);
 	}
-
+	
+	bs.Read(obj->isHit);
+	
 	obj->updateCollisionDetectionGeometry();
 }
-
-
-
-
-
+*/
 
 
 void FaceOff::clientSendCmd()
 {
-
 	if (!m_client.isConnected)
 	{
 		return;
@@ -2591,14 +2668,10 @@ void FaceOff::clientSendCmd()
 
 	UserCmd cmd = clientCreateNewCmd();
 
-
-
 	++m_client.cmdNum;
 	int newCmdIndex = m_client.cmdNum & CMD_BUFFER_MASK;
 	
-
 	// sprintf("		cl cmdNumber %d \n", m_client.cmdNum);
-
 
 	m_client.cmds[newCmdIndex] = cmd;
 
@@ -2650,7 +2723,8 @@ void FaceOff::clientSendPacket(RakNet::BitStream& bs)
 	bsOut.Write(m_client.netchan.outgoingSequence);
 	++m_client.netchan.outgoingSequence;
 
-	bsOut.Write(m_defaultPlayerID);
+//	bsOut.Write(m_defaultPlayerObjectId.getId());
+	m_defaultPlayerObjectId.serialize(bsOut);
 	bsOut.Write(m_client.lastServerMsgSequence);
 	// utl::clDebug("m_client.netchan.outgoingSequence", m_client.netchan.outgoingSequence);
 
@@ -2704,7 +2778,7 @@ UserCmd FaceOff::clientCreateNewCmd()
 	int mx, my;	
 	SDL_GetMouseState(&mx, &my);
 
-	if (cl_players.get(m_defaultPlayerID)->m_camera->getMouseIn())
+	if (cl_players.get(m_defaultPlayerObjectId)->m_camera->getMouseIn())
 	{
 		SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
 	}
@@ -2712,11 +2786,35 @@ UserCmd FaceOff::clientCreateNewCmd()
 	float deltaYaw = 0;
 	float deltaPitch = 0;
 
-	if (cl_players.get(m_defaultPlayerID)->m_camera->getMouseIn())
+
+	if (cl_players.get(m_defaultPlayerObjectId)->m_camera->getMouseIn())
 	{
+
+
+		if (mx != utl::SCREEN_WIDTH_MIDDLE)
+		{
+			int a = 1;
+		}
+
+		if (my != utl::SCREEN_HEIGHT_MIDDLE)
+		{
+			int a = 1;
+		}
+
+
 		deltaYaw = TURN_SPEED * (utl::SCREEN_WIDTH_MIDDLE - mx);
 		deltaPitch = FORWARD_SPEED * (utl::SCREEN_HEIGHT_MIDDLE - my);
+		/*
+		utl::clDebug("mx:", mx);
+		utl::clDebug("my:", my);
+
+		utl::clDebug("player pitch0 deltaPitch:", deltaPitch);
+		utl::clDebug("player yaw0 deltaYaw:", deltaYaw);
+		*/
 	}
+
+
+
 
 	// float deltaYaw = TURN_SPEED * (utl::SCREEN_WIDTH_MIDDLE - mx);
 	// float deltaPitch = FORWARD_SPEED * (utl::SCREEN_HEIGHT_MIDDLE - my);
@@ -2728,11 +2826,23 @@ UserCmd FaceOff::clientCreateNewCmd()
 	// cmd.angles[YAW] += deltaYaw;
 	// cmd.angles[PITCH] += deltaPitch;
 
-	float pitch = cl_players.get(m_defaultPlayerID)->getCameraPitch();
-	float yaw = cl_players.get(m_defaultPlayerID)->getCameraYaw();
+//	float pitch = cl_players.get(m_defaultPlayerObjectId)->getCameraPitch();
+//	float yaw = cl_players.get(m_defaultPlayerObjectId)->getCameraYaw();
+
+	float pitch = cl_players.get(m_defaultPlayerObjectId)->getPitch();
+	float yaw = cl_players.get(m_defaultPlayerObjectId)->getYaw();
+
+
+//	utl::clDebug("player pitch0:", cl_players.get(m_defaultPlayerObjectId)->getPitch());
+//	utl::clDebug("player yaw0:", cl_players.get(m_defaultPlayerObjectId)->getYaw());
 
 	pitch += deltaPitch;
 	yaw += deltaYaw;
+
+
+//	utl::clDebug("player pitch0 deltaPitch:", deltaPitch);
+//	utl::clDebug("player yaw0 deltaYaw:", deltaYaw);
+
 
 	cmd.angles[PITCH] = pitch;
 	cmd.angles[YAW] = yaw;
@@ -2751,6 +2861,8 @@ UserCmd FaceOff::clientCreateNewCmd()
 
 
 
+//	utl::clDebug("player pitch2:", cl_players.get(m_defaultPlayerObjectId)->getPitch());
+//	utl::clDebug("player yaw2:", cl_players.get(m_defaultPlayerObjectId)->getYaw());
 //	pitch = cl_players.get(m_defaultPlayerID)->getCameraPitch();
 //	yaw = cl_players.get(m_defaultPlayerID)->getCameraYaw();
 
@@ -2768,14 +2880,14 @@ void FaceOff::clientPrediction()
 	UserCmd oldestCmd, latestCmd;
 
 	
-	if (cl_players.get(m_defaultPlayerID)->m_camera->getMouseIn())
+	if (cl_players.get(m_defaultPlayerObjectId)->m_camera->getMouseIn())
 	{
 	//	SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
 	}
 	
 
 	// int currentCmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
-	Player* p = cl_players.get(m_defaultPlayerID);
+	Player* p = cl_players.get(m_defaultPlayerObjectId);
 
 
 
@@ -2793,8 +2905,6 @@ void FaceOff::clientPrediction()
 			int cmdNum = m_client.lastAckCmdNum + 1;
 			WorldObjectState playerState = m_client.curSnapshot->playerState;
 			long long latestSnapshotTime = m_client.curSnapshot->serverTime;
-
-
 
 			p->resetCollisionFlags();
 			p->setPosition(playerState.position);
@@ -2821,7 +2931,7 @@ void FaceOff::clientPrediction()
 
 					// utl::clDebug("pos before ", cl_players.get(m_defaultPlayerID)->m_position);
 
-					simulatePlayerPhysics(cl_objectKDtree, p, m_defaultPlayerID, false);
+					simulatePlayerPhysics(cl_objectKDtree, p, false);
 
 					// utl::clDebug("pos after ", cl_players.get(m_defaultPlayerID)->m_position);
 					
@@ -2860,9 +2970,24 @@ void FaceOff::clientPrediction()
 		}
 	}
 
+
 	cmd = m_client.cmds[m_client.cmdNum & CMD_BUFFER_MASK];
-	p->m_camera->setPitch(cmd.angles[PITCH]);
-	p->m_camera->setYaw(cmd.angles[YAW]);
+
+	
+	// for debugging
+	if (!predictionOn)
+	{
+		p->setRotation(cmd.angles[PITCH], cmd.angles[YAW]);
+	}
+
+	p->m_camera->setTargetPosition(p->m_position);
+	p->m_camera->setPitch(p->getPitch());
+	p->m_camera->setYaw(p->getYaw());
+
+//	p->updateWeaponTransform();
+
+
+
 
 
 // run all the commands
@@ -3071,10 +3196,10 @@ void FaceOff::update()
 					isRunning = false;
 					break;
 				case SDLK_x:
-					cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(true);
+					cl_players.get(m_defaultPlayerObjectId)->m_camera->setMouseIn(true);
 					break;
 				case SDLK_z:
-					cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(false);
+					cl_players.get(m_defaultPlayerObjectId)->m_camera->setMouseIn(false);
 					break;
 				default:
 					break;
@@ -3145,6 +3270,10 @@ void FaceOff::update()
 					}
 					break;
 
+				case SDLK_F5:
+					serverRunPhysicsOnReadPacketsFlag = !serverRunPhysicsOnReadPacketsFlag;
+					break;
+
 				default:
 					break;
 			}
@@ -3171,7 +3300,7 @@ void FaceOff::clearCollisionDetectionFlags()
 {
 	for (int i = 0; i < sv_players.getIterationEnd(); i++)
 	{
-		Player* p = sv_players.get(i);
+		Player* p = sv_players.getByIndex(i);
 		if (p == NULL)
 		{
 			continue;
@@ -3206,13 +3335,13 @@ void FaceOff::serverSimulationTick(int msec)
 //	utl::debug("pos before", sv_players.get(m_defaultPlayerID)->m_position);
 	for (int i = 0; i < sv_players.getIterationEnd(); i++)
 	{
-		Player* p = sv_players.get(i);
+		Player* p = sv_players.getByIndex(i);
 		if (p == NULL)
 		{
 			continue;
 		}
 
-		simulatePlayerPhysics(sv_objectKDtree, p, i, true);
+		simulatePlayerPhysics(sv_objectKDtree, p, true);
 	}
 	// utl::debug("pos after", sv_players.get(m_defaultPlayerID)->m_position);
 
@@ -3225,7 +3354,7 @@ void FaceOff::serverSimulationTick(int msec)
 			continue;
 		}
 
-		simulateObjectPhysics(sv_objectKDtree, sv_objects, object, i, true);
+		simulateObjectPhysics(sv_objectKDtree, sv_objects, object, true);
 	}
 
 	int a = 1;
@@ -3237,7 +3366,7 @@ void FaceOff::serverSimulationTick(int msec)
 
 
 
-void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setCollsionFlagsBothWays)
+void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, bool setCollsionFlagsBothWays)
 {
 	if (p == NULL)
 	{
@@ -3263,9 +3392,8 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setColl
 
 	if (singlePlayerMode)
 	{
-		if (i == 1)
+		if (p->objectId.getIndex() == 1)
 		{
-
 			float tempDist = 100;
 
 			if (incrFlag)
@@ -3307,7 +3435,7 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setColl
 			p->setRotation(tempPitch, tempYaw);
 		}
 
-		else if (i == 2)
+		else if (p->objectId.getIndex() == 2)
 		{
 			/*
 			float tempDist = 15;
@@ -3378,7 +3506,8 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setColl
 
 
 
-void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject* object, int i, bool setCollsionFlagsBothWays)
+// void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray<WorldObject*>& objects, WorldObject* object, int i, bool setCollsionFlagsBothWays)
+void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray<WorldObject*>& objects, WorldObject* object, bool setCollsionFlagsBothWays)
 {
 	if (object == NULL)
 	{
@@ -3403,7 +3532,7 @@ void FaceOff::simulateObjectPhysics(KDTree& tree, FOArray& objects, WorldObject*
 			ParticleEffect* effect = wObject->explode();
 			m_smokeEffects.push_back((SmokeEffect*)effect);
 
-			objects.addToDestroyList(i);
+			objects.addToDestroyList(object->objectId);
 			return;
 		}
 	}
@@ -3500,12 +3629,9 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj, bool setCollsionFla
 		WorldObject* neighbor = neighbors[j];
 
 		// cout << neighbor->m_name << endl;
-		/*
-		if (obj->m_name == "player 0" && neighbor->m_name == "ground")
-		{
-			int a = 1;
-		}
 		
+
+		/*
 		if (obj->m_name == "player 0")
 		{
 			cout << neighbor->m_name << endl;
@@ -3593,9 +3719,15 @@ void FaceOff::render()
 
 
 	
-	// utl::clDebug("camera pos ", cl_players.get(m_defaultPlayerID)->m_position);
+//	utl::clDebug("player pos ", cl_players.get(m_defaultPlayerObjectId)->m_position);
 	
-	cl_players.get(m_defaultPlayerID)->updateCamera(m_pipeline);
+//	utl::clDebug("player pitch3:", cl_players.get(m_defaultPlayerObjectId)->getPitch());
+//	utl::clDebug("player yaw3:", cl_players.get(m_defaultPlayerObjectId)->getYaw());
+//	cout << endl;
+
+
+
+	cl_players.get(m_defaultPlayerObjectId)->updateCameraViewMatrix(m_pipeline);
 
 
 
@@ -3808,7 +3940,7 @@ void FaceOff::render()
 
 		for (int i = 0; i < cl_players.getIterationEnd(); i++)
 		{
-			Player* p = cl_players.get(i);
+			Player* p = cl_players.getByIndex(i);
 
 			if (p == NULL)
 			{
@@ -3846,15 +3978,18 @@ void FaceOff::render()
 				continue;
 			}
 			*/
-			if (object->m_name == "player mainWeapon")
-			{
-				int a = 1;
-			}
+
 
 
 			if (!object->shouldRender())
 			{
 				continue;
+			}
+
+
+			if (object->m_name == "ground")
+			{
+				int a = 1;
 			}
 
 			if (object->isHit == false)
@@ -3897,7 +4032,7 @@ void FaceOff::render()
 		// rendering players
 		for (int i = 0; i < cl_players.getIterationEnd(); i++)
 		{
-			Player* p = cl_players.get(i);
+			Player* p = cl_players.getByIndex(i);
 
 			if (p == NULL)
 			{
@@ -4465,9 +4600,14 @@ int main(int argc, char *argv[])
 	Martin.init();
 	Martin.start();
 
-
 	utl::exitSDL(pDisplaySurface);
 	//normal termination
+
+	while (1)
+	{
+
+	}
+
 	cout << "Terminating normally." << endl;
 	return EXIT_SUCCESS;
 }
@@ -4675,15 +4815,15 @@ void FaceOff::initGUI()
 		int BAR_HEIGHT = 10;
 
 		Control* HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GREEN, "icon_hp.png");
-		cl_players.get(m_defaultPlayerID)->m_healthBarGUI = (Bar*)HPBar;
+		cl_players.get(m_defaultPlayerObjectId)->m_healthBarGUI = (Bar*)HPBar;
 
 		xOffset = 175;
 		Control* armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_armor.png");
-		cl_players.get(m_defaultPlayerID)->m_armorBarGUI = (Bar*)armorBar;
+		cl_players.get(m_defaultPlayerObjectId)->m_armorBarGUI = (Bar*)armorBar;
 
 		xOffset = 700;
 		Control* ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
-		cl_players.get(m_defaultPlayerID)->m_ammoBarGUI = (Bar*)ammoBar;
+		cl_players.get(m_defaultPlayerObjectId)->m_ammoBarGUI = (Bar*)ammoBar;
 
 		xOffset = 0; yOffset = 0;
 		Label* fpsLabel = new Label("90", xOffset, yOffset, 50, 50, GRAY);
@@ -4845,7 +4985,7 @@ void FaceOff::clientHandleDeviceEvents()
 
 				}
 				*/
-				cl_players.get(m_defaultPlayerID)->m_camera->setMouseIn(true);
+				cl_players.get(m_defaultPlayerObjectId)->m_camera->setMouseIn(true);
 
 
 
