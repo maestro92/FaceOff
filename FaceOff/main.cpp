@@ -159,7 +159,7 @@ void FaceOff::init()
 	serverRunPhysicsOnReadPacketsFlag = true;
 
 	latencyOptions = { 0, 20, 50, 100, 200 };	// millisecond
-	curLatencyOption = 4;
+	curLatencyOption = 0;
 	latency = latencyOptions[curLatencyOption] / 2;
 
 	packetLossOptions = { 0, 5, 10, 50 };
@@ -1055,36 +1055,32 @@ void FaceOff::broadCastNewClientJoining(ObjectId playerId, RakNet::BitStream& bs
 
 void FaceOff::deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStream& bs, bool curPlayerFlag)
 {
-	p->deserialize_New(bs, &m_modelMgr);
+	// need to call this first before desrailize, otherwise, pickUp won't work properly
+	if (curPlayerFlag == true)
+	{
+		p->setDefaultPlayerFlag(curPlayerFlag);
+	}
 
-	int a = 1;
+	p->deserialize_New(bs, &m_modelMgr);
 
 	if (curPlayerFlag == true)
 	{
 		m_defaultPlayerObjectId = p->objectId;
-		p->setDefaultPlayerFlag(curPlayerFlag);
 	}
 
 	cl_players.set(p, p->objectId);
 	cl_objectKDtree.insert(p);
 
-	a = 1;
 
 	for (int i = 0; i < p->getWeapons().size(); i++)
 	{
 		Weapon* weapon = p->getWeapons()[i];
-		utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
-		a = 1;
 		if (weapon != NULL)
 		{
 			cl_objects.set(weapon, weapon->objectId);
-			utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
-			a = 1;
 		}
 	}
 
-	utl::clDebug("ground scale0, ", cl_objects.getByIndex(0)->m_scale);
-	a = 1;
 
 	/*
 	int weaponCount = 0;
@@ -1531,8 +1527,8 @@ void FaceOff::serverSendClientSnapshot(int clientId)
 
 	RakNet::BitStream bs;
 
-	serverWritePlayers(from, to, clientId, bs);
-	serverWriteEntities(from, to, bs);
+	serverWritePlayers(clientId, from, to, bs);
+	serverWriteEntities(clientId, from, to, bs);
 
 
 	RakNet::BitStream bs1;
@@ -1569,7 +1565,7 @@ void FaceOff::serverSendClientSnapshot(int clientId)
 //	m_server.peer->Send(&bs1, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, m_server.getClient(clientId).systemAddress, false);
 }
 
-void FaceOff::serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, RakNet::BitStream& bs)
+void FaceOff::serverWritePlayers(int clientId, Snapshot* from, Snapshot* to, RakNet::BitStream& bs)
 {
 	for (int i = 0; i < sv_players.getIterationEnd(); i++)
 	{
@@ -1632,7 +1628,7 @@ void FaceOff::serverWriteOtherPlayer(Player* p, RakNet::BitStream& bs)
 }
 
 
-void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStream& bs)
+void FaceOff::serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, RakNet::BitStream& bs)
 {
 	// these are only dynamic objects, we don't care about static objects
 	to->numEntities = 0;
@@ -1657,8 +1653,16 @@ void FaceOff::serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStrea
 
 	for (int i = sv_objects.preferredIterationStart; i < sv_objects.getIterationEnd(); i++)
 	{
-		if (sv_objects.getByIndex(i) != NULL)
+		WorldObject* obj = sv_objects.getByIndex(i);
+
+
+		if (obj != NULL)
 		{
+			if(!obj->shouldSend(clientId))
+			{
+				continue;
+			}
+
 			// recall we are using a circular buffer
 			int index = m_server.nextSnapshotEntityIndex % m_server.snapshotObjectStatesBufferSize;
 

@@ -141,7 +141,7 @@ void WorldObject::updateGameInfo()
 		isHitCounter++;
 	}
 
-	if (isHitCounter >= 50)
+	if (isHitCounter >= 20)
 	{
 		isHit = false;
 		isHitCounter = 0;
@@ -352,6 +352,10 @@ void WorldObject::printParentTrees()
 	}
 }
 
+ bool WorldObject::shouldSend(int clientId)
+{
+	return true;
+}
 
 void WorldObject::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 {

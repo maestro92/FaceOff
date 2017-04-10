@@ -775,12 +775,6 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 
 	if (node->isLeaf())
 	{
-
-		if (player->m_name == "player 0" && (node->id == 6 || node->id == 12))
-		{
-			int a = 1;
-		}
-
 		for (int i = 0; i < node->m_objects.size(); i++)
 		{
 			WorldObject* obj = node->m_objects[i];
@@ -833,12 +827,12 @@ void KDTree::visitNodes(KDTreeNode* node, WorldObject* player, glm::vec3 lineSta
 			}
 			else if (obj->getGeometryType() == CD_SPHERE)
 			{
-				cout << "obj name is" << obj->m_name << endl;
+		//		cout << "obj name is" << obj->m_name << endl;
 				hit = CollisionDetection::testRaySphere(lineStart, lineDir, *(obj->m_sphere), tempHitPoint);
-				if (hit == true)
-					cout << "true" << endl;
-				else
-					cout << "false" << endl;
+		//		if (hit == true)
+		//			cout << "true" << endl;
+		//		else
+		//			cout << "false" << endl;
 			}
 
 			if (hit)
@@ -934,7 +928,7 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 				continue;
 			}
 			
-			
+			/*
 			if (testObject->m_name == "player 0")
 			{
 //				utl::debug("		object name is", obj->m_name);
@@ -944,7 +938,7 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 			{
 				int a = 1;
 			}
-			
+			*/
 
 			if (testObject->ignorePhysicsWith(obj))
 			{

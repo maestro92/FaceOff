@@ -255,24 +255,29 @@ void Player::processUserCmd(const UserCmd& cmd)
 	m_pitch = cmd.angles[PITCH];
 	m_yaw = cmd.angles[YAW];
 
+	bool moved = false;
 	if (cmd.buttons & FORWARD)
 	{
 		updateVelXZ(0.0);
+		moved = true;
 	}
 
 	if (cmd.buttons & BACK)
 	{
 		updateVelXZ(180.0);
+		moved = true;
 	}
 
 	if (cmd.buttons & LEFT)
 	{
 		updateVelXZ(90.0);
+		moved = true;
 	}
 
 	if (cmd.buttons & RIGHT)
 	{
 		updateVelXZ(270);
+		moved = true;
 	}
 
 
@@ -282,6 +287,7 @@ void Player::processUserCmd(const UserCmd& cmd)
 		inMidAir = true;
 		curJumpCoolDown = 0;
 		jumped = true;
+		moved = true;
 	}
 
 	if (inMidAir)
@@ -295,8 +301,14 @@ void Player::processUserCmd(const UserCmd& cmd)
 
 	setRotation(cmd.angles[PITCH], cmd.angles[YAW]);
 
-	updateCollisionDetectionGeometry();
+	if (moved)
+	{
+		updateCollisionDetectionGeometry();
+	}
+	else
+	{
 
+	}
 
 	// update the camera attached to it
 //	m_camera->processUserCmd(cmd, vel, canJumpFlag);

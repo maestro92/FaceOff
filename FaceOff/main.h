@@ -1300,11 +1300,11 @@ class FaceOff
 		void serverSendClientSnapshot(int clientId);
 		void serverBuildClientSnapshot(Snapshot* from, Snapshot* to, RakNet::BitStream& bs);
 		
-		void serverWritePlayers(Snapshot* from, Snapshot* to, int clientId, RakNet::BitStream& bs);
+		void serverWritePlayers(int clientId, Snapshot* from, Snapshot* to, RakNet::BitStream& bs);
 		void serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs);
 		void serverWriteOtherPlayer(Player* p, RakNet::BitStream& bs);
 
-		void serverWriteEntities(Snapshot* from, Snapshot* to, RakNet::BitStream& bs);
+		void serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, RakNet::BitStream& bs);
 		void serverWriteNewWorldObject(WorldObjectState* obj1, RakNet::BitStream& bs);
 		void serverWriteDeltaWorldObject(WorldObjectState* obj0, WorldObjectState* obj1, RakNet::BitStream& bs, bool force);
 		void serverWriteRemoveWorldObject(WorldObjectState* obj0, RakNet::BitStream& bs);

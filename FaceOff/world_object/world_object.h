@@ -177,6 +177,8 @@ class WorldObject
 		// check if we ignore physics testing with the object with the instanceId
 		virtual bool ignorePhysicsWith(WorldObject* obj);
 		
+		virtual bool shouldSend(int clientId);
+
 		bool alreadyTestedPhysicsWith(WorldObject* obj);
 
 		virtual WeaponSlotEnum getWeaponSlot();

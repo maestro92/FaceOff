@@ -89,6 +89,7 @@ class Weapon : public WorldObject
 //		void setGrenadeThrowerId(ObjectId id);
 		int getGrenadeThrowerId();
 
+		virtual bool shouldSend(int clientId);
 
 		bool shouldExplode();
 		

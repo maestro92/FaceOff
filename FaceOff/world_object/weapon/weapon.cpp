@@ -289,6 +289,19 @@ void Weapon::serialize_New(RakNet::BitStream& bs)
 #endif // DEBUG 
 }
 
+
+bool Weapon::shouldSend(int clientId)
+{
+	if (hasOwner() && ownerId.getIndex() == clientId)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
 void Weapon::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 {
 	uint16_t tag = 0;
