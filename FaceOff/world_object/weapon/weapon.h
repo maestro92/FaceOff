@@ -89,7 +89,7 @@ class Weapon : public WorldObject
 //		void setGrenadeThrowerId(ObjectId id);
 		int getGrenadeThrowerId();
 
-		virtual bool shouldSend(int clientId);
+	//	virtual bool shouldSend(int clientId);
 
 		bool shouldExplode();
 		
@@ -99,9 +99,7 @@ class Weapon : public WorldObject
 		
 		virtual void renderGroup(Pipeline& p, Renderer* r);
 		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
-		
-		bool hasOwner();
-		ObjectId ownerId;
+
 
 		std::function<void(Weapon*)> onDelete;
 

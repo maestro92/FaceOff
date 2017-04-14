@@ -537,7 +537,7 @@ void Player::updateContactNormalInfo(glm::vec3 normal)
 
 void Player::updateWeaponTransform()
 {
-	adjustWeaponAndBulletPosition();
+//	adjustWeaponAndBulletPosition();
 	glm::vec3 xOffset;
 	glm::vec3 yOffset;
 	glm::vec3 zOffset;
@@ -617,11 +617,21 @@ void Player::updateWeaponTransform()
 			pos = m_position + xOffset + yOffset + zOffset;
 			m_curWeapon->setPosition(pos);		
 			// dont need to set scale, that's done at pickUp()
+			/*
+			if (getClientId() == 1)
+			{
+				utl::debug("m_xAxis", m_xAxis);
+				utl::debug("m_yAxis", m_yAxis);
+				utl::debug("m_zAxis", m_zAxis);
+				utl::debug("\n");
+			}
+			*/
 		}
 
 
-		m_curWeapon->setRotation(m_rotation);
-	
+	//	m_curWeapon->setRotation(m_rotation);
+		m_curWeapon->setRotation(m_pitch, m_yaw);
+
 	//	glm::mat4 rot = glm::rotate(90.0f, 1.0f, 0.0f, 0.0f);
 	//	m_curWeapon->setRotation(rot);
 	//	utl::clDebug("weaponRotation", m_curWeapon->m_rotation);

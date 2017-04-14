@@ -5,7 +5,7 @@
 WorldObject::WorldObject()
 {
 	active = true;
-
+	isWeapon = false;
 	// m_instanceId = utl::createUniqueObjectID();
 
     m_position = glm::vec3(0.0, 0.0, 0.0);
@@ -43,6 +43,10 @@ WorldObject* WorldObject::getOne()
 	return obj;
 }
 
+bool WorldObject::hasOwner()
+{
+	return ownerId != ObjectId::NO_OWNER;
+}
 
 
 WorldObject::~WorldObject()
@@ -354,7 +358,14 @@ void WorldObject::printParentTrees()
 
  bool WorldObject::shouldSend(int clientId)
 {
-	return true;
+	if (isWeapon && hasOwner() && ownerId.getIndex() == clientId)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
 
 void WorldObject::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
@@ -417,28 +428,34 @@ void WorldObject::deserialize_Delta(int flags, RakNet::BitStream& bs)
 	if (flags & U_ANGLE0)
 	{
 		bs.Read(m_pitch);
-		if (m_name == "player 0")
+		/*
+		if (m_name == "player 1 mainWeapon")
 		{
 			cout << "player 0, pitch" << endl;
 		}
+		*/
 	}
 
 	if (flags & U_ANGLE1)
 	{
 		bs.Read(m_yaw);
-		if (m_name == "player 0")
+		/*
+		if (m_name == "player 1 mainWeapon")
 		{
 			cout << "player 0, yaw" << endl;
 		}
+		*/
 	}
 
 	if (flags & U_ANGLE2)
 	{
 		bs.Read(m_roll);
-		if (m_name == "player 0")
+		/*
+		if (m_name == "player 1 mainWeapon")
 		{
 			cout << "player 0, roll" << endl;
 		}
+		*/
 	}
 
 	bs.Read(isHit);

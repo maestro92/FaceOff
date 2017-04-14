@@ -57,6 +57,7 @@ void Weapon::init(WeaponData data)
 
 	m_explodeDelayMode = false;
 	m_readyToExplode = false;
+	isWeapon = true;
 //	m_grenadeThrowerId = -1;
 }
 
@@ -255,10 +256,6 @@ bool Weapon::ignorePhysicsWith(WorldObject* obj)
 	return false;
 }
 
-bool Weapon::hasOwner()
-{
-	return ownerId != ObjectId::NO_OWNER;
-}
 
 void Weapon::serialize_New(RakNet::BitStream& bs)
 {
@@ -289,18 +286,6 @@ void Weapon::serialize_New(RakNet::BitStream& bs)
 #endif // DEBUG 
 }
 
-
-bool Weapon::shouldSend(int clientId)
-{
-	if (hasOwner() && ownerId.getIndex() == clientId)
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
-}
 
 void Weapon::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 {

@@ -636,11 +636,13 @@ http://stackoverflow.com/questions/7367677/is-memset-more-efficient-than-for-loo
 
 
 
+my thinking is, if something depends on the "compiler", just do it then...
 
 
 
-c++ union and endianess
 
+-	c++ union and endianess
+also realized something
 
 
 
@@ -659,6 +661,25 @@ http://stackoverflow.com/questions/4117002/why-can-i-access-private-variables-in
 The access modifiers work on class level, and not on object level.
 
 That is, two objects of the same class can access each others private members.
+
+
+
+
+
+
+
+
+
+
+
+#############################################################################################
+####################################### 2017 April 11th #####################################
+#############################################################################################
+
+
+I was reading the "An Introduction to GCC" book, and it was talking about macros, and it said 
+
+	"that it is al godo idea to surround macros by parentheses whenever they are part of an expression"
 
 
 

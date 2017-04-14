@@ -72,24 +72,26 @@ struct Snapshot
 
 struct ClientWorldObjectState
 {
-
+	bool valid;
 	int flags;
 	WorldObjectState state;
 
 	ClientWorldObjectState()
 	{
-
+		valid = false;
 	}
 
 	ClientWorldObjectState(int flags)
 	{
 		this->flags = flags;
+		this->valid = true;
 	}
 
 	ClientWorldObjectState(int flags, const WorldObjectState& state)
 	{
 		this->flags = flags;
 		this->state = state;
+		this->valid = true;
 	}
 };
 
@@ -116,14 +118,7 @@ struct ClientSnapshot
 
 	ClientSnapshot()
 	{
-		serverTime = -1;
-		clientReceivedAckTime = -1;
-
-		playerStart = 9999999;
-		playerEnd = -1;
-
-		entityStart = 9999999;
-		entityEnd = -1;
+		reset();
 	}
 
 	bool valid()
@@ -137,7 +132,7 @@ struct ClientSnapshot
 		players[index] = entityState;
 
 		playerStart = std::min(playerStart, index);
-		playerEnd = std::max(playerEnd, index);;
+		playerEnd = std::max(playerEnd, index);
 	}
 
 
@@ -146,7 +141,7 @@ struct ClientSnapshot
 		entities[index] = entityState;
 
 		entityStart = std::min(entityStart, index);
-		entityEnd = std::max(entityEnd, index);;
+		entityEnd = std::max(entityEnd, index);
 	}
 
 	int getPlayerIterStart()
@@ -169,7 +164,21 @@ struct ClientSnapshot
 		return entityEnd + 1;
 	}
 
+	void reset()
+	{
+		serverTime = -1;
+		clientReceivedAckTime = -1;
 
+		playerStart = 9999999;
+		playerEnd = -1;
+
+		entityStart = 9999999;
+		entityEnd = -1;
+
+		memset(players, 0, sizeof(players));
+		memset(entities, 0, sizeof(entities));
+
+	}
 };
 
 

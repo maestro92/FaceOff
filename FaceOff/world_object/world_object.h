@@ -79,6 +79,10 @@ class WorldObject
 
 		ObjectId objectId;
 
+		bool isWeapon;
+		bool hasOwner();
+		ObjectId ownerId;
+
 		bool active;
 		// CollisionDetectionGeometry* m_geometry;
 		
@@ -140,6 +144,11 @@ class WorldObject
 		inline float getYaw();
 		inline float getRoll();
 
+		inline void setPitch(float pitch);
+		inline void setYaw(float yaw);
+		inline void setRoll(float roll);
+
+
 		virtual bool shouldRender();
 
 		virtual void renderSingle(Pipeline& p, Renderer* r);
@@ -177,7 +186,7 @@ class WorldObject
 		// check if we ignore physics testing with the object with the instanceId
 		virtual bool ignorePhysicsWith(WorldObject* obj);
 		
-		virtual bool shouldSend(int clientId);
+		bool shouldSend(int clientId);
 
 		bool alreadyTestedPhysicsWith(WorldObject* obj);
 
@@ -311,7 +320,6 @@ void WorldObject::setRotation(float pitch, float yaw)
 	m_yAxis = glm::vec3(rot[1][0], rot[1][1], rot[1][2]);
 	m_zAxis = glm::vec3(rot[2][0], rot[2][1], rot[2][2]);
 
-
 	/*
 	float temp[16] = { rot[0][0], rot[1][0], rot[2][0], 0,
 	rot[0][1], rot[1][1], rot[2][1], 0,
@@ -342,6 +350,21 @@ inline float WorldObject::getYaw()
 inline float WorldObject::getRoll()
 {
 	return m_roll;
+}
+
+inline void WorldObject::setPitch(float pitch)
+{
+	m_pitch = pitch;
+}
+
+inline void WorldObject::setYaw(float yaw)
+{
+	m_yaw = yaw;
+}
+
+inline void WorldObject::setRoll(float roll)
+{
+	m_roll = roll;
 }
 
 inline void WorldObject::setVelocity(glm::vec3 vel)
@@ -470,6 +493,8 @@ inline WorldObjectState WorldObject::getState()
 	state.objectId = objectId;
 	state.position = m_position;
 	
+
+
 	state.angles[PITCH] = m_pitch;
 	state.angles[YAW] = m_yaw;
 	state.angles[ROLL] = m_roll;

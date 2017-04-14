@@ -125,7 +125,7 @@ const int CLIENT_INPUT_SENT_PER_SECOND = 33;
 const int CLIENT_INPUT_SENT_TIME_STEP = 1000 / SERVER_SNAPSHOT_PER_SECOND;
 
 
-const float SPAWN_POSITION_UNIT_OFFSET = 20.0f;
+const float SPAWN_POSITION_UNIT_OFFSET = 40.0f;
 
 const int INVALID_OBJECT = 0x7FFFFFFF;
 
@@ -513,9 +513,6 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 	//	m_objectKDtree.build(objectsForKDTree, glm::vec3(xboundWithWalls + 1, ybound + 1, zboundWithWalls + 1), glm::vec3(-xboundWithWalls - 1, -1, -zboundWithWalls - 1));
 	tree.build(objectsForKDTree, glm::vec3(xboundWithWalls + 1, ybound + 1, zboundWithWalls + 1), glm::vec3(-xboundWithWalls - 1, -1, -zboundWithWalls - 1));
-
-
-
 }
 
 
@@ -572,30 +569,6 @@ void FaceOff::initObjects()
 	m_smokeEffects.push_back(smEffect);
 	
 }
-
-
-/*
-void FaceOff::lateInitObjects()
-{
-
-	for (auto player : sv_players.objects)
-	{
-		if (player != NULL)
-		{
-			sv_objectKDtree.insert(player);
-		}
-	}
-
-	for (auto player : cl_players.objects)
-	{
-		if (player != NULL)
-		{
-			cl_objectKDtree.insert(player);
-		}
-	}
-
-}
-*/
 
 
 void FaceOff::initRenderers()
@@ -796,9 +769,9 @@ void FaceOff::initNetworkLobby()
 
 						ObjectId newPlayerId = sv_players.nextAvailableId();
 						int newPlayerIndex = newPlayerId.getIndex();
-						float newSpawnX = newPlayerIndex * SPAWN_POSITION_UNIT_OFFSET;
+						float newSpawnX = 0;// newPlayerIndex * SPAWN_POSITION_UNIT_OFFSET;
 						float newSpawnY = 5;
-						float newSpawnZ = newPlayerIndex * SPAWN_POSITION_UNIT_OFFSET;
+						float newSpawnZ = -newPlayerIndex * SPAWN_POSITION_UNIT_OFFSET;
 
 						// Add Player
 						Player* p = new Player(newPlayerId);
@@ -1620,9 +1593,9 @@ void FaceOff::serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, Ra
 	{
 		WorldObject* obj = sv_objects.getByIndex(i);
 
-
 		if (obj != NULL)
 		{
+
 			if(!obj->shouldSend(clientId))
 			{
 				continue;
@@ -1801,16 +1774,33 @@ void FaceOff::serverWriteDeltaWorldObject(WorldObjectState* obj0, WorldObjectSta
 {
 	int flags = 0;
 
+	/*
+	if (sv_objects.get(obj1->objectId)->m_name == "player 1 mainWeapon")
+	{
+		int a = 1;
+	}
+	*/
+
 	// positions
 	if (obj0->position[0] != obj1->position[0])		flags |= U_POSITION0;
 	if (obj0->position[1] != obj1->position[1])		flags |= U_POSITION1;
 	if (obj0->position[2] != obj1->position[2])		flags |= U_POSITION2;
 
 	// angles
-	if (obj0->angles[0] != obj1->angles[0])		flags |= U_ANGLE0;
-	if (obj0->angles[1] != obj1->angles[1])		flags |= U_ANGLE1;
-	if (obj0->angles[2] != obj1->angles[2])		flags |= U_ANGLE2;
+	if (obj0->angles[0] != obj1->angles[0])
+	{
+		flags |= U_ANGLE0;
+	}
 
+	if (obj0->angles[1] != obj1->angles[1])
+	{
+		flags |= U_ANGLE1;
+	}
+
+	if (obj0->angles[2] != obj1->angles[2])
+	{
+		flags |= U_ANGLE2;
+	}
 
 	if (!flags && !force)
 	{
@@ -1863,8 +1853,8 @@ void FaceOff::processUserFireWeapon(Player* p)
 		glm::vec3 lineDir = -p->getZAxis();
 
 
-		utl::debug("lineStart", lineStart);
-		utl::debug("lineDir", lineDir);
+//		utl::debug("lineStart", lineStart);
+//		utl::debug("lineDir", lineDir);
 
 		// m_objectKDtree.visitNodes(m_objectKDtree.m_head, lineStart, lineDir, 500.0f, hitObject, 0, hitNode);
 
@@ -1880,7 +1870,7 @@ void FaceOff::processUserFireWeapon(Player* p)
 
 		if (hitObject != NULL)
 		{
-			utl::debug("name", hitObject->m_name);
+	//		utl::debug("name", hitObject->m_name);
 			hitObject->isHit = true;
 
 			WorldObject* hitPointMark = new WorldObject();
@@ -1893,7 +1883,7 @@ void FaceOff::processUserFireWeapon(Player* p)
 		}
 		else
 		{
-			utl::debug("hitObject is NULL");
+	//		utl::debug("hitObject is NULL");
 		}
 		// VisitNodes
 	}
@@ -1917,15 +1907,10 @@ void FaceOff::clientFrame(long long dt)
 
 	clientReadPackets();
 
-
 	clientSendCmd();
 	clientCheckForResend();
 
-
-
 	processPacketQueue(m_client.realTime, clientToServer, false);
-
-
 
 	// I opt to do player prediction collision detection on the interpolated objects
 	// so I do this before the clientPrediction
@@ -1933,11 +1918,15 @@ void FaceOff::clientFrame(long long dt)
 //	cout << "interpolateEntities" << endl;
 	interpolateEntities();
 
+	if (cl_objects.getByIndex(30) != NULL)
+	{
+	//	utl::clDebug("obj4", cl_objects.getByIndex(30)->m_position);
+	}
 	clientPrediction();
+
 
 	render();	
 	
-	int a = 1;
 //	cout << "clientframe end" << endl;
 
 }
@@ -1996,6 +1985,14 @@ void FaceOff::interpolateEntities()
 				}
 			}
 
+			/*
+			if (temp->valid() && temp->entities[30].valid == true )
+			{
+				std::cout << "						snapshotIndex " << i << " " << temp->entities[30].state.position.x << " " << temp->entities[30].state.position.y << " " << temp->entities[30].state.position.z << endl;
+//				utl::clDebug("	interpolate obj1", cl_objects.getByIndex(30)->m_position);
+			}
+			*/
+
 			if (to && from)
 			{
 				break;
@@ -2012,8 +2009,8 @@ void FaceOff::interpolateEntities()
 			from = to;
 		}
 
-//		std::cout << "to snapshot clientReceivedAckTime " << to->clientReceivedAckTime << endl;
-//		std::cout << "from snapshot clientReceivedAckTime " << from->clientReceivedAckTime << endl;
+	//	std::cout << "to snapshot clientReceivedAckTime " << to->clientReceivedAckTime << endl;
+	//	std::cout << "from snapshot clientReceivedAckTime " << from->clientReceivedAckTime << endl;
 
 		double interpFactor = 0; 
 		if (to != from)
@@ -2126,34 +2123,99 @@ void FaceOff::interpolateEntities()
 			cState1 = to->entities[i];
 			ObjectId objId1 = cState1.state.objectId;
 
+			
+
+
 			if (cState1.flags & U_DELTA)
 			{
 				cState0 = from->entities[i];
-				ObjectId objId0 = cState0.state.objectId;
+			
+				ObjectId objId0 = cState0.state.objectId;				
 				WorldObject* obj = cl_objects.get(objId1);
-//				if (objId0.getId() == objId1.getId())
+
+				// if it's our weapons, we'll deal with it ourselves
+				if (obj->isWeapon == true && obj->ownerId == m_defaultPlayerObjectId)
+				{
+					continue;
+				}
+
+
 				if (objId0 == objId1)
 				{
 					// interpolate position
 					// interpolate angle
-					if (interpolateFlag)
+					if (cState0.valid == false)
 					{
-						obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+						
+						// if (cl_objects.getByIndex(30) != NULL)
+						if (obj->objectId.getIndex() == 30)
+						{
+						//	utl::clDebug("	interpolate obj1", cl_objects.getByIndex(30)->m_position);
+						}
+						
+						obj->m_position = cState1.state.position;
 					}
 					else
 					{
-						obj->m_position = cState1.state.position;
+						if (interpolateFlag)
+						{
+							
+							// if (cl_objects.getByIndex(30) != NULL)
+							if (obj->objectId.getIndex() == 30)
+							{
+							//	utl::clDebug("	interpolate obj2", cl_objects.getByIndex(30)->m_position);
+							}
+							
+							obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+						}
+						else
+						{
+							
+							
+							/*
+							// if (cl_objects.getByIndex(30) != NULL)
+							if (obj->objectId.getIndex() == 30)
+							{
+								utl::clDebug("	interpolate obj3", cl_objects.getByIndex(30)->m_position);
+								utl::clDebug("	state0", cState0.state.position);
+								utl::clDebug("	state1", cState1.state.position);
+							}
+							*/
+							
+							obj->m_position = cState1.state.position;
+						}
 					}
 				}
 				else
 				{
+					
+					// if (cl_objects.getByIndex(30) != NULL)
+					if (obj->objectId.getIndex() == 30)
+					{
+					//	utl::clDebug("interpolate obj4", cl_objects.getByIndex(30)->m_position);
+					}
+					
 					obj->m_position = cState1.state.position;
 				}
 
 				cl_objectKDtree.insert(obj);
+
+				// if (cl_objects.getByIndex(30) != NULL)
+				if (obj->objectId.getIndex() == 30)
+				{
+				//	utl::clDebug("interpolate obj5", cl_objects.getByIndex(30)->m_position);
+				}
 			}
 		}
+	//	utl::clDebug("	finishin interpoalting");
 	}
+	
+	/*
+	else
+	{
+		utl::clDebug("	cursnapshot Null");
+	}
+	*/
 }
 
 
@@ -2274,6 +2336,9 @@ void FaceOff::clientParseSnapshot(RakNet::BitStream& bs)
 	ClientSnapshot* prev = NULL;
 	ClientSnapshot* cur = &m_client.snapshots[m_client.netchan.incomingSequence & CL_SNAPSHOT_BUFFER_MASK];
 	
+
+	cur->reset();
+
 	bs.Read(cur->serverTime);
 //	cout << "	cur serverTime: " << cur->serverTime << endl;
 
@@ -2385,9 +2450,9 @@ void FaceOff::clientParseEntities(ClientSnapshot* prev, ClientSnapshot* cur, Rak
 
 
 		// ObjectId objId(id1);
+		
+		// cout << "flags is " << flags << endl;
 		/*
-		cout << "flags is " << flags << endl;
-
 		if (flags & U_DELTA)
 		{
 			cout << "U_DELTA " << endl;
@@ -2401,8 +2466,9 @@ void FaceOff::clientParseEntities(ClientSnapshot* prev, ClientSnapshot* cur, Rak
 			cout << "U_REMOVE " << flags << endl;
 		}
 
-		cout << "id1 is " << objId.s.index << endl;
+		// cout << "id1 is " << objId.s.index << endl;
 		*/
+
 		if (flags & U_DELTA)
 		{
 	//		utl::debug("	U_DELTA snapshot");
@@ -2438,6 +2504,14 @@ void FaceOff::clientParseDeltaEntity(ClientSnapshot* cur, int flags, RakNet::Bit
 
 	obj->deserialize_Delta(flags, bs);
 
+	/*
+	utl::debug("default index", m_defaultPlayerObjectId.getIndex());
+	if (m_defaultPlayerObjectId.getIndex() == 0 && obj->objectId.getIndex() == 30)
+	{
+		utl::debug("client parse: obj in deltaEntity", obj->m_position);
+	}
+	*/
+
 	ClientWorldObjectState state(flags, obj->getState());
 	cur->setEntity(objId.getIndex(), state);
 }
@@ -2453,6 +2527,13 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 		ObjectId objId = obj->objectId;
 		ClientWorldObjectState state(flags, obj->getState());
 		cur->setEntity(objId.getIndex(), state);
+	
+		/*
+		if (m_defaultPlayerObjectId.getIndex() == 0 && obj->objectId.getIndex() == 30)
+		{
+			utl::debug("client parse: obj in addEntity", obj->m_position);
+		}
+		*/
 	}
 	else if (flags & U_WEAPON)
 	{
@@ -2462,6 +2543,13 @@ void FaceOff::clientParseAddEntity(ClientSnapshot* cur, int flags, RakNet::BitSt
 		ObjectId objId = obj->objectId;
 		ClientWorldObjectState state(flags, obj->getState());
 		cur->setEntity(objId.getIndex(), state);
+
+		/*
+		if (m_defaultPlayerObjectId.getIndex() == 0 && obj->objectId.getIndex() == 30)
+		{
+			utl::debug("client parse: obj in addEntity weapon", obj->m_position);
+		}
+		*/
 
 		/*
 		if (obj.objectId.id == 27)
@@ -2528,6 +2616,14 @@ void FaceOff::clientParseRemoveEntity(ClientSnapshot* cur, int flags, RakNet::Bi
 
 	ClientWorldObjectState state(flags);
 	cur->setEntity(objId.getIndex(), state);
+
+	/*
+	if (m_defaultPlayerObjectId.getIndex() == 0 && objId.getIndex() == 30)
+	{
+		utl::debug("client parse: obj in deltaRemoveEntity", state.state.position);
+	}
+	*/
+
 }
 
 
@@ -2782,16 +2878,13 @@ void FaceOff::clientPrediction()
 			*/
 		}
 	}
-
-
-	cmd = m_client.cmds[m_client.cmdNum & CMD_BUFFER_MASK];
-
-	
-	// for debugging
-	if (!predictionOn)
+	else
 	{
+		cmd = m_client.cmds[m_client.cmdNum & CMD_BUFFER_MASK];
 		p->setRotation(cmd.angles[PITCH], cmd.angles[YAW]);
+		p->updateWeaponTransform();
 	}
+
 
 	p->m_camera->setTargetPosition(p->m_position);
 	p->m_camera->setPitch(p->getPitch());
@@ -3170,7 +3263,13 @@ void FaceOff::serverSimulationTick(int msec)
 		simulateObjectPhysics(sv_objectKDtree, sv_objects, object, true);
 	}
 
-	int a = 1;
+	/*
+	if (sv_objects.getByIndex(30) != NULL)
+	{
+		utl::debug("sv obj", sv_objects.getByIndex(30)->m_position);
+	}
+	*/
+	
 
 	sv_objects.destroyObjects();
 }
@@ -3202,50 +3301,62 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, bool setCollsionFla
 	*/
 
 	p->updateMidAirVelocity();
-
+#if 0
+	float step = 5;
 	if (singlePlayerMode)
 	{
 		if (p->objectId.getIndex() == 1)
 		{
-			float tempDist = 100;
+			float tempDist = 120;
+
+			p->m_position.z = 90;
 
 			if (incrFlag)
-				p->m_position.z += 0.05;
+			{
+				p->m_position.x += step;
+			}
 			else
-				p->m_position.z -= 0.05;
+			{
+				p->m_position.x -= step;
+			}
 
-			if (p->m_position.z > tempDist)
+			if (p->m_position.x > tempDist)
 				incrFlag = false;
 
-			if (p->m_position.z < 20)
+			if (p->m_position.x < -tempDist)
 				incrFlag = true;
-
-
 
 
 			float tempMaxAngle = 150;
 
+			float pitch = p->getPitch();
+			float yaw = p->getYaw();
+
 			if (incrAngleFlag)
 			{
-				tempPitch = 0;
-				tempYaw += 1;
+				p->setPitch(0);
+				p->setYaw(yaw + 1);
 			}
 			else
 			{
-				tempPitch = 0;
-				tempYaw -= 1;
+				p->setPitch(0);
+				p->setYaw(yaw - 1);
 			}
 
-			if (tempPitch > tempMaxAngle)
+			pitch = p->getPitch();
+			yaw = p->getYaw();
+
+			if (pitch > tempMaxAngle)
 			{
 				incrAngleFlag = false;
 			}
-			if (tempPitch < -tempMaxAngle)
+			if (pitch < -tempMaxAngle)
 			{
 				incrAngleFlag = true;
 			}
 
-			p->setRotation(tempPitch, tempYaw);
+			p->setRotation(pitch, yaw);
+		//	p->updateWeaponTransform();
 		}
 
 		else if (p->objectId.getIndex() == 2)
@@ -3293,10 +3404,11 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, bool setCollsionFla
 			//	tempYaw2 = 0;
 
 			p->setRotation(tempPitch2, tempYaw2);
+		//	p->updateWeaponTransform();
 		}
 
 	}
-
+#endif
 
 
 	p->updateCollisionDetectionGeometry();
@@ -3308,6 +3420,25 @@ void FaceOff::simulatePlayerPhysics(KDTree& tree, Player* p, bool setCollsionFla
 	
 	tree.reInsert(p);
 	p->updateWeaponTransform();
+	/*
+	if (sv_objects.getByIndex(30) != NULL)
+	{
+				utl::clDebug("		object", sv_objects.getByIndex(30)->m_position);
+	}
+	*/
+
+	/*
+	if (p->m_name == "player 1")
+	{
+		
+		cout << "player1 " << p->getPitch() << " " << p->getYaw() << " " << p->getRoll() << endl;
+
+		WorldObject* weapon = sv_objects.getByIndex(30);
+
+		cout << "player1 weapon " << weapon->getPitch() << " " << weapon->getYaw() << " " << weapon->getRoll() << endl;
+	}
+	*/
+
 
 }
 
@@ -3770,7 +3901,10 @@ void FaceOff::render()
 			if (object == NULL)
 				continue;
 
-
+			if (m_defaultPlayerObjectId.getIndex() == 0 && object->objectId.getIndex() == 30)
+			{
+		//		utl::clDebug("		object", object->m_position);
+			}
 			/*
 			if (object->getObjectType() == WEAPON)
 			{
@@ -3785,11 +3919,12 @@ void FaceOff::render()
 				continue;
 			}
 
-
+			/*
 			if (object->m_name == "ground")
 			{
 				int a = 1;
 			}
+			*/
 
 			if (object->isHit == false)
 			{
