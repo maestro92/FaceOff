@@ -405,7 +405,7 @@ void WorldObject::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 }
 
 
-
+#if 0
 void WorldObject::serialize_Delta(int flags, RakNet::BitStream& bs)
 {
 	if (flags & U_POSITION0)		bs.Write(m_position[0]);
@@ -464,4 +464,4 @@ void WorldObject::deserialize_Delta(int flags, RakNet::BitStream& bs)
 	setRotation(m_pitch, m_yaw);
 	updateCollisionDetectionGeometry();
 }
-
+#endif

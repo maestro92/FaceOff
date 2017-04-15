@@ -27,7 +27,7 @@
 #include "glm/gtx/quaternion.hpp"
 #include "glm/gtx/euler_angles.hpp"
 #include "glm/gtx/norm.hpp"
-
+#include "glm/gtx/compatibility.hpp"
 
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
 

@@ -47,7 +47,32 @@ bool utl::chance(float percent)
 
 glm::vec3 utl::interpolateEntityPosition(glm::vec3 pos0, glm::vec3 pos1, float interpFactor)
 {
-	glm::vec3 pos;
-	pos = pos0 + (pos1 - pos0) * interpFactor;
-	return pos;
+	return pos0 + (pos1 - pos0) * interpFactor;
 }
+
+
+glm::vec3 utl::interpolateEntityAngles(glm::vec3 pos0, glm::vec3 pos1, float interpFactor)
+{
+	glm::vec3 diff = pos1 - pos0;
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (diff[i] > 180)
+		{
+			diff[i] -= 360;
+		}
+
+		if (diff[i] < -180)
+		{
+			diff[i] += 360;
+		}
+	}
+
+	return pos0 + diff * interpFactor;
+}
+
+float utl::interpolateAngle(float f0, float f1, float interpFactor)
+{
+	return 0;
+}
+

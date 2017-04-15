@@ -505,6 +505,8 @@ namespace utl
 	float barycentricInterpolation(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec2 coord);
 
 	glm::vec3 interpolateEntityPosition(glm::vec3 pos0, glm::vec3 pos1, float interpFactor);
+	glm::vec3 interpolateEntityAngles(glm::vec3 pos0, glm::vec3 pos1, float interpFactor);
+	float interpolateAngle(float f0, float f1, float interpFactor);
 
 	uint32_t createUniqueObjectID();
 

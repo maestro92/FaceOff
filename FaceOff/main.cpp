@@ -159,11 +159,11 @@ void FaceOff::init()
 	serverRunPhysicsOnReadPacketsFlag = true;
 
 	latencyOptions = { 0, 20, 50, 100, 200 };	// millisecond
-	curLatencyOption = 0;
+	curLatencyOption = latencyOptions.size()-1;
 	latency = latencyOptions[curLatencyOption] / 2;
 
-	packetLossOptions = { 0, 5, 10, 50 };
-	packetLoss = 0;
+	packetLossOptions = { 0, 5, 10 };
+	packetLoss = packetLossOptions.size() - 1;
 
 	curLatencyOption = 0;
 
@@ -1538,10 +1538,11 @@ void FaceOff::serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs)
 	flags |= U_POSITION2;
 
 	bs.Write(flags);
-//	bs.Write(p->objectId.getId());
 	p->objectId.serialize(bs);
 
-	p->serialize_Delta(flags, bs);
+	WorldObjectState state = p->getState();
+	state.serialize(flags, bs);
+	// p->serialize_Delta(flags, bs);
 }
 
 
@@ -1559,10 +1560,11 @@ void FaceOff::serverWriteOtherPlayer(Player* p, RakNet::BitStream& bs)
 	flags |= U_ANGLE2;
 
 	bs.Write(flags);
-//	bs.Write(p->objectId.getId());
 	p->objectId.serialize(bs);
 
-	p->serialize_Delta(flags, bs);
+	WorldObjectState state = p->getState();
+	state.serialize(flags, bs);
+//	p->serialize_Delta(flags, bs);
 }
 
 
@@ -1588,7 +1590,6 @@ void FaceOff::serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, Ra
 	}
 	*/
 
-
 	for (int i = sv_objects.preferredIterationStart; i < sv_objects.getIterationEnd(); i++)
 	{
 		WorldObject* obj = sv_objects.getByIndex(i);
@@ -1596,11 +1597,26 @@ void FaceOff::serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, Ra
 		if (obj != NULL)
 		{
 
+/*
+			if (clientId == 1 && obj->objectId.getIndex() == 27)
+			{
+				utl::debug("mainWeapon 27 owner is", obj->ownerId.getIndex());
+		
+				if (obj->shouldSend(clientId))
+				{
+					utl::debug("sending");
+				}
+				else
+				{
+					utl::debug("not sending");
+				}
+			}
+
 			if(!obj->shouldSend(clientId))
 			{
 				continue;
 			}
-
+*/
 			// recall we are using a circular buffer
 			int index = m_server.nextSnapshotEntityIndex % m_server.snapshotObjectStatesBufferSize;
 
@@ -1684,6 +1700,13 @@ void FaceOff::serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, Ra
 		{
 			if (id1.getTag() == id0.getTag())
 			{
+				/*
+				if (clientId == 1 && obj1->objectId.getIndex() == 27)
+				{
+					cout << "delta" << endl;
+				}
+				*/
+
 				serverWriteDeltaWorldObject(obj0, obj1, bs, false);
 				++i0;
 				++i1;
@@ -1692,10 +1715,22 @@ void FaceOff::serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, Ra
 			else
 			{
 				// remove old object
+			/*
+				if (clientId == 1 && obj1->objectId.getIndex() == 27)
+				{
+					cout << "remove 1" << endl;
+				}
+			*/
 				serverWriteRemoveWorldObject(obj0, bs);
 				++i0;
 
 				// add new object
+			/*
+				if (clientId == 1 && obj1->objectId.getIndex() == 27)
+				{
+					cout << "New 1" << endl;
+				}
+			*/
 				serverWriteNewWorldObject(obj1, bs);
 				++i1;
 				continue;
@@ -1705,6 +1740,12 @@ void FaceOff::serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, Ra
 		// adding new entity
 		if (id1.getIndex() < id0.getIndex())
 		{
+			/*
+			if (clientId == 1 && obj1->objectId.getIndex() == 27)
+			{
+				cout << "New 2" << endl;
+			}
+			*/
 			serverWriteNewWorldObject(obj1, bs);
 			++i1;
 			continue;
@@ -1715,6 +1756,12 @@ void FaceOff::serverWriteEntities(int clientId, Snapshot* from, Snapshot* to, Ra
 		// removing entity
 		if (id1.getIndex() > id0.getIndex())
 		{
+			/*
+			if (clientId == 1 && obj1->objectId.getIndex() == 27)
+			{
+				cout << "remove 2" << endl;
+			}
+			*/
 			serverWriteRemoveWorldObject(obj0, bs);
 			++i0;
 			continue;
@@ -1813,8 +1860,13 @@ void FaceOff::serverWriteDeltaWorldObject(WorldObjectState* obj0, WorldObjectSta
 //	bs.Write(obj0->objectId.getId());
 
 	bs.Write(flags);
-	obj0->objectId.serialize(bs);
-	sv_objects.get(obj1->objectId)->serialize_Delta(flags, bs);
+	obj1->objectId.serialize(bs);
+	obj1->serialize(flags, bs);
+
+//	sv_objects.get(obj1->objectId)->serialize_Delta(flags, bs);
+
+//	WorldObjectState state = p->getState();
+//	state.serialize(flags, bs);
 }
 
 
@@ -2081,27 +2133,37 @@ void FaceOff::interpolateEntities()
 
 			//		utl::clDebug("player interpFactor", interpFactor);
 			//		utl::clDebug("state1 pos", cState1.state.position);
-					if (interpolateFlag)
-					{
-						p->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
 
+
+					if (cState0.valid == false)
+					{
+						p->m_position = cState1.state.position;
+						p->setRotation(cState1.state.angles[PITCH], cState1.state.angles[YAW]);
 					}
 					else
 					{
-						p->m_position = cState1.state.position;
-						
+						if (interpolateFlag)
+						{
+							p->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);							
+							glm::vec3 angles = utl::interpolateEntityAngles(cState0.state.angles, cState1.state.angles, interpFactor);
+
+							p->setRotation(angles[PITCH], angles[YAW]);
+						}
+						else
+						{
+							p->m_position = cState1.state.position;
+							p->setRotation(cState1.state.angles[PITCH], cState1.state.angles[YAW]);
+						}
 					}
 					
-					
 					//		utl::clDebug("state0 pos", cState0.state.position);
-
-
 				}
 				else
 				{
 					p->m_position = cState1.state.position;
+					p->setRotation(cState1.state.angles[PITCH], cState1.state.angles[YAW]);
 				}
-
+				p->isHit = cState1.state.isHit;
 				p->updateWeaponTransform();
 				p->updateCollisionDetectionGeometry();
 				cl_objectKDtree.insert(p);
@@ -2139,6 +2201,12 @@ void FaceOff::interpolateEntities()
 				WorldObject* obj = cl_objects.get(objId1);
 
 				// if it's our weapons, we'll deal with it ourselves
+
+				if (obj == NULL)
+				{
+					utl::debug("obj1Index is ", objId1.getIndex());
+				}
+
 				if (obj->isWeapon == true && obj->hasOwner())
 				{
 					/*
@@ -2171,6 +2239,7 @@ void FaceOff::interpolateEntities()
 						}
 						
 						obj->m_position = cState1.state.position;
+						obj->setRotation(cState1.state.angles[PITCH], cState1.state.angles[YAW]);
 					}
 					else
 					{
@@ -2183,7 +2252,12 @@ void FaceOff::interpolateEntities()
 							//	utl::clDebug("	interpolate obj2", cl_objects.getByIndex(30)->m_position);
 							}
 							
+							
+
 							obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+							glm::vec3 angles = utl::interpolateEntityAngles(cState0.state.angles, cState1.state.angles, interpFactor);
+
+							obj->setRotation(angles[PITCH], angles[YAW]);
 							// interpolate angles
 						}
 						else
@@ -2201,6 +2275,7 @@ void FaceOff::interpolateEntities()
 							*/
 							
 							obj->m_position = cState1.state.position;
+							obj->setRotation(cState1.state.angles[PITCH], cState1.state.angles[YAW]);
 						}
 					}
 				}
@@ -2214,8 +2289,9 @@ void FaceOff::interpolateEntities()
 					}
 					
 					obj->m_position = cState1.state.position;
+					obj->setRotation(cState1.state.angles[PITCH], cState1.state.angles[YAW]);
 				}
-
+				obj->isHit = cState1.state.isHit;
 				obj->updateCollisionDetectionGeometry();
 				cl_objectKDtree.insert(obj);
 
@@ -2416,28 +2492,45 @@ void FaceOff::clientParsePlayer(ClientSnapshot* cur, int flags, RakNet::BitStrea
 
 }
 
-void FaceOff::clientParseDefaultPlayer(ClientSnapshot* cur, int flags, ObjectId playerId, RakNet::BitStream& bs)
+void FaceOff::clientParseDefaultPlayer(ClientSnapshot* curSnapshot, int flags, ObjectId playerId, RakNet::BitStream& bs)
 {
-	Player* p = cl_players.get(playerId);
+//	Player* p = cl_players.get(playerId);
+//	p->deserialize_Delta(flags, bs);
 
-	p->deserialize_Delta(flags, bs);
+//	ClientWorldObjectState state(flags, p->getState());
+//	cur->setPlayer(playerId.getIndex(), state);
 
-	ClientWorldObjectState state(flags, p->getState());
-	cur->setPlayer(playerId.getIndex(), state);
+//	cur->playerState = p->getState();
 
-	cur->playerState = p->getState();
+	WorldObjectState state;
+	state.objectId = playerId;
+	state.deserialize(flags, bs);
+	
+	ClientWorldObjectState cState(flags, state);
+	curSnapshot->setPlayer(playerId.getIndex(), cState);
+
+	curSnapshot->playerState = state;
 }
 
 
 //void FaceOff::clientParseOtherPlayer(ClientSnapshot* cur, int flags, int playerId, RakNet::BitStream& bs)
-void FaceOff::clientParseOtherPlayer(ClientSnapshot* cur, int flags, ObjectId playerId, RakNet::BitStream& bs)
+void FaceOff::clientParseOtherPlayer(ClientSnapshot* curSnapshot, int flags, ObjectId playerId, RakNet::BitStream& bs)
 {
+	WorldObjectState state;
+	state.objectId = playerId;
+	state.deserialize(flags, bs);
+
+	ClientWorldObjectState cState(flags, state);
+	curSnapshot->setPlayer(playerId.getIndex(), cState);
+
+/*
 	Player* p = cl_players.get(playerId);
 
 	p->deserialize_Delta(flags, bs);
 
 	ClientWorldObjectState state(flags, p->getState());
 	cur->setPlayer(playerId.getIndex(), state);
+*/
 }
 
 
@@ -2510,29 +2603,28 @@ void FaceOff::clientParseEntities(ClientSnapshot* prev, ClientSnapshot* cur, Rak
 }
 
 
-void FaceOff::clientParseDeltaEntity(ClientSnapshot* cur, int flags, RakNet::BitStream& bs)
+void FaceOff::clientParseDeltaEntity(ClientSnapshot* curSnapshot, int flags, RakNet::BitStream& bs)
 {
-//	int id = 0;
-//	bs.Read(id);
-//	ObjectId objId(id);
-
-	ObjectId objId;
-	objId.deserialize(bs);
-
-	WorldObject* obj = cl_objects.get(objId);
-
-	obj->deserialize_Delta(flags, bs);
+	WorldObjectState state;
+	state.objectId.deserialize(bs);
+	state.deserialize(flags, bs);
 
 	/*
-	utl::debug("default index", m_defaultPlayerObjectId.getIndex());
-	if (m_defaultPlayerObjectId.getIndex() == 0 && obj->objectId.getIndex() == 30)
+	// utl::debug("default index", m_defaultPlayerObjectId.getIndex());
+	if (m_defaultPlayerObjectId.getIndex() == 1 && state.objectId.getIndex() == 27)
 	{
-		utl::debug("client parse: obj in deltaEntity", obj->m_position);
+		utl::debug("client parse: obj in deltaEntity", state.position);
+	}
+	
+
+	if (state.objectId.getIndex() == 27)
+	{
+		utl::debug("client parse: obj in deltaEntity", state.position);
 	}
 	*/
 
-	ClientWorldObjectState state(flags, obj->getState());
-	cur->setEntity(objId.getIndex(), state);
+	ClientWorldObjectState cState(flags, state);
+	curSnapshot->setEntity(state.objectId.getIndex(), cState);
 }
 
 

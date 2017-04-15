@@ -317,6 +317,55 @@ struct WorldObjectState
 		this->angles = angles;
 		this->isHit = isHit;
 	}
+
+
+	void serialize(int flags, RakNet::BitStream& bs)
+	{
+		if (flags & U_POSITION0)		bs.Write(position[0]);
+		if (flags & U_POSITION1)		bs.Write(position[1]);
+		if (flags & U_POSITION2)		bs.Write(position[2]);
+
+		if (flags & U_ANGLE0)		bs.Write(angles[PITCH]);
+		if (flags & U_ANGLE1)		bs.Write(angles[YAW]);
+		if (flags & U_ANGLE2)		bs.Write(angles[ROLL]);
+
+		bs.Write(isHit);
+	}
+
+	void deserialize(int flags, RakNet::BitStream& bs)
+	{
+		if (flags & U_POSITION0)
+		{
+			bs.Read(position[0]);
+		}
+
+		if (flags & U_POSITION1)
+		{
+			bs.Read(position[1]);
+		}
+
+		if (flags & U_POSITION2)
+		{
+			bs.Read(position[2]);
+		}
+
+		if (flags & U_ANGLE0)
+		{
+			bs.Read(angles[PITCH]);
+		}
+
+		if (flags & U_ANGLE1)
+		{
+			bs.Read(angles[YAW]);
+		}
+
+		if (flags & U_ANGLE2)
+		{
+			bs.Read(angles[ROLL]);
+		}
+
+		bs.Read(isHit);
+	}
 };
 
 
