@@ -2084,11 +2084,14 @@ void FaceOff::interpolateEntities()
 					if (interpolateFlag)
 					{
 						p->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+
 					}
 					else
 					{
 						p->m_position = cState1.state.position;
+						
 					}
+					
 					
 					//		utl::clDebug("state0 pos", cState0.state.position);
 
@@ -2099,6 +2102,8 @@ void FaceOff::interpolateEntities()
 					p->m_position = cState1.state.position;
 				}
 
+				p->updateWeaponTransform();
+				p->updateCollisionDetectionGeometry();
 				cl_objectKDtree.insert(p);
 
 				/*
@@ -2134,10 +2139,22 @@ void FaceOff::interpolateEntities()
 				WorldObject* obj = cl_objects.get(objId1);
 
 				// if it's our weapons, we'll deal with it ourselves
-				if (obj->isWeapon == true && obj->ownerId == m_defaultPlayerObjectId)
+				if (obj->isWeapon == true && obj->hasOwner())
 				{
+					/*
+					if (obj->ownerId == m_defaultPlayerObjectId)
+					{
+						continue;
+					}
+					else if (obj->ownerId != m_defaultPlayerObjectId)
+					{
+						Player* p = cl_players.get(obj->ownerId);
+					}
+					*/
 					continue;
 				}
+
+				
 
 
 				if (objId0 == objId1)
@@ -2167,6 +2184,7 @@ void FaceOff::interpolateEntities()
 							}
 							
 							obj->m_position = utl::interpolateEntityPosition(cState0.state.position, cState1.state.position, interpFactor);
+							// interpolate angles
 						}
 						else
 						{
@@ -2198,6 +2216,7 @@ void FaceOff::interpolateEntities()
 					obj->m_position = cState1.state.position;
 				}
 
+				obj->updateCollisionDetectionGeometry();
 				cl_objectKDtree.insert(obj);
 
 				// if (cl_objects.getByIndex(30) != NULL)
