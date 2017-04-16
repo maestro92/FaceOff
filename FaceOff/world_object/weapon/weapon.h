@@ -36,11 +36,7 @@ class Weapon : public WorldObject
 
 		void init(WeaponData data);
 
-		int m_damage;
-		Magazine m_magazine;
-		int m_magazineCount;
-		int m_rpm;
-		long long m_roundCooldown;	// cooldowns between rounds
+
 
 		virtual void updateGameInfo();
 
@@ -67,6 +63,9 @@ class Weapon : public WorldObject
 
 		ParticleEffect* explode();
 
+		int getCurAmmo();
+		
+
 
 		void startExplodeDelayTimer();
 
@@ -91,7 +90,12 @@ class Weapon : public WorldObject
 //		void setGrenadeThrowerId(ObjectId id);
 		int getGrenadeThrowerId();
 
+		int getTotalAmmoCount();
+
 	//	virtual bool shouldSend(int clientId);
+
+		void reload();
+		void fire();
 
 		bool shouldExplode();
 		
@@ -102,6 +106,8 @@ class Weapon : public WorldObject
 		virtual void renderGroup(Pipeline& p, Renderer* r);
 		virtual void renderWireFrameGroup(Pipeline& p, Renderer* r);
 
+		int getDamage();
+		long long getRoundsCooldown();
 
 		std::function<void(Weapon*)> onDelete;
 
@@ -111,6 +117,14 @@ class Weapon : public WorldObject
 
 	private:
 		void setData(WeaponData data);
+
+		int m_damage;
+		Magazine m_magazine;
+
+		int m_curNumMagazine;
+		int m_maxNumMagazine;
+		int m_rpm;
+		long long m_roundsCooldown;	// cooldowns between rounds
 
 
 		long long m_explodeDelayStartTime;

@@ -810,7 +810,7 @@ int Player::getCurArmor()
 
 int Player::getCurAmmo()
 {
-	return 0;
+	return m_curWeapon->getCurAmmo();
 }
 
 void Player::pickUp(Weapon* weapon)
@@ -955,9 +955,7 @@ Weapon* Player::drop()
 	pos += -10.0f * dir;
 
 
-
 //	utl::debug("weapon pos is", pos);
-
 //	drop->setPosition(pos);
 //	drop->updateAABB();
 	drop->setPosition(pos);
@@ -976,8 +974,6 @@ Weapon* Player::drop()
 	m_curWeapon = m_weapons[slot];
 
 	return drop;
-
-//	m_curWeapon = weapon;
 }
 
 void Player::reloadWeapon()
@@ -994,18 +990,26 @@ Weapon* Player::getWeapon(int index)
 
 void Player::fireWeapon(long long nowTime_ms)
 {
-	if (m_curWeapon->getWeaponSlot() == PROJECTILE)
+	if (m_curWeapon == NULL)
 	{
-		m_grenadeGatherMode = true;
+		return;
 	}
+	else
+	{
+		if (m_curWeapon->getWeaponSlot() == PROJECTILE)
+		{
+			m_grenadeGatherMode = true;
+		}
 
-	cout << "firing Weapon " << endl;
-	cout << "nowTime_ms " << nowTime_ms << endl;
-	cout << "m_lastFiredTime " << m_lastFiredTime << endl;
-	cout << "m_curWeapon->m_roundCooldown " << m_curWeapon->m_roundCooldown << endl << endl;
+		cout << "firing Weapon " << endl;
+		cout << "nowTime_ms " << nowTime_ms << endl;
+		cout << "m_lastFiredTime " << m_lastFiredTime << endl;
+		cout << "m_curWeapon->m_roundCooldown " << m_curWeapon->getRoundsCooldown() << endl << endl;
 
-	m_lastFiredTime = nowTime_ms;
+		m_curWeapon->fire();
 
+		m_lastFiredTime = nowTime_ms;
+	}
 	/*
 	Particle bullet;
 
@@ -1034,7 +1038,7 @@ bool Player::notInAttackCooldown(long long nowTime_ms)
 	cout << "m_curWeapon->m_roundCooldown " << m_curWeapon->m_roundCooldown << endl << endl;
 	*/
 
-	return (nowTime_ms - m_lastFiredTime > m_curWeapon->m_roundCooldown);
+	return (nowTime_ms - m_lastFiredTime > m_curWeapon->getRoundsCooldown());
 }
 
 bool Player::inGrenadeGatherMode()

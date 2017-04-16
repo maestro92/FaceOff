@@ -219,6 +219,8 @@ class WorldObject
 
 		void printParentTrees();
 
+		bool isDead();
+
 		uint8_t collisionFlags[ENTITY_COLLISION_FLAG_SIZE];
 	protected:
 

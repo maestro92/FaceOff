@@ -1941,7 +1941,7 @@ void FaceOff::processUserFireWeapon(Player* p)
 			hitPointMark->m_name = "hitMark";
 			//								m_hitPointMarks.push_back(hitPointMark);
 			
-			int damage = p->getCurWeapon()->m_damage;
+			int damage = p->getCurWeapon()->getDamage();
 			hitObject->takeDamage(damage);
 		}
 		else
@@ -3036,6 +3036,16 @@ void FaceOff::clientPrediction()
 	if (cmd.buttons & ATTACK)
 	{
 		p->fireWeapon(m_client.realTime);
+	}
+
+	if (p->isDead())
+	{
+		// reposition camera, then zoom slightly out
+		// update the target
+	}
+	else
+	{
+
 	}
 
 	p->m_camera->setTargetPosition(p->m_position);
@@ -4221,8 +4231,8 @@ void FaceOff::render()
 	int fps = getAverageFPS();
 	m_gui.setFPS(fps);
 	m_gui.setHP(defaultPlayer->getCurHP());
-	m_gui.setArmor(defaultPlayer->getCurHP());
-	m_gui.setAmmo(defaultPlayer->getCurHP());
+	m_gui.setArmor(defaultPlayer->getCurArmor());
+	m_gui.setAmmo(defaultPlayer->getCurAmmo());
 
 	m_gui.initGUIRenderingSetup();
 	if (!m_zoomedIn)

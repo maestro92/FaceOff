@@ -181,16 +181,36 @@ void WorldObject::takeDamage(int damage)
 {
 	if (isPlayer())
 	{
-		m_curHP -= damage;
+		// check armor, if we have armor, deduct from armor		
+		if (m_curArmor >= 0)
+		{
+			m_curArmor -= damage;
+			if (m_curArmor < 0)
+			{
+				damage = -m_curArmor;
+				m_curArmor = 0;
+			}
+			else
+			{
+				damage = 0;
+			}
+		}
 
+		// deduct HP if there is carry over
+		m_curHP -= damage;
+		m_curHP = std::max(0, m_curHP);
 		if (m_curHP <= 0)
 		{
 			// i'm dead
 			cout << "Player " << objectId.getIndex() << " dead" << endl;
 		}
 	}
+}
 
 
+bool WorldObject::isDead()
+{
+	return m_curHP <= 0;
 }
 
 void WorldObject::addParentNode(KDTreeNode* node)

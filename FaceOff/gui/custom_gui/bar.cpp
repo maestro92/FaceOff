@@ -63,9 +63,11 @@ void Bar::render()
 
 void Bar::computeForegroundWidth(int hp)
 {
-
 	int w = (int)(hp * m_widthValueRatio);
 	foreground.setWidth(w);
+
+//	cout << "hp " << hp << endl;
+//	cout << "w " << w << endl;
 }
 
 

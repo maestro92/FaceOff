@@ -67,14 +67,16 @@ void Weapon::setData(WeaponData data)
 
 	m_magazine.cur = data.magazineCapacity;
 	m_magazine.max = data.magazineCapacity;
-	m_magazineCount = data.maxMagazineCount;
+	m_curNumMagazine = data.maxMagazineCount;
+	m_maxNumMagazine = data.maxMagazineCount;
 	m_rpm = data.rpm;
 
-	m_roundCooldown = m_rpm;
-	m_roundCooldown /= 60;
-	m_roundCooldown = 1000 / m_roundCooldown;
+	m_roundsCooldown = m_rpm;
+	m_roundsCooldown /= 60;
+	m_roundsCooldown = 1000 / m_roundsCooldown;
 
-	cout << "cooldown is " << m_roundCooldown << endl;
+	cout << "cooldown is " << m_roundsCooldown << endl;
+	cout << "data.magazineCapacity " << data.magazineCapacity << endl;
 
 	m_nameEnum = data.nameEnum;
 
@@ -94,6 +96,35 @@ void Weapon::setData(WeaponData data)
 	m_wireFrameModel = new CubeWireFrameModel(m_model->m_aabb);
 }
 
+
+int Weapon::getCurAmmo()
+{
+	return m_magazine.cur;
+}
+
+int Weapon::getTotalAmmoCount()
+{
+	return m_magazine.max * m_maxNumMagazine;
+}
+
+void Weapon::reload()
+{
+	if (m_curNumMagazine > 0)
+	{
+		m_curNumMagazine--;
+		m_magazine.cur = m_magazine.max;
+	}
+}
+
+void Weapon::fire()
+{
+	if (m_magazine.cur > 0)
+	{
+		m_magazine.cur--;
+	}
+
+	// playing the firing animation
+}
 
 void Weapon::updateGameInfo()
 {
@@ -192,6 +223,17 @@ ParticleEffect* Weapon::explode()
 //	effect->setTexture("Assets/Images/smoke_sprite.png");
 
 	return effect;
+}
+
+
+int Weapon::getDamage()
+{
+	return m_damage;
+}
+
+long long Weapon::getRoundsCooldown()
+{
+	return m_roundsCooldown;
 }
 
 /*

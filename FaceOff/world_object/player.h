@@ -136,7 +136,7 @@ class Player : public WorldObject
 		Bar* m_armorBarGUI;
 		Bar* m_ammoBarGUI;
 		*/
-
+		void reload();
 
 		bool inGrenadeGatherMode();
 		bool isUsingLongRangedWeapon();
@@ -175,8 +175,6 @@ class Player : public WorldObject
 		void updateContactNormalInfo(glm::vec3 normal);
 
 		virtual void updateGameInfo();
-
-
 
 		void updateVelXZ(float dir);
 		void updateVelY(float dir);
