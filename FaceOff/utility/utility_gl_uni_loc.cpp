@@ -1,5 +1,5 @@
 
-#include "utility.h"
+#include "utility_gl_uni_loc.h"
 
 /*
 static void setUniLoc(GLuint location, int value);

@@ -44,8 +44,6 @@ Player::Player(ObjectId objIdIn)
 
 	m_grenadeGatherMode = false;
 
-	m_healthBarGUI = NULL;
-
 	m_entityType = PLAYER;
 	m_dynamicType = DYNAMIC;
 
@@ -378,8 +376,12 @@ void Player::updateMidAirVelocity()
 
 void Player::updateGameStats()
 {
+
+
+	/*
 	static bool incrFlag = false;
 
+	
 	if (incrFlag)
 	{
 		m_curHP += 1;
@@ -400,7 +402,9 @@ void Player::updateGameStats()
 	{
 		incrFlag = true;
 	}
+	*/
 
+	/*
 	if (m_healthBarGUI != NULL)
 	{
 		m_healthBarGUI->computeForegroundWidth(m_curHP);
@@ -415,6 +419,7 @@ void Player::updateGameStats()
 	{
 		m_ammoBarGUI->computeForegroundWidth(m_curHP);
 	}
+	*/
 }
 
 /*
@@ -793,6 +798,20 @@ void Player::weaponOnDelete(Weapon* weapon)
 }
 */
 
+int Player::getCurHP()
+{
+	return m_curHP;
+}
+
+int Player::getCurArmor()
+{
+	return m_curArmor;
+}
+
+int Player::getCurAmmo()
+{
+	return 0;
+}
 
 void Player::pickUp(Weapon* weapon)
 {
@@ -973,12 +992,19 @@ Weapon* Player::getWeapon(int index)
 	return m_weapons[index];
 }
 
-void Player::fireWeapon()
+void Player::fireWeapon(long long nowTime_ms)
 {
 	if (m_curWeapon->getWeaponSlot() == PROJECTILE)
 	{
 		m_grenadeGatherMode = true;
 	}
+
+	cout << "firing Weapon " << endl;
+	cout << "nowTime_ms " << nowTime_ms << endl;
+	cout << "m_lastFiredTime " << m_lastFiredTime << endl;
+	cout << "m_curWeapon->m_roundCooldown " << m_curWeapon->m_roundCooldown << endl << endl;
+
+	m_lastFiredTime = nowTime_ms;
 
 	/*
 	Particle bullet;
@@ -1000,7 +1026,16 @@ void Player::fireWeapon()
 }
 
 
+bool Player::notInAttackCooldown(long long nowTime_ms)
+{
+	/*
+	cout << "nowTime_ms " << nowTime_ms << endl;
+	cout << "m_lastFiredTime " << m_lastFiredTime << endl;
+	cout << "m_curWeapon->m_roundCooldown " << m_curWeapon->m_roundCooldown << endl << endl;
+	*/
 
+	return (nowTime_ms - m_lastFiredTime > m_curWeapon->m_roundCooldown);
+}
 
 bool Player::inGrenadeGatherMode()
 {
@@ -1013,6 +1048,17 @@ Weapon* Player::getCurWeapon()
 } 
 
 
+PlayerState Player::getPlayerState()
+{
+	PlayerState ps;
+	ps.hp = m_curHP;
+	ps.armor = m_curArmor;
+	ps.ammo = 100;
+	ps.base = getState();
+	return ps;
+}
+
+/*
 float Player::getCameraPitch()
 {
 	return m_camera->m_pitch;
@@ -1022,7 +1068,7 @@ float Player::getCameraYaw()
 {
 	return m_camera->m_yaw;
 }
-
+*/
 
 
 

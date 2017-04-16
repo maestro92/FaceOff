@@ -696,7 +696,7 @@ void FaceOff::initNetworkLobby()
 
 					sv_objectKDtree.insert(p);
 
-					p->printParentTrees();
+					// p->printParentTrees();
 
 					RakNet::BitStream bs;
 					bs.Write((RakNet::MessageID)NEW_CLIENT);
@@ -819,10 +819,10 @@ void FaceOff::initNetworkLobby()
 
 						p->svDebug();
 
-						p->printParentTrees();
-						sv_objectKDtree.print(5);
-						sv_objectKDtree.print(11);
-						sv_objectKDtree.print(12);
+					//	p->printParentTrees();
+					//	sv_objectKDtree.print(5);
+					//	sv_objectKDtree.print(11);
+					//	sv_objectKDtree.print(12);
 
 
 						RakNet::BitStream bsOut;
@@ -1537,12 +1537,19 @@ void FaceOff::serverWriteDefaultPlayer(Player* p, RakNet::BitStream& bs)
 	flags |= U_POSITION1;
 	flags |= U_POSITION2;
 
+	flags |= U_PLAYER;
+	flags |= U_MY_PLAYER;
+
 	bs.Write(flags);
 	p->objectId.serialize(bs);
 
-	WorldObjectState state = p->getState();
-	state.serialize(flags, bs);
-	// p->serialize_Delta(flags, bs);
+//	PlayerState state = p->
+//	WorldObjectState state = p->getState();
+//	state.serialize(flags, bs);
+	
+	PlayerState ps = p->getPlayerState();
+	ps.serialize(flags, bs);
+// p->serialize_Delta(flags, bs);
 }
 
 
@@ -1893,7 +1900,7 @@ void FaceOff::serverRunClientMoveCmd(ObjectId playerId, UserCmd cmd)
 void FaceOff::processUserFireWeapon(Player* p)
 {
 
-	p->fireWeapon();
+	p->fireWeapon(m_server.realTime);
 
 	if (p->isUsingLongRangedWeapon())
 	{
@@ -1922,9 +1929,10 @@ void FaceOff::processUserFireWeapon(Player* p)
 
 		if (hitObject != NULL)
 		{
-	//		utl::debug("name", hitObject->m_name);
+			utl::debug("name", hitObject->m_name);
 			hitObject->isHit = true;
 
+			// if on the client, we do this
 			WorldObject* hitPointMark = new WorldObject();
 			hitPointMark->setPosition(hitPoint);
 			hitPointMark->setScale(1.0, 1.0, 1.0);
@@ -1932,6 +1940,9 @@ void FaceOff::processUserFireWeapon(Player* p)
 			hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
 			hitPointMark->m_name = "hitMark";
 			//								m_hitPointMarks.push_back(hitPointMark);
+			
+			int damage = p->getCurWeapon()->m_damage;
+			hitObject->takeDamage(damage);
 		}
 		else
 		{
@@ -2207,7 +2218,7 @@ void FaceOff::interpolateEntities()
 					utl::debug("obj1Index is ", objId1.getIndex());
 				}
 
-				if (obj->isWeapon == true && obj->hasOwner())
+				if (obj->isWeapon() && obj->hasOwner())
 				{
 					/*
 					if (obj->ownerId == m_defaultPlayerObjectId)
@@ -2502,6 +2513,18 @@ void FaceOff::clientParseDefaultPlayer(ClientSnapshot* curSnapshot, int flags, O
 
 //	cur->playerState = p->getState();
 
+
+	PlayerState ps;
+	ps.base.objectId = playerId;
+	ps.deserialize(flags, bs);
+
+	ClientWorldObjectState cState(flags, ps.base);
+	curSnapshot->setPlayer(playerId.getIndex(), cState);
+
+	curSnapshot->playerState = ps;
+
+
+	/*
 	WorldObjectState state;
 	state.objectId = playerId;
 	state.deserialize(flags, bs);
@@ -2510,6 +2533,7 @@ void FaceOff::clientParseDefaultPlayer(ClientSnapshot* curSnapshot, int flags, O
 	curSnapshot->setPlayer(playerId.getIndex(), cState);
 
 	curSnapshot->playerState = state;
+	*/
 }
 
 
@@ -2832,6 +2856,8 @@ UserCmd FaceOff::clientCreateNewCmd()
 	}
 	*/
 
+	Player* p = cl_players.get(m_defaultPlayerObjectId);
+
 	UserCmd cmd;
 //	cmd.playerId = m_defaultPlayerID;
 
@@ -2843,14 +2869,20 @@ UserCmd FaceOff::clientCreateNewCmd()
 	if (state[SDLK_a])	{cmd.buttons |= LEFT;}
 	if (state[SDLK_d])	{cmd.buttons |= RIGHT;}
 	if (state[SDLK_SPACE])	{cmd.buttons |= JUMP;}
-	if (SDL_GetMouseState(NULL, NULL) && SDL_BUTTON(SDL_BUTTON_LEFT)) { cmd.buttons |= ATTACK; }
+	if (SDL_GetMouseState(NULL, NULL) && SDL_BUTTON(SDL_BUTTON_LEFT))
+	{
+		if (p->notInAttackCooldown(m_client.realTime))
+		{
+			cmd.buttons |= ATTACK;
+		}
+	}
 
 
 	// get mouse movement
 	int mx, my;	
 	SDL_GetMouseState(&mx, &my);
 
-	if (cl_players.get(m_defaultPlayerObjectId)->m_camera->getMouseIn())
+	if (p->m_camera->getMouseIn())
 	{
 		SDL_WarpMouse(utl::SCREEN_WIDTH_MIDDLE, utl::SCREEN_HEIGHT_MIDDLE);
 	}
@@ -2859,14 +2891,14 @@ UserCmd FaceOff::clientCreateNewCmd()
 	float deltaPitch = 0;
 
 
-	if (cl_players.get(m_defaultPlayerObjectId)->m_camera->getMouseIn())
+	if (p->m_camera->getMouseIn())
 	{
 		deltaYaw = TURN_SPEED * (utl::SCREEN_WIDTH_MIDDLE - mx);
 		deltaPitch = FORWARD_SPEED * (utl::SCREEN_HEIGHT_MIDDLE - my);
 	}
 
-	float pitch = cl_players.get(m_defaultPlayerObjectId)->getPitch();
-	float yaw = cl_players.get(m_defaultPlayerObjectId)->getYaw();
+	float pitch = p->getPitch();
+	float yaw = p->getYaw();
 
 	pitch += deltaPitch;
 	yaw += deltaYaw;
@@ -2909,7 +2941,12 @@ void FaceOff::clientPrediction()
 	// int currentCmdIndex = m_client.cmdCounter & CMD_BUFFER_MASK;
 	Player* p = cl_players.get(m_defaultPlayerObjectId);
 
-
+	if (m_client.curSnapshot != NULL)
+	{
+		PlayerState ps = m_client.curSnapshot->playerState;
+		p->setHP(ps.hp);
+		p->setArmor(ps.armor);		
+	}
 
 	p->updateGameStats();
 
@@ -2920,10 +2957,8 @@ void FaceOff::clientPrediction()
 	{
 		if (m_client.curSnapshot != NULL)
 		{
-
-			
 			int cmdNum = m_client.lastAckCmdNum + 1;
-			WorldObjectState playerState = m_client.curSnapshot->playerState;
+			WorldObjectState playerState = m_client.curSnapshot->playerState.base;
 			long long latestSnapshotTime = m_client.curSnapshot->serverTime;
 
 			p->resetCollisionFlags();
@@ -2996,6 +3031,12 @@ void FaceOff::clientPrediction()
 		p->updateWeaponTransform();
 	}
 
+	cmd = m_client.cmds[m_client.cmdNum & CMD_BUFFER_MASK];
+	
+	if (cmd.buttons & ATTACK)
+	{
+		p->fireWeapon(m_client.realTime);
+	}
 
 	p->m_camera->setTargetPosition(p->m_position);
 	p->m_camera->setPitch(p->getPitch());
@@ -3766,9 +3807,9 @@ void FaceOff::render()
 //	utl::clDebug("player yaw3:", cl_players.get(m_defaultPlayerObjectId)->getYaw());
 //	cout << endl;
 
+	Player* defaultPlayer = cl_players.get(m_defaultPlayerObjectId);
 
-
-	cl_players.get(m_defaultPlayerObjectId)->updateCameraViewMatrix(m_pipeline);
+	defaultPlayer->updateCameraViewMatrix(m_pipeline);
 
 
 
@@ -4176,6 +4217,13 @@ void FaceOff::render()
 		glBindFramebuffer(GL_FRAMEBUFFER, RENDER_TO_SCREEN);
 	}
 
+
+	int fps = getAverageFPS();
+	m_gui.setFPS(fps);
+	m_gui.setHP(defaultPlayer->getCurHP());
+	m_gui.setArmor(defaultPlayer->getCurHP());
+	m_gui.setAmmo(defaultPlayer->getCurHP());
+
 	m_gui.initGUIRenderingSetup();
 	if (!m_zoomedIn)
 	{
@@ -4524,6 +4572,7 @@ void FaceOff::initGUI()
 	Control::init("", 25, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	m_gui.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 
+	/*
 //	if (!m_isServer)
 	{
 		int xOffset = 55;
@@ -4533,15 +4582,15 @@ void FaceOff::initGUI()
 		int BAR_HEIGHT = 10;
 
 		Control* HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GREEN, "icon_hp.png");
-		cl_players.get(m_defaultPlayerObjectId)->m_healthBarGUI = (Bar*)HPBar;
+		// cl_players.get(m_defaultPlayerObjectId)->m_healthBarGUI = (Bar*)HPBar;
 
 		xOffset = 175;
 		Control* armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_armor.png");
-		cl_players.get(m_defaultPlayerObjectId)->m_armorBarGUI = (Bar*)armorBar;
+		// cl_players.get(m_defaultPlayerObjectId)->m_armorBarGUI = (Bar*)armorBar;
 
 		xOffset = 700;
 		Control* ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
-		cl_players.get(m_defaultPlayerObjectId)->m_ammoBarGUI = (Bar*)ammoBar;
+		// cl_players.get(m_defaultPlayerObjectId)->m_ammoBarGUI = (Bar*)ammoBar;
 
 		xOffset = 0; yOffset = 0;
 		Label* fpsLabel = new Label("90", xOffset, yOffset, 50, 50, GRAY);
@@ -4576,9 +4625,8 @@ void FaceOff::initGUI()
 
 		m_gui.addGUIComponent(vertAim);
 		m_gui.setVerAimIndex(m_gui.getNumGUIComponent() - 1);
-
-
 	}
+	*/
 }
 
 

@@ -19,12 +19,14 @@ struct WeaponData
 	int damage;
 	int magazineCapacity;
 	int maxMagazineCount;
+	int rpm;		// rounds per minute
 
 	float modelScale;
 	float firstPOVScale;
 	glm::vec3 firstPOVOffset;
 	float thirdPOVScale;
 	glm::vec3 thirdPOVOffset;
+
 
 	Model* model;
 };

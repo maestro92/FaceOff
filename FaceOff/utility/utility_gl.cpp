@@ -1,4 +1,4 @@
-#include "utility.h"
+#include "utility_gl.h"
 
 
 void utl::initGLEW()

@@ -1,4 +1,4 @@
-#include "utility.h"
+#include "utility_assimp.h"
 
 glm::vec3 utl::toGlmVec(aiVector3D& v)
 {

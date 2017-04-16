@@ -6,7 +6,8 @@
 #include <GL/glew.h>
 
 #include "define.h"
-#include "utility.h"
+#include "utility_assimp.h"
+#include "utility_gl.h"
 #include <cstdlib>
 #include <iostream>
 #include <stdio.h>

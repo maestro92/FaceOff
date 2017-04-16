@@ -39,6 +39,8 @@ class Weapon : public WorldObject
 		int m_damage;
 		Magazine m_magazine;
 		int m_magazineCount;
+		int m_rpm;
+		long long m_roundCooldown;	// cooldowns between rounds
 
 		virtual void updateGameInfo();
 

@@ -57,7 +57,7 @@ void Weapon::init(WeaponData data)
 
 	m_explodeDelayMode = false;
 	m_readyToExplode = false;
-	isWeapon = true;
+
 //	m_grenadeThrowerId = -1;
 }
 
@@ -68,7 +68,13 @@ void Weapon::setData(WeaponData data)
 	m_magazine.cur = data.magazineCapacity;
 	m_magazine.max = data.magazineCapacity;
 	m_magazineCount = data.maxMagazineCount;
+	m_rpm = data.rpm;
 
+	m_roundCooldown = m_rpm;
+	m_roundCooldown /= 60;
+	m_roundCooldown = 1000 / m_roundCooldown;
+
+	cout << "cooldown is " << m_roundCooldown << endl;
 
 	m_nameEnum = data.nameEnum;
 

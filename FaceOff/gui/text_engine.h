@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 
+#include "utility\utility_debug.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -95,3 +96,5 @@ class TextEngine
 
 
 #endif
+
+

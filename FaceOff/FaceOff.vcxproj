@@ -466,6 +466,12 @@
     <ClInclude Include="network\network_protocol.h" />
     <ClInclude Include="renderer\renderer_constants.h" />
     <ClInclude Include="shared.h" />
+    <ClInclude Include="utility\utility_assimp.h" />
+    <ClInclude Include="utility\utility_debug.h" />
+    <ClInclude Include="utility\utility_gl.h" />
+    <ClInclude Include="utility\utility_gl_uni_loc.h" />
+    <ClInclude Include="utility\utility_json.h" />
+    <ClInclude Include="utility\utility_sdl.h" />
     <ClInclude Include="world_object\particle_effect\fire_work_effect.h" />
     <ClInclude Include="world_object\particle_effect\smoke_effect.h" />
     <ClInclude Include="world_object\particle_effect\particle_effect.h" />

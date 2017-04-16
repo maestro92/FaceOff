@@ -49,16 +49,59 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	r_sniperScopeView.disableShader();
 	*/
 
+
+	int xOffset = 55;
+	int yOffset = 570;
+
+	int BAR_WIDTH = 60;
+	int BAR_HEIGHT = 10;
+
+	m_HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GREEN, "icon_hp.png");
+
+	xOffset = 175;
+	m_armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_armor.png");
+
+	xOffset = 700;
+	m_ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
+
+	xOffset = 0; yOffset = 0;
+	m_fpsLabel = new Label("90", xOffset, yOffset, 50, 50, GRAY);
+
+	int aimWidth = 20;
+	int aimHeight = 20;
+
+	int aimX = utl::SCREEN_WIDTH / 2 - aimWidth / 2;
+	int aimY = utl::SCREEN_HEIGHT / 2;
+
+	utl::debug("aimX", aimX);
+	utl::debug("aimY", aimY);
+	m_horiAim = new Label("", aimX, aimY - 1, aimWidth, 2, GREEN);
+
+	aimX = utl::SCREEN_WIDTH / 2;
+	aimY = utl::SCREEN_HEIGHT / 2 - aimHeight / 2;
+
+	utl::debug("aimX", aimX);
+	utl::debug("aimY", aimY);
+
+	m_vertAim = new Label("", aimX - 1, aimY, 2, aimHeight, GREEN);
+
+	addGUIComponent(m_HPBar);
+	addGUIComponent(m_armorBar);
+	addGUIComponent(m_ammoBar);
+	addGUIComponent(m_fpsLabel);
+	addGUIComponent(m_horiAim);
+	addGUIComponent(m_vertAim);
+	
+
+
+
+
 	/*
 	r_texture.printDataPairs();
 	Control::r_coloredRect.printDataPairs();
 	Control::r_texturedRect.printDataPairs();
 	Control::r_listBoxItemHighlight.printDataPairs();
 	r_sniperScopeView.printDataPairs();
-
-
-
-
 
 
 
@@ -83,8 +126,60 @@ void GUIManager::init(int screenWidth, int screenHeight)
 
 
 
+/*
+	if (m_healthBarGUI != NULL)
+	{
+		m_healthBarGUI->computeForegroundWidth(m_curHP);
+	}
+	
+	if (m_armorBarGUI != NULL)
+	{
+		m_armorBarGUI->computeForegroundWidth(m_curArmor);
+	}
+
+	if (m_ammoBarGUI != NULL)
+	{
+		m_ammoBarGUI->computeForegroundWidth(m_curHP);
+	}
+*/
+void GUIManager::setHP(int HP)
+{
+	if (m_HPBar != NULL)
+	{
+		m_HPBar->computeForegroundWidth(HP);
+	}
+}
+
+void GUIManager::setArmor(int armor)
+{
+	if (m_armorBar != NULL)
+	{
+		m_armorBar->computeForegroundWidth(armor);
+	}
+}
+
+void GUIManager::setAmmo(int ammo)
+{
+	if (m_ammoBar != NULL)
+	{
+		m_ammoBar->computeForegroundWidth(ammo);
+	}
+}
 
 
+void GUIManager::setFPS(int fps)
+{
+	if (m_fpsLabel != NULL)
+	{
+		m_fpsLabel->setText(utl::intToStr(fps));
+	}
+}
+
+
+void GUIManager::setSniperZoomMode(bool b)
+{
+	m_sniperZoomMode = b;
+}
 
 void GUIManager::initGUIRenderingSetup()
 {
@@ -184,42 +279,6 @@ void GUIManager::updateAndRender(MouseState mouseState)
 	}
 }
 
-
-void GUIManager::setSniperZoomMode(bool b)
-{
-	m_sniperZoomMode = b;
-}
-
-void GUIManager::setHorAimIndex(int index)
-{
-	m_horAimIndex = index;
-}
-
-void GUIManager::setVerAimIndex(int index)
-{
-	m_verAimIndex = index;
-}
-
-void GUIManager::setFPS(int fps)
-{
-	if (m_fpsLabel != NULL)
-	{
-		m_fpsLabel->setText(utl::intToStr(fps));
-	}
-}
-
-void GUIManager::setFPSLabel(Label* label)
-{
-	if (label != NULL)
-	{
-		if (m_fpsLabel != NULL)
-		{
-			delete m_fpsLabel;
-		}
-
-		m_fpsLabel = label;
-	}
-}
 
 
 

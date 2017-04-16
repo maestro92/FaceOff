@@ -55,9 +55,4 @@ bool Camera::hasMoved()
 	return m_moved;
 }
 
-Move Camera::getMoveState()
-{
-	return m_moveState;
-}
-
 

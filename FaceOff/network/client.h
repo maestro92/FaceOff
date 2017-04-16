@@ -20,7 +20,7 @@
 
 #include "game_messages.h"
 #include "network_utility.h"
-#include "utility.h"
+#include "utility_debug.h"
 
 #include "shared.h"
 
@@ -105,7 +105,7 @@ struct ClientSnapshot
 
 	// since snapshots are sent by server to the client,
 	// the playerState is the info about this client
-	WorldObjectState playerState;
+	PlayerState playerState;
 
 	int numEntities;
 	ClientWorldObjectState players[MAX_PLAYERS_IN_SNAPSHOT];

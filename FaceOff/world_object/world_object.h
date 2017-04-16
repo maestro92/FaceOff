@@ -79,7 +79,8 @@ class WorldObject
 
 		ObjectId objectId;
 
-		bool isWeapon;
+		bool isPlayer();
+		bool isWeapon();
 		bool hasOwner();
 		ObjectId ownerId;
 
@@ -147,8 +148,7 @@ class WorldObject
 		inline void setPitch(float pitch);
 		inline void setYaw(float yaw);
 		inline void setRoll(float roll);
-
-
+		
 		virtual bool shouldRender();
 
 		virtual void renderSingle(Pipeline& p, Renderer* r);
@@ -202,6 +202,9 @@ class WorldObject
 		
 		bool inMidAir;
 
+		void takeDamage(int damage);
+
+		
 
 		virtual void serialize_New(RakNet::BitStream& bs);
 		virtual void deserialize_New(RakNet::BitStream& bs, ModelManager* mm);
@@ -209,6 +212,8 @@ class WorldObject
 		void serialize_Delta(int flags, RakNet::BitStream& bs);
 		void deserialize_Delta(int flags, RakNet::BitStream& bs);
 
+		void setHP(int hp);
+		void setArmor(int armor);
 
 		void print_uint8_t(uint8_t n);
 
@@ -219,6 +224,13 @@ class WorldObject
 
 //		uint8_t collisionFlags[ENTITY_COLLISION_FLAG_SIZE];
 		
+		int m_maxHP;
+		int m_curHP;
+
+		int m_maxArmor;
+		int m_curArmor;
+
+
 		/// expressed in degrees
 		float m_pitch;
 		float m_yaw;

@@ -61,12 +61,10 @@ class Player : public WorldObject
 		void setPosition(glm::vec3 position);
 		void setPosition(float x, float y, float z);
 
-
-
 		void setDefaultPlayerFlag(bool b);
 		
 
-		vector<glm::vec3> m_weaponPositionOffsets;
+		vector<glm::vec3> m_weaponPositionOffsets; 
 		vector<glm::vec3> m_bulletStartPositionOffsets;
 		vector<glm::vec3> m_bulletStartPositionOffsetScale;
 
@@ -126,15 +124,19 @@ class Player : public WorldObject
 
 //		void setRotation(float pitch, float yaw);
 
-		void fireWeapon();
+		void fireWeapon(long long nowTime_ms);
+		bool notInAttackCooldown(long long nowTime_ms);
 		Weapon* throwGrenade();
 
-		float getCameraPitch();
-		float getCameraYaw();
+//		float getCameraPitch();
+//		float getCameraYaw();
 
+		/*
 		Bar* m_healthBarGUI;
 		Bar* m_armorBarGUI;
 		Bar* m_ammoBarGUI;
+		*/
+
 
 		bool inGrenadeGatherMode();
 		bool isUsingLongRangedWeapon();
@@ -162,7 +164,8 @@ class Player : public WorldObject
 		int weaponCount;
 
 		bool hasMoved();
-		Move getMoveState();
+
+		PlayerState getPlayerState();
 
 		bool isDefaultPlayer();
 
@@ -174,10 +177,13 @@ class Player : public WorldObject
 		virtual void updateGameInfo();
 
 
+
 		void updateVelXZ(float dir);
 		void updateVelY(float dir);
 
-
+		int getCurHP();
+		int getCurArmor();
+		int getCurAmmo();
 
 		glm::vec3 getXAxis();
 		glm::vec3 getYAxis();
@@ -187,13 +193,8 @@ class Player : public WorldObject
 	private:
 //		int m_id;
 
-		int m_maxHP;
-		int m_curHP;
 
-		int m_maxArmor;
-		int m_curArmor;
-
-
+		long long m_lastFiredTime;
 
 		glm::vec3 m_midAirHorVel;
 		vector<Weapon*> m_weapons;

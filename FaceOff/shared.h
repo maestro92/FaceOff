@@ -54,7 +54,7 @@ const int END_OF_SV_SNAPSHOT_ENTITIES = -9999;
 #define	U_FRAME8	(1<<9)		// frame is a byte
 
 // second byte
-#define	U_EVENT		(1<<10)
+#define	U_MY_PLAYER	(1<<10)
 #define	U_NUMBER16	(1<<11)		// NUMBER8 is implicit if not set
 #define	U_MOREBITS1	(1<<12)		// read one additional byte
 #define	U_MODEL		(1<<13)
@@ -301,6 +301,10 @@ struct ObjectId
 
 // mainly used in building the snapshot
 // we need to keep a deep copy of WorldObjectStates in the curSVSnapshotObjects
+
+
+
+
 struct WorldObjectState
 {
 	ObjectId objectId;
@@ -334,6 +338,17 @@ struct WorldObjectState
 
 	void deserialize(int flags, RakNet::BitStream& bs)
 	{
+		if (flags & U_POSITION0)	bs.Read(position[0]);		
+		if (flags & U_POSITION1)	bs.Read(position[1]);
+		if (flags & U_POSITION2)	bs.Read(position[2]);
+		
+		if (flags & U_ANGLE0)	bs.Read(angles[PITCH]);
+		if (flags & U_ANGLE1)	bs.Read(angles[YAW]);
+		if (flags & U_ANGLE2)	bs.Read(angles[ROLL]);
+		
+		bs.Read(isHit);
+
+		/*
 		if (flags & U_POSITION0)
 		{
 			bs.Read(position[0]);
@@ -365,7 +380,38 @@ struct WorldObjectState
 		}
 
 		bs.Read(isHit);
+		*/
 	}
+};
+
+
+struct PlayerState
+{
+	WorldObjectState base;
+
+	int hp;
+	int armor;
+	int ammo;
+
+	
+	void serialize(int flags, RakNet::BitStream& bs)
+	{
+		base.serialize(flags, bs);
+		
+		bs.Write(hp);
+		bs.Write(armor);
+		bs.Write(ammo);
+	}
+
+	void deserialize(int flags, RakNet::BitStream& bs)
+	{
+		base.deserialize(flags, bs);
+
+		bs.Read(hp);
+		bs.Read(armor);
+		bs.Read(ammo);
+	}
+	
 };
 
 
@@ -384,14 +430,14 @@ struct NetChannel
 	int outgoingSequence;
 };
 
-
+/*
 // playerState is mostly used for server sending down the client about information player information
 struct PlayerState
 {
 	int cmdTime;		// cmd->serverTime of last executed command on the server
 
 };
-
+*/
 
 
 struct EntityState

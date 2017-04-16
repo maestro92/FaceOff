@@ -2,10 +2,12 @@
 #define RENDERER_H_
 
 #include "define.h"
+#include <unordered_map>
 #include "pipeline.h"
 #include "shader.h"
-#include "utility.h"
-#include <unordered_map>
+#include "utility_json.h"
+#include "utility_gl.h"
+#include "utility_gl_uni_loc.h"
 #include <stack>
 
 

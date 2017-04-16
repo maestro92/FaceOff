@@ -34,12 +34,15 @@ class GUIManager
 		void renderTextureSingle(GLuint textureId, GLuint fboTarget, Rect rect);
 		*/
 
-
+		/*
 		void setHorAimIndex(int index);
 		void setVerAimIndex(int index);
 		void setSniperZoomMode(bool b);
 		void setFPSLabel(Label* fps);
 		void setFPS(int fps);
+		*/
+
+		void setSniperZoomMode(bool b);
 
 		void initRenderer(const Array arr, Renderer* r, string name);
 		Object findRendererObject(const Array arr, string name);
@@ -63,18 +66,30 @@ class GUIManager
         void addGUIComponent(Control* control);
 		int getNumGUIComponent();
 
-		void setFPS();
+		void setHP(int HP);
+		void setArmor(int armor);
+		void setAmmo(int ammo);
+		void setFPS(int FPS);
 
     private:
         int m_GUIComponentsID;
         int m_GUIComponentsFlags;
+
+		Bar* m_HPBar;
+		Bar* m_armorBar;
+		Bar* m_ammoBar;
+
+		Label* m_horiAim;
+		Label* m_vertAim;
+		Label* m_fpsLabel;
+
         vector<Control*> m_GUIComponents;
 
 		bool m_sniperZoomMode;
 		int m_horAimIndex;
 		int m_verAimIndex;
 
-		Label* m_fpsLabel;
+
 
         QuadModel m_textureQuad;
         Pipeline m_GUIPipeline;

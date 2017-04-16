@@ -5,7 +5,6 @@
 WorldObject::WorldObject()
 {
 	active = true;
-	isWeapon = false;
 	// m_instanceId = utl::createUniqueObjectID();
 
     m_position = glm::vec3(0.0, 0.0, 0.0);
@@ -158,6 +157,41 @@ void WorldObject::update()
 
 }
 
+bool WorldObject::isPlayer()
+{
+	return m_entityType == PLAYER;
+}
+
+bool WorldObject::isWeapon()
+{
+	return m_entityType == WEAPON;
+}
+
+void WorldObject::setHP(int hp)
+{
+	m_curHP = hp;
+}
+void WorldObject::setArmor(int armor)
+{
+	m_curArmor = armor;
+}
+
+
+void WorldObject::takeDamage(int damage)
+{
+	if (isPlayer())
+	{
+		m_curHP -= damage;
+
+		if (m_curHP <= 0)
+		{
+			// i'm dead
+			cout << "Player " << objectId.getIndex() << " dead" << endl;
+		}
+	}
+
+
+}
 
 void WorldObject::addParentNode(KDTreeNode* node)
 {
@@ -358,7 +392,7 @@ void WorldObject::printParentTrees()
 
  bool WorldObject::shouldSend(int clientId)
 {
-	if (isWeapon && hasOwner() && ownerId.getIndex() == clientId)
+	if (isWeapon() && hasOwner() && ownerId.getIndex() == clientId)
 	{
 		return false;
 	}

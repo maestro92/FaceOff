@@ -485,8 +485,8 @@ struct FOArray
 			objects[free].object = obj;
 			objects[free].object->objectId = objId;
 
-			cout << obj->m_name << "	tag is " << obj->objectId.getTag() << endl;
-			cout << obj->m_name << "	index is " << obj->objectId.getIndex() << endl;
+		//	cout << obj->m_name << "	tag is " << obj->objectId.getTag() << endl;
+		//	cout << obj->m_name << "	index is " << obj->objectId.getIndex() << endl;
 
 			count++;
 			maxUsed = max(maxUsed, free);

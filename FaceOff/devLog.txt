@@ -518,6 +518,11 @@ well, if c++ std is doing it this way, then I should definition do the same with
 
 
 
+http://stackoverflow.com/questions/4955159/is-is-a-good-practice-to-put-the-definition-of-c-classes-into-the-header-file
+
+
+http://stackoverflow.com/questions/5735379/what-does-include-actually-do
+
 
 
 

@@ -59,8 +59,7 @@ class Camera
 
 
 		bool hasMoved();
-		Move getMoveState();
-		
+
 
 
 		virtual CameraType getCameraType() = 0;
@@ -87,7 +86,6 @@ class Camera
 		glm::vec3 m_velocity;
 
 		bool m_moved;
-		Move m_moveState;
 
         /// expressed in degrees
         float m_pitch;

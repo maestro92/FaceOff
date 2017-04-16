@@ -87,6 +87,7 @@ WeaponData ModelManager::getWeaponData(WeaponNameEnum name)
 	return m_weaponDatas[name];
 }
 
+// http://strike-counter.com/cs-go-stats/weapons-stats
 void ModelManager::initWeaponsData()
 {
 	
@@ -153,6 +154,7 @@ void ModelManager::initWeaponsData()
 		int damage =					utl::findValue(obj, "damage").get_int();
 		int magazineCapacity =			utl::findValue(obj, "magazineCapacity").get_int();
 		int maxMagazineCount =			utl::findValue(obj, "maxMagazineCount").get_int();
+		int m_rpm =						utl::findValue(obj, "rpm").get_int();
 
 		float modelScale =				utl::findValue(obj, "modelScale").get_real();
 		float fPOVScale =				utl::findValue(obj, "firstPOVScale").get_real();
@@ -170,6 +172,7 @@ void ModelManager::initWeaponsData()
 									damage, 
 									magazineCapacity, 
 									maxMagazineCount, 
+									m_rpm,
 									modelScale, 
 									fPOVScale,
 									fPOVOffset,
