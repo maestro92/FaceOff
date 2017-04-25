@@ -91,28 +91,17 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		*/
 		root->id = count;
 		count++;
-		
+	
+		/*
 		utl::debug("root id", root->id);
 		utl::debug("depth", depth);
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
 			utl::debug("obj name", root->m_objects[i]->m_name);
 		}
+		*/
 
-		/*
-		for (int i = 0; i < root->m_objects2.size(); i++)
-		{
-			utl::debug("obj name", root->m_objects2[i]->m_name);
-		}
-		*/
-		/*
-		for (auto it = root->m_objects2.begin(); it != root->m_objects2.end(); it++)
-		{
-			utl::debug("obj name", it->second->m_name);
-		}
-		*/
-		
-		utl::debugLn(2);
+	//	utl::debugLn(2);
 		return root;
 	}
 
@@ -206,33 +195,20 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 	
 		root->id = count;
 
-
+		/*
 		utl::debug("root id", root->id);
 		utl::debug("depth", depth);
 		for (int i = 0; i < root->m_objects.size(); i++)
 		{
 			utl::debug("obj name", root->m_objects[i]->m_name);
 		}
-
+		*/
 		count++;
 
-		/*
-		for (auto it = root->m_objects2.begin(); it != root->m_objects2.end(); it++)
-		{
-			utl::debug("obj name", it->second->m_name);
-		}
-		*/
 
-		/*
-		for (int i = 0; i < root->m_objects.size(); i++)
-		{
-			utl::debug("obj name", root->m_objects[i]->m_name);
-		}
-		*/
-		utl::debugLn(2);
+
+		// utl::debugLn(2);
 	
-		// root->m_left = NULL;
-		// root->m_right = NULL;
 		root->m_child[0] = NULL;
 		root->m_child[1] = NULL;
 
@@ -1165,7 +1141,6 @@ void KDTree::print(KDTreeNode* node, int id)
 		}
 
 		cout << endl << endl << endl;
-
 	}
 
 	print(node->m_child[0], id);

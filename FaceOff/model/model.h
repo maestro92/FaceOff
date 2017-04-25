@@ -25,6 +25,7 @@ using namespace std;
 #define INVALID_MATERIAL 0xFFFFFFFF
 #define INVALID_GL_VALUE -1
 
+/*
 #define POS_VB 0
 #define NORMAL_VB 1
 #define TANGENT_VB 2
@@ -40,29 +41,37 @@ using namespace std;
 #define UV_UNI_LOC 4
 #define BONE_ID_UNI_LOC 5
 #define BONE_WEIGHT_UNI_LOC 6
+*/
 
 
 /*
 http://gamedev.stackexchange.com/questions/19560/what-is-the-best-way-to-store-meshes-or-3d-models-in-a-class
-
-This basically means that the models are stored in GPU memory instead of CPU memory, minimizing GPU to CPU transfers and greatly improving rendering performance.
 */
+
+
+
+
+
+
 
 #include "Mesh.h"
 
 class Model
 {
     public:
-        enum
+		
+		enum
         {
-            POSITION = 0,
-            NORMAL,
-            COLOR,
-            UV,
-        };
+            POSITION_VERTEX_ATTRIB = 0,
+            NORMAL_VERTEX_ATTRIB,
+            COLOR_VERTEX_ATTRIB,
+            UV_VERTEX_ATTRIB,
+			BONE_IDS_ATTRIB,		// for animated models
+			BONE_WEIGHTS_ATTRIB		// for animated models
+		};
 
         Model();
-        ~Model();
+        virtual ~Model();
 
         void addMesh(Mesh m);
 		void setTextures(vector<string> textureFiles);
@@ -73,14 +82,22 @@ class Model
 		static void enableVertexAttribArrays();
 		static void disableVertexAttribArrays();
 
+		void printAiSceneHiearchy(const aiNode* node, int level);
 
         void clear();
+
         GLuint m_modelGeometry;
 
 		AABB m_aabb;
 
         vector<Mesh> m_meshes;
-        vector<TextureData> m_textures;
+
+		vector<TextureData> m_textures;
+			
+		bool isAnimated();
+
+	protected:
+		bool m_isAnimated;
 };
 
 

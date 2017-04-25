@@ -22,7 +22,7 @@ ModelManager::~ModelManager()
 
 void ModelManager::init()
 {
-	m_models.resize(ModelEnum::NUM_MODELS);
+
 
 	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
 	m_player = new ImportedModel("./Assets/models/sphere_player.obj", textures);
@@ -47,14 +47,33 @@ void ModelManager::init()
 	
 
 
-	m_models[ModelEnum::player] = *m_player;
-	m_models[ModelEnum::healthbar] = *m_healthBar;
-	m_models[ModelEnum::xyzAxis] = *m_xyzAxis;
-	m_models[ModelEnum::tree] = *m_tree;
-	m_models[ModelEnum::cube] = *m_cube;
-	m_models[ModelEnum::woodenBox] = *m_woodenBox;
-	m_models[ModelEnum::ground] = *m_ground;
-	m_models[ModelEnum::legoMan] = *m_legoMan;
+//	m_animatedLegoMan = new AnimatedModel("Assets/models/animations/walking_lego.md5mesh", textures);
+
+//	m_animatedLampBob = new AnimatedModel("Assets/models/animations/boblampclean.md5mesh");
+
+	m_animatedLegoMan = AnimatedModel("Assets/models/animations/walking_lego.md5mesh", textures);
+//	m_animatedLegoMan = AnimatedModel("Assets/models/animations/boblampclean.md5mesh", textures);
+
+	m_animatedLegoMan.printBoneNodesHiearchy();
+
+
+
+//	m_animatedLampBob = new AnimatedModel("Assets/models/animations/boblampclean.md5mesh");
+
+//	while(1)
+//	{ }
+
+	m_models.resize(ModelEnum::NUM_MODELS);
+	m_models[ModelEnum::player] = m_player;
+	m_models[ModelEnum::healthbar] = m_healthBar;
+	m_models[ModelEnum::xyzAxis] = m_xyzAxis;
+	m_models[ModelEnum::tree] = m_tree;
+	m_models[ModelEnum::cube] = m_cube;
+	m_models[ModelEnum::woodenBox] = m_woodenBox;
+	m_models[ModelEnum::ground] = m_ground;
+	m_models[ModelEnum::legoMan] = m_legoMan;
+	m_models[ModelEnum::animatedLegoMan] = &m_animatedLegoMan;
+
 
 	/*
 	m_models[ModelEnum::player] = ImportedModel;
@@ -78,8 +97,7 @@ void ModelManager::shutDown()
 
 Model* ModelManager::get(int modelEnum)
 {
-	Model* m = &m_models[modelEnum];
-	return m;
+	return m_models[modelEnum];
 }
 
 WeaponData ModelManager::getWeaponData(WeaponNameEnum name)
@@ -251,6 +269,30 @@ void ModelManager::initWeaponsData()
 	};
 	*/
 }
+
+
+
+
+/*
+Model* ModelManager::createXYZAxisModel()
+{
+
+}
+
+Model* ModelManager::createQuadModel()
+{
+
+}
+Model* ModelManager::cubeWireFrameModel()
+{
+
+}
+
+Model* ModelManager::cubeModel()
+{
+
+}
+*/
 
 
 

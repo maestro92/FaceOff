@@ -176,7 +176,7 @@ class WorldObject
 
 		virtual void updateGameInfo();
 
-		void update(); 
+		void updateAnimModelFrame(long long nowTime_ms, vector<glm::mat4>& boneTranforms); 
 
 		void addParentNode(KDTreeNode* node);
 

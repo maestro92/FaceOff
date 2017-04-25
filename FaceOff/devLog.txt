@@ -578,33 +578,45 @@ in the top and bottom
 ####################################### 2017 march 26th #####################################
 #############################################################################################
 
+encoutered an "already known revelation" about hash-tables
 
-v-table vs if else branching
+This happened when I was profiling my code. (I was pleased to find out that visual studio 2017 free edition has the profiler!). Even under the release build, my game was not 
+running fast enough to have two instances running on my machine. I felt that my game should atleast be able to accomplish that since quake3 runs fine with two instances on my machine
 
+After profiling my game, it turns a step in my collision detection was taking a lot time. Specifically, the part where I check for duplicated colisions checks.
 
-
-consider using switch as well
-
-
-
-
-http://softwareengineering.stackexchange.com/questions/301510/in-general-is-it-worth-using-virtual-functions-to-avoid-branching
+in a usual physics collision detection tick, we generally have the algorithm below if you use some kind of broadphase collision detection
 
 
 
+			for entity in world
+			{
+
+				neighbors = kdtree.findNeighbors(entity)
+
+				for neighbor in neighbors
+				{
+					resolveCollision()
+				}
+
+			}
 
 
 
+and in the kdtree.findNeighbors function, you usually will implement some type mechanism to avoid repleated collisions.
+previously, I was using an unordered_set to accomplish this. I would take both ids from the collision pairs, sort them, and store that as a key 
+in the unordered_set. And becuz the game hit the collision code very frequently, the unordered_set, despite having a constant big(O) access time which we learned in school
+was killing my game.
+
+the new approach I used was storing a bit array for each object in the game to check whether I've already tested collision with an object. So my added a int array 
 
 
+			class Entity
+			{
 
 
-
-
-
-WorldObject GetOne() vs constructor
-
-
+			
+			}
 
 
 
@@ -618,6 +630,20 @@ trying to remove virtual functions
 
 	"ignore Physics With"
 
+
+
+
+
+v-table vs if else branching
+
+
+
+consider using switch as well
+
+
+
+
+http://softwareengineering.stackexchange.com/questions/301510/in-general-is-it-worth-using-virtual-functions-to-avoid-branching
 
 
 
@@ -721,4 +747,7 @@ interpolating angles
 possible camera positions upon death
 
 
+
+
+should I calculate the matrices on the CPU then send it to GPU or send everything to GPU and calculate it there?
 

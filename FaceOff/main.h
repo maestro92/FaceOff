@@ -704,6 +704,7 @@ class FaceOff
 		WorldObject     o_ground;
 		SkyBox          o_skybox;
 		WorldObject		o_sampleBullet;
+		WorldObject		o_animatedLegoDude;
 
 		int debugCurClientId;
 

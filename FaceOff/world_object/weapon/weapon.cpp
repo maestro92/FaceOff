@@ -75,8 +75,8 @@ void Weapon::setData(WeaponData data)
 	m_roundsCooldown /= 60;
 	m_roundsCooldown = 1000 / m_roundsCooldown;
 
-	cout << "cooldown is " << m_roundsCooldown << endl;
-	cout << "data.magazineCapacity " << data.magazineCapacity << endl;
+//	cout << "cooldown is " << m_roundsCooldown << endl;
+//	cout << "data.magazineCapacity " << data.magazineCapacity << endl;
 
 	m_nameEnum = data.nameEnum;
 

@@ -5,6 +5,7 @@
 #include "renderer_constants.h"
 #include "renderer.h"
 #include "scene_renderer.h"
+#include "animation_model_renderer.h"
 #include "light/light_manager.h"
 
 
@@ -25,6 +26,7 @@ class RendererManager
 		Renderer		r_playerTarget;
 		Renderer		r_skybox;
 
+		AnimationModelRenderer		r_dynamicModel;
 		
 		Renderer		r_healthBar;
 

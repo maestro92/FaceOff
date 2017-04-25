@@ -59,6 +59,11 @@ GLuint utl::loadTexture(string filename, GLuint filteringParam, GLuint edgeParam
 
     SDL_Surface* img2 = loadSDLImage(filename);
 
+	if (img2 == NULL)
+	{
+		return -1;
+	}
+
     unsigned int num;
     glGenTextures(1,&num);
 

@@ -28,7 +28,16 @@
 		}
 	},
 
-
+	{
+		"r": 			"r_dynamicModel",
+		"vs":			"dynamic_model.vs",
+		"fs":			"dynamic_model.fs",
+		"data":
+		{
+			"u_texture":	"DP_INT"
+		}
+	},
+	
 	{
 		"r": 			"r_playerTarget",
 		"vs":			"player_target.vs",

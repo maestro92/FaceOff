@@ -63,8 +63,9 @@ class ImportedModel : public Model
     public:
         ImportedModel();
         ImportedModel(string filename);
+	//	ImportedModel(string filename, bool b);
 		ImportedModel(string filename, vector<string> textures);
-        ~ImportedModel();
+        virtual ~ImportedModel();
 
 
 
@@ -74,6 +75,10 @@ class ImportedModel : public Model
 
         virtual bool load(string filename);
 		virtual bool load(string filename, vector<string> textureFiles);
+
+
+	//	virtual bool load2(string filename);
+	//	virtual bool load2(string filename, vector<string> textureFiles);
 		//  void render();
 
 
@@ -85,24 +90,12 @@ class ImportedModel : public Model
 
     protected:
         bool initFromAiScene(const aiScene* pScene, const std::string& Filename);
-
-        void initMesh(const aiMesh* m, const aiScene* s,
-                      vector<glm::vec3>& positions,
-                      vector<glm::vec3>& normals,
-                      vector<glm::vec3>& colors,
-                      vector<glm::vec2>& UVs,
-                      vector<unsigned int>& Indices);
+	//	bool initFromAiScene2(const aiScene* pScene, const std::string& Filename);
 
         void initMesh(unsigned int Index, const aiMesh* m, const aiScene* scene);
+	//	void initMesh2(unsigned int Index, const aiMesh* m, const aiScene* scene);
 
-        void initVertexVectors(const aiMesh* m,
-                          vector<glm::vec3>& positions,
-                          vector<glm::vec3>& normals,
-                          vector<glm::vec3>& colors,
-                          vector<glm::vec2>& UVs,
-                          glm::vec3 defaultColor);
-
-        void initIndexVectors(const aiMesh* m, vector<unsigned int>& Indices);
+	//	void printAiSceneHiearchy(const aiNode* node, int level);
 
         bool initMaterials(const aiScene* pScene, const std::string& Filename);
 

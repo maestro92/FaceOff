@@ -152,9 +152,15 @@ void WorldObject::updateGameInfo()
 
 }
 
-void WorldObject::update()
+void WorldObject::updateAnimModelFrame(long long nowTime_ms, vector<glm::mat4>& boneTransforms)
 {
-
+	if (m_model != NULL && m_model->isAnimated())
+	{
+		AnimatedModel* ptr = (AnimatedModel*)(m_model);
+		double nowTime_s = nowTime_ms;
+		nowTime_s /= 1000;
+		ptr->getAnimBoneTranforms(nowTime_s, boneTransforms);
+	}
 }
 
 bool WorldObject::isPlayer()

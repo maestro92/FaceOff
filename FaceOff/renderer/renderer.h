@@ -54,6 +54,8 @@ struct DataPair
 	virtual ~DataPair(){};
 
 	virtual void setUniLoc(){};
+	virtual void setUniLocTranspose() {};
+
 	virtual void printValue(){};
 
 	void printError()
@@ -70,6 +72,7 @@ struct DataPair
 	virtual void setValue(glm::vec4 value){ printError(); };
 	virtual void setValue(glm::mat3 value){ printError(); };
 	virtual void setValue(glm::mat4 value){ printError(); };
+
 };
 
 
@@ -291,6 +294,12 @@ struct Mat4DataPair : public DataPair
 		utl::setUniLoc(uniLoc, value);
 	}
 
+	void setUniLocTranspose()
+	{
+	//	cout << "here" << endl;
+		utl::setUniLocTranspose(uniLoc, value);
+	}
+
 	void printValue()
 	{
 		utl::debug("value is", value);
@@ -329,8 +338,6 @@ class Renderer
 		void enableShader();
 		void disableShader();
 
-
-		virtual void setUniLocs();
 		virtual void setUniLocs(Pipeline& p);
 
 
@@ -376,6 +383,9 @@ class Renderer
 		Shader* m_shader;
 		vector<DataPair*> m_dataPairs;
 		stack<GLuint> m_textureUnitStack;
+
+	protected:
+		virtual void setUniLocs();
 
 };
 

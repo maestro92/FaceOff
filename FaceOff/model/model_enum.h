@@ -14,9 +14,11 @@ namespace ModelEnum
 		xyzAxis,
 		tree,
 		cube,
+		quad,
 		woodenBox,
 		legoMan,
 		ground,
+		animatedLegoMan,
 		NUM_MODELS
 	};
 }

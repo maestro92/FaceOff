@@ -56,6 +56,12 @@ SDL_Surface* utl::loadSDLImage(string filename)
 {
     SDL_Surface* img = loadRawImage(filename);
 
+	if (img == NULL)
+	{
+		cout << "ERROR: " << filename << " not found" << std::endl;
+		return NULL;
+	}
+
     SDL_PixelFormat pixel_format = {NULL,
                                     32,             // converting to 32 bit pixel
                                     4,              // number of bytes

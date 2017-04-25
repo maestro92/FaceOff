@@ -25,6 +25,8 @@ void RendererManager::init(int width, int height)
 	Renderer::initRendererWrapper(vArray, &r_fullTexture, "r_fullTexture");
 	Renderer::initRendererWrapper(vArray, &r_playerTarget, "r_playerTarget");
 	Renderer::initRendererWrapper(vArray, &r_skybox, "r_skybox");
+	Renderer::initRendererWrapper(vArray, &r_dynamicModel, "r_dynamicModel");
+	r_dynamicModel.init();
 
 	Renderer::initRendererWrapper(vArray, &r_smokeEffectUpdate, "r_smokeEffectUpdate");
 	r_smokeEffectUpdate.enableShader();

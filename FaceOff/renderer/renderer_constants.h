@@ -20,6 +20,14 @@ namespace R_FULL_TEXTURE
 	};
 }
 
+namespace R_DYNAMIC_MODEL
+{
+	enum E
+	{
+		u_texture = 0
+	};
+}
+
 namespace R_PLAYER_TARGET
 {
 	enum E

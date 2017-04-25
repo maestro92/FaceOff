@@ -227,6 +227,7 @@
     <ClCompile Include="model\builtin_model\quad_model.cpp" />
     <ClCompile Include="model\builtin_model\terrain_model.cpp" />
     <ClCompile Include="model\builtin_model\xyz_axis_model.cpp" />
+    <ClCompile Include="model\animated_model.cpp" />
     <ClCompile Include="model\imported_model.cpp" />
     <ClCompile Include="model\model.cpp" />
     <ClCompile Include="model\model_manager.cpp" />
@@ -234,6 +235,7 @@
     <ClCompile Include="network\network_manager.cpp" />
     <ClCompile Include="network\server.cpp" />
     <ClCompile Include="pipeline.cpp" />
+    <ClCompile Include="renderer\animation_model_renderer.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
     <ClCompile Include="renderer\renderer_manager.cpp" />
     <ClCompile Include="renderer\scene_renderer.cpp" />
@@ -454,6 +456,7 @@
     <ClInclude Include="model\builtin_model\quad_model.h" />
     <ClInclude Include="model\builtin_model\terrain_model.h" />
     <ClInclude Include="model\builtin_model\xyz_axis_model.h" />
+    <ClInclude Include="model\animated_model.h" />
     <ClInclude Include="model\mesh.h" />
     <ClInclude Include="model\imported_model.h" />
     <ClInclude Include="model\model.h" />
@@ -464,6 +467,7 @@
     <ClInclude Include="collision_detection\collision_detection_geometry.h" />
     <ClInclude Include="network\connection.h" />
     <ClInclude Include="network\network_protocol.h" />
+    <ClInclude Include="renderer\animation_model_renderer.h" />
     <ClInclude Include="renderer\renderer_constants.h" />
     <ClInclude Include="shared.h" />
     <ClInclude Include="utility\utility_assimp.h" />

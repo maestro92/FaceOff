@@ -544,6 +544,13 @@ void FaceOff::initObjects()
 	o_sampleBullet.setScale(1.0, 5.0, 1.0);
 
 	o_skybox = SkyBox();
+	o_animatedLegoDude = WorldObject();
+	o_animatedLegoDude.setModelEnum(ModelEnum::animatedLegoMan);
+	o_animatedLegoDude.setModel(m_modelMgr.get(ModelEnum::animatedLegoMan));
+//	o_animatedLegoDude.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
+	o_animatedLegoDude.setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
+	o_animatedLegoDude.setScale(2.0);
+	o_animatedLegoDude.setPosition(glm::vec3(0.0, 0.0, -20.0));
 
 
 	initMap(sv_objects, sv_players, sv_objectKDtree);
@@ -551,7 +558,7 @@ void FaceOff::initObjects()
 
 	// Grenade particle effect
 	FireWorkEffect* fwEffect = new FireWorkEffect();
-	fwEffect->setPosition(glm::vec3(15.0, 0.0, 13.0));
+	fwEffect->setPosition(glm::vec3(0.0, 0.0, -10.0));
 	fwEffect->setScale(50.0);
 
 	fwEffect->init();
@@ -4026,6 +4033,22 @@ void FaceOff::render()
 	p_renderer->disableShader();
 
 #else
+
+/*
+	p_renderer = &m_rendererMgr.r_dynamicModel;
+	p_renderer->enableShader();
+	p_renderer->setData((int)R_DYNAMIC_MODEL::u_texture, 0, GL_TEXTURE_2D, tempTexture);
+		o_animatedLegoDude.renderGroup(m_pipeline, p_renderer);
+	p_renderer->disableShader();
+*/
+	p_renderer = &m_rendererMgr.r_dynamicModel;
+	p_renderer->enableShader();
+		o_animatedLegoDude.updateAnimModelFrame(SDL_GetTicks(), m_rendererMgr.r_dynamicModel.m_boneTransforms);
+
+		p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
+		o_animatedLegoDude.renderGroup(m_pipeline, p_renderer);
+	p_renderer->disableShader();
+
 	p_renderer = &m_rendererMgr.r_fullTexture;
 	p_renderer->enableShader();
 	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);

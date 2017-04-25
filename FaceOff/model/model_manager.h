@@ -11,6 +11,7 @@ using namespace std;
 #include "model.h"
 #include "quad_model.h"
 #include "imported_model.h"
+#include "animated_model.h"
 #include "xyz_axis_model.h"
 
 
@@ -37,8 +38,10 @@ class Weapon;
 
 class ModelManager
 {
+
+
 	public:
-	
+
 		ModelManager();
 		~ModelManager();
 
@@ -69,6 +72,9 @@ class ModelManager
 
 		Model* get(int modelEnum);
 
+
+		Model* getOneBuiltInModel();
+
 	private:
 		Model* m_player;
 		Model* m_healthBar;
@@ -79,9 +85,24 @@ class ModelManager
 		Model* m_woodenBox;
 		Model* m_legoMan;
 
+		// Model* m_animatedLegoMan;
+		
+		AnimatedModel m_animatedLegoMan;
+		Model* m_animatedLampBob;
 
-		vector<Model> m_models;
-		/*
+
+		Model* createXYZAxisModel();
+		Model* createQuadModel();
+		Model* cubeWireFrameModel();
+		Model* cubeModel();
+
+		vector<Model*> m_models;
+		
+
+//		vector<Model> m_models;
+
+
+/*
 		XYZAxisModel    m_xyzModel;
 		ImportedModel	m_bulletModel;
 
