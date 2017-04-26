@@ -16,7 +16,7 @@ namespace utl
 
 	// for matrix, aiMatrix are row-major, glm::mat are column-major
 	// essentially, we are changing row-major to column-major matrix
-	glm::mat4 toGlmMat(aiMatrix3x3 m);
+	glm::mat4 toGlmMat(aiMatrix3x3& m);
 	glm::mat4 toGlmMat(aiMatrix4x4& m);
 	glm::mat4 toGlmMat(const aiMatrix4x4& m);
 	glm::mat4 toGlmMat2(aiMatrix4x4& m2);

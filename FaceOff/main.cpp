@@ -4045,7 +4045,7 @@ void FaceOff::render()
 	p_renderer->enableShader();
 		o_animatedLegoDude.updateAnimModelFrame(SDL_GetTicks(), m_rendererMgr.r_dynamicModel.m_boneTransforms);
 
-		p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
+		p_renderer->setData((int)R_DYNAMIC_MODEL::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 		o_animatedLegoDude.renderGroup(m_pipeline, p_renderer);
 	p_renderer->disableShader();
 
