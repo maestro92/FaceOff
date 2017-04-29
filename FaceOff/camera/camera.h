@@ -1,7 +1,7 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
-#include "network/network_utility.h"
+#include "client_server/network_utility.h"
 #include "define.h"
 #include "utility.h"
 #include "pipeline.h"

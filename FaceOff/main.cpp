@@ -20,7 +20,7 @@
 #include "BitStream.h"
 #include "RakNetTypes.h"	// Message ID
 
-#include "network_manager.h"
+#include "client_server/network_manager.h"
 
 
 #define RENDER_DEBUG_FLAG 0

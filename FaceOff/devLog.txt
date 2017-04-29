@@ -743,11 +743,46 @@ interpolating angles
 ####################################### 2017 April 16th #####################################
 #############################################################################################
 
+I am recently working on skeletal animation, and I stumble upon the question of "should I calculate the matrices on the CPU or the GPU"
 
-possible camera positions upon death
+this is the best answer I found
+
+
+
+http://stackoverflow.com/questions/16620013/should-i-calculate-matrices-on-the-gpu-or-on-the-cpu
+
+
+
+- Death sequence
+another thing I thought about is dealing with the camera positioning during the death animation of your main character. Usually the camera zooms out of the "first person point of view" 
+to a "third person point of view". To implement this, I recalled a GDC talk where they talk about how they implement the same thing in the "last of us"
+essentially they add back up cameras at possible camera positions around your character (joel or ellie). So if your normal in-game camera is behind collisions, you check the other ones, to see if you have
+line of sight
+
+name of the GDC 2014 talk: 
+
+	Unsynced: The Last of Us Melee System
+
+http://www.gdcvault.com/play/1020368/Unsynced-The-Last-of-Us, around at the 30:15 mark
 
 
 
 
-should I calculate the matrices on the CPU then send it to GPU or send everything to GPU and calculate it there?
+
+#############################################################################################
+####################################### 2017 April 29th #####################################
+#############################################################################################
+
+I have gotten skeletal animation to work in my game recently
+
+I am going to start the network protocol. One major source of learning will be from source code I have downloaded from gaffer on games.
+I think this will also be helpful for my work as well. 
+
+If you consider some of the major engineering components of a game such as AI, graphics, physics and Network and so on. Since you are on a mobile platform, graphics and physics are gonna be limited.
+We won't be doing ground breaking stuff on graphics or physics from a mobile game. But there will be lots of interesting networking problems, for example: reducing bandwith, etc etc. Just imaigne all 
+the network diagnostic tools Milota wrote.
+
+There I am starting the network protocol for my game
+
+
 

@@ -71,11 +71,11 @@ struct KDTreeNode;
 #include "RakNetTypes.h"	// Message ID
 // #include "network/network_manager.h"
 
-#include "network\network_manager.h"
-#include "network\server.h"
-#include "network\client.h"
+#include "client_server\network_manager.h"
+#include "client_server\server.h"
+#include "client_server\client.h"
 
-#include "game_messages.h"
+#include "client_server\game_messages.h"
 
 #include "collision_detection/contact_data.h"
 #include "collision_detection/collision_detection.h"
@@ -85,7 +85,7 @@ struct KDTreeNode;
 #include "terrain/terrain.h"
 #include "terrain/multitexture_terrain.h"
 
-#include "network\network_utility.h"
+#include "client_server\network_utility.h"
 
 
 #include <al.h>

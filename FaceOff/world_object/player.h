@@ -23,7 +23,7 @@
 #include "terrain/terrain.h"
 
 #include <list>
-#include "network/network_utility.h"
+#include "client_server/network_utility.h"
 
 #include "world_object/weapon/weapon.h"
 
