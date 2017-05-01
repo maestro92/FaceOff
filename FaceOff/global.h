@@ -1,27 +1,19 @@
 #ifndef GLOBAL_H_
 #define GLOBAL_H_
 
-
-#ifdef CLIENT
-
-
-
-
-
-#endif
-
+// forward declaration
+class LightManager;
+class ModelManager;
+class RendererManager;
 
 struct Global
 {
-
-	bool quit = false;
-	// get all the managers 
-
-
-
+	LightManager* lightMgr = nullptr;
+	ModelManager* modelMgr = nullptr;
+	RendererManager* rendererMgr = nullptr;
 };
 
 
+// static LightManager	lightManager;
 extern Global global;
-
 #endif

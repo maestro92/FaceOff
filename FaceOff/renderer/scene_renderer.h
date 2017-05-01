@@ -4,23 +4,36 @@
 #include "renderer.h"
 #include "light/base_light.h"
 
+#include "global.h"
+#include "light\light_manager.h"
 class SceneRenderer : public Renderer
 {
+	const int NUM_DIR_LIGHT_UNILOCS = 4;
+	const int NUM_PT_LIGHT_UNILOCS = 4;
+	const int NUM_SPOT_LIGHT_UNILOCS = 4;
+
 	public:
-		
-		virtual void addShader(Shader* s);
+		void init();
+		void setDirLightsData(const vector<DirectionalLight>& lights);
+		void setPointLightsData(const vector<PointLight>& lights);
+		void setSpotLightsData(const vector<SpotLight>& lights);
 
-		bool addDirLightUniLocs();
-		bool addPointLightUniLocs();
-		bool addSpotLightUniLocs();
+	private:
+		int dirLightUniLocStartIndex;
+		int pointLightUniLocStartIndex;
+		int spotLightUniLocStartIndex;
 
-		void setDirLightData(DirectionalLight light);
-		void setPointLightData(PointLight light);
-		void setSpotLightData(SpotLight light);
 
-		void setDirLightsData(vector<DirectionalLight> lights);
-		void setPointLightsData(vector<PointLight> lights);
-		void setSpotLightsData(vector<SpotLight> lights);
+		void addDirLightUniLocs();
+		void addPointLightUniLocs();
+		void addSpotLightUniLocs();
+
+
+		void setDirLightData(const DirectionalLight& light, int lightIndex);
+		void setPointLightData(const PointLight& light, int lightIndex);
+		void setSpotLightData(const SpotLight& light, int lightIndex);
+
+
 };
 
 

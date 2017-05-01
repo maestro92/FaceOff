@@ -21,7 +21,7 @@
 #include "RakNetTypes.h"	// Message ID
 
 #include "client_server/network_manager.h"
-
+#include "global.h"
 
 #define RENDER_DEBUG_FLAG 0
 
@@ -129,8 +129,8 @@ const float SPAWN_POSITION_UNIT_OFFSET = 40.0f;
 
 const int INVALID_OBJECT = 0x7FFFFFFF;
 
-RendererManager FaceOff::m_rendererMgr;
-ModelManager	FaceOff::m_modelMgr;
+// RendererManager FaceOff::m_rendererMgr;
+// modelMgr	FaceOff::m_modelMgr;
 
 
 
@@ -153,6 +153,20 @@ FaceOff::~FaceOff()
 
 void FaceOff::init()
 {
+	global.lightMgr = new LightManager();
+	global.lightMgr->init();
+
+	global.modelMgr = new ModelManager();
+	global.modelMgr->init();
+
+	// renderMgr has to init after the lightMgr
+	global.rendererMgr = new RendererManager();
+	global.rendererMgr->init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+
+	// global.rendererManager
+	// m_rendererMgr.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+	// m_rendererMgr.initSceneRendererStaticLightsData(m_lightManager);
+
 	isRunning = true;
 	singlePlayerMode = true;
 
@@ -173,16 +187,14 @@ void FaceOff::init()
 	containedFlag = false;
 	hitNode = NULL;
 
-
-
-
 	timeProfilerIndex = 0;
 	fpsProfilerIndex = 0;
 
 	initObjects();
-	initRenderers();
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
    
-	// initAudio();
 	initNetwork();
 	initNetworkLobby();
 
@@ -241,7 +253,8 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setScale(xbound, zbound, 1.0);
 	o_temp->setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
 	o_temp->setModelEnum(ModelEnum::ground);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::ground));
+//	o_temp->setModel(m_modelMgr.get(ModelEnum::ground));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::ground));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	o_temp->m_name = "ground";
 	objects.add(o_temp);
@@ -251,9 +264,9 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->m_name = "south wall";
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setPosition(0, ybound / 2, zbound + wallWidth);
-	//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
+//	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -264,9 +277,8 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setPosition(0, ybound / 2, -zbound - wallWidth);
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
-	//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -278,7 +290,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
 	//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -291,7 +303,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
 	//	o_temp->setModel(m_modelMgr.m_cube);
 	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -312,7 +324,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
 		//		o_temp->setModel(m_modelMgr.m_woodenBox);
 		o_temp->setModelEnum(ModelEnum::woodenBox);
-		o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
+		o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
 		objects.add(o_temp);
 	}
@@ -331,7 +343,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
 		//		o_temp->setModel(m_modelMgr.m_woodenBox);
 		o_temp->setModelEnum(ModelEnum::woodenBox);
-		o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
+		o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
 		objects.add(o_temp);
 	}
@@ -362,7 +374,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, -halfPosZMag);
 	//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -375,7 +387,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, -halfPosZMag);
 	//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -389,7 +401,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, halfPosZMag);
 	//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -402,7 +414,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
 	//	o_temp->setModel(m_modelMgr.m_woodenBox);
 	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(m_modelMgr.get(ModelEnum::woodenBox));
+	o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -413,21 +425,21 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	float formationGap = 40.0f;
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(MAC_11));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(MAC_11));
 	o_temp->m_name = "MAC_11";
 	o_temp->setPosition(-3 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(AWM));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(AWM));
 	o_temp->m_name = "AWM";
 	o_temp->setPosition(-2 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(MINIGUN));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(MINIGUN));
 	o_temp->m_name = "MINIGUN";
 	o_temp->setPosition(-1 * formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -435,21 +447,21 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(KNIFE));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(KNIFE));
 	o_temp->m_name = "knife";
 	o_temp->setPosition(formationGap, 5, -110);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(MP5));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(MP5));
 	o_temp->m_name = "MP5";
 	o_temp->setPosition(-3 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(MG42));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(MG42));
 	o_temp->m_name = "MG42";
 	o_temp->setPosition(-2 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -458,14 +470,14 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 
 	// init weapons for the map
-	o_temp = new Weapon(m_modelMgr.getWeaponData(AK_47));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(AK_47));
 	o_temp->m_name = "AK 47";
 	o_temp->setPosition(-formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(M16));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(M16));
 	o_temp->m_name = "M16";
 	o_temp->setPosition(formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -473,7 +485,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(KATANA));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(KATANA));
 	o_temp->m_name = "katana";
 	o_temp->setPosition(2 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
@@ -481,14 +493,11 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 
 
-	o_temp = new Weapon(m_modelMgr.getWeaponData(PISTOL_SHOTGUN));
+	o_temp = new Weapon(global.modelMgr->getWeaponData(PISTOL_SHOTGUN));
 	o_temp->m_name = "shotgun";
 	o_temp->setPosition(3 * formationGap, 5, -140);
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
-
-
-
 
 
 	vector<WorldObject*> objectsForKDTree;
@@ -520,7 +529,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 void FaceOff::initObjects()
 {
-	m_modelMgr.init();
+//	m_modelMgr.init();
 	// m_nm.init(&m_modelMgr, &m_objects, &m_players);
 
 	/*/
@@ -538,7 +547,7 @@ void FaceOff::initObjects()
 	float scale = 100.0;
 	o_worldAxis.setScale(scale);
 	o_worldAxis.setModelEnum(ModelEnum::xyzAxis);
-	o_worldAxis.setModel(m_modelMgr.get(ModelEnum::xyzAxis));
+	o_worldAxis.setModel(global.modelMgr->get(ModelEnum::xyzAxis));
 
 	
 	o_sampleBullet.setScale(1.0, 5.0, 1.0);
@@ -546,7 +555,7 @@ void FaceOff::initObjects()
 	o_skybox = SkyBox();
 	o_animatedLegoDude = WorldObject();
 	o_animatedLegoDude.setModelEnum(ModelEnum::animatedLegoMan);
-	o_animatedLegoDude.setModel(m_modelMgr.get(ModelEnum::animatedLegoMan));
+	o_animatedLegoDude.setModel(global.modelMgr->get(ModelEnum::animatedLegoMan));
 //	o_animatedLegoDude.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
 	o_animatedLegoDude.setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
 	o_animatedLegoDude.setScale(2.0);
@@ -577,16 +586,13 @@ void FaceOff::initObjects()
 	
 }
 
-
+/*
 void FaceOff::initRenderers()
 {
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
 	m_rendererMgr.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	m_rendererMgr.initSceneRendererStaticLightsData(m_lightManager);
 }
-
+*/
 
 void FaceOff::initNetwork()
 {
@@ -667,22 +673,22 @@ void FaceOff::initNetworkLobby()
 					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
 					p->setRotation(0, 0);
 					p->setModelEnum(ModelEnum::player);
-					p->setModel(m_modelMgr.get(ModelEnum::player));
+					p->setModel(global.modelMgr->get(ModelEnum::player));
 					p->setMass(80);
 					p->setCollisionDetectionGeometry(CD_SPHERE);
 
 					utl::clDebug("	player objectId tag", p->objectId.getTag());
 					utl::clDebug("	player objectId index", p->objectId.getIndex());
 
-					Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
+					Weapon* mainWeapon = new Weapon(global.modelMgr->getWeaponData(M16));
 					mainWeapon->setCollisionDetectionGeometry(CD_AABB);
 					mainWeapon->m_name = "player " + utl::intToStr(newPlayerIndex) + " mainWeapon";
 
-					Weapon* knife = new Weapon(m_modelMgr.getWeaponData(KNIFE));
+					Weapon* knife = new Weapon(global.modelMgr->getWeaponData(KNIFE));
 					knife->setCollisionDetectionGeometry(CD_AABB);
 					knife->m_name = "player " + utl::intToStr(newPlayerIndex) + " knife";
 
-					Weapon* grenade = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
+					Weapon* grenade = new Weapon(global.modelMgr->getWeaponData(FRAG_GRENADE));
 					grenade->setMass(0.4);
 					grenade->setMaterialEnergyRestitution(0.6);
 					grenade->setMaterialSurfaceFriction(0.3);
@@ -786,22 +792,22 @@ void FaceOff::initNetworkLobby()
 						p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
 						p->setRotation(0, 0);
 						p->setModelEnum(ModelEnum::player);
-						p->setModel(m_modelMgr.get(ModelEnum::player));
+						p->setModel(global.modelMgr->get(ModelEnum::player));
 						p->setMass(80);
 						p->setCollisionDetectionGeometry(CD_SPHERE);
 
 						utl::clDebug("	player objectId tag", p->objectId.getTag());
 						utl::clDebug("	player objectId index", p->objectId.getIndex());
 
-						Weapon* mainWeapon = new Weapon(m_modelMgr.getWeaponData(M16));
+						Weapon* mainWeapon = new Weapon(global.modelMgr->getWeaponData(M16));
 						mainWeapon->setCollisionDetectionGeometry(CD_AABB);
 						mainWeapon->m_name = "player mainWeapon";
 
-						Weapon* knife = new Weapon(m_modelMgr.getWeaponData(KNIFE));
+						Weapon* knife = new Weapon(global.modelMgr->getWeaponData(KNIFE));
 						knife->setCollisionDetectionGeometry(CD_AABB);
 						knife->m_name = "player knife";
 
-						Weapon* grenade = new Weapon(m_modelMgr.getWeaponData(FRAG_GRENADE));
+						Weapon* grenade = new Weapon(global.modelMgr->getWeaponData(FRAG_GRENADE));
 						grenade->setMass(0.4);
 						grenade->setMaterialEnergyRestitution(0.6);
 						grenade->setMaterialSurfaceFriction(0.3);
@@ -1031,7 +1037,7 @@ void FaceOff::deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStre
 		p->setDefaultPlayerFlag(curPlayerFlag);
 	}
 
-	p->deserialize_New(bs, &m_modelMgr);
+	p->deserialize_New(bs);
 
 	if (curPlayerFlag == true)
 	{
@@ -1056,7 +1062,7 @@ void FaceOff::deserializePlayerAndWeaponAndAddToWorld(Player* p, RakNet::BitStre
 
 void FaceOff::deserializeEntityAndAddToWorld(WorldObject* obj, RakNet::BitStream& bs)
 {
-	obj->deserialize_New(bs, &m_modelMgr);
+	obj->deserialize_New(bs);
 
 	cl_objects.set(obj, obj->objectId);
 
@@ -1944,7 +1950,7 @@ void FaceOff::processUserFireWeapon(Player* p)
 			hitPointMark->setPosition(hitPoint);
 			hitPointMark->setScale(1.0, 1.0, 1.0);
 			hitPointMark->setModelEnum(ModelEnum::cube);
-			hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
+			hitPointMark->setModel(global.modelMgr->get(ModelEnum::cube));
 			hitPointMark->m_name = "hitMark";
 			//								m_hitPointMarks.push_back(hitPointMark);
 			
@@ -3835,14 +3841,16 @@ void FaceOff::render()
 	// *******************************************************
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_rendererMgr.m_backGroundLayerFBO.FBO);
-	//	Model::enableVertexAttribArrays();
+//	glBindFramebuffer(GL_FRAMEBUFFER, m_rendererMgr.m_backGroundLayerFBO.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, global.rendererMgr->m_backGroundLayerFBO.FBO);
+
+//	Model::enableVertexAttribArrays();
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// the render function disables depth test Cull face already and enables it afterwards
-	o_skybox.render(m_pipeline, &m_rendererMgr.r_skybox);
+	o_skybox.render(m_pipeline, &global.rendererMgr->r_skybox);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 #if RENDER_DEBUG_FLAG
@@ -4034,24 +4042,19 @@ void FaceOff::render()
 
 #else
 
-/*
-	p_renderer = &m_rendererMgr.r_dynamicModel;
+
+	p_renderer = &global.rendererMgr->r_dynamicModel;
 	p_renderer->enableShader();
-	p_renderer->setData((int)R_DYNAMIC_MODEL::u_texture, 0, GL_TEXTURE_2D, tempTexture);
-		o_animatedLegoDude.renderGroup(m_pipeline, p_renderer);
-	p_renderer->disableShader();
-*/
-	p_renderer = &m_rendererMgr.r_dynamicModel;
-	p_renderer->enableShader();
-		o_animatedLegoDude.updateAnimModelFrame(SDL_GetTicks(), m_rendererMgr.r_dynamicModel.m_boneTransforms);
+		o_animatedLegoDude.updateAnimModelFrame(SDL_GetTicks(), global.rendererMgr->r_dynamicModel.m_boneTransforms);
 
 		p_renderer->setData((int)R_DYNAMIC_MODEL::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 		o_animatedLegoDude.renderGroup(m_pipeline, p_renderer);
 	p_renderer->disableShader();
 
-	p_renderer = &m_rendererMgr.r_fullTexture;
+//	p_renderer = &global.rendererMgr->r_fullTexture;
+	p_renderer = &global.rendererMgr->r_sceneTexture;
 	p_renderer->enableShader();
-	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
+	p_renderer->setData((int)R_SCENE_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 
 		for (int i = 0; i < cl_players.getIterationEnd(); i++)
 		{
@@ -4061,17 +4064,7 @@ void FaceOff::render()
 			{
 				continue;
 			}
-			/*
-			if (!m_isServer)
-			{
-				if (oldPos != p->getPosition())
-				{
-					utl::debug("pos", p->getPosition());
 
-					oldPos = p->getPosition();
-				}
-			}
-			*/
 			if (p->isHit == false)
 			{
 				p->renderGroup(m_pipeline, p_renderer);
@@ -4086,30 +4079,10 @@ void FaceOff::render()
 			if (object == NULL)
 				continue;
 
-			if (m_defaultPlayerObjectId.getIndex() == 0 && object->objectId.getIndex() == 30)
-			{
-		//		utl::clDebug("		object", object->m_position);
-			}
-			/*
-			if (object->getObjectType() == WEAPON)
-			{
-				continue;
-			}
-			*/
-
-
-
 			if (!object->shouldRender())
 			{
 				continue;
 			}
-
-			/*
-			if (object->m_name == "ground")
-			{
-				int a = 1;
-			}
-			*/
 
 			if (object->isHit == false)
 			{
@@ -4119,7 +4092,7 @@ void FaceOff::render()
 
 	p_renderer->disableShader();
 
-
+	/*
 	// Rendering wireframes
 	p_renderer = &m_rendererMgr.r_fullVertexColor;
 	p_renderer->enableShader();
@@ -4136,12 +4109,12 @@ void FaceOff::render()
 			//		m_objectKDtree.renderNode(m_pipeline, p_renderer, hitNode);
 		}
 	p_renderer->disableShader();
+	*/
 
 
 
 
-
-	p_renderer = &m_rendererMgr.r_fullColor;
+	p_renderer = &global.rendererMgr->r_fullColor;
 	p_renderer->enableShader();
 	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
 
@@ -4158,8 +4131,6 @@ void FaceOff::render()
 				continue;
 			}
 
-		//	p->alreadyFireTested = false;
-
 			if (p->isHit)
 			{
 				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
@@ -4174,8 +4145,6 @@ void FaceOff::render()
 
 			if (object == NULL)
 				continue;
-
-		//	object->alreadyFireTested = false;
 
 			if (object->getEntityType() == WEAPON)
 			{
@@ -4260,7 +4229,7 @@ void FaceOff::render()
 	m_gui.initGUIRenderingSetup();
 	if (!m_zoomedIn)
 	{
-		m_gui.renderTextureFullScreen(m_rendererMgr.m_backGroundLayerFBO.colorTexture);
+		m_gui.renderTextureFullScreen(global.rendererMgr->m_backGroundLayerFBO.colorTexture);
 	}
 
 	glEnable(GL_BLEND);
@@ -4308,7 +4277,7 @@ void FaceOff::render()
 	if (m_zoomedIn)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, RENDER_TO_SCREEN);
-		m_gui.renderSnipeScopeView(m_rendererMgr.m_backGroundLayerFBO.colorTexture);
+		m_gui.renderSnipeScopeView(global.rendererMgr->m_backGroundLayerFBO.colorTexture);
 	}
 
 

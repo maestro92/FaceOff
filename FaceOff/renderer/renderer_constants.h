@@ -44,6 +44,22 @@ namespace R_SKYBOX
 	};
 }
 
+namespace R_SCENE_TEXTURE
+{
+	enum E
+	{
+		u_texture = 0
+	};
+}
+
+namespace R_SCENE_COLOR
+{
+	enum E
+	{
+		u_color = 0
+	};
+}
+
 namespace R_FIRE_WORK_EFFECT_UPDATE
 {
 	enum E

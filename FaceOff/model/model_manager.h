@@ -34,7 +34,7 @@ using namespace std;
 using namespace json_spirit;
 
 // to resolve circular depenency issue
-class Weapon;
+// class Weapon;
 
 class ModelManager
 {
@@ -53,7 +53,7 @@ class ModelManager
 		void readWeaponData(const mObject& obj);
 		void initWeaponData(WeaponData& data);
 		void initWeaponsData();
-		Weapon createWeapon(WeaponNameEnum name);
+//		Weapon createWeapon(WeaponNameEnum name);
 
 		
 

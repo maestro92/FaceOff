@@ -7,8 +7,11 @@
 #include "weapon_data.h"
 #include "particle_effect.h"
 #include "smoke_effect.h"
-//class ModelManager;
+//
+
+#include "global.h"
 #include "model_manager.h"
+
 
 using namespace std;
 
@@ -80,7 +83,7 @@ class Weapon : public WorldObject
 
 
 		virtual void serialize_New(RakNet::BitStream& bs);
-		virtual void deserialize_New(RakNet::BitStream& bs, ModelManager* mm);
+		virtual void deserialize_New(RakNet::BitStream& bs);
 
 //		virtual void serialize_Delta(RakNet::BitStream& bs);
 //		virtual void deserialize_Delta(RakNet::BitStream& bs);

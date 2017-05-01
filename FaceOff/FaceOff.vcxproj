@@ -97,6 +97,7 @@
     <ClCompile Include="collision_detection\collision_detection.cpp" />
     <ClCompile Include="collision_detection\kd_tree.cpp" />
     <ClCompile Include="collision_detection\contact_data.cpp" />
+    <ClCompile Include="global.cpp" />
     <ClCompile Include="gui\custom_gui\bar.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_reader.cpp" />
     <ClCompile Include="libraries\json_spirit\json_spirit_value.cpp" />
@@ -235,8 +236,8 @@
     <ClCompile Include="client_server\network_manager.cpp" />
     <ClCompile Include="client_server\server.cpp" />
     <ClCompile Include="network\address.cpp" />
-    <ClCompile Include="global.cpp" />
     <ClCompile Include="pipeline.cpp" />
+    <ClCompile Include="protocol\connection.cpp" />
     <ClCompile Include="renderer\animation_model_renderer.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
     <ClCompile Include="renderer\renderer_manager.cpp" />
@@ -269,10 +270,13 @@
     <ClInclude Include="camera\camera.h" />
     <ClInclude Include="camera\first_person_camera.h" />
     <ClInclude Include="camera\third_person_camera.h" />
+    <ClInclude Include="client_server\client_server_enums.h" />
+    <ClInclude Include="client_server\client_server_packets.h" />
     <ClInclude Include="collision_detection\collision_detection.h" />
     <ClInclude Include="collision_detection\kd_tree.h" />
     <ClInclude Include="collision_detection\kd_tree_node.h" />
     <ClInclude Include="collision_detection\contact_data.h" />
+    <ClInclude Include="global.h" />
     <ClInclude Include="gui\custom_gui\bar.h" />
     <ClInclude Include="gui\gui_renderer_constants.h" />
     <ClInclude Include="libraries\json_spirit\json_spirit.h" />
@@ -469,8 +473,8 @@
     <ClInclude Include="collision_detection\collision_detection_geometry.h" />
     <ClInclude Include="network\address.h" />
     <ClInclude Include="network\enums.h" />
-    <ClInclude Include="global.h" />
     <ClInclude Include="network\simulator.h" />
+    <ClInclude Include="protocol\connection.h" />
     <ClInclude Include="protocol\object.h" />
     <ClInclude Include="protocol\packet.h" />
     <ClInclude Include="protocol\write_stream.h" />

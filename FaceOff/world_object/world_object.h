@@ -9,7 +9,8 @@
 #include <string>
 #include "cube_wireframe_model.h"
 #include "collision_detection_geometry.h"
-class ModelManager;
+#include "global.h"
+// class ModelManager;
 
 #include "shared.h"
 /*
@@ -207,7 +208,7 @@ class WorldObject
 		
 
 		virtual void serialize_New(RakNet::BitStream& bs);
-		virtual void deserialize_New(RakNet::BitStream& bs, ModelManager* mm);
+		virtual void deserialize_New(RakNet::BitStream& bs);
 
 		void serialize_Delta(int flags, RakNet::BitStream& bs);
 		void deserialize_Delta(int flags, RakNet::BitStream& bs);

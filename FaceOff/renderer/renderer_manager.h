@@ -6,6 +6,7 @@
 #include "renderer.h"
 #include "scene_renderer.h"
 #include "animation_model_renderer.h"
+#include "global.h"
 #include "light/light_manager.h"
 
 
@@ -41,6 +42,12 @@ class RendererManager
 
 		
 		Renderer r_multiTexturedTerrain;
+
+		SceneRenderer r_sceneColor;
+		SceneRenderer r_sceneTexture;
+
+
+
 		SceneRenderer r_multiTexTerrain;
 		SceneRenderer r_texturedObject;
 		SceneRenderer r_billboardOneQuad;

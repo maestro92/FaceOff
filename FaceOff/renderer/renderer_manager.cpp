@@ -44,6 +44,17 @@ void RendererManager::init(int width, int height)
 		r_smokeEffectRender.setData(R_SMOKE_EFFECT_RENDER::u_zFar, utl::Z_FAR);
 	r_smokeEffectRender.disableShader();
 
+
+//	SceneRenderer r_sceneColor;
+	Renderer::initRendererWrapper(vArray, &r_sceneTexture, "r_sceneTexture");
+	r_sceneTexture.init();
+	r_sceneTexture.enableShader();
+		r_sceneTexture.setDirLightsData(global.lightMgr->getDirLights());
+		r_sceneTexture.setPointLightsData(global.lightMgr->getPointLights());
+		r_sceneTexture.setSpotLightsData(global.lightMgr->getSpotLights());
+	r_sceneTexture.disableShader();
+
+
 	/*
 	r_fullVertexColor.printDataPairs();
 	r_fullColor.printDataPairs();

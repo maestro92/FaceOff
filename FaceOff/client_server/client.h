@@ -24,6 +24,8 @@
 
 #include "shared.h"
 
+
+
 // allow a lot of command backups for very fast systems
 // multiple commands may be combined into a single packet, so this
 // needs to be larger than PACKET_BACKUP
@@ -189,85 +191,109 @@ class ClientConnection
 
 };
 
-class Client
-{
-	public:
-		Client();
-		Client(RakNet::RakNetGUID guid);
-		~Client();
+// namespace clientServer
+// {
 
-		void init(int cmdSampleRate);
-		void run();
+	struct ClientConfig
+	{
+		uint16_t defaultServerPort = 10000;	// the default server port. Used when resolving by hostname and address port is zero.
 
-		bool timeToSampleUserCmd(long long nowTime_m);
+		float connectingSendRate = 5.0f;
+		float connectedSendRate = 10.0f;
 
-		RakNet::RakPeerInterface* peer;
-		bool isConnected;
+		float connectingTimeOut = 10.0f;		// timeout in seconds while a client is connecting
+		float connectedTimeOut = 30.0f;		// timeout in seconds once a client is connected;
 
 
-		int framecount;
-		int frametime;		// msec since last frame
+		int fragmentSize = 1024;
+		int fragmentsPerSecond = 60;
+	};
+
+	class Client
+	{
+		private:
+			const ClientConfig m_config;
+
+		//	protocol::Connection* m_connection;
+		//	network::Address m_address;
 
 
-		// the rate the client is sampling usercmd
-		// https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
-		// this article says, I should sample it at the same rate the server is ticking
-		int cmdRate;	
-		int CL_FIXED_CMD_SAMPLE_TIME_ms;
-		long long lastSampleTime;
+		public:
+			Client();
+			Client(RakNet::RakNetGUID guid);
+			~Client();
 
-		long long realTime;
+			void init(int cmdSampleRate);
+			void run();
 
-//		int realtime;
-		int realFrameTime;	
+			bool timeToSampleUserCmd(long long nowTime_m);
 
-		int nextSnapshotTime;
-
-		int	serverTime;			// may be paused during play
-
-		int	weapon;
-
-		int lastServerMsgSequence;	// the message the server will delta from	
-		int lastAckCmdNum;
-
-		// keeping two entries for mouse smoothing
-//		int mouseDx[2];
-//		int mouseDy[2];
-//		int mouseIndex;
-		UserCmd cmds[CMD_BUFFER_SIZE];	// each message will send several old cmds
-		int cmdNum;				// incremented each frame, because multiple
-								// frames may need to be packed into a single packet
-
-		ClientSnapshot* curSnapshot;		// latest received from server
-		ClientSnapshot snapshots[CL_SNAPSHOT_BUFFER_SIZE];
-
-		// index (not anded off) into parseEntities[]
-//		int	parseEntitiesIndex;
-
-	
-//		I have trouble accessing past frames without doing linear time
-	
-
-//		ClientWorldObjectState parseEntities[MAX_PARSE_ENTITIES];
-		//		WorldObjectState entityBaseLines[MAX_ENTITIES];
-		//		WorldObjectState parseEntities[MAX_PARSE_ENTITIES];
-
-		// the circular objects states used when parsing the snapshot from the server
-		// will also be used when the client tries to interpolate across snapshots
-		// vector<WorldObjectState> snapshotObjectStates;	
-
-//		int lastUserCmdFrame;	// the frame that the last client usercmd send over
-		NetChannel netchan;
-
-		RakNet::RakNetGUID m_guid;
-		RakNet::SystemAddress systemAddress;
-		RakNet::SystemAddress serverSystemAddress;
+			RakNet::RakPeerInterface* peer;
+			bool isConnected;
 
 
-		int serverMessageSequence;
+			int framecount;
+			int frametime;		// msec since last frame
 
-		int id;
-		
-};
 
+			// the rate the client is sampling usercmd
+			// https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
+			// this article says, I should sample it at the same rate the server is ticking
+			int cmdRate;
+			int CL_FIXED_CMD_SAMPLE_TIME_ms;
+			long long lastSampleTime;
+
+			long long realTime;
+
+			//		int realtime;
+			int realFrameTime;
+
+			int nextSnapshotTime;
+
+			int	serverTime;			// may be paused during play
+
+			int	weapon;
+
+			int lastServerMsgSequence;	// the message the server will delta from	
+			int lastAckCmdNum;
+
+			// keeping two entries for mouse smoothing
+	//		int mouseDx[2];
+	//		int mouseDy[2];
+	//		int mouseIndex;
+			UserCmd cmds[CMD_BUFFER_SIZE];	// each message will send several old cmds
+			int cmdNum;				// incremented each frame, because multiple
+									// frames may need to be packed into a single packet
+
+			ClientSnapshot* curSnapshot;		// latest received from server
+			ClientSnapshot snapshots[CL_SNAPSHOT_BUFFER_SIZE];
+
+			// index (not anded off) into parseEntities[]
+	//		int	parseEntitiesIndex;
+
+
+	//		I have trouble accessing past frames without doing linear time
+
+
+	//		ClientWorldObjectState parseEntities[MAX_PARSE_ENTITIES];
+			//		WorldObjectState entityBaseLines[MAX_ENTITIES];
+			//		WorldObjectState parseEntities[MAX_PARSE_ENTITIES];
+
+			// the circular objects states used when parsing the snapshot from the server
+			// will also be used when the client tries to interpolate across snapshots
+			// vector<WorldObjectState> snapshotObjectStates;	
+
+	//		int lastUserCmdFrame;	// the frame that the last client usercmd send over
+			NetChannel netchan;
+
+			RakNet::RakNetGUID m_guid;
+			RakNet::SystemAddress systemAddress;
+			RakNet::SystemAddress serverSystemAddress;
+
+
+			int serverMessageSequence;
+
+			int id;
+	};
+// }
 #endif

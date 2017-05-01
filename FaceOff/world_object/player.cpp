@@ -1322,7 +1322,7 @@ void Player::serialize_New(RakNet::BitStream& bs)
 }
 
 // Note we still have to add this Player to the world if we haven't done that yet
-void Player::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
+void Player::deserialize_New(RakNet::BitStream& bs)
 {
 	// the message id is already ignored
 //	int id = 0;
@@ -1347,7 +1347,7 @@ void Player::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 	setRotation(m_pitch, m_yaw);
 
 	bs.Read(m_modelEnum);		
-	setModel(mm->get(m_modelEnum));
+	setModel(global.modelMgr->get(m_modelEnum));
 
 
 	bs.Read(m_geometryType);	 
@@ -1370,7 +1370,7 @@ void Player::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 	for (int i = 0; i < weaponCount; i++)
 	{
 		Weapon* weapon = new Weapon();
-		weapon->deserialize_New(bs, mm);
+		weapon->deserialize_New(bs);
 
 		pickUp(weapon);
 	}

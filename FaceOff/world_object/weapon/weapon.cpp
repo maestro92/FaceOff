@@ -335,7 +335,7 @@ void Weapon::serialize_New(RakNet::BitStream& bs)
 }
 
 
-void Weapon::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
+void Weapon::deserialize_New(RakNet::BitStream& bs)
 {
 	uint16_t tag = 0;
 	uint16_t index = 0;
@@ -351,7 +351,7 @@ void Weapon::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 
 	bs.Read(m_nameEnum);
 	// important to run this before the operations below
-	init(mm->getWeaponData((WeaponNameEnum)m_nameEnum));	
+	init(global.modelMgr->getWeaponData((WeaponNameEnum)m_nameEnum));	
 
 	bs.Read(m_slotEnum);
 

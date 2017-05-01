@@ -59,8 +59,6 @@ class Snapshot
 };
 */
 
-
-
 // snapshot constructed on the server for the particular client
 class Snapshot
 {
@@ -85,102 +83,124 @@ class Snapshot
 };
 
 
-class Server
-{
-	public:
-		Server();
-		Server(bool dedicatedFlag);
-		~Server();
-
-		void init(int fps);
-
-		void run();
-
-		RakNet::RakPeerInterface* peer;
-
-		bool isInitalized;
-		bool isDedicated;
-		int m_fps;
-
-		int timeout;
-
-		int snapshotCounter;	// incremented for each snapshot built
-		// int	timeResidual;		// <= 1000 / sv_frame->value
-		// the circular objects states used when building snapshot on the server
-		vector<WorldObjectState> snapshotObjectStates;
-		vector<WorldObjectState> snapshotObjectStatesBaselines;
+// namespace clientServer/
+// {
 
 
+	struct ServerConfig
+	{
+		float connectingSendRate = 10;
+		float connectedSendRate = 30;
 
-		int nextSnapshotEntityIndex;
-		int snapshotObjectStatesBufferSize;
+		float connectingTimeOut = 5.0f;		// timeout in seconds while a client is connecting
+		float connectedTimeOut = 10.0f;		// timeout in seconds once a client is connected;
 
+		
+		int fragmentSize = 1024;
+		int fragmentsPerSecond = 60;
 
+	
+		// network::Simulator* networkSimulator = nulltpr;	// optional network simulator
+	};
 
-//		vector<WorldObjectState> snapshotPlayerStates;
+	class Server
+	{
+		public:
+			Server();
+			Server(bool dedicatedFlag);
+			~Server();
 
+			void init(int fps);
 
-		int m_deltaTimeAccumulatorMS;
-		int	nextFrameTime;		// when time > nextFrameTime, process world
+			void run();
 
-		int frameNum;
+			RakNet::RakPeerInterface* peer;
 
-		int num_entities;		// current number, <= MAX_GENTITIES
+			bool isInitalized;
+			bool isDedicated;
+			int m_fps;
 
+			int timeout;
 
-
-		void addClient(RakNet::Packet* packet);
-		RakNet::SystemAddress getClientAddress(int i);
-		bool isClientConnected(int i);
-		void setClientIncomingSequence(int i, int sequence);
-		int getClientOutgoingSequence(int i);
-		void incrementClientOutgoingSequence(int i);
-
-		int getClientLastAckMessageSequence(int i);						// currently, mainly used as lastAckSnapshotSequence
-		void setClientLastAckMessageSequence(int i, int ackMsgSequence);
-
-		int getClientLastUserCmdNum(int i);
-		void setClientLastUserCmdNum(int i, int index);
-
-		Snapshot& getClientSnapshot(int i, int si);
-
-		int getNumConnectedClients();
-		int getNumClients();
-
-		int time;
-		long long realTime;
-
-	private:
-
-		// server's representation of client
-		// the main and everywhere else shouldn't be aware of this class
-		class ClientHandle
-		{
-			public:
-				Snapshot snapshots[SV_SNAPSHOT_BUFFER_SIZE];
-				RakNet::SystemAddress systemAddress;
-				bool isConnected;
-				int lastAckMessageSequence;			// the frame that the last client usercmd send over
-				int lastUserCmdNum;
-				NetChannel netchan;
-				RakNet::RakNetGUID m_guid;
-
-				ClientHandle(RakNet::RakNetGUID guid)
-				{
-					m_guid = guid;
-					isConnected = false;
-
-					lastUserCmdNum = -1;
-				}
-		};
-
-		int numConnectedClient;
-
-		vector<ClientHandle> clients;
-};
+			int snapshotCounter;	// incremented for each snapshot built
+			// int	timeResidual;		// <= 1000 / sv_frame->value
+			// the circular objects states used when building snapshot on the server
+			vector<WorldObjectState> snapshotObjectStates;
+			vector<WorldObjectState> snapshotObjectStatesBaselines;
 
 
 
+			int nextSnapshotEntityIndex;
+			int snapshotObjectStatesBufferSize;
+
+
+
+	//		vector<WorldObjectState> snapshotPlayerStates;
+
+
+			int m_deltaTimeAccumulatorMS;
+			int	nextFrameTime;		// when time > nextFrameTime, process world
+
+			int frameNum;
+
+			int num_entities;		// current number, <= MAX_GENTITIES
+
+
+
+			void addClient(RakNet::Packet* packet);
+			RakNet::SystemAddress getClientAddress(int i);
+			bool isClientConnected(int i);
+			void setClientIncomingSequence(int i, int sequence);
+			int getClientOutgoingSequence(int i);
+			void incrementClientOutgoingSequence(int i);
+
+			int getClientLastAckMessageSequence(int i);						// currently, mainly used as lastAckSnapshotSequence
+			void setClientLastAckMessageSequence(int i, int ackMsgSequence);
+
+			int getClientLastUserCmdNum(int i);
+			void setClientLastUserCmdNum(int i, int index);
+
+			Snapshot& getClientSnapshot(int i, int si);
+
+			int getNumConnectedClients();
+			int getNumClients();
+
+			int time;
+			long long realTime;
+
+		private:
+
+			// server's representation of client
+			// the main and everywhere else shouldn't be aware of this class
+			class ClientHandle
+			{
+				public:
+					Snapshot snapshots[SV_SNAPSHOT_BUFFER_SIZE];
+					RakNet::SystemAddress systemAddress;
+					bool isConnected;
+					int lastAckMessageSequence;			// the frame that the last client usercmd send over
+					int lastUserCmdNum;
+					NetChannel netchan;
+					RakNet::RakNetGUID m_guid;
+
+					
+
+					ClientHandle(RakNet::RakNetGUID guid)
+					{
+						m_guid = guid;
+						isConnected = false;
+
+						lastUserCmdNum = -1;
+					}
+			};
+
+			int numConnectedClient;
+
+			vector<ClientHandle> clients;
+	};
+
+
+//}
 
 
 

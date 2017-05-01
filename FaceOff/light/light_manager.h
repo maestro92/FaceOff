@@ -17,30 +17,40 @@ const static float SPECULAR_POWER = 32.0f;
 
 #include "base_light.h"
 
+const glm::vec3 COLOR_BLUE = glm::vec3(0.0f, 0.0f, 1.0f);
+const glm::vec3 COLOR_GREEN = glm::vec3(0.0f, 1.0f, 0.0f);
+const glm::vec3 COLOR_CYAN = glm::vec3(0.0f, 1.0f, 1.0f);
+const glm::vec3 COLOR_RED = glm::vec3(1.0f, 0.0f, 0.0f);
+const glm::vec3 COLOR_PINK = glm::vec3(1.0f, 0.0f, 1.0f);
+const glm::vec3 COLOR_YELLOW = glm::vec3(1.0f, 1.0f, 0.0f);
+const glm::vec3 COLOR_WHITE = glm::vec3(1.0f, 1.0f, 1.0f);
+
+
 class LightManager
 {
 	public:
 		LightManager(); 
 		~LightManager();
 
+		void init();
+		
+		vector<DirectionalLight>& getDirLights();
+		DirectionalLight& getDirLight(int index);
+		int getNumDirLight();
 
-//		vector<BaseLight*> getLights();
-//		BaseLight* getLight(int index);
-
-		DirectionalLight getDirLight(int index);
-		PointLight getPointLight(int index);
-		SpotLight getSpotLight(int index);
+		vector<PointLight>& getPointLights();
+		PointLight& getPointLight(int index);
+		int getNumPointLight();
+		
+		vector<SpotLight>& getSpotLights();
+		SpotLight& getSpotLight(int index);
+		int getNumSpotLight();
 
 	private:
 
 		vector<DirectionalLight> m_dirLights;
 		vector<PointLight> m_pointLights;
 		vector<SpotLight> m_spotLights;
-
-//		vector<BaseLight*> m_lights;
-		int m_dirLightCount;
-		int m_pointLightCount;
-		int m_spotLightCount;
 };
 
 

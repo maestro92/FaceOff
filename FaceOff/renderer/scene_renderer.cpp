@@ -1,8 +1,26 @@
 
 #include "scene_renderer.h"
 
-void SceneRenderer::addShader(Shader* s)
+void SceneRenderer::init()
 {
+	dirLightUniLocStartIndex = m_dataPairs.size();
+	for (unsigned int i = 0; i < global.lightMgr->getNumDirLight(); i++)
+	{
+		addDirLightUniLocs();
+	}
+
+	pointLightUniLocStartIndex = m_dataPairs.size();
+	for (unsigned int i = 0; i < global.lightMgr->getNumPointLight(); i++)
+	{
+		addPointLightUniLocs();
+	}
+
+	spotLightUniLocStartIndex = m_dataPairs.size();
+	for (unsigned int i = 0; i < global.lightMgr->getNumSpotLight(); i++)
+	{
+		addSpotLightUniLocs();
+	}
+
 	/*
 	Renderer::addShader(s);
 
@@ -13,59 +31,62 @@ void SceneRenderer::addShader(Shader* s)
 }
 
 
-bool SceneRenderer::addDirLightUniLocs()
+void SceneRenderer::addDirLightUniLocs()
 {
-	/*
 	addDataPair("u_dirLight.base.color", DP_VEC3);
 	addDataPair("u_dirLight.base.ambientIntensity", DP_FLOAT);
 	addDataPair("u_dirLight.base.diffuseIntensity", DP_FLOAT);
 	addDataPair("u_dirLight.direction", DP_VEC3);
-	*/
-	return true;
 }
 
-bool SceneRenderer::addPointLightUniLocs()
-{
-	return true;
-}
-
-bool SceneRenderer::addSpotLightUniLocs()
-{
-	return true;
-}
-
-
-void SceneRenderer::setDirLightData(DirectionalLight light)
-{
-	/*
-	setData("u_dirLight.base.color", light.color);
-	setData("u_dirLight.base.ambientIntensity", light.ambientIntensity);
-	setData("u_dirLight.base.diffuseIntensity", light.diffuseIntensity);
-	setData("u_dirLight.direction", light.direction);
-	*/
-}
-
-void SceneRenderer::setPointLightData(PointLight light)
+void SceneRenderer::addPointLightUniLocs()
 {
 
 }
 
-void SceneRenderer::setSpotLightData(SpotLight light)
+void SceneRenderer::addSpotLightUniLocs()
 {
 
 }
 
-void SceneRenderer::setDirLightsData(vector<DirectionalLight> lights)
+
+void SceneRenderer::setDirLightsData(const vector<DirectionalLight>& lights)
+{
+	for (int i = 0; i < lights.size(); i++)
+	{
+		auto light = lights[i];
+		int index = dirLightUniLocStartIndex + i * NUM_DIR_LIGHT_UNILOCS;
+		setDirLightData(light, index);
+	}
+}
+
+
+void SceneRenderer::setPointLightsData(const vector<PointLight>& lights)
 {
 
 }
 
-void SceneRenderer::setPointLightsData(vector<PointLight> lights)
+void SceneRenderer::setSpotLightsData(const vector<SpotLight>& lights)
 {
 
 }
 
-void SceneRenderer::setSpotLightsData(vector<SpotLight> lights)
+
+
+void SceneRenderer::setDirLightData(const DirectionalLight& light, int lightIndex)
+{
+	setData(lightIndex, light.color);
+	setData(lightIndex + 1, light.ambientIntensity);
+	setData(lightIndex + 2, light.diffuseIntensity);
+	setData(lightIndex + 3, light.direction);
+}
+
+void SceneRenderer::setPointLightData(const PointLight& light, int lightIndex)
+{
+
+}
+
+void SceneRenderer::setSpotLightData(const SpotLight& light, int lightIndex)
 {
 
 }

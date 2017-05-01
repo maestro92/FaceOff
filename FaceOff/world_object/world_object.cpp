@@ -428,7 +428,7 @@ void WorldObject::printParentTrees()
 	}
 }
 
-void WorldObject::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
+void WorldObject::deserialize_New(RakNet::BitStream& bs)
 {
 	// the message id is already ignored
 	uint16_t tag = 0;
@@ -445,7 +445,7 @@ void WorldObject::deserialize_New(RakNet::BitStream& bs, ModelManager* mm)
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
 	bs.Read(m_modelEnum);
 
-	setModel(mm->get(m_modelEnum));
+	setModel(global.modelMgr->get(m_modelEnum));
 
 	bs.Read(m_geometryType);
 	setCollisionDetectionGeometry(m_geometryType);

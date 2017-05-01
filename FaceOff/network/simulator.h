@@ -6,6 +6,19 @@
 // network simulator that can simulate latency, jitter and packetLoss
 
 
+namespace network
+{
+	struct SimulatorConfig
+	{
+
+
+
+	};
+
+
+
+}
+
 
 
 #endif

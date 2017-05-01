@@ -52,19 +52,19 @@ struct PointLight : public BaseLight
 		attenuation.exp = 0.0f;
 	}
 
-	PointLight(glm::vec3 Color,
-		float AmbientIntensity,
-		float DiffuseIntensity,
-		glm::vec3 Position,
-		float Constant, float Linear, float Exp)
+	PointLight(glm::vec3 colorIn,
+		float ambientIntensityIn,
+		float diffuseIntensityIn,
+		glm::vec3 positionIn,
+		float constantIn, float linearIn, float expIn)
 	{
-		color = Color;
-		ambientIntensity = AmbientIntensity;
-		diffuseIntensity = DiffuseIntensity;
-		position = Position;
-		attenuation.constant = Constant;
-		attenuation.linear = Linear;
-		attenuation.exp = Exp;
+		color = colorIn;
+		ambientIntensity = ambientIntensityIn;
+		diffuseIntensity = diffuseIntensityIn;
+		position = positionIn;
+		attenuation.constant = constantIn;
+		attenuation.linear = linearIn;
+		attenuation.exp = expIn;
 	}
 };
 

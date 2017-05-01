@@ -59,6 +59,27 @@
 	},
 
 	{
+		"r": 			"r_sceneTexture",
+		"vs":			"scene_texture.vs",
+		"fs":			"scene_texture.fs",
+		"data":
+		{
+			"u_texture":	"DP_INT"
+		}
+	},
+
+	{
+		"r": 			"r_sceneColor",
+		"vs":			"scene_color.vs",
+		"fs":			"scene_color.fs",
+		"data":
+		{
+			"u_color":	"DP_VEC3"
+		}
+	},
+
+
+	{
 		"r": 			"r_fireWorkEffectUpdate",
 		"vs":			"particle_effect_update.vs",
 		"gs":			"particle_effect_update.gs",

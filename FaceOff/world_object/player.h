@@ -27,7 +27,8 @@
 
 #include "world_object/weapon/weapon.h"
 
-// #include "model_manager.h"
+#include "global.h"
+#include "model_manager.h"
 
 #include "custom_gui/bar.h"
 
@@ -151,7 +152,7 @@ class Player : public WorldObject
 		*/
 
 		virtual void serialize_New(RakNet::BitStream& bs);
-		virtual void deserialize_New(RakNet::BitStream& bs, ModelManager* mm);
+		virtual void deserialize_New(RakNet::BitStream& bs);
 
 //		virtual void serialize_Delta(int flags, RakNet::BitStream& bs);
 //		virtual void deserialize_Delta(int flags, RakNet::BitStream& bs);

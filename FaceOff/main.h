@@ -653,8 +653,8 @@ class FaceOff
 {
 	// private:
 	public:
-		static RendererManager		m_rendererMgr;
-		static ModelManager			m_modelMgr;
+//		static RendererManager		m_rendererMgr;
+//		static ModelManager			m_modelMgr;
 		NetworkManager				m_nm;
 		Renderer*					p_renderer;
 
@@ -711,7 +711,6 @@ class FaceOff
 		list<Particle> m_bullets;
 		queue<int> m_objectIndexPool;
 
-//		int m_defaultPlayerID;
 		ObjectId m_defaultPlayerObjectId;
 		int getDefaultPlayerId();
 
@@ -809,8 +808,7 @@ class FaceOff
 		/// init functions
 		void init();
 		void initObjects();
-		// void lateInitObjects();
-		void initRenderers();
+
 		void initGUI();
 		void initAudio();
 		
