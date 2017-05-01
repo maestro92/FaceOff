@@ -1,0 +1,58 @@
+#
+## Alias OBJ Material File
+# Exported from SketchUp, (c) 2000-2012 Trimble Navigation Limited
+
+newmtl M_3
+Ka 0.000000 0.000000 0.000000
+Kd 0.388235 0.317647 0.227451
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_3.jpg
+
+newmtl M_5
+Ka 0.000000 0.000000 0.000000
+Kd 0.411765 0.364706 0.294118
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_5.jpg
+
+newmtl M_2
+Ka 0.000000 0.000000 0.000000
+Kd 0.392157 0.364706 0.282353
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_2.jpg
+
+newmtl M_6
+Ka 0.000000 0.000000 0.000000
+Kd 0.325490 0.294118 0.243137
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_6.jpg
+
+newmtl M_7
+Ka 0.000000 0.000000 0.000000
+Kd 0.513725 0.396078 0.286275
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_7.jpg
+
+newmtl M_8
+Ka 0.000000 0.000000 0.000000
+Kd 0.313725 0.286275 0.262745
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_8.jpg
+
+newmtl M_9
+Ka 0.000000 0.000000 0.000000
+Kd 0.635294 0.509804 0.372549
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_9.jpg
+
+newmtl M_10
+Ka 0.000000 0.000000 0.000000
+Kd 0.184314 0.125490 0.090196
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_10.png
+
+newmtl M_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.490196 0.431373 0.329412
+Ks 0.330000 0.330000 0.330000
+map_Kd wooden boxes pack/M_1.jpg
+

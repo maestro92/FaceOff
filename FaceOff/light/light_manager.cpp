@@ -22,11 +22,11 @@ LightManager::~LightManager()
 void LightManager::init()
 {
 	DirectionalLight dirLight = DirectionalLight();
-	dirLight.ambientIntensity = 0.1f;
+	dirLight.ambientIntensity = 0.05f;
 	dirLight.color = COLOR_WHITE;
 	dirLight.diffuseIntensity = 0.5;
 //	dirLight.direction = glm::vec3(19.1004, -28.881, -40.5246) * 2.0f;
-	dirLight.direction = glm::vec3(1, -1, 1);
+	dirLight.direction = glm::normalize(glm::vec3(1, -1, 1));
 	m_dirLights.push_back(dirLight);
 }
 

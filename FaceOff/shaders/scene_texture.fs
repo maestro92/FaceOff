@@ -49,8 +49,8 @@ uniform sampler2D u_texture;
 // uniform float u_matSpecularIntensity;
 // uniform float u_specularPower;
 
-const float matSpecularIntensity = 0.2;
-const float specularPower = 1.0;
+const float matSpecularIntensity = 0.8;
+const float specularPower = 32;
 
 
 in vec3 vf_position;
@@ -58,7 +58,7 @@ in vec3 vf_normal;
 in vec2 vf_UV;
 out vec4 FragColor;
 
-
+// this assumes lightDir is normalized
 vec4 calcLightInternal(BaseLight light, vec3 lightDir, vec3 worldPos, vec3 normal)
 {
 	// ambient light
@@ -73,17 +73,19 @@ vec4 calcLightInternal(BaseLight light, vec3 lightDir, vec3 worldPos, vec3 norma
 
 	if(diffuseFactor > 0.0)
 	{
+// 		diffuseIntensity is just something we can tune
 		diffuseColor = vec4(light.color, 1.0) * light.diffuseIntensity * diffuseFactor;
+//		diffuseColor = vec4(light.color, 1.0) * diffuseFactor;
 
 
 		// specular light
-		vec3 eyeToWorldPos = normalize(u_eyePoint - worldPos);
+		vec3 worldPosToEye = normalize(u_eyePoint - worldPos);
 
-		vec3 reflection = reflect(eyeToWorldPos, normal);
+		vec3 reflection = reflect(lightDir, normal);
 
 		reflection = normalize(reflection);
 
-		float specularFactor = dot(reflection, lightDir);
+		float specularFactor = dot(reflection, worldPosToEye);
 
 		specularFactor = pow(specularFactor, specularPower);
 
@@ -99,6 +101,7 @@ vec4 calcLightInternal(BaseLight light, vec3 lightDir, vec3 worldPos, vec3 norma
 
 vec4 calcDirectionalLight(vec3 worldPos, vec3 normal)
 {
+	// u_dirLight.direction is already noramlized
 	return calcLightInternal(u_dirLight.base, u_dirLight.direction, worldPos, normal);
 }
 

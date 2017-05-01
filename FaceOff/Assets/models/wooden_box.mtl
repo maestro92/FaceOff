@@ -1,0 +1,12 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl Material_WoodPlanks_Color.jpg
+Ns 15.686275
+Ka 0.000000 0.000000 0.000000
+Kd 0.640523 0.640523 0.640523
+Ks 0.378205 0.378205 0.378205
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd wooden box\WoodPlanks_Color.jpg

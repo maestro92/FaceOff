@@ -38,7 +38,9 @@ void ModelManager::init()
 
 	m_cube = new ImportedModel("Assets/models/unit_cube1.obj");
 
-	m_woodenBox = new ImportedModel("Assets/models/wooden box/WoodenBoxOpen02.obj");
+//	m_woodenBox = new ImportedModel("Assets/models/wooden box/WoodenBoxOpen02.obj");
+
+	m_woodenBox = new ImportedModel("Assets/models/wooden_box.obj");
 
 	m_ground = new ImportedModel("Assets/models/quad.obj", textures);
 
