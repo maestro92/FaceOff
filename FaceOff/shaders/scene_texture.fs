@@ -49,8 +49,8 @@ uniform sampler2D u_texture;
 // uniform float u_matSpecularIntensity;
 // uniform float u_specularPower;
 
-const float matSpecularIntensity = 0.8;
-const float specularPower = 32;
+const float matSpecularIntensity = 1.0;
+const float specularPower = 16;
 
 
 in vec3 vf_position;
@@ -66,35 +66,43 @@ vec4 calcLightInternal(BaseLight light, vec3 lightDir, vec3 worldPos, vec3 norma
 
 
 	// diffuse light
-	float diffuseFactor = dot(normal, -lightDir);
+	float diffuseFactor = max(dot(normal, -lightDir), 0.0);
 
-	vec4 diffuseColor = vec4(0, 0, 0, 0);
-	vec4 specularColor = vec4(0, 0, 0, 0);
+	vec4 diffuseColor = vec4(light.color, 1.0) * light.diffuseIntensity * diffuseFactor;
 
+	/*
 	if(diffuseFactor > 0.0)
 	{
 // 		diffuseIntensity is just something we can tune
 		diffuseColor = vec4(light.color, 1.0) * light.diffuseIntensity * diffuseFactor;
-//		diffuseColor = vec4(light.color, 1.0) * diffuseFactor;
-
-
-		// specular light
-		vec3 worldPosToEye = normalize(u_eyePoint - worldPos);
-
-		vec3 reflection = reflect(lightDir, normal);
-
-		reflection = normalize(reflection);
-
-		float specularFactor = dot(reflection, worldPosToEye);
-
-		specularFactor = pow(specularFactor, specularPower);
-
-		if(specularFactor > 0.0)
-		{
-			specularColor = vec4(light.color, 1.0) * matSpecularIntensity * specularFactor;
-		}
-
 	}
+	*/
+
+
+	// Phong specular model
+	/*
+	// specular light
+	vec3 worldPosToEye = normalize(u_eyePoint - worldPos);
+
+	vec3 reflection = reflect(lightDir, normal);
+
+	reflection = normalize(reflection);
+
+	float specularFactor = dot(reflection, worldPosToEye);
+
+	specularFactor = pow(specularFactor, specularPower);
+
+	if(specularFactor > 0.0)
+	{
+		specularColor = vec4(light.color, 1.0) * matSpecularIntensity * specularFactor;
+	}
+	*/
+	// Blinn-Phong Specular Model
+	vec3 viewDir = normalize(u_eyePoint - worldPos);
+	vec3 halfwayDir = normalize(lightDir + viewDir);
+	
+	float specularFactor = pow(max(dot(normal, halfwayDir), 0.0), specularPower);
+	vec4 specularColor =  vec4(light.color, 1.0) * matSpecularIntensity * specularFactor;
 
 	return ambientColor + diffuseColor + specularColor;
 }
