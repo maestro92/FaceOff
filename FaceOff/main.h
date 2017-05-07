@@ -663,7 +663,10 @@ class FaceOff
 		Uint32 m_nextGameTick = 0;
 		MouseState m_mouseState;
 
+		Pipeline m_lightPovPipeline;
 		Pipeline m_pipeline;
+
+		glm::vec3 sunPosition;
 
 		DelayedPacket myDP;
 
@@ -902,7 +905,8 @@ class FaceOff
 		uint8_t svFireWeaponCollisionFlags[ENTITY_COLLISION_FLAG_SIZE];
 		void processUserFireWeapon(Player* p);
 		void render();
-
+		void renderEntities(Pipeline& p, Renderer* r);
+		void renderDebug();
 
 //		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setCollsionFlagsBothWays);
 //		void simulateObjectPhysics(KDTree& tree, FOArray<WorldObject*>& objects, WorldObject* object, int i, bool setCollsionFlagsBothWays);

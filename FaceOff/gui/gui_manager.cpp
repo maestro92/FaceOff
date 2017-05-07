@@ -30,6 +30,7 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	string path = "gui_shaders/";
 
 	Renderer::initRendererWrapper(vArray, &r_texture, "r_texture", path);
+	Renderer::initRendererWrapper(vArray, &r_depthTexture, "r_depthTexture", path);
 	Renderer::initRendererWrapper(vArray, &r_coloredRect, "r_coloredRect", path);
 	Renderer::initRendererWrapper(vArray, &r_texturedRect, "r_texturedRect", path);
 	Renderer::initRendererWrapper(vArray, &r_listBoxItemHighlight, "r_listBoxItemHighlight", path);
@@ -211,6 +212,9 @@ void GUIManager::renderSnipeScopeView(GLuint sceneTextureId)
 	r_sniperScopeView.disableShader();
 }
 
+
+
+
 void GUIManager::renderTextureFullScreen(GLuint textureId)
 {
 	renderTextureFullScreen(textureId, RENDER_TO_SCREEN);
@@ -218,34 +222,44 @@ void GUIManager::renderTextureFullScreen(GLuint textureId)
 
 void GUIManager::renderTextureFullScreen(GLuint textureId, GLuint fboTarget)
 {
-	renderTexture(textureId, fboTarget, 0, 0, m_screenWidth, m_screenHeight);
+	renderTexture(textureId, fboTarget, 0, 0, m_screenWidth, m_screenHeight, r_texture);
 }
 
-void GUIManager::renderTexture(GLuint textureId, int x, int y, int width, int height)
+void GUIManager::renderDepthTextureFullScreen(GLuint textureId)
 {
-	renderTexture(textureId, RENDER_TO_SCREEN, x, y, width, height);
+	renderDepthTextureFullScreen(textureId, RENDER_TO_SCREEN);
 }
 
-void GUIManager::renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height)
+void GUIManager::renderDepthTextureFullScreen(GLuint textureId, GLuint fboTarget)
+{
+	renderTexture(textureId, fboTarget, 0, 0, m_screenWidth, m_screenHeight, r_depthTexture);
+}
+
+void GUIManager::renderTexture(GLuint textureId, int x, int y, int width, int height, Renderer& r)
+{
+	renderTexture(textureId, RENDER_TO_SCREEN, x, y, width, height, r);
+}
+
+void GUIManager::renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height, Renderer& r)
 {
 	setupRenderToScreen(x, y, width, height);
-	r_texture.enableShader();
-	r_texture.setData(R_TEXTURE::u_texture, 0, GL_TEXTURE_2D, textureId);
+	r.enableShader();
+	r.setData(R_TEXTURE::u_texture, 0, GL_TEXTURE_2D, textureId);
 
     m_GUIPipeline.pushMatrix();
         m_GUIPipeline.translate(x, y, 0);
         m_GUIPipeline.scale(width, height, 1.0);
 
-		r_texture.setUniLocs(m_GUIPipeline);
+		r.setUniLocs(m_GUIPipeline);
         m_textureQuad.render();
     m_GUIPipeline.popMatrix();
-	r_texture.disableShader();
+	r.disableShader();
 }
 
 
 void GUIManager::renderTexture(GLuint TextureId, GLuint FboTarget, Rect rect)
 {
-    renderTexture(TextureId, FboTarget, rect.x, rect.y, rect.w, rect.h);
+    renderTexture(TextureId, FboTarget, rect.x, rect.y, rect.w, rect.h, r_texture);
 }
 
 

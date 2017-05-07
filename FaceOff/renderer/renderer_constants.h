@@ -60,6 +60,24 @@ namespace R_SCENE_COLOR
 	};
 }
 
+namespace R_SCENE_TEXTURE_WITH_SHADOW_PASS1
+{
+	enum E
+	{
+
+	};
+}
+
+namespace R_SCENE_TEXTURE_WITH_SHADOW_PASS2
+{
+	enum E
+	{
+		u_shadowMap = 0,
+		u_shadowMapSize,
+		u_lightViewProjMat
+	};
+}
+
 namespace R_FIRE_WORK_EFFECT_UPDATE
 {
 	enum E

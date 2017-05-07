@@ -51,6 +51,7 @@ class LightManager
 		vector<DirectionalLight> m_dirLights;
 		vector<PointLight> m_pointLights;
 		vector<SpotLight> m_spotLights;
+
 };
 
 

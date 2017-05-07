@@ -11,6 +11,17 @@
 	},
 
 	{
+
+		"r": 			"r_depthTexture",
+		"vs":			"depth_texture.vs",
+		"fs":			"depth_texture.fs",
+		"data":
+		{
+			"u_texture":	"DP_INT"
+		}
+	},
+
+	{
 		"r": 			"r_coloredRect",
 		"vs":			"colored_rect.vs",
 		"fs":			"colored_rect.fs",

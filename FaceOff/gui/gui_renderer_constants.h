@@ -12,6 +12,14 @@ namespace R_TEXTURE
 	};
 }
 
+namespace R_DEPTH_TEXTURE
+{
+	enum E
+	{
+		u_texture = 0
+	};
+}
+
 namespace R_COLORED_RECT
 {
 	enum E

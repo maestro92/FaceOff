@@ -64,46 +64,33 @@ vec4 calcLightInternal(BaseLight light, vec3 lightDir, vec3 worldPos, vec3 norma
 	// ambient light
 	vec4 ambientColor = vec4(light.color, 1.0) * light.ambientIntensity;
 
-
 	// diffuse light
 	float diffuseFactor = max(dot(normal, -lightDir), 0.0);
-
 	vec4 diffuseColor = vec4(light.color, 1.0) * light.diffuseIntensity * diffuseFactor;
 
-	/*
-	if(diffuseFactor > 0.0)
-	{
-// 		diffuseIntensity is just something we can tune
-		diffuseColor = vec4(light.color, 1.0) * light.diffuseIntensity * diffuseFactor;
-	}
-	*/
-
+	// specular light
 
 	// Phong specular model
+	
 	/*
-	// specular light
-	vec3 worldPosToEye = normalize(u_eyePoint - worldPos);
-
+	vec3 viewDir = normalize(u_eyePoint - worldPos);
 	vec3 reflection = reflect(lightDir, normal);
 
 	reflection = normalize(reflection);
 
-	float specularFactor = dot(reflection, worldPosToEye);
-
+	float specularFactor = max(dot(reflection, viewDir), 0.0);
 	specularFactor = pow(specularFactor, specularPower);
-
-	if(specularFactor > 0.0)
-	{
-		specularColor = vec4(light.color, 1.0) * matSpecularIntensity * specularFactor;
-	}
+	vec4 specularColor = vec4(light.color, 1.0) * matSpecularIntensity * specularFactor;
 	*/
+
 	// Blinn-Phong Specular Model
 	vec3 viewDir = normalize(u_eyePoint - worldPos);
 	vec3 halfwayDir = normalize(lightDir + viewDir);
 	
-	float specularFactor = pow(max(dot(normal, halfwayDir), 0.0), specularPower);
-	vec4 specularColor =  vec4(light.color, 1.0) * matSpecularIntensity * specularFactor;
-
+	float specularFactor = max(dot(normal, halfwayDir), 0.0);
+	specularFactor = pow(specularFactor, specularPower);
+	vec4 specularColor = vec4(light.color, 1.0) * matSpecularIntensity * specularFactor;
+	
 	return ambientColor + diffuseColor + specularColor;
 }
 

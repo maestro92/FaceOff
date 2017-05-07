@@ -23,8 +23,10 @@ class GUIManager
 		void setupRenderToScreen(int x, int y, int width, int height);
 		void renderTextureFullScreen(GLuint textureId);
 		void renderTextureFullScreen(GLuint textureId, GLuint fboTarget);
-		void renderTexture(GLuint textureId, int x, int y, int width, int height);
-		void renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height);
+		void renderDepthTextureFullScreen(GLuint textureId);
+		void renderDepthTextureFullScreen(GLuint textureId, GLuint fboTarget);
+		void renderTexture(GLuint textureId, int x, int y, int width, int height, Renderer& r);
+		void renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height, Renderer& r);
 		void renderTexture(GLuint textureId, GLuint fboTarget, Rect rect);
 
 		void renderSnipeScopeView(GLuint sceneTextureId);
@@ -53,6 +55,7 @@ class GUIManager
         void renderGUI();
 
 		Renderer r_texture;
+		Renderer r_depthTexture;
 		Renderer r_coloredRect;
 		Renderer r_texturedRect;
 		Renderer r_listBoxItemHighlight;

@@ -78,6 +78,27 @@
 		}
 	},
 
+	{
+		"r": 			"r_sceneTextureWithShadowPass1",
+		"vs":			"scene_texture_with_shadow_pass1.vs",
+		"fs":			"scene_texture_with_shadow_pass1.fs",
+		"data":
+		{
+
+		}
+	},
+
+	{
+		"r": 			"r_sceneTextureWithShadowPass2",
+		"vs":			"scene_texture_with_shadow_pass2.vs",
+		"fs":			"scene_texture_with_shadow_pass2.fs",
+		"data":
+		{
+			"u_shadowMap":	"DP_INT",
+			"u_shadowMapSize":		"DP_VEC2",
+			"u_lightViewProjMat": 	"DP_MAT4"			
+		}
+	},
 
 	{
 		"r": 			"r_fireWorkEffectUpdate",

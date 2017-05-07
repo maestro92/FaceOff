@@ -55,6 +55,17 @@ void RendererManager::init(int width, int height)
 	r_sceneTexture.disableShader();
 
 
+	Renderer::initRendererWrapper(vArray, &r_sceneTextureWithShadowPass1, "r_sceneTextureWithShadowPass1");
+
+	Renderer::initRendererWrapper(vArray, &r_sceneTextureWithShadowPass2, "r_sceneTextureWithShadowPass2");
+	r_sceneTextureWithShadowPass2.init();
+	r_sceneTextureWithShadowPass2.enableShader();
+	r_sceneTextureWithShadowPass2.setDirLightsData(global.lightMgr->getDirLights());
+	r_sceneTextureWithShadowPass2.setPointLightsData(global.lightMgr->getPointLights());
+	r_sceneTextureWithShadowPass2.setSpotLightsData(global.lightMgr->getSpotLights());
+	r_sceneTextureWithShadowPass2.disableShader();
+
+
 	/*
 	r_fullVertexColor.printDataPairs();
 	r_fullColor.printDataPairs();
@@ -65,9 +76,118 @@ void RendererManager::init(int width, int height)
 	r_smokeEffectRender.printDataPairs();
 	*/
 
+
+	shadowMapWidth = utl::SCREEN_WIDTH * SHADOW_MAP_RATIO;
+	shadowMapHeight = utl::SCREEN_HEIGHT * SHADOW_MAP_RATIO;
+
+	initShadowMapFBO(shadowMapWidth, shadowMapHeight);
+	// m_shadowMapFBO = utl::createFrameBufferObject(shadowMapWidth, shadowMapHeight);
+
 	m_backGroundLayerFBO = utl::createFrameBufferObject(width, height);
 	m_particleLayerFBO = utl::createFrameBufferObject(width, height);
 }
+
+
+/*
+
+
+
+void RendererManager::initShadowMapFBO(int w, int h)
+{
+	glGenTextures(1, &m_shadowMapFBO.depthTexture);
+	glBindTexture(GL_TEXTURE_2D, m_shadowMapFBO.depthTexture);
+
+	// No need to force GL_DEPTH_COMPONENT24, drivers usually give you the max precision if available
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// GL_LINEAR does not make sense for depth texture. However, next tutorial shows usage of GL_LINEAR and PCF
+	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+	// Remove artifact on the edges of the shadowmap
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	// Create a FBO and attach the depth texture:
+	glGenFramebuffers(1, &m_shadowMapFBO.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFBO.FBO);
+
+	// Instruct openGL that we won't bind a color texture with the currently bound FBO
+	// Disable writes to the color buffer
+	glDrawBuffer(GL_NONE);
+
+	// Disable reads from the color buffer
+	glReadBuffer(GL_NONE);
+
+	// attach the texture to FBO depth attachment point
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapFBO.depthTexture, 0);
+
+	// check FBO status
+	utl::errorCheck();
+
+	GLenum FBOstatus;
+	FBOstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (FBOstatus != GL_FRAMEBUFFER_COMPLETE)
+	{
+		cout << "GL_FRAMEBUFFER_COMPLETE failed. CANNOT use FBO" << endl;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// don't need the color channel, just the dpeth
+
+}
+
+*/
+
+
+void RendererManager::initShadowMapFBO(int w, int h)
+{
+	glGenTextures(1, &m_shadowMapFBO.depthTexture);
+	glBindTexture(GL_TEXTURE_2D, m_shadowMapFBO.depthTexture);
+
+	// GL_LINEAR does not make sense for depth texture. However, next tutorial shows usage of GL_LINEAR and PCF
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// Remove artifact on the edges of the shadowmap
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	// No need to force GL_DEPTH_COMPONENT24, drivers usually give you the max precision if available
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Create a FBO and attach the depth texture:
+	glGenFramebuffers(1, &m_shadowMapFBO.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFBO.FBO);
+
+	// Instruct openGL that we won't bind a color texture with the currently bound FBO
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+
+	// attach the texture to FBO depth attachment point
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_shadowMapFBO.depthTexture, 0);
+
+	// check FBO status
+	utl::errorCheck();
+
+	GLenum FBOstatus;
+	FBOstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (FBOstatus != GL_FRAMEBUFFER_COMPLETE)
+	{
+		cout << "GL_FRAMEBUFFER_COMPLETE failed. CANNOT use FBO" << endl;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// don't need the color channel, just the dpeth
+
+}
+
 
 void RendererManager::initSceneRendererStaticLightsData(LightManager lightManager)
 {

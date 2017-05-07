@@ -167,6 +167,8 @@ void FaceOff::init()
 	// m_rendererMgr.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	// m_rendererMgr.initSceneRendererStaticLightsData(m_lightManager);
 
+	sunPosition = glm::vec3(-300,300,0);
+
 	isRunning = true;
 	singlePlayerMode = true;
 
@@ -215,6 +217,11 @@ void FaceOff::init()
 	m_pipeline.setMatrixMode(PROJECTION_MATRIX);
 	m_pipeline.loadIdentity();
 	m_pipeline.perspective(45 * m_zoomFactor, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
+
+
+	m_lightPovPipeline.setMatrixMode(PROJECTION_MATRIX);
+	m_lightPovPipeline.loadIdentity();
+	m_lightPovPipeline.perspective(90, utl::SCREEN_WIDTH / utl::SCREEN_HEIGHT, utl::Z_NEAR, utl::Z_FAR);
 
 	Model::enableVertexAttribArrays();
 
@@ -663,7 +670,7 @@ void FaceOff::initNetworkLobby()
 					ObjectId newPlayerId = sv_players.nextAvailableId();
 					float newSpawnX = 0;
 					float newSpawnY = 5;
-					float newSpawnZ = 25;
+					float newSpawnZ = 15;
 
 					// Add Player
 					Player* p = new Player(newPlayerId);
@@ -3794,13 +3801,88 @@ void FaceOff::checkNeighbors(KDTree& tree, WorldObject* obj, bool setCollsionFla
 
 
 
+void FaceOff::renderEntities(Pipeline& pipeline, Renderer* renderer)
+{
+	for (int i = 0; i < cl_players.getIterationEnd(); i++)
+	{
+		Player* p = cl_players.getByIndex(i);
 
+		if (p == NULL)
+		{
+			continue;
+		}
+
+		if (p->isHit == false)
+		{
+			p->renderGroup(pipeline, renderer);
+		}
+	}
+
+
+	for (int i = 0; i < cl_objects.getIterationEnd(); i++)
+	{
+		WorldObject* object = cl_objects.getByIndex(i);
+
+		if (object == NULL)
+			continue;
+
+		if (!object->shouldRender())
+		{
+			continue;
+		}
+
+		if (object->isHit == false)
+		{
+			object->renderGroup(pipeline, renderer);
+		}
+	}
+}
 
 
 void FaceOff::render()
 {
-	m_pipeline.setMatrixMode(VIEW_MATRIX);
-	m_pipeline.loadIdentity();
+
+//	m_lightPovPipeline
+
+
+	
+	m_lightPovPipeline.setMatrixMode(VIEW_MATRIX);
+	m_lightPovPipeline.loadIdentity();
+
+	m_lightPovPipeline.rotateX(-45);
+	m_lightPovPipeline.rotateY(270);
+
+	m_lightPovPipeline.translate(sunPosition);
+
+	global.rendererMgr->m_lightViewProjMat = LIGHT_BIAS_MATRIX * m_lightPovPipeline.getProjectionMatrix() * m_lightPovPipeline.getViewMatrix(); // m_lightPovPipeline.getModelViewProjectionMatrix();
+
+
+	glViewport(0, 0, global.rendererMgr->shadowMapWidth, global.rendererMgr->shadowMapHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, global.rendererMgr->m_shadowMapFBO.FBO);
+
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
+	glEnable(GL_DEPTH_TEST);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	// enable or disable writing into the depth buffer
+	// glDepthMask(GL_TRUE);	
+
+	m_lightPovPipeline.setMatrixMode(MODEL_MATRIX);
+	p_renderer = &global.rendererMgr->r_sceneTextureWithShadowPass1;
+	p_renderer->enableShader();
+		renderEntities(m_lightPovPipeline, p_renderer);
+	p_renderer->disableShader();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// glDisable(GL_CULL_FACE);
+	glViewport(0, 0, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+
+//	m_pipeline.setMatrixMode(VIEW_MATRIX);
+//	m_pipeline.loadIdentity();
+	
 
 	/*
 	if (in spectator mode)
@@ -3831,9 +3913,20 @@ void FaceOff::render()
 //	cout << endl;
 
 	Player* defaultPlayer = cl_players.get(m_defaultPlayerObjectId);
-
 	defaultPlayer->updateCameraViewMatrix(m_pipeline);
 
+	
+	utl::clDebug("player pitch3:", cl_players.get(m_defaultPlayerObjectId)->getPitch());
+	utl::clDebug("player yaw3:", cl_players.get(m_defaultPlayerObjectId)->getYaw());
+	
+	/*
+	m_pipeline.setMatrixMode(VIEW_MATRIX);
+	m_pipeline.loadIdentity();
+
+	m_pipeline.rotateX(-45);
+	m_pipeline.rotateY(270);
+	m_pipeline.translate(sunPosition);
+	*/
 
 
 	// *******************************************************
@@ -3841,208 +3934,19 @@ void FaceOff::render()
 	// *******************************************************
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
 
-//	glBindFramebuffer(GL_FRAMEBUFFER, m_rendererMgr.m_backGroundLayerFBO.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, global.rendererMgr->m_backGroundLayerFBO.FBO);
-
-//	Model::enableVertexAttribArrays();
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
-
+	glCullFace(GL_BACK);
 	// the render function disables depth test Cull face already and enables it afterwards
 	o_skybox.render(m_pipeline, &global.rendererMgr->r_skybox);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 #if RENDER_DEBUG_FLAG
-	p_renderer = &m_rendererMgr.r_fullTexture;
-	p_renderer->enableShader();
-	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
-
-	{
-		// render the players
-		if (!m_isServer)
-		{
-			m_players[m_defaultPlayerID]->renderGroup(m_pipeline, p_renderer);
-		}
-
-
-		for (int i = 0; i < m_objects.size(); i++)
-		{
-			WorldObject* object = m_objects[i];
-
-			if (object == NULL)
-				continue;
-
-
-
-
-			if (object->isTested != true && object->isCollided != true && object->isHit != true)
-			{
-				if (m_isServer && object->getName() == "player mainWeapon")
-				{
-					utl::debug("object name is", object->getName());
-				}
-				object->renderGroup(m_pipeline, p_renderer);
-			}
-		}
-
-
-
-
-		for (int i = 0; i < m_players.size(); i++)
-		{
-			if (i == m_defaultPlayerID)
-				continue;
-
-			Player* player = m_players[i];
-			if (player->isTested != true && player->isCollided != true && player->isHit != true)
-			{
-
-				m_players[i]->renderGroup(m_pipeline, p_renderer);
-			}
-		}
-
-
-	}
-	p_renderer->disableShader();
-
-
-	// Rendering wireframes
-	p_renderer = &m_rendererMgr.r_fullVertexColor;
-	p_renderer->enableShader();
-
-	o_worldAxis.renderGroup(m_pipeline, p_renderer);
-
-
-	for (int i = 0; i < m_objects.size(); i++)
-	{
-		WorldObject* object = m_objects[i];
-
-		if (object == NULL)
-			continue;
-
-
-		object->renderWireFrameGroup(m_pipeline, p_renderer);
-	}
-
-
-	for (int i = 0; i < m_players.size(); i++)
-	{
-		if (i == m_defaultPlayerID)
-			continue;
-
-		Player* player = m_players[i];
-
-		player->renderWireFrameGroup(m_pipeline, p_renderer);
-
-	}
-
-	if (containedFlag)
-	{
-		m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
-	}
-	else
-	{
-		//	if (hitNode != NULL)
-		//		m_objectKDtree.renderNode(m_pipeline, p_renderer, hitNode);
-	}
-	p_renderer->disableShader();
-
-
-
-	p_renderer = &m_rendererMgr.r_fullColor;
-	p_renderer->enableShader();
-	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
-
-
-		// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
-		if (!containedFlag)
-			m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
-
-
-		for (int i = 0; i < m_objects.size(); i++)
-		{
-			WorldObject* object = m_objects[i];
-
-			if (object == NULL)
-				continue;
-
-
-			object->alreadyFireTested = false;
-
-			if (object->isHit)
-			{
-				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
-				object->renderGroup(m_pipeline, p_renderer);
-
-			}
-			else if (object->isCollided)
-			{
-				p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
-				object->renderGroup(m_pipeline, p_renderer);
-				object->isCollided = false;
-			}
-			else if (object->isTested)
-			{
-				p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
-				object->renderGroup(m_pipeline, p_renderer);
-				object->isTested = false;
-			}
-
-
-
-
-
-		}
-
-
-		// rendering players
-		for (int i = 0; i < m_players.size(); i++)
-		{
-
-			Player* p = m_players[i];
-
-			p->alreadyFireTested = false;
-			if (i == m_defaultPlayerID)
-			{
-				continue;
-			}
-
-
-			if (p->isHit)
-			{
-				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
-				p->renderGroup(m_pipeline, p_renderer);
-
-			}
-			else if (p->isCollided)
-			{
-				p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
-				p->renderGroup(m_pipeline, p_renderer);
-				p->isCollided = false;
-			}
-			else if (p->isTested)
-			{
-				p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
-				p->renderGroup(m_pipeline, p_renderer);
-				p->isTested = false;
-			}
-		}
-
-		/*
-		// rendering hitPointMarks
-		for (int i = 0; i < m_hitPointMarks.size(); i++)
-		{
-			p_renderer->setData(R_FULL_COLOR::u_color, RED);
-			m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
-		}
-		*/
-
-	p_renderer->disableShader();
-
+	renderDebug();
 #else
-
-
+	
 	p_renderer = &global.rendererMgr->r_dynamicModel;
 	p_renderer->enableShader();
 		o_animatedLegoDude.updateAnimModelFrame(SDL_GetTicks(), global.rendererMgr->r_dynamicModel.m_boneTransforms);
@@ -4051,7 +3955,20 @@ void FaceOff::render()
 		o_animatedLegoDude.renderGroup(m_pipeline, p_renderer);
 	p_renderer->disableShader();
 
-//	p_renderer = &global.rendererMgr->r_fullTexture;
+
+		
+	p_renderer = &global.rendererMgr->r_sceneTextureWithShadowPass2;
+	p_renderer->enableShader();
+		p_renderer->setData((int)R_SCENE_TEXTURE_WITH_SHADOW_PASS2::u_shadowMap, 3, GL_TEXTURE_2D, global.rendererMgr->m_shadowMapFBO.depthTexture);
+		p_renderer->setData((int)R_SCENE_TEXTURE_WITH_SHADOW_PASS2::u_shadowMapSize, glm::vec2(global.rendererMgr->shadowMapWidth, global.rendererMgr->shadowMapHeight));
+		p_renderer->setData((int)R_SCENE_TEXTURE_WITH_SHADOW_PASS2::u_lightViewProjMat, global.rendererMgr->m_lightViewProjMat);
+		renderEntities(m_pipeline, p_renderer);
+	p_renderer->disableShader();
+	
+
+
+
+	/*
 	p_renderer = &global.rendererMgr->r_sceneTexture;
 	p_renderer->enableShader();
 	p_renderer->setData((int)R_SCENE_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
@@ -4091,14 +4008,16 @@ void FaceOff::render()
 		}
 
 	p_renderer->disableShader();
+	*/
 
-	/*
+
+	
 	// Rendering wireframes
-	p_renderer = &m_rendererMgr.r_fullVertexColor;
+	p_renderer = &global.rendererMgr->r_fullVertexColor;
 	p_renderer->enableShader();
 
 		o_worldAxis.renderGroup(m_pipeline, p_renderer);
-		
+		/*
 		if (containedFlag)
 		{
 			cl_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
@@ -4108,8 +4027,9 @@ void FaceOff::render()
 			//	if (hitNode != NULL)
 			//		m_objectKDtree.renderNode(m_pipeline, p_renderer, hitNode);
 		}
+		*/
 	p_renderer->disableShader();
-	*/
+	
 
 
 
@@ -4230,6 +4150,7 @@ void FaceOff::render()
 	if (!m_zoomedIn)
 	{
 		m_gui.renderTextureFullScreen(global.rendererMgr->m_backGroundLayerFBO.colorTexture);
+//		m_gui.renderDepthTextureFullScreen(global.rendererMgr->m_shadowMapFBO.depthTexture);
 	}
 
 	glEnable(GL_BLEND);
@@ -4300,6 +4221,197 @@ long long FaceOff::getCurrentTimeMillis()
 #endif
 }
 
+
+void FaceOff::renderDebug()
+{
+#if 0
+	p_renderer = &m_rendererMgr.r_fullTexture;
+	p_renderer->enableShader();
+	p_renderer->setData((int)R_FULL_TEXTURE::u_texture, 0, GL_TEXTURE_2D, tempTexture);
+
+	{
+		// render the players
+		if (!m_isServer)
+		{
+			m_players[m_defaultPlayerID]->renderGroup(m_pipeline, p_renderer);
+		}
+
+
+		for (int i = 0; i < m_objects.size(); i++)
+		{
+			WorldObject* object = m_objects[i];
+
+			if (object == NULL)
+				continue;
+
+
+
+
+			if (object->isTested != true && object->isCollided != true && object->isHit != true)
+			{
+				if (m_isServer && object->getName() == "player mainWeapon")
+				{
+					utl::debug("object name is", object->getName());
+				}
+				object->renderGroup(m_pipeline, p_renderer);
+			}
+		}
+
+
+
+
+		for (int i = 0; i < m_players.size(); i++)
+		{
+			if (i == m_defaultPlayerID)
+				continue;
+
+			Player* player = m_players[i];
+			if (player->isTested != true && player->isCollided != true && player->isHit != true)
+			{
+
+				m_players[i]->renderGroup(m_pipeline, p_renderer);
+			}
+		}
+
+
+	}
+	p_renderer->disableShader();
+
+
+	// Rendering wireframes
+	p_renderer = &m_rendererMgr.r_fullVertexColor;
+	p_renderer->enableShader();
+
+	o_worldAxis.renderGroup(m_pipeline, p_renderer);
+
+
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+
+		if (object == NULL)
+			continue;
+
+
+		object->renderWireFrameGroup(m_pipeline, p_renderer);
+	}
+
+
+	for (int i = 0; i < m_players.size(); i++)
+	{
+		if (i == m_defaultPlayerID)
+			continue;
+
+		Player* player = m_players[i];
+
+		player->renderWireFrameGroup(m_pipeline, p_renderer);
+
+	}
+
+	if (containedFlag)
+	{
+		m_objectKDtree.renderCubeFrame(m_pipeline, p_renderer);
+	}
+	else
+	{
+		//	if (hitNode != NULL)
+		//		m_objectKDtree.renderNode(m_pipeline, p_renderer, hitNode);
+	}
+	p_renderer->disableShader();
+
+
+
+	p_renderer = &m_rendererMgr.r_fullColor;
+	p_renderer->enableShader();
+	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+
+
+	// m_objectKDtree.renderGroup(m_pipeline, p_renderer);
+	if (!containedFlag)
+		m_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
+
+
+	for (int i = 0; i < m_objects.size(); i++)
+	{
+		WorldObject* object = m_objects[i];
+
+		if (object == NULL)
+			continue;
+
+
+		object->alreadyFireTested = false;
+
+		if (object->isHit)
+		{
+			p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+			object->renderGroup(m_pipeline, p_renderer);
+
+		}
+		else if (object->isCollided)
+		{
+			p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
+			object->renderGroup(m_pipeline, p_renderer);
+			object->isCollided = false;
+		}
+		else if (object->isTested)
+		{
+			p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
+			object->renderGroup(m_pipeline, p_renderer);
+			object->isTested = false;
+		}
+
+
+
+
+
+	}
+
+
+	// rendering players
+	for (int i = 0; i < m_players.size(); i++)
+	{
+
+		Player* p = m_players[i];
+
+		p->alreadyFireTested = false;
+		if (i == m_defaultPlayerID)
+		{
+			continue;
+		}
+
+
+		if (p->isHit)
+		{
+			p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+			p->renderGroup(m_pipeline, p_renderer);
+
+		}
+		else if (p->isCollided)
+		{
+			p_renderer->setData(R_FULL_COLOR::u_color, PURPLE);
+			p->renderGroup(m_pipeline, p_renderer);
+			p->isCollided = false;
+		}
+		else if (p->isTested)
+		{
+			p_renderer->setData(R_FULL_COLOR::u_color, BLUE);
+			p->renderGroup(m_pipeline, p_renderer);
+			p->isTested = false;
+		}
+	}
+
+	/*
+	// rendering hitPointMarks
+	for (int i = 0; i < m_hitPointMarks.size(); i++)
+	{
+	p_renderer->setData(R_FULL_COLOR::u_color, RED);
+	m_hitPointMarks[i]->renderGroup(m_pipeline, p_renderer);
+	}
+	*/
+
+	p_renderer->disableShader();
+#endif
+}
 
 
 bool FaceOff::testCollisionDetection(WorldObject* a, WorldObject* b, ContactData& contactData)
