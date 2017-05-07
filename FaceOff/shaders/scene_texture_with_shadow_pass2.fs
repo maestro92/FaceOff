@@ -79,9 +79,9 @@ float calcShadowFactor(vec4 shadowMapCoord)
 
     float shadowFactor = 0.0;
 
-    for (int y = -1 ; y <= 1 ; y++) 
+    for (float y = -1.5 ; y <= 1.5 ; y++) 
     {
-        for (int x = -1 ; x <= 1 ; x++) 
+        for (float x = -1.5 ; x <= 1.5 ; x++) 
         {
             vec2 offsets = vec2(x * xOffset, y * yOffset);
             vec3 uvc = vec3(shadowMapCoord.xy + offsets, shadowMapCoord.z + EPSILON);
@@ -94,7 +94,7 @@ float calcShadowFactor(vec4 shadowMapCoord)
         }
     }
 
-    return (shadowFactor / 9.0);
+    return (shadowFactor / 16.0);
 }
 
 

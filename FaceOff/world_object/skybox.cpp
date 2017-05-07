@@ -39,23 +39,24 @@ void SkyBox::init(string* files)
 }
 
 
-void SkyBox::render(Pipeline& m_pipeline, Renderer* r)
+void SkyBox::render(Pipeline& p, Renderer* r)
 {
-	
     glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	
 	r->enableShader();
 	r->setData(R_SKYBOX::u_cubeMapTextureID, 0, GL_TEXTURE_CUBE_MAP, m_staticCubeMapID);
 
-    m_pipeline.pushMatrix();
-        m_pipeline.translate(m_position);
+    p.pushMatrix();
+        p.translate(m_position);
 	//	m_pipeline.rotate(angle, 0.0f, 1.0f, 0.0f);
-		m_pipeline.scale(m_scale);
 
-        r->setUniLocs(m_pipeline);
+		p.addMatrix(m_rotation);
+		p.scale(m_scale);
+
+        r->setUniLocs(p);
         m_cubeModel.render();
-    m_pipeline.popMatrix();
+    p.popMatrix();
     r->disableShader();
 
 	angle += 0.001;

@@ -149,17 +149,19 @@ void RendererManager::initShadowMapFBO(int w, int h)
 {
 	glGenTextures(1, &m_shadowMapFBO.depthTexture);
 	glBindTexture(GL_TEXTURE_2D, m_shadowMapFBO.depthTexture);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
-	// GL_LINEAR does not make sense for depth texture. However, next tutorial shows usage of GL_LINEAR and PCF
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	// Remove artifact on the edges of the shadowmap
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-	// No need to force GL_DEPTH_COMPONENT24, drivers usually give you the max precision if available
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Create a FBO and attach the depth texture:
@@ -167,7 +169,10 @@ void RendererManager::initShadowMapFBO(int w, int h)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFBO.FBO);
 
 	// Instruct openGL that we won't bind a color texture with the currently bound FBO
+	// Disable writes to the color buffer
 	glDrawBuffer(GL_NONE);
+
+	// Disable reads from the color buffer
 	glReadBuffer(GL_NONE);
 
 	// attach the texture to FBO depth attachment point

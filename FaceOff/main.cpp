@@ -560,6 +560,8 @@ void FaceOff::initObjects()
 	o_sampleBullet.setScale(1.0, 5.0, 1.0);
 
 	o_skybox = SkyBox();
+	o_skybox.setRotation(glm::rotate(90.0f, 0.0f, 1.0f, 0.0f));
+
 	o_animatedLegoDude = WorldObject();
 	o_animatedLegoDude.setModelEnum(ModelEnum::animatedLegoMan);
 	o_animatedLegoDude.setModel(global.modelMgr->get(ModelEnum::animatedLegoMan));
@@ -3839,6 +3841,8 @@ void FaceOff::renderEntities(Pipeline& pipeline, Renderer* renderer)
 }
 
 
+
+
 void FaceOff::render()
 {
 
@@ -3915,7 +3919,7 @@ void FaceOff::render()
 	Player* defaultPlayer = cl_players.get(m_defaultPlayerObjectId);
 	defaultPlayer->updateCameraViewMatrix(m_pipeline);
 
-	
+	utl::clDebug("player eyepoint:", cl_players.get(m_defaultPlayerObjectId)->m_camera->getEyePoint());
 	utl::clDebug("player pitch3:", cl_players.get(m_defaultPlayerObjectId)->getPitch());
 	utl::clDebug("player yaw3:", cl_players.get(m_defaultPlayerObjectId)->getYaw());
 	
@@ -3932,16 +3936,21 @@ void FaceOff::render()
 	// *******************************************************
 	// ************* Rendering *******************************
 	// *******************************************************
-	m_pipeline.setMatrixMode(MODEL_MATRIX);
 
+	m_pipeline.setMatrixMode(MODEL_MATRIX);
 	glBindFramebuffer(GL_FRAMEBUFFER, global.rendererMgr->m_backGroundLayerFBO.FBO);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glCullFace(GL_BACK);
+
 	// the render function disables depth test Cull face already and enables it afterwards
+	o_skybox.setPosition(defaultPlayer->m_camera->getEyePoint());
 	o_skybox.render(m_pipeline, &global.rendererMgr->r_skybox);
+
+	glCullFace(GL_BACK);
 	glClear(GL_DEPTH_BUFFER_BIT);
+	
+
 
 #if RENDER_DEBUG_FLAG
 	renderDebug();
