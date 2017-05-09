@@ -1,3 +1,4 @@
+/*
 #ifndef ANIMATION_MODEL_RENDERER_H_
 #define ANIMATION_MODEL_RENDERER_H_
 
@@ -26,3 +27,4 @@ class AnimationModelRenderer : public Renderer
 
 
 #endif
+*/

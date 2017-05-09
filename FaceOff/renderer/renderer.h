@@ -10,6 +10,8 @@
 #include "utility_gl_uni_loc.h"
 #include <stack>
 
+#include "scene_light_render_helper.h"
+#include "animation_model_render_helper.h"
 
 using namespace std;
 
@@ -378,11 +380,15 @@ class Renderer
 		static void initRenderer(const Object obj, Renderer* r, string path);
 		static void initRenderer(const Object obj, Renderer* r);
 
-	public:
+		AnimationModelRenderHelper* animationHelper;
+		SceneLightRenderHelper* lightHelper;
+		
 		MatricesUniLoc m_matricesUniLocs;
 		Shader* m_shader;
 		vector<DataPair*> m_dataPairs;
 		stack<GLuint> m_textureUnitStack;
+
+		
 
 	protected:
 		virtual void setUniLocs();

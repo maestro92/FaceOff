@@ -1237,7 +1237,13 @@ glm::vec3 Player::getFirePosition()
 
 bool Player::ignorePhysicsWith(WorldObject* obj)
 {
+	/*
 	if (getCollisionFlagIndex() == obj->getCollisionFlagIndex())
+	{
+		return true;
+	}
+	*/
+	if (this == obj)
 	{
 		return true;
 	}

@@ -1,4 +1,5 @@
-
+/*
+#include "renderer.h"
 #include "animation_model_renderer.h"
 
 
@@ -34,4 +35,4 @@ void AnimationModelRenderer::setUniLocs(Pipeline& p)
 	}
 	Renderer::setUniLocs(p);
 }
-
+*/

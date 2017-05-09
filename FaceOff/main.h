@@ -910,7 +910,8 @@ class FaceOff
 		void renderEntities(Pipeline& p, Renderer* r);
 //		void renderDynamicEntities(Pipeline& pipeline, Renderer* renderer, vector<glm::mat4>& transformBuffers, bool animateFlag);
 //		void renderDynamicEntities(Pipeline& pipeline, AnimationModelRenderer* renderer, bool animateFlag);
-		void renderDynamicEntities(Pipeline& p, AnimationModelRenderer& r);
+//		void renderDynamicEntities(Pipeline& p, AnimationModelRenderer& r);
+		void renderDynamicEntities(Pipeline& p, Renderer* r);
 		void renderDebug();
 
 //		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setCollsionFlagsBothWays);

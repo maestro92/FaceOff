@@ -29,9 +29,17 @@ class RendererManager
 		Renderer		r_playerTarget;
 		Renderer		r_skybox;
 
+
+		/*
 		AnimationModelRenderer		r_dynamicModel;
 		AnimationModelRenderer		r_dynamicModelWithShadowPass1;
 		AnimationModelRenderer		r_dynamicModelWithShadowPass2;
+		*/
+
+		Renderer		r_dynamicModel;
+		Renderer		r_dynamicModelWithShadowPass1;
+		Renderer		r_dynamicModelWithShadowPass2;
+
 
 		Renderer		r_healthBar;
 
@@ -48,11 +56,19 @@ class RendererManager
 		
 		Renderer r_multiTexturedTerrain;
 
+		/*
 		SceneRenderer r_sceneColor;
 		SceneRenderer r_sceneTexture;
+		*/
+		Renderer	r_sceneColor;
+		Renderer	r_sceneTexture;
 
 
 		Renderer r_sceneTextureWithShadowPass1;
+		Renderer r_sceneTextureWithShadowPass2;
+
+
+		/*
 		SceneRenderer r_sceneTextureWithShadowPass2;
 
 
@@ -60,7 +76,8 @@ class RendererManager
 		SceneRenderer r_texturedObject;
 		SceneRenderer r_billboardOneQuad;
 		SceneRenderer r_billboardTwoQuad;
-		
+		*/
+
 		int shadowMapWidth;
 		int shadowMapHeight;
 		glm::mat4 m_lightViewProjMat;
@@ -80,7 +97,7 @@ class RendererManager
 
 
 
-		void initSceneRendererStaticLightsData(LightManager lightManager);
+		// void initSceneRendererStaticLightsData(LightManager lightManager);
 
 	private:
 		void initShadowMapFBO(int w, int h);

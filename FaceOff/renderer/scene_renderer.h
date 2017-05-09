@@ -1,3 +1,4 @@
+/*
 #ifndef SCENE_RENDERER_H_
 #define SCENE_RENDERER_H_
 
@@ -38,3 +39,5 @@ class SceneRenderer : public Renderer
 
 
 #endif
+*/
+

@@ -916,6 +916,11 @@ void KDTree::visitOverlappedNodes(KDTreeNode* node, WorldObject* testObject, glm
 			}
 			*/
 
+			if (testObject == obj)
+			{
+				continue;
+			}
+
 			if (testObject->ignorePhysicsWith(obj))
 			{
 				continue;

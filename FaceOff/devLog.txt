@@ -786,3 +786,27 @@ There I am starting the network protocol for my game
 
 
 
+
+#############################################################################################
+####################################### 2017 May 9th #####################################
+#############################################################################################
+
+I was wondering if I should prefer using pointers or references in member data
+
+
+
+http://stackoverflow.com/questions/892133/should-i-prefer-pointers-or-references-in-member-data
+
+
+I was also profiling my code with visual studio, and the results show that one of the most intensive task was from
+ig7icd32.dll. After googling, this is what I found out about it:
+
+	"
+	Ig7icd32.dll is a type of DLL file associated with Intel Graphics 
+	Accelerator Drivers for Windows 8® developed by Intel Corporation 
+	for the Windows Operating System. The latest known version of 
+	Ig7icd32.dll is 9.17.10.2867, which was produced for Windows 7.
+	"
+
+so essentially, it is intel graphics drivers
+

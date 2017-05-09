@@ -293,12 +293,15 @@ bool WorldObject::ignorePhysics()
 
 bool WorldObject::ignorePhysicsWith(WorldObject* obj)
 {
+	return this == obj;
+	/*
 	if (getCollisionFlagIndex() == obj->getCollisionFlagIndex())
 	{
 		return true;
 	}
 
 	return false;
+	*/
 }
 
 bool WorldObject::alreadyTestedPhysicsWith(WorldObject* obj)

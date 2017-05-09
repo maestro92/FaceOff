@@ -11,17 +11,11 @@
 #include "cube_wireframe_model.h"
 #include "collision_detection_geometry.h"
 #include "global.h"
-// class ModelManager;
 
 #include "shared.h"
-/*
-struct KDTreeNode;
-#include "collision_detection/kd_tree_node.h"
-*/
-struct KDTreeNode;
-// #include "collision_detection/kd_tree_node.h"
-
 #include <vector>
+
+struct KDTreeNode;
 
 const glm::vec3 NEG_GRAVITY = glm::vec3(0, -9.8, 0);
 const glm::vec3 NEG_HALF_GRAVITY = glm::vec3(0, -4.9, 0);

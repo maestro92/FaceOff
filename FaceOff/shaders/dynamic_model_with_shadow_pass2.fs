@@ -166,11 +166,6 @@ vec4 calcPointLight()
 
 void main()
 {
-
-	FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-/*
-
-
 	vec2 tc = vf_UV;	 //	tc.y = 1.0 - vf_UV.y;
 	vec4 rawColor = texture(u_texture, tc);
 
@@ -182,6 +177,6 @@ void main()
 
 	vec4 color = rawColor * finalLightColor;
 	FragColor = rawColor * finalLightColor;
-*/
+
 }
 

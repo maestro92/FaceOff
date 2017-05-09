@@ -3841,12 +3841,22 @@ void FaceOff::renderEntities(Pipeline& pipeline, Renderer* renderer)
 }
 
 // void FaceOff::renderDynamicEntities(Pipeline& pipeline, AnimationModelRenderer* renderer, bool animateFlag)
+/*
 void FaceOff::renderDynamicEntities(Pipeline& p, AnimationModelRenderer& r)
 {
 	r.m_boneTransforms = &o_animatedLegoDude.animationHelper->boneTransforms;
 	o_animatedLegoDude.renderGroup(m_pipeline, &r);
 }
+*/
 
+void FaceOff::renderDynamicEntities(Pipeline& p, Renderer* r)
+{
+	if (r->animationHelper != nullptr)
+	{
+		r->animationHelper->m_boneTransforms = &o_animatedLegoDude.animationHelper->boneTransforms;
+		o_animatedLegoDude.renderGroup(p, r);
+	}
+}
 
 void FaceOff::UpdateDynamicEntitiesAnimations()
 {
@@ -3893,9 +3903,10 @@ void FaceOff::render()
 		renderEntities(m_lightPovPipeline, p_renderer);
 	p_renderer->disableShader();
 
-	global.rendererMgr->r_dynamicModelWithShadowPass1.enableShader();
-		renderDynamicEntities(m_lightPovPipeline, global.rendererMgr->r_dynamicModelWithShadowPass1);
-	global.rendererMgr->r_dynamicModelWithShadowPass1.disableShader();
+	p_renderer = &global.rendererMgr->r_dynamicModelWithShadowPass1;
+	p_renderer->enableShader();
+		renderDynamicEntities(m_lightPovPipeline, p_renderer);
+	p_renderer->disableShader();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	// glDisable(GL_CULL_FACE);
@@ -3936,10 +3947,12 @@ void FaceOff::render()
 	Player* defaultPlayer = cl_players.get(m_defaultPlayerObjectId);
 	defaultPlayer->updateCameraViewMatrix(m_pipeline);
 
+	/*
 	utl::clDebug("player eyepoint:", cl_players.get(m_defaultPlayerObjectId)->m_camera->getEyePoint());
 	utl::clDebug("player pitch3:", cl_players.get(m_defaultPlayerObjectId)->getPitch());
 	utl::clDebug("player yaw3:", cl_players.get(m_defaultPlayerObjectId)->getYaw());
-	
+	*/
+
 	/*
 	m_pipeline.setMatrixMode(VIEW_MATRIX);
 	m_pipeline.loadIdentity();
@@ -3993,13 +4006,13 @@ void FaceOff::render()
 		renderEntities(m_pipeline, p_renderer);
 	p_renderer->disableShader();
 	
-	
-	global.rendererMgr->r_dynamicModelWithShadowPass2.enableShader();
-//		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_texture, 0, GL_TEXTURE_2D, tempTexture);
-		renderDynamicEntities(m_pipeline, global.rendererMgr->r_dynamicModelWithShadowPass2);
-	global.rendererMgr->r_dynamicModelWithShadowPass2.disableShader();
-	
-
+	p_renderer = &global.rendererMgr->r_dynamicModelWithShadowPass2;
+	p_renderer->enableShader();
+		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_shadowMap, 3, GL_TEXTURE_2D, global.rendererMgr->m_shadowMapFBO.depthTexture);
+		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_shadowMapSize, glm::vec2(global.rendererMgr->shadowMapWidth, global.rendererMgr->shadowMapHeight));
+		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_lightViewProjMat, global.rendererMgr->m_lightViewProjMat);
+		renderDynamicEntities(m_pipeline, p_renderer);
+	p_renderer->disableShader();
 
 	/*
 	p_renderer = &global.rendererMgr->r_sceneTexture;

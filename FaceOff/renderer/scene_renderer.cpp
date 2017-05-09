@@ -1,4 +1,4 @@
-
+/*
 #include "scene_renderer.h"
 
 void SceneRenderer::init()
@@ -20,14 +20,6 @@ void SceneRenderer::init()
 	{
 		addSpotLightUniLocs();
 	}
-
-	/*
-	Renderer::addShader(s);
-
-	addDirLightUniLocs();
-	addPointLightUniLocs();
-	addSpotLightUniLocs();
-	*/
 }
 
 
@@ -90,4 +82,7 @@ void SceneRenderer::setSpotLightData(const SpotLight& light, int lightIndex)
 {
 
 }
+
+
+*/
 

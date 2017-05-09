@@ -44,6 +44,51 @@ void RendererManager::init(int width, int height)
 
 
 	Renderer::initRendererWrapper(vArray, &r_sceneTexture, "r_sceneTexture");
+	r_sceneTexture.lightHelper = new SceneLightRenderHelper();
+	r_sceneTexture.lightHelper->init(&r_sceneTexture);
+	r_sceneTexture.enableShader();
+		r_sceneTexture.lightHelper->setDirLightsData(global.lightMgr->getDirLights());
+		r_sceneTexture.lightHelper->setPointLightsData(global.lightMgr->getPointLights());
+		r_sceneTexture.lightHelper->setSpotLightsData(global.lightMgr->getSpotLights());
+	r_sceneTexture.disableShader();
+
+
+	Renderer::initRendererWrapper(vArray, &r_sceneTextureWithShadowPass1, "r_sceneTextureWithShadowPass1");
+
+	Renderer::initRendererWrapper(vArray, &r_sceneTextureWithShadowPass2, "r_sceneTextureWithShadowPass2");
+	r_sceneTextureWithShadowPass2.lightHelper = new SceneLightRenderHelper();
+	r_sceneTextureWithShadowPass2.lightHelper->init(&r_sceneTextureWithShadowPass2);
+	r_sceneTextureWithShadowPass2.enableShader();
+		r_sceneTextureWithShadowPass2.lightHelper->setDirLightsData(global.lightMgr->getDirLights());
+		r_sceneTextureWithShadowPass2.lightHelper->setPointLightsData(global.lightMgr->getPointLights());
+		r_sceneTextureWithShadowPass2.lightHelper->setSpotLightsData(global.lightMgr->getSpotLights());
+	r_sceneTextureWithShadowPass2.disableShader();
+
+	// r_dynamicModel
+	Renderer::initRendererWrapper(vArray, &r_dynamicModel, "r_dynamicModel");
+	r_dynamicModel.animationHelper = new AnimationModelRenderHelper();
+	r_dynamicModel.animationHelper->init(&r_dynamicModel);
+	
+	// r_dynamicModelWithShadowPass1
+	Renderer::initRendererWrapper(vArray, &r_dynamicModelWithShadowPass1, "r_dynamicModelWithShadowPass1");
+	r_dynamicModelWithShadowPass1.animationHelper = new AnimationModelRenderHelper();
+	r_dynamicModelWithShadowPass1.animationHelper->init(&r_dynamicModelWithShadowPass1);
+	
+
+	// r_dynamicModelWithShadowPass2
+	Renderer::initRendererWrapper(vArray, &r_dynamicModelWithShadowPass2, "r_dynamicModelWithShadowPass2");
+	r_dynamicModelWithShadowPass2.animationHelper = new AnimationModelRenderHelper();
+	r_dynamicModelWithShadowPass2.animationHelper->init(&r_dynamicModelWithShadowPass2);
+
+	r_dynamicModelWithShadowPass2.lightHelper = new SceneLightRenderHelper();
+	r_dynamicModelWithShadowPass2.lightHelper->init(&r_dynamicModelWithShadowPass2);
+	r_dynamicModelWithShadowPass2.enableShader();
+		r_dynamicModelWithShadowPass2.lightHelper->setDirLightsData(global.lightMgr->getDirLights());
+		r_dynamicModelWithShadowPass2.lightHelper->setPointLightsData(global.lightMgr->getPointLights());
+		r_dynamicModelWithShadowPass2.lightHelper->setSpotLightsData(global.lightMgr->getSpotLights());
+	r_dynamicModelWithShadowPass2.disableShader();
+	/*
+	Renderer::initRendererWrapper(vArray, &r_sceneTexture, "r_sceneTexture");
 	r_sceneTexture.init();
 	r_sceneTexture.enableShader();
 		r_sceneTexture.setDirLightsData(global.lightMgr->getDirLights());
@@ -70,6 +115,10 @@ void RendererManager::init(int width, int height)
 	
 	Renderer::initRendererWrapper(vArray, &r_dynamicModelWithShadowPass2, "r_dynamicModelWithShadowPass2");
 	r_dynamicModelWithShadowPass2.init();
+	*/
+
+
+
 
 	/*
 	r_fullVertexColor.printDataPairs();
@@ -198,10 +247,10 @@ void RendererManager::initShadowMapFBO(int w, int h)
 
 }
 
-
+/*
 void RendererManager::initSceneRendererStaticLightsData(LightManager lightManager)
 {
-	/*
+
 	r_multiTexTerrain.enableShader();
 		r_multiTexTerrain.setDirLightData(lightManager.getDirLight(0));
 	r_multiTexTerrain.disableShader();
@@ -217,9 +266,9 @@ void RendererManager::initSceneRendererStaticLightsData(LightManager lightManage
 	r_texturedObject.enableShader();
 		r_billboardTwoQuad.setDirLightData(lightManager.getDirLight(0));
 	r_texturedObject.disableShader();
-	*/
-}
 
+}
+*/
 
 
 

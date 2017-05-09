@@ -239,8 +239,10 @@
     <ClCompile Include="pipeline.cpp" />
     <ClCompile Include="protocol\connection.cpp" />
     <ClCompile Include="renderer\animation_model_renderer.cpp" />
+    <ClCompile Include="renderer\animation_model_render_helper.cpp" />
     <ClCompile Include="renderer\renderer.cpp" />
     <ClCompile Include="renderer\renderer_manager.cpp" />
+    <ClCompile Include="renderer\scene_light_render_helper.cpp" />
     <ClCompile Include="renderer\scene_renderer.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="shared.cpp" />
