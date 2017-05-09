@@ -253,6 +253,7 @@
     <ClCompile Include="utility\utility_sdl.cpp" />
     <ClCompile Include="utility\utility_json.cpp" />
     <ClCompile Include="utility\utility_time.cpp" />
+    <ClCompile Include="world_object\animation_helper.cpp" />
     <ClCompile Include="world_object\billboard_list.cpp" />
     <ClCompile Include="world_object\particle_effect\fire_work_effect.cpp" />
     <ClCompile Include="world_object\particle_effect\particle_effect.cpp" />
@@ -481,6 +482,8 @@
     <ClInclude Include="client_server\connection.h" />
     <ClInclude Include="client_server\network_protocol.h" />
     <ClInclude Include="renderer\animation_model_renderer.h" />
+    <ClInclude Include="renderer\animation_model_render_helper.h" />
+    <ClInclude Include="renderer\scene_light_render_helper.h" />
     <ClInclude Include="renderer\renderer_constants.h" />
     <ClInclude Include="shared.h" />
     <ClInclude Include="utility\utility_assimp.h" />
@@ -489,6 +492,7 @@
     <ClInclude Include="utility\utility_gl_uni_loc.h" />
     <ClInclude Include="utility\utility_json.h" />
     <ClInclude Include="utility\utility_sdl.h" />
+    <ClInclude Include="world_object\animation_helper.h" />
     <ClInclude Include="world_object\particle_effect\fire_work_effect.h" />
     <ClInclude Include="world_object\particle_effect\smoke_effect.h" />
     <ClInclude Include="world_object\particle_effect\particle_effect.h" />

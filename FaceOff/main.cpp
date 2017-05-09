@@ -3840,7 +3840,18 @@ void FaceOff::renderEntities(Pipeline& pipeline, Renderer* renderer)
 	}
 }
 
+// void FaceOff::renderDynamicEntities(Pipeline& pipeline, AnimationModelRenderer* renderer, bool animateFlag)
+void FaceOff::renderDynamicEntities(Pipeline& p, AnimationModelRenderer& r)
+{
+	r.m_boneTransforms = &o_animatedLegoDude.animationHelper->boneTransforms;
+	o_animatedLegoDude.renderGroup(m_pipeline, &r);
+}
 
+
+void FaceOff::UpdateDynamicEntitiesAnimations()
+{
+	o_animatedLegoDude.updateAnimModelFrame(SDL_GetTicks());
+}
 
 
 void FaceOff::render()
@@ -3848,6 +3859,7 @@ void FaceOff::render()
 
 //	m_lightPovPipeline
 
+	UpdateDynamicEntitiesAnimations();
 
 	
 	m_lightPovPipeline.setMatrixMode(VIEW_MATRIX);
@@ -3880,6 +3892,11 @@ void FaceOff::render()
 	p_renderer->enableShader();
 		renderEntities(m_lightPovPipeline, p_renderer);
 	p_renderer->disableShader();
+
+	global.rendererMgr->r_dynamicModelWithShadowPass1.enableShader();
+		renderDynamicEntities(m_lightPovPipeline, global.rendererMgr->r_dynamicModelWithShadowPass1);
+	global.rendererMgr->r_dynamicModelWithShadowPass1.disableShader();
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	// glDisable(GL_CULL_FACE);
 	glViewport(0, 0, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
@@ -3956,13 +3973,15 @@ void FaceOff::render()
 	renderDebug();
 #else
 	
+	/*
 	p_renderer = &global.rendererMgr->r_dynamicModel;
 	p_renderer->enableShader();
-		o_animatedLegoDude.updateAnimModelFrame(SDL_GetTicks(), global.rendererMgr->r_dynamicModel.m_boneTransforms);
-
+		o_animatedLegoDude.updateAnimModelFrame(SDL_GetTicks(), (*global.rendererMgr->r_dynamicModel.m_boneTransforms));
+		
 		p_renderer->setData((int)R_DYNAMIC_MODEL::u_texture, 0, GL_TEXTURE_2D, tempTexture);
 		o_animatedLegoDude.renderGroup(m_pipeline, p_renderer);
 	p_renderer->disableShader();
+	*/
 
 
 		
@@ -3974,7 +3993,12 @@ void FaceOff::render()
 		renderEntities(m_pipeline, p_renderer);
 	p_renderer->disableShader();
 	
-
+	
+	global.rendererMgr->r_dynamicModelWithShadowPass2.enableShader();
+//		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_texture, 0, GL_TEXTURE_2D, tempTexture);
+		renderDynamicEntities(m_pipeline, global.rendererMgr->r_dynamicModelWithShadowPass2);
+	global.rendererMgr->r_dynamicModelWithShadowPass2.disableShader();
+	
 
 
 	/*

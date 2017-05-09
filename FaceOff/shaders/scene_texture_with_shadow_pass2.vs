@@ -20,7 +20,6 @@ void main()
 
 	vf_position = vec3(u_modelMat * vec4(position, 1.0));
 	vf_normal = normalize(vec3(u_modelMat * vec4(normal, 0.0)));
-//	vf_normal = vec3(u_modelMat * vec4(normal, 0.0));
 	vf_UV = UV;
 
 	vf_lightSpacePos = u_lightViewProjMat * u_modelMat * vec4(position, 1.0);

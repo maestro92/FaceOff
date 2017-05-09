@@ -6,6 +6,7 @@
 #include "renderer.h"
 #include "model_enum.h"
 #include "model.h"
+#include "animation_helper.h"
 #include <string>
 #include "cube_wireframe_model.h"
 #include "collision_detection_geometry.h"
@@ -177,7 +178,9 @@ class WorldObject
 
 		virtual void updateGameInfo();
 
-		void updateAnimModelFrame(long long nowTime_ms, vector<glm::mat4>& boneTranforms); 
+		void updateAnimModelFrame(long long nowTime_ms);
+		void updateAnimModelFrame(long long nowTime_ms, vector<glm::mat4>& boneTranforms);
+
 
 		void addParentNode(KDTreeNode* node);
 
@@ -205,7 +208,9 @@ class WorldObject
 
 		void takeDamage(int damage);
 
-		
+		void initAnimationHelper();
+
+		AnimationHelper* animationHelper;
 
 		virtual void serialize_New(RakNet::BitStream& bs);
 		virtual void deserialize_New(RakNet::BitStream& bs);
@@ -253,6 +258,8 @@ class WorldObject
 		float m_halfMaterialSurfaceFriction;
 
 		bool testedForNotInMidAir;
+
+
 };
 
 
@@ -430,8 +437,12 @@ inline void WorldObject::setModel(Model* model)
 	m_model = model;
 	m_wireFrameModel = new CubeWireFrameModel(model->m_aabb);
 
-//	updateAABB();
+	if (m_model->isAnimated())
+	{
+		animationHelper = new AnimationHelper();
+	}
 
+//	updateAABB();
 //	m_staticWireFrameModel = new CubeWireFrameModel(m_aabb);
 }
 

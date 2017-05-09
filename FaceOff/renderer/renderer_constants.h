@@ -20,14 +20,6 @@ namespace R_FULL_TEXTURE
 	};
 }
 
-namespace R_DYNAMIC_MODEL
-{
-	enum E
-	{
-		u_texture = 0
-	};
-}
-
 namespace R_PLAYER_TARGET
 {
 	enum E
@@ -41,6 +33,32 @@ namespace R_SKYBOX
 	enum E
 	{
 		u_cubeMapTextureID = 0
+	};
+}
+
+namespace R_DYNAMIC_MODEL
+{
+	enum E
+	{
+		u_texture = 0
+	};
+}
+
+namespace R_DYNAMIC_MODEL_WITH_SHADOW_PASS1
+{
+	enum E
+	{
+
+	};
+}
+
+namespace R_DYNAMIC_MODEL_WITH_SHADOW_PASS2
+{
+	enum E
+	{
+		u_shadowMap = 0,
+		u_shadowMapSize,
+		u_lightViewProjMat
 	};
 }
 

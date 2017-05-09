@@ -27,16 +27,6 @@
 			"u_texture":	"DP_INT"
 		}
 	},
-
-	{
-		"r": 			"r_dynamicModel",
-		"vs":			"dynamic_model.vs",
-		"fs":			"dynamic_model.fs",
-		"data":
-		{
-			"u_texture":	"DP_INT"
-		}
-	},
 	
 	{
 		"r": 			"r_playerTarget",
@@ -55,6 +45,36 @@
 		"data":
 		{
 			"u_cubeMapTextureID":	"DP_INT"
+		}
+	},
+
+	{
+		"r": 			"r_dynamicModel",
+		"vs":			"dynamic_model.vs",
+		"fs":			"dynamic_model.fs",
+		"data":
+		{
+			"u_texture":	"DP_INT"
+		}
+	},
+
+	{
+		"r": 			"r_dynamicModelWithShadowPass1",
+		"vs":			"dynamic_model_with_shadow_pass1.vs",
+		"fs":			"dynamic_model_with_shadow_pass1.fs",
+		"data":
+		{}
+	},
+
+	{
+		"r": 			"r_dynamicModelWithShadowPass2",
+		"vs":			"dynamic_model_with_shadow_pass2.vs",
+		"fs":			"dynamic_model_with_shadow_pass2.fs",
+		"data":
+		{
+			"u_shadowMap":			"DP_INT",
+			"u_shadowMapSize":		"DP_VEC2",
+			"u_lightViewProjMat": 	"DP_MAT4"	
 		}
 	},
 
@@ -83,9 +103,7 @@
 		"vs":			"scene_texture_with_shadow_pass1.vs",
 		"fs":			"scene_texture_with_shadow_pass1.fs",
 		"data":
-		{
-
-		}
+		{}
 	},
 
 	{
@@ -94,7 +112,7 @@
 		"fs":			"scene_texture_with_shadow_pass2.fs",
 		"data":
 		{
-			"u_shadowMap":	"DP_INT",
+			"u_shadowMap":			"DP_INT",
 			"u_shadowMapSize":		"DP_VEC2",
 			"u_lightViewProjMat": 	"DP_MAT4"			
 		}

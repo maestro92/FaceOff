@@ -657,7 +657,7 @@ class FaceOff
 //		static ModelManager			m_modelMgr;
 		NetworkManager				m_nm;
 		Renderer*					p_renderer;
-
+		
 		/// GUI
 		long long m_runningTime;
 		Uint32 m_nextGameTick = 0;
@@ -904,8 +904,13 @@ class FaceOff
 
 		uint8_t svFireWeaponCollisionFlags[ENTITY_COLLISION_FLAG_SIZE];
 		void processUserFireWeapon(Player* p);
+
+		void UpdateDynamicEntitiesAnimations();
 		void render();
 		void renderEntities(Pipeline& p, Renderer* r);
+//		void renderDynamicEntities(Pipeline& pipeline, Renderer* renderer, vector<glm::mat4>& transformBuffers, bool animateFlag);
+//		void renderDynamicEntities(Pipeline& pipeline, AnimationModelRenderer* renderer, bool animateFlag);
+		void renderDynamicEntities(Pipeline& p, AnimationModelRenderer& r);
 		void renderDebug();
 
 //		void simulatePlayerPhysics(KDTree& tree, Player* p, int i, bool setCollsionFlagsBothWays);

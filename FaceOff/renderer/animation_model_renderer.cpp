@@ -2,9 +2,14 @@
 #include "animation_model_renderer.h"
 
 
+AnimationModelRenderer::AnimationModelRenderer()
+{
+
+}
+
 void AnimationModelRenderer::init()
 {
-	m_boneTransforms.resize(MAX_BONES, glm::mat4(0.0));
+//	m_boneTransforms.resize(MAX_BONES, glm::mat4(0.0));
 	
 	boneUniLockIndexStart = m_dataPairs.size();
 	for (unsigned int i = 0; i < MAX_BONES; i++)
@@ -18,13 +23,15 @@ void AnimationModelRenderer::init()
  
 void AnimationModelRenderer::setUniLocs(Pipeline& p)
 {
-	for (int i = 0; i < m_boneTransforms.size(); i++)
+	if (m_boneTransforms != nullptr)
 	{
-		int varEnum = boneUniLockIndexStart + i;
-		m_dataPairs[varEnum]->setValue(m_boneTransforms[i]);
-		m_dataPairs[varEnum]->setUniLoc();
+		for (int i = 0; i < m_boneTransforms->size(); i++)
+		{
+			int varEnum = boneUniLockIndexStart + i;
+			m_dataPairs[varEnum]->setValue((*m_boneTransforms)[i]);
+			m_dataPairs[varEnum]->setUniLoc();
+		}
 	}
-
 	Renderer::setUniLocs(p);
 }
 

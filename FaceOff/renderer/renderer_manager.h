@@ -30,7 +30,9 @@ class RendererManager
 		Renderer		r_skybox;
 
 		AnimationModelRenderer		r_dynamicModel;
-		
+		AnimationModelRenderer		r_dynamicModelWithShadowPass1;
+		AnimationModelRenderer		r_dynamicModelWithShadowPass2;
+
 		Renderer		r_healthBar;
 
 		Renderer		r_fireWorkEffectUpdate;

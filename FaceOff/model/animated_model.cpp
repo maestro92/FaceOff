@@ -404,11 +404,12 @@ we traverse through our tree (nodes), and whenever we arrive at a node, we set t
 */
 void AnimatedModel::getAnimBoneTranforms(double nowTime_s, vector<glm::mat4>& boneTransforms)
 {
-	boneTransforms.clear();
-	boneTransforms.resize(m_numBones);
-	glm::mat4 parentTransform = glm::mat4(1.0f);
-//	glm::mat4 parentTransform = m_globalTransform;
+	if (boneTransforms.size() != m_numBones)
+	{
+		boneTransforms.resize(m_numBones);
+	}
 
+	glm::mat4 parentTransform = glm::mat4(1.0f);
 
 	double timeInTicks = nowTime_s * m_ticksPerSecond;
 	double animationTick = fmod(timeInTicks, m_durationInTicks);

@@ -25,8 +25,6 @@ void RendererManager::init(int width, int height)
 	Renderer::initRendererWrapper(vArray, &r_fullTexture, "r_fullTexture");
 	Renderer::initRendererWrapper(vArray, &r_playerTarget, "r_playerTarget");
 	Renderer::initRendererWrapper(vArray, &r_skybox, "r_skybox");
-	Renderer::initRendererWrapper(vArray, &r_dynamicModel, "r_dynamicModel");
-	r_dynamicModel.init();
 
 	Renderer::initRendererWrapper(vArray, &r_smokeEffectUpdate, "r_smokeEffectUpdate");
 	r_smokeEffectUpdate.enableShader();
@@ -45,7 +43,6 @@ void RendererManager::init(int width, int height)
 	r_smokeEffectRender.disableShader();
 
 
-//	SceneRenderer r_sceneColor;
 	Renderer::initRendererWrapper(vArray, &r_sceneTexture, "r_sceneTexture");
 	r_sceneTexture.init();
 	r_sceneTexture.enableShader();
@@ -60,11 +57,19 @@ void RendererManager::init(int width, int height)
 	Renderer::initRendererWrapper(vArray, &r_sceneTextureWithShadowPass2, "r_sceneTextureWithShadowPass2");
 	r_sceneTextureWithShadowPass2.init();
 	r_sceneTextureWithShadowPass2.enableShader();
-	r_sceneTextureWithShadowPass2.setDirLightsData(global.lightMgr->getDirLights());
-	r_sceneTextureWithShadowPass2.setPointLightsData(global.lightMgr->getPointLights());
-	r_sceneTextureWithShadowPass2.setSpotLightsData(global.lightMgr->getSpotLights());
+		r_sceneTextureWithShadowPass2.setDirLightsData(global.lightMgr->getDirLights());
+		r_sceneTextureWithShadowPass2.setPointLightsData(global.lightMgr->getPointLights());
+		r_sceneTextureWithShadowPass2.setSpotLightsData(global.lightMgr->getSpotLights());
 	r_sceneTextureWithShadowPass2.disableShader();
 
+	Renderer::initRendererWrapper(vArray, &r_dynamicModel, "r_dynamicModel");
+	r_dynamicModel.init();
+
+	Renderer::initRendererWrapper(vArray, &r_dynamicModelWithShadowPass1, "r_dynamicModelWithShadowPass1");
+	r_dynamicModelWithShadowPass1.init();
+	
+	Renderer::initRendererWrapper(vArray, &r_dynamicModelWithShadowPass2, "r_dynamicModelWithShadowPass2");
+	r_dynamicModelWithShadowPass2.init();
 
 	/*
 	r_fullVertexColor.printDataPairs();

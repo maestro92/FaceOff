@@ -16,6 +16,7 @@ WorldObject::WorldObject()
 	m_invMass = 1.0 / m_mass;
 	
 	m_model = NULL;
+	animationHelper = NULL;
 
 	m_geometryType = CD_NULL;
 	m_aabb = NULL;
@@ -150,6 +151,17 @@ void WorldObject::updateGameInfo()
 		isHitCounter = 0;
 	}
 
+}
+
+void WorldObject::updateAnimModelFrame(long long nowTime_ms) // , vector<glm::mat4>& boneTransforms)
+{
+	if (m_model != NULL && m_model->isAnimated() && animationHelper != NULL)
+	{
+		AnimatedModel* ptr = (AnimatedModel*)(m_model);
+		double nowTime_s = nowTime_ms;
+		nowTime_s /= 1000;
+		ptr->getAnimBoneTranforms(nowTime_s, animationHelper->boneTransforms);
+	}
 }
 
 void WorldObject::updateAnimModelFrame(long long nowTime_ms, vector<glm::mat4>& boneTransforms)

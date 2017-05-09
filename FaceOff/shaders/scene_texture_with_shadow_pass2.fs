@@ -44,8 +44,9 @@ uniform DirectionalLight u_dirLight;
 uniform int u_numPointLights;
 uniform PointLight u_pointLights[MAX_POINT_LIGHTS];
 
-
+// make sure this is the first texture
 uniform sampler2D u_texture;
+
 uniform sampler2D u_shadowMap;
 uniform vec2 u_shadowMapSize;
 // uniform float u_matSpecularIntensity;
@@ -68,12 +69,6 @@ out vec4 FragColor;
 
 float calcShadowFactor(vec4 shadowMapCoord)
 {
- //   vec3 ProjCoords = lightSpacePos.xyz / lightSpacePos.w;
- //   vec2 UVCoords;
- //   UVCoords.x = 0.5 * ProjCoords.x + 0.5;
- //   UVCoords.y = 0.5 * ProjCoords.y + 0.5;
- //   float z = 0.5 * ProjCoords.z + 0.5;
-
     float xOffset = 1.0/u_shadowMapSize.x;
     float yOffset = 1.0/u_shadowMapSize.y;
 
