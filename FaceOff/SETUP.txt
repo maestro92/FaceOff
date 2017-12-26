@@ -48,6 +48,21 @@ http://stackoverflow.com/questions/19321804/this-function-or-variable-may-be-uns
 
 
 
+- If you see the following error
+"
+error LNK2019 unresolved external symbol _imp___iob_func referenced in function _ShowError
+"
+
+http://stackoverflow.com/questions/4845410/error-lnk2019-unresolved-external-symbol-main-referenced-in-function-tmainc
+look for Anton Andreev's solution
+
+
+Solution in short: add the following line
+#undef main
+
+
+
+
 - If you see this other error
 "
 error C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings	
