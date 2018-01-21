@@ -19,6 +19,19 @@ class RendererManager
 {
 	const int SHADOW_MAP_RATIO = 2;
 
+	struct RenderConfig
+	{
+		bool shadowsOn;
+		bool lightScatteringOn;
+		
+		RenderConfig()
+		{
+			shadowsOn = true;
+			lightScatteringOn = true;
+		}
+	};
+
+
     public:
         RendererManager();
         ~RendererManager();
@@ -51,9 +64,10 @@ class RendererManager
 
 
 		Renderer		r_composite;
+		Renderer		r_occlusionMap;
+		Renderer		r_volLightScattering;		// post process, volumetric light scattering
 
-
-		
+		glm::vec2	sunScreenPosition;
 		Renderer r_multiTexturedTerrain;
 
 		/*
@@ -67,6 +81,7 @@ class RendererManager
 		Renderer r_sceneTextureWithShadowPass1;
 		Renderer r_sceneTextureWithShadowPass2;
 
+	
 
 		/*
 		SceneRenderer r_sceneTextureWithShadowPass2;
@@ -85,7 +100,7 @@ class RendererManager
 
 		FrameBufferObject m_backGroundLayerFBO;
 		FrameBufferObject m_particleLayerFBO;
-
+		FrameBufferObject m_occlusionMapFBO;
 
 
 		void init(int width, int height);
@@ -101,7 +116,7 @@ class RendererManager
 
 	private:
 		void initShadowMapFBO(int w, int h);
-
+		void initOcclusionMapFBO(int w, int h);
 		
 		// unordered_map<string, DATA_PAIR_TYPE> m_stringToDPTypeEnum;
 };

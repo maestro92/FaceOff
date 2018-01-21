@@ -50,9 +50,7 @@ http://gamedev.stackexchange.com/questions/19560/what-is-the-best-way-to-store-m
 
 
 
-
-
-
+#include "model_type_enum.h"
 
 #include "Mesh.h"
 
@@ -96,8 +94,13 @@ class Model
 			
 		bool isAnimated();
 
+		void setType(ModelType type);
+		ModelType getType();
+
 	protected:
 		bool m_isAnimated;
+
+		ModelType m_type;
 };
 
 

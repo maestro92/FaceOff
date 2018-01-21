@@ -666,7 +666,7 @@ class FaceOff
 		Pipeline m_lightPovPipeline;
 		Pipeline m_pipeline;
 
-		glm::vec3 sunPosition;
+		// glm::vec3 sunPosition;
 
 		DelayedPacket myDP;
 
@@ -708,6 +708,7 @@ class FaceOff
 		SkyBox          o_skybox;
 		WorldObject		o_sampleBullet;
 		WorldObject		o_animatedLegoDude;
+		WorldObject		o_sun;
 
 		int debugCurClientId;
 
@@ -907,6 +908,8 @@ class FaceOff
 
 		void UpdateDynamicEntitiesAnimations();
 		void render();
+		void renderShadowMap();
+		void renderOcclusionMap();
 		void renderEntities(Pipeline& p, Renderer* r);
 //		void renderDynamicEntities(Pipeline& pipeline, Renderer* renderer, vector<glm::mat4>& transformBuffers, bool animateFlag);
 //		void renderDynamicEntities(Pipeline& pipeline, AnimationModelRenderer* renderer, bool animateFlag);

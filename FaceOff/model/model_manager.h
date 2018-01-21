@@ -4,7 +4,7 @@
 using namespace std;
 
 #include <unordered_map>
-#include "model_enum.h"
+#include "model_type_enum.h"
 
 #include "utility.h"
 
@@ -84,6 +84,8 @@ class ModelManager
 		Model* m_ground;
 		Model* m_woodenBox;
 		Model* m_legoMan;
+
+		Model* m_sun;
 
 		// Model* m_animatedLegoMan;
 		

@@ -1300,7 +1300,7 @@ void Player::serialize_New(RakNet::BitStream& bs)
 	bs.Write(m_yaw);
 
 
-	bs.Write(m_modelEnum);
+	bs.Write((int)m_modelType);
 	bs.Write(getGeometryType());
 	bs.Write(getMass());
 	bs.Write(getMaterialEnergyRestitution());
@@ -1352,8 +1352,11 @@ void Player::deserialize_New(RakNet::BitStream& bs)
 	bs.Read(m_yaw);	
 	setRotation(m_pitch, m_yaw);
 
-	bs.Read(m_modelEnum);		
-	setModel(global.modelMgr->get(m_modelEnum));
+	int modelType = 0;
+	bs.Read(modelType);
+	m_modelType = (ModelType)modelType;
+
+	setModel(global.modelMgr->get(m_modelType));
 
 
 	bs.Read(m_geometryType);	 

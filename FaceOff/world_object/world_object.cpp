@@ -33,7 +33,7 @@ WorldObject::WorldObject()
 
 	resetCollisionFlags();
 
-	m_modelEnum = -1;
+	m_modelType = ModelType::none;
 }
 
 
@@ -406,7 +406,7 @@ void WorldObject::serialize_New(RakNet::BitStream& bs)
 	utl::write(bs, m_name);
 
 	bs.WriteVector(m_position.x, m_position.y, m_position.z);
-	bs.Write(m_modelEnum);
+	bs.Write((int)m_modelType);
 
 	bs.Write(getGeometryType());
 	bs.Write(getMass());
@@ -458,9 +458,12 @@ void WorldObject::deserialize_New(RakNet::BitStream& bs)
 	utl::read(bs, m_name);
 
 	bs.ReadVector(m_position.x, m_position.y, m_position.z);
-	bs.Read(m_modelEnum);
 
-	setModel(global.modelMgr->get(m_modelEnum));
+	int modelType = 0;
+	bs.Read(modelType);
+	m_modelType = (ModelType)modelType;
+
+	setModel(global.modelMgr->get(m_modelType));
 
 	bs.Read(m_geometryType);
 	setCollisionDetectionGeometry(m_geometryType);

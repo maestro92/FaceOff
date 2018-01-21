@@ -6,7 +6,7 @@ Button::Button()
 
 Button::Button(string text, int x, int y, int width, int height,
                glm::vec3 bgColor, glm::vec3 highlightColor, glm::vec3 pressedColor,
-               std::function<void()> callBack) : Control(text, x, y, width, height, BLUE)
+               std::function<void()> callBack) : Control(text, x, y, width, height, COLOR_BLUE)
 {
     m_down = false;
     m_highlightTexture = -1;

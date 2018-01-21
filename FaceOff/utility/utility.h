@@ -61,19 +61,26 @@ using namespace std;
 
 #define RENDER_TO_SCREEN 0
 
-#define BLACK       glm::vec3(0.0,0.0,0.0)
-#define DARK_BLUE   glm::vec3(0.0,0.0,0.75)
-#define BLUE        glm::vec3(0.0,0.0,0.5)
-#define GREEN       glm::vec3(0.0,1.0,0.0)
-#define TEAL        glm::vec3(0.0,1.0,1.0)
-#define RED         glm::vec3(1.0,0.0,0.0)
-#define PURPLE      glm::vec3(1.0,0.0,1.0)
-#define YELLOW      glm::vec3(1.0,1.0,0.0)
+const glm::vec3 COLOR_BLACK = glm::vec3(0.0, 0.0, 0.0);
+const glm::vec3 COLOR_DARK_BLUE = glm::vec3(0.0, 0.0, 0.75);
+const glm::vec3 COLOR_PURPLE = glm::vec3(1.0, 0.0, 1.0);
 
-#define DARK_GRAY   glm::vec3(0.25,0.25,0.25)
-#define GRAY        glm::vec3(0.5,0.5,0.5)
-#define LIGHT_GRAY  glm::vec3(0.75, 0.75, 0.75)
-#define WHITE       glm::vec3(1.0,1.0,1.0)
+const glm::vec3 COLOR_DARK_GRAY = glm::vec3(0.25, 0.25, 0.25);
+const glm::vec3 COLOR_GRAY = glm::vec3(0.5, 0.5, 0.5);
+const glm::vec3 COLOR_LIGHT_GRAY = glm::vec3(0.75, 0.75, 0.75);
+
+
+const glm::vec3 COLOR_BLUE =	glm::vec3(0.0f, 0.0f, 1.0f);
+const glm::vec3 COLOR_GREEN =	glm::vec3(0.0f, 1.0f, 0.0f);
+const glm::vec3 COLOR_CYAN =	glm::vec3(0.0f, 1.0f, 1.0f);
+const glm::vec3 COLOR_RED =		glm::vec3(1.0f, 0.0f, 0.0f);
+const glm::vec3 COLOR_PINK =	glm::vec3(1.0f, 0.0f, 1.0f);
+const glm::vec3 COLOR_YELLOW =	glm::vec3(1.0f, 1.0f, 0.0f);
+const glm::vec3 COLOR_WHITE =	glm::vec3(1.0f, 1.0f, 1.0f);
+
+
+
+// const glm::vec3 COLOR_WHITE = glm::vec3(1.0, 1.0, 1.0);
 
 typedef long long UniqueId;
 

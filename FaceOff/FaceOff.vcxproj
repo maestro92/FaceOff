@@ -469,7 +469,7 @@
     <ClInclude Include="model\mesh.h" />
     <ClInclude Include="model\imported_model.h" />
     <ClInclude Include="model\model.h" />
-    <ClInclude Include="model\model_enum.h" />
+    <ClInclude Include="model\model_type_enum.h" />
     <ClInclude Include="model\model_manager.h" />
     <ClInclude Include="model\texture.h" />
     <ClInclude Include="model\vertex_data.h" />

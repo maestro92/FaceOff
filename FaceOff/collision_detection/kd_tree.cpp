@@ -75,7 +75,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 //	if (objects.size() < 3 || depth == 6)
 	if (objects.size() < 3)
 	{
-		vector <glm::vec3> colors = { RED, GREEN, BLUE };
+		vector <glm::vec3> colors = { COLOR_RED, COLOR_GREEN, COLOR_BLUE };
 
 		int rem = count % 3;
 		root->createWireFrameModel(colors[rem]);
@@ -179,7 +179,7 @@ KDTreeNode* KDTree::recursiveBuild(vector<WorldObject*> objects, glm::vec3 maxP,
 		rightObjects.size() == objects.size() ||
 		leftObjects.size() == rightObjects.size() == objects.size())
 	{
-		vector <glm::vec3> colors = { RED, GREEN, BLUE };
+		vector <glm::vec3> colors = { COLOR_RED, COLOR_GREEN, COLOR_BLUE };
 
 		int rem = count % 3;
 		root->createWireFrameModel(colors[rem]);

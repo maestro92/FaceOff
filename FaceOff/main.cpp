@@ -167,7 +167,8 @@ void FaceOff::init()
 	// m_rendererMgr.init(utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
 	// m_rendererMgr.initSceneRendererStaticLightsData(m_lightManager);
 
-	sunPosition = glm::vec3(-300,300,0);
+
+	
 
 	isRunning = true;
 	singlePlayerMode = true;
@@ -259,9 +260,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	WorldObject* o_temp = new WorldObject();
 	o_temp->setScale(xbound, zbound, 1.0);
 	o_temp->setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
-	o_temp->setModelEnum(ModelEnum::ground);
-//	o_temp->setModel(m_modelMgr.get(ModelEnum::ground));
-	o_temp->setModel(global.modelMgr->get(ModelEnum::ground));
+	o_temp->setModel(global.modelMgr->get(ModelType::ground));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	o_temp->m_name = "ground";
 	objects.add(o_temp);
@@ -271,9 +270,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->m_name = "south wall";
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setPosition(0, ybound / 2, zbound + wallWidth);
-	o_temp->setModelEnum(ModelEnum::cube);
-//	o_temp->setModel(m_modelMgr.get(ModelEnum::cube));
-	o_temp->setModel(global.modelMgr->get(ModelEnum::cube));
+	o_temp->setModel(global.modelMgr->get(ModelType::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -284,8 +281,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->setPosition(0, ybound / 2, -zbound - wallWidth);
 	o_temp->setScale(xbound, ybound / 2, wallWidth);
 	o_temp->setRotation(glm::rotate(180.0f, 0.0f, 1.0f, 0.0f));
-	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(global.modelMgr->get(ModelEnum::cube));
+	o_temp->setModel(global.modelMgr->get(ModelType::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -295,9 +291,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->m_name = "west wall";
 	o_temp->setPosition(-xbound - wallWidth, ybound / 2, 0.0);
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
-	//	o_temp->setModel(m_modelMgr.m_cube);
-	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(global.modelMgr->get(ModelEnum::cube));
+	o_temp->setModel(global.modelMgr->get(ModelType::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -308,9 +302,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 	o_temp->m_name = "east wall";
 	o_temp->setPosition(xbound + wallWidth, ybound / 2, 0.0);
 	o_temp->setScale(wallWidth, ybound / 2, zbound);
-	//	o_temp->setModel(m_modelMgr.m_cube);
-	o_temp->setModelEnum(ModelEnum::cube);
-	o_temp->setModel(global.modelMgr->get(ModelEnum::cube));
+	o_temp->setModel(global.modelMgr->get(ModelType::cube));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -329,9 +321,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-		//		o_temp->setModel(m_modelMgr.m_woodenBox);
-		o_temp->setModelEnum(ModelEnum::woodenBox);
-		o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
+		o_temp->setModel(global.modelMgr->get(ModelType::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
 		objects.add(o_temp);
 	}
@@ -348,9 +338,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 		o_temp->setPosition(x, scale / 2, z);
 		o_temp->setScale(scale);
 		o_temp->m_name = "woodenBox " + utl::floatToStr(x);
-		//		o_temp->setModel(m_modelMgr.m_woodenBox);
-		o_temp->setModelEnum(ModelEnum::woodenBox);
-		o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
+		o_temp->setModel(global.modelMgr->get(ModelType::woodenBox));
 		o_temp->setCollisionDetectionGeometry(CD_AABB);
 		objects.add(o_temp);
 	}
@@ -379,9 +367,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, -halfPosZMag);
-	//	o_temp->setModel(m_modelMgr.m_woodenBox);
-	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
+	o_temp->setModel(global.modelMgr->get(ModelType::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -392,9 +378,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, -halfPosZMag);
-	//	o_temp->setModel(m_modelMgr.m_woodenBox);
-	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
+	o_temp->setModel(global.modelMgr->get(ModelType::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -406,9 +390,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(-halfPosXMag, pillarYScale / 2, halfPosZMag);
-	//	o_temp->setModel(m_modelMgr.m_woodenBox);
-	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
+	o_temp->setModel(global.modelMgr->get(ModelType::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -419,9 +401,7 @@ void FaceOff::initMap(FOArray<WorldObject*>& objects, FOArray<Player*>& players,
 
 	o_temp->setScale(pillarXScale, pillarYScale, pillarZScale);
 	o_temp->setPosition(halfPosXMag, pillarYScale / 2, halfPosZMag);
-	//	o_temp->setModel(m_modelMgr.m_woodenBox);
-	o_temp->setModelEnum(ModelEnum::woodenBox);
-	o_temp->setModel(global.modelMgr->get(ModelEnum::woodenBox));
+	o_temp->setModel(global.modelMgr->get(ModelType::woodenBox));
 	o_temp->setCollisionDetectionGeometry(CD_AABB);
 	objects.add(o_temp);
 
@@ -553,8 +533,8 @@ void FaceOff::initObjects()
 
 	float scale = 100.0;
 	o_worldAxis.setScale(scale);
-	o_worldAxis.setModelEnum(ModelEnum::xyzAxis);
-	o_worldAxis.setModel(global.modelMgr->get(ModelEnum::xyzAxis));
+//	o_worldAxis.setModelType(ModelType::xyzAxis);
+	o_worldAxis.setModel(global.modelMgr->get(ModelType::xyzAxis));
 
 	
 	o_sampleBullet.setScale(1.0, 5.0, 1.0);
@@ -563,12 +543,17 @@ void FaceOff::initObjects()
 	o_skybox.setRotation(glm::rotate(90.0f, 0.0f, 1.0f, 0.0f));
 
 	o_animatedLegoDude = WorldObject();
-	o_animatedLegoDude.setModelEnum(ModelEnum::animatedLegoMan);
-	o_animatedLegoDude.setModel(global.modelMgr->get(ModelEnum::animatedLegoMan));
+	o_animatedLegoDude.setModel(global.modelMgr->get(ModelType::animatedLegoMan));
 //	o_animatedLegoDude.setRotation(glm::rotate(90.0f, 1.0f, 0.0f, 0.0f));
 	o_animatedLegoDude.setRotation(glm::rotate(-90.0f, 1.0f, 0.0f, 0.0f));
 	o_animatedLegoDude.setScale(2.0);
 	o_animatedLegoDude.setPosition(glm::vec3(0.0, 0.0, -20.0));
+
+
+	o_sun = WorldObject();
+	o_sun.setModel(global.modelMgr->get(ModelType::sun));
+	o_sun.setPosition(glm::vec3(-300, 300, 0));
+	o_sun.setScale(5.0);
 
 
 	initMap(sv_objects, sv_players, sv_objectKDtree);
@@ -681,8 +666,7 @@ void FaceOff::initNetworkLobby()
 					p->m_name = "player " + utl::intToStr(newPlayerIndex);
 					p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
 					p->setRotation(0, 0);
-					p->setModelEnum(ModelEnum::player);
-					p->setModel(global.modelMgr->get(ModelEnum::player));
+					p->setModel(global.modelMgr->get(ModelType::player));
 					p->setMass(80);
 					p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -800,8 +784,7 @@ void FaceOff::initNetworkLobby()
 						p->m_name = "player " + utl::intToStr(newPlayerId.getIndex());
 						p->setPosition(newSpawnX, newSpawnY, newSpawnZ);
 						p->setRotation(0, 0);
-						p->setModelEnum(ModelEnum::player);
-						p->setModel(global.modelMgr->get(ModelEnum::player));
+						p->setModel(global.modelMgr->get(ModelType::player));
 						p->setMass(80);
 						p->setCollisionDetectionGeometry(CD_SPHERE);
 
@@ -1958,8 +1941,7 @@ void FaceOff::processUserFireWeapon(Player* p)
 			WorldObject* hitPointMark = new WorldObject();
 			hitPointMark->setPosition(hitPoint);
 			hitPointMark->setScale(1.0, 1.0, 1.0);
-			hitPointMark->setModelEnum(ModelEnum::cube);
-			hitPointMark->setModel(global.modelMgr->get(ModelEnum::cube));
+			hitPointMark->setModel(global.modelMgr->get(ModelType::cube));
 			hitPointMark->m_name = "hitMark";
 			//								m_hitPointMarks.push_back(hitPointMark);
 			
@@ -3864,21 +3846,16 @@ void FaceOff::UpdateDynamicEntitiesAnimations()
 }
 
 
-void FaceOff::render()
+
+void FaceOff::renderShadowMap()
 {
-
-//	m_lightPovPipeline
-
-	UpdateDynamicEntitiesAnimations();
-
-	
 	m_lightPovPipeline.setMatrixMode(VIEW_MATRIX);
 	m_lightPovPipeline.loadIdentity();
 
 	m_lightPovPipeline.rotateX(-45);
 	m_lightPovPipeline.rotateY(270);
 
-	m_lightPovPipeline.translate(sunPosition);
+	m_lightPovPipeline.translate(o_sun.getPosition());
 
 	global.rendererMgr->m_lightViewProjMat = LIGHT_BIAS_MATRIX * m_lightPovPipeline.getProjectionMatrix() * m_lightPovPipeline.getViewMatrix(); // m_lightPovPipeline.getModelViewProjectionMatrix();
 
@@ -3909,9 +3886,65 @@ void FaceOff::render()
 	p_renderer->disableShader();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// glDisable(GL_CULL_FACE);
 	glViewport(0, 0, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT);
+}
 
+void FaceOff::renderOcclusionMap()
+{
+/*
+	int viewport[4] = { 0, 0, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT };
+
+	gluProject(o_sun.m_position[0], o_sun.m_position[1], o_sun.m_position[2],
+		(double*)(&m_pipeline.getModelViewMatrix()[0][0]), (double*)(&m_pipeline.getProjectionMatrix()[0][0]), viewport,
+		(double*)(&global.rendererMgr->sunScreenPosition[0]), (double*)(&global.rendererMgr->sunScreenPosition[1]), (double*)(&global.rendererMgr->sunScreenPosition[2]));
+	*/
+
+//	utl::debug("modelView", m_pipeline.getModelViewMatrix());
+//	utl::debug("proj", m_pipeline.getProjectionMatrix());
+
+	float temp; 
+	int result = utl::gluProjectWrapper(o_sun.m_position, m_pipeline.getModelViewMatrix(), m_pipeline.getProjectionMatrix(), 0, 0, utl::SCREEN_WIDTH, utl::SCREEN_HEIGHT,
+			global.rendererMgr->sunScreenPosition[0], global.rendererMgr->sunScreenPosition[1], temp);
+	
+//	utl::clDebug("result", result);
+	// utl::clDebug("sunScreenPos", global.rendererMgr->sunScreenPosition);
+//	utl::clDebug("sunScreenPos", global.rendererMgr->sunScreenPosition);
+
+	global.rendererMgr->sunScreenPosition[0] /= utl::SCREEN_WIDTH;
+	global.rendererMgr->sunScreenPosition[1] /= utl::SCREEN_HEIGHT;
+
+
+//	utl::clDebug("sunScreenPos", global.rendererMgr->sunScreenPosition);
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, global.rendererMgr->m_occlusionMapFBO.FBO);
+	
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+//	glClearColor(0.02, 0.02, 0.02, 1.0);
+//	glClearColor(0.2, 0.2, 0.2, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+//	p_renderer = &global.rendererMgr->r_occlusionMap;
+	p_renderer = &global.rendererMgr->r_fullVertexColor;
+	p_renderer->enableShader();	
+		o_sun.renderGroup(m_pipeline, p_renderer);
+		renderEntities(m_pipeline, p_renderer);
+	p_renderer->disableShader();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void FaceOff::render()
+{
+
+//	m_lightPovPipeline
+
+	UpdateDynamicEntitiesAnimations();
+
+	renderShadowMap();
+
+	
 //	m_pipeline.setMatrixMode(VIEW_MATRIX);
 //	m_pipeline.loadIdentity();
 	
@@ -3966,8 +3999,10 @@ void FaceOff::render()
 	// *******************************************************
 	// ************* Rendering *******************************
 	// *******************************************************
-
 	m_pipeline.setMatrixMode(MODEL_MATRIX);
+	renderOcclusionMap();
+
+
 	glBindFramebuffer(GL_FRAMEBUFFER, global.rendererMgr->m_backGroundLayerFBO.FBO);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -3975,7 +4010,7 @@ void FaceOff::render()
 
 	// the render function disables depth test Cull face already and enables it afterwards
 	o_skybox.setPosition(defaultPlayer->m_camera->getEyePoint());
-	o_skybox.render(m_pipeline, &global.rendererMgr->r_skybox);
+//	o_skybox.render(m_pipeline, &global.rendererMgr->r_skybox);
 
 	glCullFace(GL_BACK);
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -3996,8 +4031,11 @@ void FaceOff::render()
 	p_renderer->disableShader();
 	*/
 
+	p_renderer = &global.rendererMgr->r_fullVertexColor;
+	p_renderer->enableShader();
+		o_sun.renderGroup(m_pipeline, p_renderer);
+	p_renderer->disableShader();
 
-		
 	p_renderer = &global.rendererMgr->r_sceneTextureWithShadowPass2;
 	p_renderer->enableShader();
 		p_renderer->setData((int)R_SCENE_TEXTURE_WITH_SHADOW_PASS2::u_shadowMap, 3, GL_TEXTURE_2D, global.rendererMgr->m_shadowMapFBO.depthTexture);
@@ -4010,7 +4048,7 @@ void FaceOff::render()
 	p_renderer->enableShader();
 		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_shadowMap, 3, GL_TEXTURE_2D, global.rendererMgr->m_shadowMapFBO.depthTexture);
 		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_shadowMapSize, glm::vec2(global.rendererMgr->shadowMapWidth, global.rendererMgr->shadowMapHeight));
-		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_lightViewProjMat, global.rendererMgr->m_lightViewProjMat);
+		p_renderer->setData((int)R_DYNAMIC_MODEL_WITH_SHADOW_PASS2::u_lightViewProjMat, global.rendererMgr->m_lightViewProjMat);		
 		renderDynamicEntities(m_pipeline, p_renderer);
 	p_renderer->disableShader();
 
@@ -4082,7 +4120,7 @@ void FaceOff::render()
 
 	p_renderer = &global.rendererMgr->r_fullColor;
 	p_renderer->enableShader();
-	p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+	p_renderer->setData(R_FULL_COLOR::u_color, COLOR_GREEN);
 
 		if (!containedFlag)
 			cl_objectKDtree.renderWireFrame(m_pipeline, p_renderer);
@@ -4099,7 +4137,7 @@ void FaceOff::render()
 
 			if (p->isHit)
 			{
-				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+				p_renderer->setData(R_FULL_COLOR::u_color, COLOR_GREEN);
 				p->renderGroup(m_pipeline, p_renderer);
 			}
 		}
@@ -4119,7 +4157,7 @@ void FaceOff::render()
 
 			if (object->isHit)
 			{
-				p_renderer->setData(R_FULL_COLOR::u_color, GREEN);
+				p_renderer->setData(R_FULL_COLOR::u_color, COLOR_GREEN);
 				object->renderGroup(m_pipeline, p_renderer);
 			}
 		}
@@ -4195,8 +4233,12 @@ void FaceOff::render()
 	m_gui.initGUIRenderingSetup();
 	if (!m_zoomedIn)
 	{
-		m_gui.renderTextureFullScreen(global.rendererMgr->m_backGroundLayerFBO.colorTexture);
+//		m_gui.renderTextureFullScreen(global.rendererMgr->m_backGroundLayerFBO.colorTexture);
 //		m_gui.renderDepthTextureFullScreen(global.rendererMgr->m_shadowMapFBO.depthTexture);
+//		m_gui.renderTextureFullScreen(global.rendererMgr->m_occlusionMapFBO.colorTexture);
+		m_gui.renderVolLightScattering(global.rendererMgr->sunScreenPosition, 
+										global.rendererMgr->m_occlusionMapFBO.colorTexture, 
+										global.rendererMgr->m_backGroundLayerFBO.colorTexture);
 	}
 
 	glEnable(GL_BLEND);
@@ -4898,8 +4940,8 @@ void FaceOff::clientHandleDeviceEvents()
 				WorldObject* hitPointMark = new WorldObject();
 				hitPointMark->setPosition(hitPoint);
 				hitPointMark->setScale(1.0, 1.0, 1.0);
-				hitPointMark->setModelEnum(ModelEnum::cube);
-				hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
+				hitPointMark->setModelType(ModelType::cube);
+				hitPointMark->setModel(m_modelMgr.get(ModelType::cube));
 				hitPointMark->m_name = "hitMark";
 				//								m_hitPointMarks.push_back(hitPointMark);
 				}
@@ -5130,8 +5172,8 @@ void FaceOff::clientHandleDeviceEvents()
 							WorldObject* hitPointMark = new WorldObject();
 							hitPointMark->setPosition(hitPoint);
 							hitPointMark->setScale(1.0, 1.0, 1.0);
-							hitPointMark->setModelEnum(ModelEnum::cube);
-							hitPointMark->setModel(m_modelMgr.get(ModelEnum::cube));
+							hitPointMark->setModelType(ModelType::cube);
+							hitPointMark->setModel(m_modelMgr.get(ModelType::cube));
 							hitPointMark->m_name = "hitMark";
 							//								m_hitPointMarks.push_back(hitPointMark);
 						}

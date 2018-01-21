@@ -1,6 +1,7 @@
 #ifndef GUI_MANAGER_H_
 #define GUI_MANAGER_H_
 
+#include "global.h"
 #include "pipeline.h"
 #include "utility.h"
 #include "Rect.h"
@@ -13,7 +14,6 @@
 #include "gui_renderer_constants.h"
 #include "custom_gui/bar.h"
 #include "renderer_constants.h"
-
 class GUIManager
 {
     public:
@@ -29,6 +29,7 @@ class GUIManager
 		void renderTexture(GLuint textureId, GLuint fboTarget, int x, int y, int width, int height, Renderer& r);
 		void renderTexture(GLuint textureId, GLuint fboTarget, Rect rect);
 
+		void renderVolLightScattering(glm::vec2 sunScreenPosition, GLuint occlusionMapId, GLuint sceneTextureId);
 		void renderSnipeScopeView(GLuint sceneTextureId);
 		/*
 		void renderTextureSingle(GLuint textureId, int x, int y, int width, int height);

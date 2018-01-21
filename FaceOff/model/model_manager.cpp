@@ -25,7 +25,7 @@ void ModelManager::init()
 
 
 	vector<string> textures;  textures.push_back("Assets/Images/chess.png");
-	m_player = new ImportedModel("./Assets/models/sphere_player.obj", textures);
+	m_player = new ImportedModel("./Assets/models/sphere_player.obj", textures, ModelType::player);
 	m_player->setMeshRandTextureIdx();
 
 
@@ -34,18 +34,18 @@ void ModelManager::init()
 	m_xyzAxis = new XYZAxisModel();
 
 	textures.clear();  textures.push_back("Assets/tree.png");
-	m_tree = new ImportedModel("Assets/tree.obj", textures);
+	m_tree = new ImportedModel("Assets/tree.obj", textures, ModelType::tree);
 
-	m_cube = new ImportedModel("Assets/models/unit_cube1.obj");
+	m_cube = new ImportedModel("Assets/models/unit_cube1.obj", ModelType::cube);
 
 //	m_woodenBox = new ImportedModel("Assets/models/wooden box/WoodenBoxOpen02.obj");
 
-	m_woodenBox = new ImportedModel("Assets/models/wooden_box.obj");
+	m_woodenBox = new ImportedModel("Assets/models/wooden_box.obj", ModelType::woodenBox);
 
-	m_ground = new ImportedModel("Assets/models/quad.obj", textures);
+	m_ground = new ImportedModel("Assets/models/quad.obj", textures, ModelType::ground);
 
 	textures.clear();  textures.push_back("Assets/Images/chess.png");
-	m_legoMan = new ImportedModel("Assets/models/lego_man.obj");
+	m_legoMan = new ImportedModel("Assets/models/lego_man.obj", ModelType::legoMan);
 	
 
 
@@ -59,33 +59,35 @@ void ModelManager::init()
 	m_animatedLegoMan.printBoneNodesHiearchy();
 
 
+	m_sun = new ImportedModel("Assets/models/sphere10.obj", ModelType::sun);
 
 //	m_animatedLampBob = new AnimatedModel("Assets/models/animations/boblampclean.md5mesh");
 
 //	while(1)
 //	{ }
 
-	m_models.resize(ModelEnum::NUM_MODELS);
-	m_models[ModelEnum::player] = m_player;
-	m_models[ModelEnum::healthbar] = m_healthBar;
-	m_models[ModelEnum::xyzAxis] = m_xyzAxis;
-	m_models[ModelEnum::tree] = m_tree;
-	m_models[ModelEnum::cube] = m_cube;
-	m_models[ModelEnum::woodenBox] = m_woodenBox;
-	m_models[ModelEnum::ground] = m_ground;
-	m_models[ModelEnum::legoMan] = m_legoMan;
-	m_models[ModelEnum::animatedLegoMan] = &m_animatedLegoMan;
+	m_models.resize(ModelType::NUM_MODELS);
+	m_models[ModelType::player] = m_player;
+	m_models[ModelType::healthbar] = m_healthBar;
+	m_models[ModelType::xyzAxis] = m_xyzAxis;
+	m_models[ModelType::tree] = m_tree;
+	m_models[ModelType::cube] = m_cube;
+	m_models[ModelType::woodenBox] = m_woodenBox;
+	m_models[ModelType::ground] = m_ground;
+	m_models[ModelType::legoMan] = m_legoMan;
+	m_models[ModelType::animatedLegoMan] = &m_animatedLegoMan;
+	m_models[ModelType::sun] = m_sun;
 
 
 	/*
-	m_models[ModelEnum::player] = ImportedModel;
-	m_models[ModelEnum::healthbar] = QuadModel(1, 1);
-	m_models[ModelEnum::xyzAxis] = XYZAxisModel();
-	m_models[ModelEnum::tree] = ImportedModel("Assets/tree.obj");
-	m_models[ModelEnum::cube] = ImportedModel("Assets/models/unit_cube1.obj");
-	m_models[ModelEnum::woodenBox] = ImportedModel("Assets/models/wooden box/WoodenBoxOpen02.obj");
-	m_models[ModelEnum::ground] = ImportedModel("Assets/models/quad.obj");
-	m_models[ModelEnum::legoMan] = ImportedModel("Assets/models/lego_man.obj");
+	m_models[ModelType::player] = ImportedModel;
+	m_models[ModelType::healthbar] = QuadModel(1, 1);
+	m_models[ModelType::xyzAxis] = XYZAxisModel();
+	m_models[ModelType::tree] = ImportedModel("Assets/tree.obj");
+	m_models[ModelType::cube] = ImportedModel("Assets/models/unit_cube1.obj");
+	m_models[ModelType::woodenBox] = ImportedModel("Assets/models/wooden box/WoodenBoxOpen02.obj");
+	m_models[ModelType::ground] = ImportedModel("Assets/models/quad.obj");
+	m_models[ModelType::legoMan] = ImportedModel("Assets/models/lego_man.obj");
 	*/
 	initWeaponsData();
 
@@ -184,7 +186,7 @@ void ModelManager::initWeaponsData()
 		glm::vec3 thirdPOVOffset =		utl::findVec3(obj, "thirdPOVOffset");
 
 		string modelFileName =			modelPath + utl::findValue(obj, "model").get_str();		
-		ImportedModel* model = new ImportedModel(modelFileName);
+		ImportedModel* model = new ImportedModel(modelFileName, ModelType::unspecified);
 
 		m_weaponDatas[nameEnum] = { name, 
 									nameEnum,

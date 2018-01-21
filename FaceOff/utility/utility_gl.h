@@ -58,7 +58,10 @@ struct DoubleFrameBufferObject
 
 namespace utl
 {
-	/// utl_GL.cpp
+	// https://www.khronos.org/opengl/wiki/GluProject_and_gluUnProject_code
+//	int gluProjectWrapper(glm::vec3 objPos, glm::mat4 modelView, glm::mat4 proj, int x, int y, int width, int height, float& winX, float& winY);
+	int gluProjectWrapper(glm::vec3 objPos, glm::mat4 modelView, glm::mat4 proj, int x, int y, int width, int height, float& winX, float& winY, float& winZ);
+
 	void initGLEW();
 	void errorCheck();
 	GLuint createFBO();

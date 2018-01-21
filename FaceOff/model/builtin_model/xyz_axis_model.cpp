@@ -4,6 +4,7 @@
 XYZAxisModel::XYZAxisModel()
 {
     m_modelGeometry = GL_LINES;
+	m_type = ModelType::xyzAxis;
 
     std::vector<VertexData> vertices;
 	std::vector<unsigned int> indices;
@@ -13,29 +14,29 @@ XYZAxisModel::XYZAxisModel()
 
     /// X axis
     v.m_position = glm::vec3(0.0,0.0,0.0);
-    v.m_color = glm::vec3(1.0,0.0,0.0);
+	v.m_color = COLOR_RED;
     vertices.push_back(v);
 
     v.m_position = glm::vec3(scale,0.0,0.0);
-    v.m_color = glm::vec3(1.0,0.0,0.0);
+    v.m_color = COLOR_RED;
     vertices.push_back(v);
 
     /// Y axis
     v.m_position = glm::vec3(0.0,0.0,0.0);
-    v.m_color = glm::vec3(0.0,1.0,0.0);
+	v.m_color = COLOR_GREEN;
     vertices.push_back(v);;
 
     v.m_position = glm::vec3(0.0,scale,0.0);
-    v.m_color = glm::vec3(0.0,1.0,0.0);
+    v.m_color = COLOR_GREEN;
     vertices.push_back(v);;
 
     /// Z axis
     v.m_position = glm::vec3(0.0,0.0,0.0);
-    v.m_color = glm::vec3(0.0,0.0,1.0);
+    v.m_color = COLOR_BLUE;
     vertices.push_back(v);;
 
     v.m_position = glm::vec3(0.0,0.0,scale);
-    v.m_color = glm::vec3(0.0,0.0,1.0);
+    v.m_color = COLOR_BLUE;
     vertices.push_back(v);;
 
 

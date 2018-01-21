@@ -58,6 +58,26 @@
 		}
 	},
 
+
+	{
+		"r": 			"r_occlusionMap",
+		"vs":			"occlusion_map.vs",
+		"fs":			"occlusion_map.fs"
+	},
+
+
+	{
+		"r": 			"r_volLightScattering",
+		"vs":			"vol_light_scattering.vs",
+		"fs":			"vol_light_scattering.fs",
+		"data":
+		{
+			"u_occlusionMapId":		"DP_INT",
+			"u_sceneTextureId":		"DP_INT",
+			"u_lightPosition":		"DP_VEC2"
+		}
+	},
+
 	{
 		"r": 			"r_dynamicModelWithShadowPass1",
 		"vs":			"dynamic_model_with_shadow_pass1.vs",

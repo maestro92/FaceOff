@@ -11,7 +11,7 @@ Renderer Control::r_listBoxItemHighlight;
 int Control::m_screenWidth;
 int Control::m_screenHeight;
 
-Control::Control() : Control("", 0,0,1,1, BLUE)
+Control::Control() : Control("", 0,0,1,1, COLOR_BLUE)
 {}
 
 Control::Control(string text, int x, int y, int width, int height, glm::vec3 color)

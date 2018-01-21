@@ -4,7 +4,7 @@
 #include "utility.h"
 #include "weapon_enum.h"
 #include "renderer.h"
-#include "model_enum.h"
+#include "model_type_enum.h"
 #include "model.h"
 #include "animation_helper.h"
 #include <string>
@@ -115,9 +115,8 @@ class WorldObject
         inline void setVelocity(glm::vec3 vel);
         inline void setVelocity(float x, float y, float z);
 
-		inline void setModelEnum(int modelEnum);
 		inline void setModel(Model* model);
-		inline int getModelEnum();
+		inline ModelType getModelType();
 
 		inline void updateModelMatrix();
 
@@ -241,7 +240,9 @@ class WorldObject
 		DynamicType m_dynamicType;
 		EntityType m_entityType;
 
-		int m_modelEnum;
+	//	int m_modelEnum;
+
+		ModelType m_modelType;
 		float m_mass;
 		float m_invMass;
 
@@ -415,19 +416,17 @@ inline glm::mat4 WorldObject::getRotation()
 }
 
 
-inline void WorldObject::setModelEnum(int modelEnum)
-{
-	m_modelEnum = modelEnum;
-}
 
 inline void WorldObject::setModel(Model* model)
 {
-	if (m_modelEnum == -1)
+	m_modelType = model->getType();
+
+	if (m_modelType == ModelType::none)
 	{
 		cout << m_name << " doesn't have a model" << endl;
-		while (1)
-		{}
+		assert(m_modelType != ModelType::none);
 	}
+
 	m_model = model;
 	m_wireFrameModel = new CubeWireFrameModel(model->m_aabb);
 

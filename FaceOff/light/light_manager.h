@@ -17,14 +17,6 @@ const static float SPECULAR_POWER = 32.0f;
 
 #include "base_light.h"
 
-const glm::vec3 COLOR_BLUE = glm::vec3(0.0f, 0.0f, 1.0f);
-const glm::vec3 COLOR_GREEN = glm::vec3(0.0f, 1.0f, 0.0f);
-const glm::vec3 COLOR_CYAN = glm::vec3(0.0f, 1.0f, 1.0f);
-const glm::vec3 COLOR_RED = glm::vec3(1.0f, 0.0f, 0.0f);
-const glm::vec3 COLOR_PINK = glm::vec3(1.0f, 0.0f, 1.0f);
-const glm::vec3 COLOR_YELLOW = glm::vec3(1.0f, 1.0f, 0.0f);
-const glm::vec3 COLOR_WHITE = glm::vec3(1.0f, 1.0f, 1.0f);
-
 
 class LightManager
 {

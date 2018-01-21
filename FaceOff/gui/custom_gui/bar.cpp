@@ -13,7 +13,7 @@ Bar::Bar()
 Bar::Bar(int x, int y, int width, int height, glm::vec3 barColor, string iconFileName)
 {
 	background.setRect(x, y, width, height);
-	background.setColor(BLACK);
+	background.setColor(COLOR_BLACK);
 
 	int diff = 4;
 	int halfDiff = diff / 2;
@@ -29,10 +29,10 @@ Bar::Bar(int x, int y, int width, int height, glm::vec3 barColor, string iconFil
 
 
 
-	background.setFont(0, BLACK);
+	background.setFont(0, COLOR_BLACK);
 	background.setText("");
 
-	foreground.setFont(0, BLACK);
+	foreground.setFont(0, COLOR_BLACK);
 	foreground.setText("");
 
 	
@@ -43,7 +43,7 @@ Bar::Bar(int x, int y, int width, int height, glm::vec3 barColor, string iconFil
 	string path = "./Assets/" + iconFileName;
 	icon.setTexture(utl::loadTexture(path, true));
 
-	icon.setFont(0, BLACK);
+	icon.setFont(0, COLOR_BLACK);
 	icon.setText("");
 }
 

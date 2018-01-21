@@ -44,6 +44,16 @@ namespace R_DYNAMIC_MODEL
 	};
 }
 
+namespace R_VOL_LIGHT_SCATTERING
+{
+	enum E
+	{
+		u_occlusionMapId = 0,
+		u_sceneTextureId,
+		u_lightPosition
+	};
+}
+
 namespace R_DYNAMIC_MODEL_WITH_SHADOW_PASS1
 {
 	enum E

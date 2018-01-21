@@ -41,6 +41,27 @@ void utl::errorCheckFBO()
         cout << "Framebuffer Okay" << endl;
 }
 
+// http://collagefactory.blogspot.com/2010/03/gluproject-source-code.html
+int utl::gluProjectWrapper(glm::vec3 objPos, glm::mat4 modelView, glm::mat4 proj, int x, int y, int width, int height, float& winX, float& winY, float& winZ)
+{
+	glm::vec4 objPos2 = glm::vec4(objPos.x, objPos.y, objPos.z, 1.0);
+	glm::vec4 projectedPos = proj * modelView * objPos2;
+	
+	if (projectedPos[3] == 0)
+	{
+		projectedPos[3] = 1;
+	//	return 0;
+	}
+	projectedPos = projectedPos / projectedPos[3];
+
+	projectedPos = projectedPos * 0.5 + 0.5;
+
+	winX = x + width * projectedPos[0];
+	winY = y + height * projectedPos[1];
+	winZ = projectedPos[2] + 0.5;
+	return 1;
+}
+
 
 
 

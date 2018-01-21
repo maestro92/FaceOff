@@ -2,7 +2,7 @@
 
 const int tickSize = 5;
 
-Slider::Slider() : Slider("Martin :)", 0, 0, 100, 100, BLUE, 0, 10)
+Slider::Slider() : Slider("Martin :)", 0, 0, 100, 100, COLOR_BLUE, 0, 10)
 {
 
 }

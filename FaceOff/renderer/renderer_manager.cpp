@@ -53,6 +53,11 @@ void RendererManager::init(int width, int height)
 	r_sceneTexture.disableShader();
 
 
+	Renderer::initRendererWrapper(vArray, &r_occlusionMap, "r_occlusionMap");
+
+	Renderer::initRendererWrapper(vArray, &r_volLightScattering, "r_volLightScattering");
+
+
 	Renderer::initRendererWrapper(vArray, &r_sceneTextureWithShadowPass1, "r_sceneTextureWithShadowPass1");
 
 	Renderer::initRendererWrapper(vArray, &r_sceneTextureWithShadowPass2, "r_sceneTextureWithShadowPass2");
@@ -87,6 +92,15 @@ void RendererManager::init(int width, int height)
 		r_dynamicModelWithShadowPass2.lightHelper->setPointLightsData(global.lightMgr->getPointLights());
 		r_dynamicModelWithShadowPass2.lightHelper->setSpotLightsData(global.lightMgr->getSpotLights());
 	r_dynamicModelWithShadowPass2.disableShader();
+	
+	
+
+//	Renderer::initRendererWrapper(vArray, &r_occlusionMap, "r_occlusionMap");	
+
+
+//	Renderer::initRendererWrapper(vArray, &r_volLightScattering, "r_volLightScattering");
+
+	
 	/*
 	Renderer::initRendererWrapper(vArray, &r_sceneTexture, "r_sceneTexture");
 	r_sceneTexture.init();
@@ -139,6 +153,8 @@ void RendererManager::init(int width, int height)
 
 	m_backGroundLayerFBO = utl::createFrameBufferObject(width, height);
 	m_particleLayerFBO = utl::createFrameBufferObject(width, height);
+	m_occlusionMapFBO = utl::createFrameBufferObject(width, height);
+	
 }
 
 
@@ -197,7 +213,13 @@ void RendererManager::initShadowMapFBO(int w, int h)
 }
 
 */
+/*
+void RendererManager::initOcclusionMapFBO()
+{
 
+
+}
+*/
 
 void RendererManager::initShadowMapFBO(int w, int h)
 {

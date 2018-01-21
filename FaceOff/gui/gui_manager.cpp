@@ -1,5 +1,5 @@
 #include "gui_manager.h"
-
+#include "renderer_manager.h"
 
 void GUIManager::init(int screenWidth, int screenHeight)
 {
@@ -57,16 +57,16 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	int BAR_WIDTH = 60;
 	int BAR_HEIGHT = 10;
 
-	m_HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GREEN, "icon_hp.png");
+	m_HPBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, COLOR_GREEN, "icon_hp.png");
 
 	xOffset = 175;
-	m_armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_armor.png");
+	m_armorBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, COLOR_GRAY, "icon_armor.png");
 
 	xOffset = 700;
-	m_ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, GRAY, "icon_ammo.png");
+	m_ammoBar = new Bar(xOffset, yOffset, BAR_WIDTH, BAR_HEIGHT, COLOR_GRAY, "icon_ammo.png");
 
 	xOffset = 0; yOffset = 0;
-	m_fpsLabel = new Label("90", xOffset, yOffset, 50, 50, GRAY);
+	m_fpsLabel = new Label("90", xOffset, yOffset, 50, 50, COLOR_GRAY);
 
 	int aimWidth = 20;
 	int aimHeight = 20;
@@ -76,7 +76,7 @@ void GUIManager::init(int screenWidth, int screenHeight)
 
 	utl::debug("aimX", aimX);
 	utl::debug("aimY", aimY);
-	m_horiAim = new Label("", aimX, aimY - 1, aimWidth, 2, GREEN);
+	m_horiAim = new Label("", aimX, aimY - 1, aimWidth, 2, COLOR_GREEN);
 
 	aimX = utl::SCREEN_WIDTH / 2;
 	aimY = utl::SCREEN_HEIGHT / 2 - aimHeight / 2;
@@ -84,7 +84,7 @@ void GUIManager::init(int screenWidth, int screenHeight)
 	utl::debug("aimX", aimX);
 	utl::debug("aimY", aimY);
 
-	m_vertAim = new Label("", aimX - 1, aimY, 2, aimHeight, GREEN);
+	m_vertAim = new Label("", aimX - 1, aimY, 2, aimHeight, COLOR_GREEN);
 
 	addGUIComponent(m_HPBar);
 	addGUIComponent(m_armorBar);
@@ -213,7 +213,25 @@ void GUIManager::renderSnipeScopeView(GLuint sceneTextureId)
 }
 
 
+void GUIManager::renderVolLightScattering(glm::vec2 sunScreenPosition, GLuint occlusionMapId, GLuint sceneTextureId)
+{
+	Renderer* renderer = &global.rendererMgr->r_volLightScattering;
 
+	renderer->enableShader();
+	
+	renderer->setData(R_VOL_LIGHT_SCATTERING::u_occlusionMapId, 0, GL_TEXTURE_2D, occlusionMapId);
+	renderer->setData(R_VOL_LIGHT_SCATTERING::u_sceneTextureId, 1, GL_TEXTURE_2D, sceneTextureId);
+	renderer->setData(R_VOL_LIGHT_SCATTERING::u_lightPosition, sunScreenPosition);
+
+	m_GUIPipeline.pushMatrix();
+	m_GUIPipeline.translate(0, 0, 0);
+	m_GUIPipeline.scale(m_screenWidth, m_screenHeight, 1.0);
+
+	renderer->setUniLocs(m_GUIPipeline);
+	m_textureQuad.render();
+	m_GUIPipeline.popMatrix();
+	renderer->disableShader();
+}
 
 void GUIManager::renderTextureFullScreen(GLuint textureId)
 {

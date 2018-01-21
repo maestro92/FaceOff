@@ -10,6 +10,7 @@ Model::Model()
 {
 	m_isAnimated = false;
     m_modelGeometry = GL_TRIANGLES;
+	m_type = ModelType::unspecified;
 
 	m_aabb.max = glm::vec3(1.0);
 	m_aabb.min = glm::vec3(-1.0);
@@ -31,6 +32,16 @@ void Model::clear()
 void Model::addMesh(Mesh m)
 {
     m_meshes.push_back(m);
+}
+
+void Model::setType(ModelType type)
+{
+	m_type = type;
+}
+
+ModelType Model::getType()
+{
+	return m_type;
 }
 
 

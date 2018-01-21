@@ -11,6 +11,8 @@ CubeModel::CubeModel(float xmax, float xmin,
 
 CubeModel::CubeModel(glm::vec3 maxP, glm::vec3 minP)
 {
+	m_type = ModelType::cube;
+
 	vector<unsigned int> indices;
 	vector<VertexData> vertices;
 	VertexData tmp;
@@ -69,6 +71,8 @@ CubeModel::CubeModel(glm::vec3 maxP, glm::vec3 minP)
 
 CubeModel::CubeModel(glm::vec3 maxP, glm::vec3 minP, glm::vec3 color)
 {
+	m_type = ModelType::cube;
+
 	vector<unsigned int> indices;
 	vector<VertexData> vertices;
 	VertexData tmp;

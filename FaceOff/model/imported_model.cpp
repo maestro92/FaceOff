@@ -5,13 +5,15 @@ ImportedModel::ImportedModel()
 	m_isAnimated = false;
 }
 
-ImportedModel::ImportedModel(string filename)
+ImportedModel::ImportedModel(string filename, ModelType type)
 {
+	m_type = type;
     load(filename);
 }
 
-ImportedModel::ImportedModel(string filename, vector<string> textures)
+ImportedModel::ImportedModel(string filename, vector<string> textures, ModelType type)
 {
+	m_type = type;
 	load(filename, textures);
 }
 
@@ -167,7 +169,20 @@ void ImportedModel::initMesh(unsigned int index, const aiMesh* m, const aiScene*
 	aiColor4D col;
 	aiMaterial* mat = scene->mMaterials[m->mMaterialIndex];
 	aiGetMaterialColor(mat,AI_MATKEY_COLOR_DIFFUSE,&col);
+
+	
 	glm::vec3 defaultColor(col.r,col.g,col.b);
+
+	if (m_type == ModelType::sun)
+	{
+		defaultColor = COLOR_WHITE;
+	}
+	else
+	{
+		defaultColor = COLOR_BLACK;
+	}
+	
+	// glm::vec3 defaultColor = COLOR_BLUE;
 
     for (unsigned int i = 0 ; i < m->mNumVertices ; i++)
     {

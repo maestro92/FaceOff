@@ -62,9 +62,8 @@ class ImportedModel : public Model
 
     public:
         ImportedModel();
-        ImportedModel(string filename);
-	//	ImportedModel(string filename, bool b);
-		ImportedModel(string filename, vector<string> textures);
+		ImportedModel(string filename, ModelType type);
+		ImportedModel(string filename, vector<string> textures, ModelType type);
         virtual ~ImportedModel();
 
 
